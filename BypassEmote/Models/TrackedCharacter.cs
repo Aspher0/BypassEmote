@@ -1,5 +1,4 @@
 using BypassEmote.Helpers;
-using FFXIVClientStructs.FFXIV.Client.Game.InstanceContent;
 using System;
 using System.Numerics;
 
