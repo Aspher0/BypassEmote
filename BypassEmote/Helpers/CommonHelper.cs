@@ -1,7 +1,9 @@
+using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using Lumina.Excel.Sheets;
@@ -82,7 +84,7 @@ public static class CommonHelper
         }
         else
         {
-            var newTracked = new TrackedCharacter(CID.Value, activeLoopTimelineId, chara.Position, chara.Rotation, false);
+            var newTracked = new TrackedCharacter(CID.Value, activeLoopTimelineId, chara.Position, chara.Rotation, IsCharacterWeaponDrawn(charaAddress));
             EmotePlayer.TrackedCharacters.Add(newTracked);
             return newTracked;
         }
@@ -91,7 +93,12 @@ public static class CommonHelper
     public unsafe static ulong? GetCIDFromPlayerPointer(nint charaAddress)
     {
         if (charaAddress == nint.Zero) return null;
-        var castChar = ((BattleChara*)charaAddress);
+
+        var character = TryGetPlayerCharacterFromAddress(charaAddress);
+
+        if (character == null) return null;
+
+        var castChar = ((BattleChara*)character.Address);
         return castChar->Character.ContentId;
     }
 
@@ -201,5 +208,21 @@ public static class CommonHelper
     public unsafe static bool IsEmoteUnlocked(uint emoteId)
     {
         return UIState.Instance()->IsEmoteUnlocked((ushort)emoteId);
+    }
+
+    public static unsafe bool IsCharacterWeaponDrawn(nint charaAddress)
+    {
+        //if (charaAddress == nint.Zero) return false;
+
+        //var gameObject = (GameObject*)charaAddress;
+
+        //if (gameObject == null || gameObject->GetObjectKind() != ObjectKind.Pc) return false;
+
+        //var character = (Character*)charaAddress;
+        //return character->IsWeaponDrawn;
+
+        var character = TryGetPlayerCharacterFromAddress(charaAddress);
+        if (character == null) return false;
+        return character.StatusFlags.HasFlag(StatusFlags.WeaponOut);
     }
 }

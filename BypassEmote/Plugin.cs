@@ -186,8 +186,6 @@ public sealed class Plugin : IDalamudPlugin
         OnEmoteHook.Original(unk, instigatorAddr, emoteId, targetId, unk2);
     }
 
-    // TODO: On Draw Weapon / Sheathe Weapon, stop looped emotes
-
     public void Dispose()
     {
         ExecuteCommandInnerHook?.Disable();

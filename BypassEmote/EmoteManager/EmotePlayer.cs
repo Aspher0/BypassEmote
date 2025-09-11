@@ -187,6 +187,7 @@ internal static unsafe class EmotePlayer
                 return;
             }
 
+            // Check if position has changed
             var pos = character.Position;
             var delta = pos - trackedCharacter.LastPlayerPosition;
             if (delta.LengthSquared() > 1e-12f)
@@ -196,7 +197,7 @@ internal static unsafe class EmotePlayer
                 return;
             }
 
-            //Uncomment to also stop on rotation change
+            // Check if rotation has changed
             //var rot = character.Rotation;
             //if (System.Math.Abs(rot - trackedCharacter.LastPlayerRotation) > 1e-7f)
             //{
@@ -204,6 +205,15 @@ internal static unsafe class EmotePlayer
             //    CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
             //    return;
             //}
+
+            // Check if weapon drawn state has changed
+            var isWeaponDrawn = CommonHelper.IsCharacterWeaponDrawn(character.Address);
+            if (isWeaponDrawn != trackedCharacter.IsWeaponDrawn)
+            {
+                StopLoop(character, true);
+                CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
+                return;
+            }
 
             trackedCharacter.UpdateLastPosition();
         }

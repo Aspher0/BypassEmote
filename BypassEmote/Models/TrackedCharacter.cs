@@ -28,6 +28,6 @@ public class TrackedCharacter
         if (character == null) return;
         LastPlayerPosition = character.Position;
         LastPlayerRotation = character.Rotation;
-
+        IsWeaponDrawn = CommonHelper.IsCharacterWeaponDrawn(character.Address);
     }
 }
