@@ -1,6 +1,4 @@
 using BypassEmote.Helpers;
-using Dalamud.Game.ClientState.Objects.SubKinds;
-using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.IoC;
@@ -8,12 +6,10 @@ using Dalamud.Plugin;
 using ECommons;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Client.UI;
-using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Component.Shell;
 using Lumina.Excel.Sheets;
 using Lumina.Extensions;
 using System;
-using System.Linq;
 
 namespace BypassEmote;
 

@@ -212,15 +212,6 @@ public static class CommonHelper
 
     public static unsafe bool IsCharacterWeaponDrawn(nint charaAddress)
     {
-        //if (charaAddress == nint.Zero) return false;
-
-        //var gameObject = (GameObject*)charaAddress;
-
-        //if (gameObject == null || gameObject->GetObjectKind() != ObjectKind.Pc) return false;
-
-        //var character = (Character*)charaAddress;
-        //return character->IsWeaponDrawn;
-
         var character = TryGetPlayerCharacterFromAddress(charaAddress);
         if (character == null) return false;
         return character.StatusFlags.HasFlag(StatusFlags.WeaponOut);
