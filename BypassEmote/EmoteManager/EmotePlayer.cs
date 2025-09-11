@@ -51,6 +51,7 @@ internal static unsafe class EmotePlayer
                     if (timelineId == 0)
                         return;
 
+                    CommonHelper.RemoveCharacterFromTrackedListByCharacterAddress(chara.Address);
                     PlayTimeline(chara, timelineId);
                     break;
                 }
