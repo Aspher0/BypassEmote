@@ -173,7 +173,10 @@ public sealed class Plugin : IDalamudPlugin
             var trackedCharacter = CommonHelper.TryGetCharacterFromTrackedList(character);
 
             if (trackedCharacter == null)
+            {
+                OnEmoteHook.Original(unk, instigatorAddr, emoteId, targetId, unk2);
                 return;
+            }
 
             EmotePlayer.StopLoop(character, true);
             var emote = Service.DataManager.GetExcelSheet<Emote>()?.GetRow(emoteId);
