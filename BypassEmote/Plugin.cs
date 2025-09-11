@@ -8,6 +8,7 @@ using Dalamud.Plugin;
 using ECommons;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Component.Shell;
 using Lumina.Excel.Sheets;
 using Lumina.Extensions;
@@ -19,8 +20,6 @@ namespace BypassEmote;
 public sealed class Plugin : IDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
-
-    public static TrackedCharacter? tc = null;
 
     internal static IpcProvider? Ipc { get; private set; }
 
@@ -170,7 +169,7 @@ public sealed class Plugin : IDalamudPlugin
 
         if (character != null)
         {
-            var trackedCharacter = CommonHelper.TryGetCharacterFromTrackedList(character);
+            var trackedCharacter = CommonHelper.TryGetCharacterFromTrackedList(character.Address);
 
             if (trackedCharacter == null)
             {
@@ -186,6 +185,8 @@ public sealed class Plugin : IDalamudPlugin
 
         OnEmoteHook.Original(unk, instigatorAddr, emoteId, targetId, unk2);
     }
+
+    // TODO: On Draw Weapon / Sheathe Weapon, stop looped emotes
 
     public void Dispose()
     {

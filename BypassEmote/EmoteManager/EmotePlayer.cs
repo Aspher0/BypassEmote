@@ -1,7 +1,6 @@
 using BypassEmote.Helpers;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Plugin.Services;
-using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 
@@ -31,6 +30,7 @@ internal static unsafe class EmotePlayer
                 emoteCategory = CommonHelper.EmoteCategory.OneShot;
         }
 
+        Service.Log.Debug($"Playing emote {emote.Name} (ID: {emote.RowId}) as {emoteCategory}");
         StopLoop(chara, false);
 
         if (Service.ClientState.LocalPlayer != null && chara.Address == Service.ClientState.LocalPlayer.Address)
@@ -57,11 +57,10 @@ internal static unsafe class EmotePlayer
                 }
         }
 
-        // if local player do stuff
         var local = Service.ClientState.LocalPlayer;
         if (local != null && local.Address == (nint)CommonHelper.GetCharacter(chara))
         {
-            // Fire IPC event for Mare Syncing
+            // Fire IPC event only if local player is the one playing the emote
             var provider = IpcProvider.Instance;
             provider?.LocalEmotePlayed?.Invoke(local, emote.RowId);
         }
@@ -97,7 +96,7 @@ internal static unsafe class EmotePlayer
         if (loopTimelineId == 0)
             return;
 
-        var trackedCharacter = CommonHelper.AddOrUpdateCharacterInTrackedList(chara, loopTimelineId);
+        var trackedCharacter = CommonHelper.AddOrUpdateCharacterInTrackedList(chara.Address, loopTimelineId);
 
         if (trackedCharacter == null)
             return;
@@ -140,7 +139,9 @@ internal static unsafe class EmotePlayer
 
     private static void CleanupLoopState(IPlayerCharacter? chara, bool shouldRemoveFromList)
     {
-        var trackedCharacter = CommonHelper.TryGetCharacterFromTrackedList(chara);
+        if (chara == null) return;
+
+        var trackedCharacter = CommonHelper.TryGetCharacterFromTrackedList(chara.Address);
 
         if (trackedCharacter != null)
         {
@@ -161,42 +162,45 @@ internal static unsafe class EmotePlayer
     {
         foreach (var trackedCharacter in TrackedCharacters)
         {
-            if (trackedCharacter.Character == null)
+            var character = CommonHelper.TryGetPlayerCharacterFromCID(trackedCharacter.CID);
+
+            if (character == null)
             {
+                Service.Log.Debug("Character became null, removing it from list.");
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
                 return;
             }
 
             if (CommonHelper.IsCharacterInObjectTable(trackedCharacter) == false)
             {
-                StopLoop(trackedCharacter.Character, true);
+                StopLoop(character, true);
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
                 return;
             }
 
-            var chara = CommonHelper.GetCharacter(trackedCharacter.Character);
+            var chara = CommonHelper.GetCharacter(character);
 
             if (chara->Timeline.BaseOverride != trackedCharacter.ActiveLoopTimelineId)
             {
-                StopLoop(trackedCharacter.Character, true);
+                StopLoop(character, true);
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
                 return;
             }
 
-            var pos = trackedCharacter.Character.Position;
+            var pos = character.Position;
             var delta = pos - trackedCharacter.LastPlayerPosition;
             if (delta.LengthSquared() > 1e-12f)
             {
-                StopLoop(trackedCharacter.Character, true);
+                StopLoop(character, true);
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
                 return;
             }
 
             //Uncomment to also stop on rotation change
-            //var rot = trackedCharacter.Character.Rotation;
+            //var rot = character.Rotation;
             //if (System.Math.Abs(rot - trackedCharacter.LastPlayerRotation) > 1e-7f)
             //{
-            //    StopLoop(trackedCharacter.Character, true);
+            //    StopLoop(character, true);
             //    CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
             //    return;
             //}
@@ -217,9 +221,11 @@ internal static unsafe class EmotePlayer
 
         foreach (var trackedCharacter in TrackedCharacters)
         {
-            if (trackedCharacter.Character != null)
+            var character = CommonHelper.TryGetPlayerCharacterFromCID(trackedCharacter.CID);
+
+            if (character != null)
             {
-                StopLoop(trackedCharacter.Character, true);
+                StopLoop(character, true);
             }
         }
     }

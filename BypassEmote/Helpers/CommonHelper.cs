@@ -2,7 +2,6 @@ using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using Lumina.Excel.Sheets;
@@ -16,8 +15,12 @@ namespace BypassEmote.Helpers;
 
 public static class CommonHelper
 {
-    public static string? GetPlayerFullNameFromPlayerCharacterObject(IPlayerCharacter? playerCharacter)
+    public static string? GetPlayerFullNameFromPlayerCharacterObject(nint charaAddress)
     {
+        if (charaAddress == nint.Zero) return null;
+
+        var playerCharacter = TryGetPlayerCharacterFromAddress(charaAddress);
+
         if (playerCharacter == null) return null;
 
         string playerName = playerCharacter.Name.ToString();
@@ -31,22 +34,24 @@ public static class CommonHelper
 
     public static unsafe Character* GetCharacter(IPlayerCharacter chara) => (Character*)chara.Address;
 
-    public static IPlayerCharacter? TryGetPlayerCharacterFromAddress(nint address)
+    public static IPlayerCharacter? TryGetPlayerCharacterFromAddress(nint charaAddress)
     {
-        if (address == 0)
+        if (charaAddress == nint.Zero)
             return null;
 
-        return Service.Objects.PlayerObjects.FirstOrDefault(p => p.Address == address) as IPlayerCharacter;
+        return Service.Objects.PlayerObjects.FirstOrDefault(p => p.Address == charaAddress) as IPlayerCharacter;
     }
 
-    public static TrackedCharacter? TryGetCharacterFromTrackedList(IPlayerCharacter? chara)
+    public static TrackedCharacter? TryGetCharacterFromTrackedList(nint charaAddress)
     {
-        if (chara == null)
+        var CID = GetCIDFromPlayerPointer(charaAddress);
+
+        if (CID == null)
             return null;
 
         foreach (var lc in EmotePlayer.TrackedCharacters)
         {
-            if (lc.Character != null && lc.Character.Address == chara.Address)
+            if (lc.CID == CID)
             {
                 return lc;
             }
@@ -54,15 +59,22 @@ public static class CommonHelper
         return null;
     }
 
-    public static TrackedCharacter? AddOrUpdateCharacterInTrackedList(IPlayerCharacter? chara, ushort activeLoopTimelineId)
+    public unsafe static TrackedCharacter? AddOrUpdateCharacterInTrackedList(nint charaAddress, ushort activeLoopTimelineId)
     {
-        if (chara == null)
-            return null;
+        if (charaAddress == nint.Zero) return null;
 
-        var existing = TryGetCharacterFromTrackedList(chara);
+        var CID = GetCIDFromPlayerPointer(charaAddress);
+
+        if (CID == null) return null;
+
+        var chara = TryGetPlayerCharacterFromAddress(charaAddress);
+
+        if (chara == null) return null;
+
+        var existing = TryGetCharacterFromTrackedList(charaAddress);
         if (existing != null)
         {
-            existing.Character = chara;
+            existing.CID = CID.Value;
             existing.ActiveLoopTimelineId = activeLoopTimelineId;
             existing.LastPlayerPosition = chara.Position;
             existing.LastPlayerRotation = chara.Rotation;
@@ -70,18 +82,41 @@ public static class CommonHelper
         }
         else
         {
-            var newTracked = new TrackedCharacter(chara, activeLoopTimelineId, chara.Position, chara.Rotation);
+            var newTracked = new TrackedCharacter(CID.Value, activeLoopTimelineId, chara.Position, chara.Rotation, false);
             EmotePlayer.TrackedCharacters.Add(newTracked);
             return newTracked;
         }
     }
 
-    public static void RemoveCharacterFromTrackedListByCharacter(IPlayerCharacter? chara)
+    public unsafe static ulong? GetCIDFromPlayerPointer(nint charaAddress)
     {
-        if (chara == null)
-            return;
+        if (charaAddress == nint.Zero) return null;
+        var castChar = ((BattleChara*)charaAddress);
+        return castChar->Character.ContentId;
+    }
 
-        EmotePlayer.TrackedCharacters.RemoveAll(tc => tc.Character != null && tc.Character.Address == chara.Address);
+    public static IPlayerCharacter? TryGetPlayerCharacterFromCID(ulong cid)
+    {
+        return Service.Objects.PlayerObjects
+            .Where(o => o is IPlayerCharacter)
+            .Select(o => o as IPlayerCharacter)
+            .FirstOrDefault(p => p != null && GetCIDFromPlayerPointer(p.Address) == cid);
+    }
+
+    public static TrackedCharacter? TryGetTrackedCharacterFromCID(ulong cid)
+    {
+        return EmotePlayer.TrackedCharacters.FirstOrDefault(tc => tc.CID == cid);
+    }
+
+    public static void RemoveCharacterFromTrackedListByCharacterAddress(nint charaAddress)
+    {
+        if (charaAddress == nint.Zero) return;
+
+        var CID = GetCIDFromPlayerPointer(charaAddress);
+
+        if (CID == null) return;
+
+        EmotePlayer.TrackedCharacters.RemoveAll(tc => tc.CID == CID.Value);
     }
 
     public static void RemoveChracterFromTrackedListByID(string id)
@@ -154,22 +189,13 @@ public static class CommonHelper
 
     public static unsafe bool IsCharacterInObjectTable(TrackedCharacter? trackedCharacter)
     {
-        if (trackedCharacter == null || trackedCharacter.Character == null)
-            return false;
+        if (trackedCharacter == null) return false;
 
-        return Service.Objects.PlayerObjects.Any(o => o.Address == (nint)GetCharacter(trackedCharacter.Character));
-    }
+        var character = TryGetPlayerCharacterFromCID(trackedCharacter.CID);
 
-    public static unsafe bool IsCharacterVisible(TrackedCharacter? trackedCharacter)
-    {
-        if (trackedCharacter == null || trackedCharacter.Character == null)
-            return false;
+        if (character == null) return false;
 
-        var gameObject = (GameObject*)trackedCharacter.Character.Address;
-        if (gameObject == null || gameObject->DrawObject == null)
-            return false;
-
-        return gameObject->DrawObject->IsVisible;
+        return Service.Objects.PlayerObjects.Any(o => o.Address == (nint)GetCharacter(character));
     }
 
     public unsafe static bool IsEmoteUnlocked(uint emoteId)
