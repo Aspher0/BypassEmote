@@ -14,6 +14,7 @@ using Lumina.Excel.Sheets;
 using Lumina.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BypassEmote;
 
@@ -29,12 +30,13 @@ public sealed class Plugin : IDalamudPlugin
     private Hook<ShellCommandModule.Delegates.ExecuteCommandInner>? ExecuteCommandInnerHook { get; init; }
 
     private readonly List<Tuple<string, string>> commandNames = [
-        new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration."),
+        new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config"),
         new Tuple<string, string>("/be", "Alias of /bypassemote."),
     ];
 
     public readonly WindowSystem WindowSystem = new("BypassEmote");
 
+    private UIBuilder MainWindow { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
 
     public unsafe Plugin()
@@ -46,7 +48,9 @@ public sealed class Plugin : IDalamudPlugin
 
         Service.InitializeService();
 
-        ConfigWindow = new ConfigWindow(this);
+        MainWindow = new UIBuilder();
+        ConfigWindow = new ConfigWindow();
+        WindowSystem.AddWindow(MainWindow);
         WindowSystem.AddWindow(ConfigWindow);
 
         SetupUI();
@@ -74,9 +78,11 @@ public sealed class Plugin : IDalamudPlugin
     private void SetupUI()
     {
         PluginInterface.UiBuilder.Draw += () => WindowSystem.Draw();
+        PluginInterface.UiBuilder.OpenMainUi += OpenMainWindow;
         PluginInterface.UiBuilder.OpenConfigUi += OpenSettings;
     }
 
+    public void OpenMainWindow() => MainWindow.Toggle();
     public void OpenSettings() => ConfigWindow.Toggle();
 
     private void SetupCommands()
@@ -107,9 +113,18 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnCommand(string command, string args)
     {
+        string[] splitArgs = args.Split(' ');
+        splitArgs = splitArgs.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
+
         if (command == "/bypassemote" || command == "/be")
         {
-            OpenSettings();
+            if (splitArgs.Length > 0 && new List<string>() { "config", "c" }.Contains(splitArgs[0]))
+            {
+                OpenSettings();
+                return;
+            }
+
+            OpenMainWindow();
             return;
         }
 
@@ -121,9 +136,6 @@ public sealed class Plugin : IDalamudPlugin
                 Service.ChatGui.Print("No player targeted.");
                 return;
             }
-
-            string[] splitArgs = args.Split(' ');
-            splitArgs = splitArgs.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
 
             if (splitArgs.Length > 0)
             {
@@ -234,13 +246,9 @@ public sealed class Plugin : IDalamudPlugin
     {
         WindowSystem.RemoveAllWindows();
         ConfigWindow.Dispose();
+        MainWindow.Dispose();
 
         Service.Dispose();
-
-        foreach (var CommandName in commandNames)
-        {
-            Service.CommandManager.RemoveHandler(CommandName.Item1);
-        }
 
         ExecuteCommandInnerHook?.Disable();
         ExecuteCommandInnerHook?.Dispose();
@@ -250,5 +258,10 @@ public sealed class Plugin : IDalamudPlugin
 
         EmotePlayer.Dispose();
         ECommonsMain.Dispose();
+
+        foreach (var CommandName in commandNames)
+        {
+            Service.CommandManager.RemoveHandler(CommandName.Item1);
+        }
     }
 }

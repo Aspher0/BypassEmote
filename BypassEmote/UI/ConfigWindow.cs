@@ -7,7 +7,7 @@ namespace BypassEmote.UI;
 
 public class ConfigWindow : Window, IDisposable
 {
-    public ConfigWindow(Plugin plugin) : base("Bypass Emote##BypassEmoteConfig", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
+    public ConfigWindow() : base("Bypass Emote##BypassEmoteConfig", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         SizeConstraints = new WindowSizeConstraints
         {
@@ -23,8 +23,12 @@ public class ConfigWindow : Window, IDisposable
         Service.Configuration.UpdateConfiguration(() => Service.Configuration.PluginEnabled = pluginEnabled);
 
         var autoFaceTarget = Service.Configuration!.AutoFaceTarget;
-        ImGui.Checkbox("Automatically Face Target", ref autoFaceTarget);
+        ImGui.Checkbox("Automatically Face Target On Emote", ref autoFaceTarget);
         Service.Configuration.UpdateConfiguration(() => Service.Configuration.AutoFaceTarget = autoFaceTarget);
+
+        //var interruptEmoteOnRotate = Service.Configuration!.InterruptEmoteOnRotate;
+        //ImGui.Checkbox("[WIP] Interrupt Emote On Character Rotation", ref interruptEmoteOnRotate);
+        //Service.Configuration.UpdateConfiguration(() => Service.Configuration.InterruptEmoteOnRotate = interruptEmoteOnRotate);
     }
 
     public void Dispose() { }

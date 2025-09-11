@@ -18,17 +18,7 @@ internal static unsafe class EmotePlayer
         if (chara == null)
             return;
 
-        var emoteCategory = CommonHelper.TryGetEmoteCategory(emote);
-
-        if (emoteCategory == null)
-        {
-            var categoryString = emote.EmoteCategory.Value.Name.ToString();
-
-            if (categoryString == "Special")
-                emoteCategory = CommonHelper.EmoteCategory.Looped;
-            else
-                emoteCategory = CommonHelper.EmoteCategory.OneShot;
-        }
+        var emoteCategory = CommonHelper.GetEmoteCategory(emote);
 
         StopLoop(chara, false);
 
@@ -148,7 +138,7 @@ internal static unsafe class EmotePlayer
             trackedCharacter.ActiveLoopTimelineId = 0;
 
             if (shouldRemoveFromList)
-                TrackedCharacters.Remove(trackedCharacter);
+                CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
         }
 
         if (TrackedCharacters.Count == 0 && _updateHooked)
@@ -203,8 +193,9 @@ internal static unsafe class EmotePlayer
 
             // Check if rotation has changed
             //var rot = character.Rotation;
-            //if (System.Math.Abs(rot - trackedCharacter.LastPlayerRotation) > 1e-7f)
+            //if (Service.Configuration!.InterruptEmoteOnRotate && System.Math.Abs(rot - trackedCharacter.LastPlayerRotation) > 1e-7f)
             //{
+            //    Service.Log.Error("[BYPASSEMOTE] Character rotation changed, removing it from list.");
             //    StopLoop(character, true);
             //    CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
             //    return;
@@ -232,17 +223,18 @@ internal static unsafe class EmotePlayer
 
     public static void Dispose()
     {
-        Service.Framework.Update -= OnFrameworkUpdate;
-        _updateHooked = false;
-
         foreach (var trackedCharacter in TrackedCharacters)
         {
             var character = CommonHelper.TryGetPlayerCharacterFromCID(trackedCharacter.CID);
 
             if (character != null)
             {
-                StopLoop(character, true);
+                var chara = CommonHelper.GetCharacter(character);
+                chara->Timeline.BaseOverride = 0;
+                chara->Timeline.TimelineSequencer.PlayTimeline(3);
             }
         }
+
+        Service.Framework.Update -= OnFrameworkUpdate;
     }
 }

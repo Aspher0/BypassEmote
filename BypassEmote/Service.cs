@@ -1,9 +1,13 @@
+using BypassEmote.Helpers;
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.IoC;
 using Dalamud.Plugin.Services;
+using Dalamud.Interface.Textures; // Texture provider for icons
+using Lumina.Data.Parsing;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
+using System; // for StringComparer
 
 namespace BypassEmote;
 
@@ -23,17 +27,20 @@ public class Service
     [PluginService] public static IGameConfig GameConfig { get; private set; } = null!;
     [PluginService] public static IGameGui GameGui { get; private set; } = null!;
     [PluginService] public static IAddonLifecycle AddonLifecycle { get; private set; } = null!;
+    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!; // provide game icons
 
     public static Plugin Plugin { get; set; } = null!;
     public static Configuration? Configuration { get; set; }
 
     public static Lumina.Excel.ExcelSheet<Emote>? emoteCommands;
     public static HashSet<(string, Emote)> Emotes = [];
+    public static List<(Emote, CommonHelper.EmoteCategory)> LockedEmotes = [];
 
     public static void InitializeService()
     {
         InitializeConfig();
         InitializeEmotes();
+        RefreshLockedEmotes();
     }
 
     public static void InitializeConfig()
@@ -65,6 +72,35 @@ public class Service
         }
         if (Emotes.Count == 0)
             Log.Error("Failed to build Emotes list");
+    }
+
+    public static void RefreshLockedEmotes()
+    {
+        LockedEmotes.Clear();
+
+        if (emoteCommands == null || Emotes.Count == 0)
+            return;
+
+        // Deduplicate by displayed emote name
+        var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var (_, emote) in Emotes)
+        {
+            if (!CommonHelper.IsEmoteUnlocked(emote.RowId))
+            {
+                var name = emote.Name.ToString();
+                if (string.IsNullOrWhiteSpace(name))
+                    name = emote.TextCommand.ValueNullable?.Command.ExtractText() ?? $"Emote {emote.RowId}";
+
+                if (seenNames.Add(name))
+                {
+                    LockedEmotes.Add((emote, CommonHelper.GetRealEmoteCategory(emote)));
+                }
+            }
+        }
+
+        // Reverse order so newest entries appear first (index 0 is last initially)
+        LockedEmotes.Reverse();
     }
 
     public static void Dispose() { }

@@ -146,6 +146,24 @@ public static class CommonHelper
         { 138, EmoteCategory.OneShot }, // /zantetsuken
     };
 
+    public static EmoteCategory GetRealEmoteCategory(Emote emote)
+    {
+        var categoryString = emote.EmoteCategory.Value.Name.ToString();
+
+        return (categoryString == "Special") ? CommonHelper.EmoteCategory.Looped : CommonHelper.EmoteCategory.OneShot;
+    }
+
+    public static EmoteCategory GetEmoteCategory(Emote emote)
+    {
+        var emoteCategory = TryGetEmoteCategory(emote);
+
+        if (emoteCategory != null) return emoteCategory.Value;
+
+        var categoryString = emote.EmoteCategory.Value.Name.ToString();
+
+        return (categoryString == "Special") ? CommonHelper.EmoteCategory.Looped : CommonHelper.EmoteCategory.OneShot;
+    }
+
     public static EmoteCategory? TryGetEmoteCategory(Emote emote)
     {
         if (EmoteCategories.TryGetValue(emote.RowId, out var category))

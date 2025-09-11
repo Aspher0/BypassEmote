@@ -10,11 +10,17 @@ public class IpcProvider
 {
     public static IpcProvider? Instance { get; private set; }
 
+    public static int MajorVersion => 1;
+    public static int MinorVersion => 0;
+
     public IpcProvider()
     {
         Instance = this;
         EzIPC.Init(this);
     }
+
+    [EzIPC("ApiVersion")]
+    public (int Major, int Minor) ApiVersion() => (MajorVersion, MinorVersion);
 
     // Applies an emote to a character
     [EzIPC("PlayEmoteById")]
