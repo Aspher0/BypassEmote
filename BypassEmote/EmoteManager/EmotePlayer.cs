@@ -30,7 +30,6 @@ internal static unsafe class EmotePlayer
                 emoteCategory = CommonHelper.EmoteCategory.OneShot;
         }
 
-        Service.Log.Debug($"Playing emote {emote.Name} (ID: {emote.RowId}) as {emoteCategory}");
         StopLoop(chara, false);
 
         if (Service.ClientState.LocalPlayer != null && chara.Address == Service.ClientState.LocalPlayer.Address)
@@ -160,19 +159,21 @@ internal static unsafe class EmotePlayer
 
     private static void OnFrameworkUpdate(IFramework framework)
     {
+        // Logging errors to debug issues
         foreach (var trackedCharacter in TrackedCharacters)
         {
             var character = CommonHelper.TryGetPlayerCharacterFromCID(trackedCharacter.CID);
 
             if (character == null)
             {
-                Service.Log.Debug("Character became null, removing it from list.");
+                Service.Log.Error("[BYPASSEMOTE] Character became null, removing it from list.");
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
                 return;
             }
 
             if (CommonHelper.IsCharacterInObjectTable(trackedCharacter) == false)
             {
+                Service.Log.Error("[BYPASSEMOTE] Character not in object table, removing it from list.");
                 StopLoop(character, true);
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
                 return;
@@ -182,6 +183,7 @@ internal static unsafe class EmotePlayer
 
             if (chara->Timeline.BaseOverride != trackedCharacter.ActiveLoopTimelineId)
             {
+                Service.Log.Error("[BYPASSEMOTE] Character not playing the same looped emote as before, removing it from the list.");
                 StopLoop(character, true);
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
                 return;
@@ -192,6 +194,7 @@ internal static unsafe class EmotePlayer
             var delta = pos - trackedCharacter.LastPlayerPosition;
             if (delta.LengthSquared() > 1e-12f)
             {
+                Service.Log.Error("[BYPASSEMOTE] Character moved, removing it from list.");
                 StopLoop(character, true);
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
                 return;
@@ -210,6 +213,7 @@ internal static unsafe class EmotePlayer
             var isWeaponDrawn = CommonHelper.IsCharacterWeaponDrawn(character.Address);
             if (isWeaponDrawn != trackedCharacter.IsWeaponDrawn)
             {
+                Service.Log.Error("[BYPASSEMOTE] Character weapon drawn flag changed, removing it from list.");
                 StopLoop(character, true);
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
                 return;
@@ -221,7 +225,8 @@ internal static unsafe class EmotePlayer
 
     public static void FaceTarget()
     {
-        ChatHelper.SendMessage("/facetarget");
+        if (Service.Configuration!.AutoFaceTarget)
+            ChatHelper.SendMessage("/facetarget");
     }
 
     public static void Dispose()

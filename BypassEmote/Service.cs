@@ -25,9 +25,22 @@ public class Service
     [PluginService] public static IAddonLifecycle AddonLifecycle { get; private set; } = null!;
 
     public static Plugin Plugin { get; set; } = null!;
+    public static Configuration? Configuration { get; set; }
 
     public static Lumina.Excel.ExcelSheet<Emote>? emoteCommands;
     public static HashSet<(string, Emote)> Emotes = [];
+
+    public static void InitializeService()
+    {
+        InitializeConfig();
+        InitializeEmotes();
+    }
+
+    public static void InitializeConfig()
+    {
+        Configuration = Plugin.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        Configuration.Save();
+    }
 
     // From dodingdaga's Copycat
     public static void InitializeEmotes()
@@ -53,4 +66,6 @@ public class Service
         if (Emotes.Count == 0)
             Log.Error("Failed to build Emotes list");
     }
+
+    public static void Dispose() { }
 }

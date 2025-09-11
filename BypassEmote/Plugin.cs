@@ -1,6 +1,9 @@
 using BypassEmote.Helpers;
+using BypassEmote.UI;
+using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
+using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using ECommons;
@@ -10,6 +13,7 @@ using FFXIVClientStructs.FFXIV.Component.Shell;
 using Lumina.Excel.Sheets;
 using Lumina.Extensions;
 using System;
+using System.Collections.Generic;
 
 namespace BypassEmote;
 
@@ -24,6 +28,15 @@ public sealed class Plugin : IDalamudPlugin
 
     private Hook<ShellCommandModule.Delegates.ExecuteCommandInner>? ExecuteCommandInnerHook { get; init; }
 
+    private readonly List<Tuple<string, string>> commandNames = [
+        new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration."),
+        new Tuple<string, string>("/be", "Alias of /bypassemote."),
+    ];
+
+    public readonly WindowSystem WindowSystem = new("BypassEmote");
+
+    private ConfigWindow ConfigWindow { get; init; }
+
     public unsafe Plugin()
     {
         ECommonsMain.Init(PluginInterface, this);
@@ -31,8 +44,12 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.Create<Service>();
         Service.Plugin = this;
 
-        Service.InitializeEmotes();
+        Service.InitializeService();
 
+        ConfigWindow = new ConfigWindow(this);
+        WindowSystem.AddWindow(ConfigWindow);
+
+        SetupUI();
         SetupCommands();
 
         Ipc = new IpcProvider();
@@ -54,8 +71,27 @@ public sealed class Plugin : IDalamudPlugin
         }
     }
 
+    private void SetupUI()
+    {
+        PluginInterface.UiBuilder.Draw += () => WindowSystem.Draw();
+        PluginInterface.UiBuilder.OpenConfigUi += OpenSettings;
+    }
+
+    public void OpenSettings() => ConfigWindow.Toggle();
+
     private void SetupCommands()
     {
+        // Register primary commands with incremental DisplayOrder based on iteration index
+        for (int i = 0; i < commandNames.Count; i++)
+        {
+            var (command, help) = (commandNames[i].Item1, commandNames[i].Item2);
+            Service.CommandManager.AddHandler(command, new CommandInfo(OnCommand)
+            {
+                HelpMessage = help,
+                DisplayOrder = i,
+            });
+        }
+
 #if DEBUG
         Service.CommandManager.AddHandler("/bet", new CommandInfo(OnCommand)
         {
@@ -71,6 +107,12 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnCommand(string command, string args)
     {
+        if (command == "/bypassemote" || command == "/be")
+        {
+            OpenSettings();
+            return;
+        }
+
 #if DEBUG
         if (command == "/bet")
         {
@@ -118,6 +160,12 @@ public sealed class Plugin : IDalamudPlugin
 
     private unsafe void DetourExecuteCommand(ShellCommandModule* commandModule, Utf8String* rawMessage, UIModule* uiModule)
     {
+        if (!Service.Configuration!.PluginEnabled)
+        {
+            ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
+            return;
+        }
+
         var seMsg = SeString.Parse(CommonHelper.GetUtf8Span(rawMessage));
         var message = CommonHelper.Utf8StringToPlainText(seMsg);
 
@@ -184,6 +232,16 @@ public sealed class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
+        WindowSystem.RemoveAllWindows();
+        ConfigWindow.Dispose();
+
+        Service.Dispose();
+
+        foreach (var CommandName in commandNames)
+        {
+            Service.CommandManager.RemoveHandler(CommandName.Item1);
+        }
+
         ExecuteCommandInnerHook?.Disable();
         ExecuteCommandInnerHook?.Dispose();
 
