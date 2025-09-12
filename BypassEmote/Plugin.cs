@@ -1,5 +1,6 @@
 using BypassEmote.Helpers;
 using BypassEmote.UI;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
@@ -103,11 +104,6 @@ public sealed class Plugin : IDalamudPlugin
         {
             HelpMessage = "Applies an emote to the targetted actor. Usage: /bet <emote_command> or /bet stop"
         });
-
-        Service.CommandManager.AddHandler("/getaddr", new CommandInfo(OnCommand)
-        {
-            HelpMessage = "Gets the address of the targetted character"
-        });
 #endif
     }
 
@@ -131,9 +127,9 @@ public sealed class Plugin : IDalamudPlugin
 #if DEBUG
         if (command == "/bet")
         {
-            if (Service.TargetManager.Target is not IPlayerCharacter charaTarget)
+            if (Service.TargetManager.Target is not ICharacter charaTarget)
             {
-                Service.ChatGui.Print("No player targeted.");
+                Service.ChatGui.Print("No character targeted.");
                 return;
             }
 
@@ -158,14 +154,6 @@ public sealed class Plugin : IDalamudPlugin
             {
                 Service.ChatGui.Print("Usage: /bet <emote_command> or /bet stop");
             }
-        } else if (command == "getaddr")
-        {
-            if (Service.TargetManager.Target is not IPlayerCharacter charaTarget)
-            {
-                Service.ChatGui.Print("No player targeted.");
-                return;
-            }
-            Service.ChatGui.Print($"Target address: {charaTarget.Address}");
         }
 #endif
     }
@@ -256,7 +244,6 @@ public sealed class Plugin : IDalamudPlugin
         OnEmoteHook?.Disable();
         OnEmoteHook?.Dispose();
 
-        EmotePlayer.Dispose();
         ECommonsMain.Dispose();
 
         foreach (var CommandName in commandNames)

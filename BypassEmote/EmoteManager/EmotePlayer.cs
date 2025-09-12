@@ -1,5 +1,5 @@
 using BypassEmote.Helpers;
-using Dalamud.Game.ClientState.Objects.SubKinds;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ internal static unsafe class EmotePlayer
     // List of characters using a looped emote
     public static List<TrackedCharacter> TrackedCharacters = new List<TrackedCharacter>();
 
-    public static void PlayEmote(IPlayerCharacter? chara, Emote emote)
+    public static void PlayEmote(ICharacter? chara, Emote emote)
     {
         if (chara == null)
             return;
@@ -29,20 +29,29 @@ internal static unsafe class EmotePlayer
         {
             case CommonHelper.EmoteCategory.Looped:
                 {
-                    var loopTimeline = TimelineResolver.ResolveLoopingTimeline(emote);
-                    var introTimeline = TimelineResolver.ResolveIntroTimeline(emote);
-                    StartLoopTimeline(chara, loopTimeline, introTimeline);
+                    PlayEmote(Service.Player, chara, emote);
+                    var trackedCharacter = CommonHelper.AddOrUpdateCharacterInTrackedList(chara.Address);
+
+                    if (trackedCharacter == null) break;
+
+                    trackedCharacter.UpdateLastPosition();
+
+                    if (!_updateHooked && TrackedCharacters.Count > 0)
+                    {
+                        Service.Framework.Update += OnFrameworkUpdate;
+                        _updateHooked = true;
+                    }
+
                     break;
                 }
             case CommonHelper.EmoteCategory.OneShot:
             default:
                 {
-                    ushort timelineId = TimelineResolver.ResolveNonLoopingTimeline(emote);
+                    ushort timelineId = (ushort)emote.ActionTimeline[0].RowId;
                     if (timelineId == 0)
                         return;
-
                     CommonHelper.RemoveCharacterFromTrackedListByCharacterAddress(chara.Address);
-                    PlayTimeline(chara, timelineId);
+                    PlayOneShotEmote(chara, timelineId);
                     break;
                 }
         }
@@ -56,7 +65,7 @@ internal static unsafe class EmotePlayer
         }
     }
 
-    public static void PlayEmoteById(IPlayerCharacter? chara, uint emoteId)
+    public static void PlayEmoteById(ICharacter? chara, uint emoteId)
     {
         if (chara == null)
             return;
@@ -70,7 +79,45 @@ internal static unsafe class EmotePlayer
         PlayEmote(chara, emoteRow.Value);
     }
 
-    public static void PlayTimeline(IPlayerCharacter? chara, ushort timelineId)
+    public static void PlayEmote(ActionTimelinePlayer player, ICharacter actor, Emote emote, bool blendIntro = true)
+    {
+        if (actor == null || emote.RowId == 0) return;
+
+        ushort loop = (ushort)emote.ActionTimeline[0].RowId; // Standard/Loop
+        ushort intro = (ushort)emote.ActionTimeline[1].RowId; // Intro
+        ushort upper = (ushort)emote.ActionTimeline[4].RowId; // Upper-body (Blend)
+
+        if (blendIntro && intro != 0)
+            player.Blend(actor, intro);
+
+        if (loop != 0)
+        {
+            player.Play(actor, loop, interrupt: true);
+            return;
+        }
+
+        if (upper != 0)
+        {
+            player.Blend(actor, upper);
+            return;
+        }
+
+        for (int i = 0; i < emote.ActionTimeline.Count; i++)
+        {
+            var id = (ushort)emote.ActionTimeline[i].RowId;
+            if (id == 0) continue;
+
+            if (i == 4)
+                player.Blend(actor, id);
+            else
+                player.Play(actor, id, interrupt: true);
+            return;
+        }
+    }
+
+    public static void Stop(ActionTimelinePlayer player, ICharacter actor) => player.Stop(actor);
+
+    public static void PlayOneShotEmote(ICharacter? chara, ushort timelineId)
     {
         if (chara == null)
             return;
@@ -78,73 +125,26 @@ internal static unsafe class EmotePlayer
         CommonHelper.GetCharacter(chara)->Timeline.TimelineSequencer.PlayTimeline(timelineId);
     }
 
-    private static void StartLoopTimeline(IPlayerCharacter? chara, ushort loopTimelineId, ushort introTimelineId = 0)
-    {
-        if (chara == null)
-            return;
-
-        if (loopTimelineId == 0)
-            return;
-
-        var trackedCharacter = CommonHelper.AddOrUpdateCharacterInTrackedList(chara.Address, loopTimelineId);
-
-        if (trackedCharacter == null)
-            return;
-
-        StopLoop(chara, false);
-
-        var character = CommonHelper.GetCharacter(chara);
-
-        character->Timeline.BaseOverride = loopTimelineId;
-
-        if (introTimelineId != 0)
-        {
-            character->Timeline.TimelineSequencer.PlayTimeline(introTimelineId);
-        }
-        else
-        {
-            character->Timeline.TimelineSequencer.PlayTimeline(loopTimelineId);
-        }
-
-        trackedCharacter.ActiveLoopTimelineId = loopTimelineId;
-        trackedCharacter.UpdateLastPosition();
-
-        if (!_updateHooked && TrackedCharacters.Count > 0)
-        {
-            Service.Framework.Update += OnFrameworkUpdate;
-            _updateHooked = true;
-        }
-    }
-
-    public static void StopLoop(IPlayerCharacter? chara, bool shouldRemoveFromList)
+    public static void StopLoop(ICharacter? chara, bool shouldRemoveFromList)
     {
         if (chara != null)
         {
             var character = CommonHelper.GetCharacter(chara);
-            character->Timeline.BaseOverride = 0;
-            character->Timeline.TimelineSequencer.PlayTimeline(3);
-            CleanupLoopState(chara, shouldRemoveFromList);
-        }
-    }
 
-    private static void CleanupLoopState(IPlayerCharacter? chara, bool shouldRemoveFromList)
-    {
-        if (chara == null) return;
+            Stop(Service.Player, chara);
 
-        var trackedCharacter = CommonHelper.TryGetCharacterFromTrackedList(chara.Address);
+            var trackedCharacter = CommonHelper.TryGetCharacterFromTrackedList(chara.Address);
 
-        if (trackedCharacter != null)
-        {
-            trackedCharacter.ActiveLoopTimelineId = 0;
-
-            if (shouldRemoveFromList)
+            if (trackedCharacter != null && shouldRemoveFromList)
+            {
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
-        }
 
-        if (TrackedCharacters.Count == 0 && _updateHooked)
-        {
-            Service.Framework.Update -= OnFrameworkUpdate;
-            _updateHooked = false;
+                if (TrackedCharacters.Count == 0 && _updateHooked)
+                {
+                    Service.Framework.Update -= OnFrameworkUpdate;
+                    _updateHooked = false;
+                }
+            }
         }
     }
 
@@ -170,16 +170,6 @@ internal static unsafe class EmotePlayer
                 return;
             }
 
-            var chara = CommonHelper.GetCharacter(character);
-
-            if (chara->Timeline.BaseOverride != trackedCharacter.ActiveLoopTimelineId)
-            {
-                Service.Log.Error("[BYPASSEMOTE] Character not playing the same looped emote as before, removing it from the list.");
-                StopLoop(character, true);
-                CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
-                return;
-            }
-
             // Check if position has changed
             var pos = character.Position;
             var delta = pos - trackedCharacter.LastPlayerPosition;
@@ -192,14 +182,14 @@ internal static unsafe class EmotePlayer
             }
 
             // Check if rotation has changed
-            //var rot = character.Rotation;
-            //if (Service.Configuration!.InterruptEmoteOnRotate && System.Math.Abs(rot - trackedCharacter.LastPlayerRotation) > 1e-7f)
-            //{
-            //    Service.Log.Error("[BYPASSEMOTE] Character rotation changed, removing it from list.");
-            //    StopLoop(character, true);
-            //    CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
-            //    return;
-            //}
+            var rot = character.Rotation;
+            if (Service.InterruptEmoteOnRotate && System.Math.Abs(rot - trackedCharacter.LastPlayerRotation) > 1e-7f)
+            {
+                Service.Log.Error("[BYPASSEMOTE] Character rotation changed, removing it from list.");
+                StopLoop(character, true);
+                CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
+                return;
+            }
 
             // Check if weapon drawn state has changed
             var isWeaponDrawn = CommonHelper.IsCharacterWeaponDrawn(character.Address);
@@ -215,10 +205,18 @@ internal static unsafe class EmotePlayer
         }
     }
 
-    public static void FaceTarget()
+    public unsafe static void FaceTarget()
     {
-        if (Service.Configuration!.AutoFaceTarget)
-            ChatHelper.SendMessage("/facetarget");
+        if (Service.ClientState.LocalPlayer is not ICharacter localCharacter)
+            return;
+
+        if (Service.TargetManager.Target is not ICharacter targetCharacter)
+            return;
+
+        var rotToTarget = CommonHelper.GetRotationToTarget(localCharacter, targetCharacter);
+
+        var c = CommonHelper.GetCharacter(localCharacter);
+        c->Rotation = rotToTarget;
     }
 
     public static void Dispose()
@@ -228,12 +226,10 @@ internal static unsafe class EmotePlayer
             var character = CommonHelper.TryGetPlayerCharacterFromCID(trackedCharacter.CID);
 
             if (character != null)
-            {
-                var chara = CommonHelper.GetCharacter(character);
-                chara->Timeline.BaseOverride = 0;
-                chara->Timeline.TimelineSequencer.PlayTimeline(3);
-            }
+                Stop(Service.Player, character);
         }
+
+        Service.Player.Dispose();
 
         Service.Framework.Update -= OnFrameworkUpdate;
     }

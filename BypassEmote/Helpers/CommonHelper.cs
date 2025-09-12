@@ -1,9 +1,9 @@
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using Lumina.Excel.Sheets;
@@ -12,29 +12,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ECommons.MathHelpers;
 
 namespace BypassEmote.Helpers;
 
 public static class CommonHelper
 {
-    public static string? GetPlayerFullNameFromPlayerCharacterObject(nint charaAddress)
-    {
-        if (charaAddress == nint.Zero) return null;
-
-        var playerCharacter = TryGetPlayerCharacterFromAddress(charaAddress);
-
-        if (playerCharacter == null) return null;
-
-        string playerName = playerCharacter.Name.ToString();
-        World? playerHomeworld = Service.DataManager.GetExcelSheet<World>()?.GetRow(playerCharacter.HomeWorld.RowId);
-
-        if (playerName == null || playerHomeworld == null) return null;
-
-        string playerHomeworldName = playerHomeworld?.Name.ToString() ?? "Unknown";
-        return $"{playerName}@{playerHomeworldName}";
-    }
-
-    public static unsafe Character* GetCharacter(IPlayerCharacter chara) => (Character*)chara.Address;
+    public static unsafe Character* GetCharacter(ICharacter chara) => (Character*)chara.Address;
 
     public static IPlayerCharacter? TryGetPlayerCharacterFromAddress(nint charaAddress)
     {
@@ -61,7 +45,7 @@ public static class CommonHelper
         return null;
     }
 
-    public unsafe static TrackedCharacter? AddOrUpdateCharacterInTrackedList(nint charaAddress, ushort activeLoopTimelineId)
+    public unsafe static TrackedCharacter? AddOrUpdateCharacterInTrackedList(nint charaAddress)
     {
         if (charaAddress == nint.Zero) return null;
 
@@ -77,14 +61,14 @@ public static class CommonHelper
         if (existing != null)
         {
             existing.CID = CID.Value;
-            existing.ActiveLoopTimelineId = activeLoopTimelineId;
+            //existing.ActiveLoopTimelineId = activeLoopTimelineId;
             existing.LastPlayerPosition = chara.Position;
             existing.LastPlayerRotation = chara.Rotation;
             return existing;
         }
         else
         {
-            var newTracked = new TrackedCharacter(CID.Value, activeLoopTimelineId, chara.Position, chara.Rotation, IsCharacterWeaponDrawn(charaAddress));
+            var newTracked = new TrackedCharacter(CID.Value, chara.Position, chara.Rotation, IsCharacterWeaponDrawn(charaAddress));
             EmotePlayer.TrackedCharacters.Add(newTracked);
             return newTracked;
         }
@@ -108,11 +92,6 @@ public static class CommonHelper
             .Where(o => o is IPlayerCharacter)
             .Select(o => o as IPlayerCharacter)
             .FirstOrDefault(p => p != null && GetCIDFromPlayerPointer(p.Address) == cid);
-    }
-
-    public static TrackedCharacter? TryGetTrackedCharacterFromCID(ulong cid)
-    {
-        return EmotePlayer.TrackedCharacters.FirstOrDefault(tc => tc.CID == cid);
     }
 
     public static void RemoveCharacterFromTrackedListByCharacterAddress(nint charaAddress)
@@ -150,7 +129,7 @@ public static class CommonHelper
     {
         var categoryString = emote.EmoteCategory.Value.Name.ToString();
 
-        return (categoryString == "Special") ? CommonHelper.EmoteCategory.Looped : CommonHelper.EmoteCategory.OneShot;
+        return (categoryString == "Special") ? EmoteCategory.Looped : EmoteCategory.OneShot;
     }
 
     public static EmoteCategory GetEmoteCategory(Emote emote)
@@ -161,7 +140,7 @@ public static class CommonHelper
 
         var categoryString = emote.EmoteCategory.Value.Name.ToString();
 
-        return (categoryString == "Special") ? CommonHelper.EmoteCategory.Looped : CommonHelper.EmoteCategory.OneShot;
+        return (categoryString == "Special") ? EmoteCategory.Looped : EmoteCategory.OneShot;
     }
 
     public static EmoteCategory? TryGetEmoteCategory(Emote emote)
@@ -181,7 +160,7 @@ public static class CommonHelper
         if (command.StartsWith('/'))
             command = command[1..];
 
-        var foundEmote = Service.Emotes.FirstOrNull(e => e.Item1 == $"/{command}");
+        var foundEmote = LinqExtensions.FirstOrNull(Service.Emotes, e => e.Item1 == $"/{command}");
         return foundEmote.HasValue ? foundEmote.Value.Item2 : null;
     }
 
@@ -233,5 +212,10 @@ public static class CommonHelper
         var character = TryGetPlayerCharacterFromAddress(charaAddress);
         if (character == null) return false;
         return character.StatusFlags.HasFlag(StatusFlags.WeaponOut);
+    }
+
+    public static float GetRotationToTarget(ICharacter from, ICharacter to)
+    {
+        return MathHelper.GetAngleBetweenPoints(new(from.Position.Z, from.Position.X), new(to.Position.Z, to.Position.X));
     }
 }

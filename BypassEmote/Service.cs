@@ -3,11 +3,9 @@ using Dalamud.Game;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.IoC;
 using Dalamud.Plugin.Services;
-using Dalamud.Interface.Textures; // Texture provider for icons
-using Lumina.Data.Parsing;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
-using System; // for StringComparer
+using System;
 
 namespace BypassEmote;
 
@@ -35,6 +33,10 @@ public class Service
     public static Lumina.Excel.ExcelSheet<Emote>? emoteCommands;
     public static HashSet<(string, Emote)> Emotes = [];
     public static List<(Emote, CommonHelper.EmoteCategory)> LockedEmotes = [];
+
+    public static ActionTimelinePlayer Player = new ActionTimelinePlayer();
+
+    public static bool InterruptEmoteOnRotate { get; set; } = false;
 
     public static void InitializeService()
     {
@@ -99,9 +101,12 @@ public class Service
             }
         }
 
-        // Reverse order so newest entries appear first (index 0 is last initially)
+        // Show latest emotes first
         LockedEmotes.Reverse();
     }
 
-    public static void Dispose() { }
+    public static void Dispose()
+    {
+        EmotePlayer.Dispose();
+    }
 }

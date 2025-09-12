@@ -1,7 +1,6 @@
 using ECommons.EzIpcManager;
 using System;
 using Dalamud.Game.ClientState.Objects.SubKinds;
-using Serilog.Core;
 using BypassEmote.Helpers;
 
 namespace BypassEmote;

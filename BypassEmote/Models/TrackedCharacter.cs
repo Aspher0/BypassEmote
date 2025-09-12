@@ -8,15 +8,13 @@ public class TrackedCharacter
 {
     public string UniqueId = new Guid().ToString();
     public ulong CID;
-    public ushort ActiveLoopTimelineId;
     public Vector3 LastPlayerPosition;
     public float LastPlayerRotation;
     public bool IsWeaponDrawn;
 
-    public TrackedCharacter(ulong cid, ushort activeLoopTimelineId, Vector3 lastPlayerPos, float lastPlayerRot, bool isWeaponDrawn)
+    public TrackedCharacter(ulong cid, Vector3 lastPlayerPos, float lastPlayerRot, bool isWeaponDrawn)
     {
         CID = cid;
-        ActiveLoopTimelineId = activeLoopTimelineId;
         LastPlayerPosition = lastPlayerPos;
         LastPlayerRotation = lastPlayerRot;
         IsWeaponDrawn = isWeaponDrawn;

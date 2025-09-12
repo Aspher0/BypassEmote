@@ -10,7 +10,6 @@ public class Configuration : IPluginConfiguration
 
     public bool PluginEnabled { get; set; } = true;
     public bool AutoFaceTarget { get; set; } = true;
-    //public bool InterruptEmoteOnRotate { get; set; } = false;
 
     public void UpdateConfiguration(Action updateAction)
     {
