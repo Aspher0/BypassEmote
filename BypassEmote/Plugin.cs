@@ -1,5 +1,7 @@
 using BypassEmote.Helpers;
 using BypassEmote.UI;
+using Dalamud.Game.ClientState.Objects.Enums;
+using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
@@ -33,6 +35,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly List<Tuple<string, string>> commandNames = [
         new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config"),
         new Tuple<string, string>("/be", "Alias of /bypassemote."),
+        new Tuple<string, string>("/bet", "Applies any emote to a targetted NPC. Usage: /bet <emote_command> or /bet stop. Only works on NPCs."),
     ];
 
     public readonly WindowSystem WindowSystem = new("BypassEmote");
@@ -99,12 +102,10 @@ public sealed class Plugin : IDalamudPlugin
             });
         }
 
-#if DEBUG
-        Service.CommandManager.AddHandler("/bet", new CommandInfo(OnCommand)
+        Service.CommandManager.AddHandler("", new CommandInfo(OnCommand)
         {
-            HelpMessage = "Applies an emote to the targetted actor. Usage: /bet <emote_command> or /bet stop"
+            HelpMessage = ""
         });
-#endif
     }
 
     private void OnCommand(string command, string args)
@@ -124,12 +125,17 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
-#if DEBUG
         if (command == "/bet")
         {
-            if (Service.TargetManager.Target is not ICharacter charaTarget)
+            if (Service.TargetManager.Target is not INpc npcTarget)
             {
-                Service.ChatGui.Print("No character targeted.");
+                Service.ChatGui.Print("No NPC targeted.");
+                return;
+            }
+
+            if (Service.TargetManager.Target.ObjectKind == ObjectKind.Companion)
+            {
+                Service.ChatGui.Print("Target is a minion, not an NPC.");
                 return;
             }
 
@@ -139,7 +145,7 @@ public sealed class Plugin : IDalamudPlugin
 
                 if (splitArgs[0] == "stop")
                 {
-                    EmotePlayer.StopLoop(charaTarget, true);
+                    EmotePlayer.StopLoop(npcTarget, true);
                     return;
                 }
 
@@ -149,13 +155,12 @@ public sealed class Plugin : IDalamudPlugin
                     return;
                 }
 
-                EmotePlayer.PlayEmote(charaTarget, emote.Value);
+                EmotePlayer.PlayEmote(npcTarget, emote.Value);
             } else
             {
                 Service.ChatGui.Print("Usage: /bet <emote_command> or /bet stop");
             }
         }
-#endif
     }
 
     private unsafe void DetourExecuteCommand(ShellCommandModule* commandModule, Utf8String* rawMessage, UIModule* uiModule)
