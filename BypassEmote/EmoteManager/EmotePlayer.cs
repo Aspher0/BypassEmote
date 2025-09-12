@@ -92,7 +92,7 @@ internal static unsafe class EmotePlayer
 
         if (loop != 0)
         {
-            player.Play(actor, loop, interrupt: true);
+            player.Play(actor, loop, false);
             return;
         }
 
@@ -110,7 +110,7 @@ internal static unsafe class EmotePlayer
             if (i == 4)
                 player.Blend(actor, id);
             else
-                player.Play(actor, id, interrupt: true);
+                player.Play(actor, id, false);
             return;
         }
     }
