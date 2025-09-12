@@ -23,12 +23,13 @@ public class IpcProvider
 
     // Applies an emote to a character
     [EzIPC("PlayEmoteById")]
-    public void PlayEmoteById(IntPtr character, uint emoteId)
+    public void PlayEmoteById(IntPtr characterAddress, uint emoteId)
     {
         Service.Framework.RunOnFrameworkThread(() =>
         {
-            var playerCharacter = CommonHelper.TryGetPlayerCharacterFromAddress(character);
-            EmotePlayer.PlayEmoteById(playerCharacter, emoteId);
+            var castChar = CommonHelper.TryGetCharacterFromAddress(characterAddress);
+            if (castChar != null)
+                EmotePlayer.PlayEmoteById(castChar, emoteId);
         });
     }
 

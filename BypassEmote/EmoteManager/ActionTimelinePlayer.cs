@@ -9,6 +9,8 @@ using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 
 namespace BypassEmote;
 
+// Borrowed and adapted from Brio (https://github.com/Etheirys/Brio)
+
 /// <summary>
 /// Standalone action-timeline based emote player that mirrors Brio's core behavior
 /// without depending on any Brio types. Works outside GPose for any ICharacter.
@@ -186,6 +188,19 @@ public sealed class ActionTimelinePlayer : IDisposable
         Blend(character, 3);
     }
 
+    public unsafe void ResetToIdle(ICharacter character)
+    {
+        var native = GetNative(character);
+
+        native->Timeline.BaseOverride = 0;
+        Blend(character, 3);
+
+        if (!_states.TryGetValue(character.Address, out var state) || state.OriginalBase is null)
+            return;
+
+        state.OriginalBase = null;
+    }
+
     public void Stop(ICharacter character)
     {
         if (HasBaseOverride(character))
@@ -193,6 +208,12 @@ public sealed class ActionTimelinePlayer : IDisposable
             ResetBase(character);
             ResetOverallSpeed(character);
         }
+    }
+
+    public void StopToIdle(ICharacter character)
+    {
+        ResetToIdle(character);
+        ResetOverallSpeed(character);
     }
 
     public void Reset(ICharacter character)

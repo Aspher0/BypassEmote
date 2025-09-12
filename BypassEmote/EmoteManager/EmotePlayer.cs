@@ -1,4 +1,5 @@
 using BypassEmote.Helpers;
+using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
@@ -50,7 +51,7 @@ internal static unsafe class EmotePlayer
                     ushort timelineId = (ushort)emote.ActionTimeline[0].RowId;
                     if (timelineId == 0)
                         return;
-                    CommonHelper.RemoveCharacterFromTrackedListByCharacterAddress(chara.Address);
+                    CommonHelper.RemoveCharacterFromTrackedListByAddress(chara.Address);
                     PlayOneShotEmote(chara, timelineId);
                     break;
                 }
@@ -116,34 +117,33 @@ internal static unsafe class EmotePlayer
     }
 
     public static void Stop(ActionTimelinePlayer player, ICharacter actor) => player.Stop(actor);
+    public static void StopToIdle(ActionTimelinePlayer player, ICharacter actor) => player.StopToIdle(actor);
 
     public static void PlayOneShotEmote(ICharacter? chara, ushort timelineId)
     {
-        if (chara == null)
-            return;
-
+        if (chara == null) return;
         CommonHelper.GetCharacter(chara)->Timeline.TimelineSequencer.PlayTimeline(timelineId);
     }
 
     public static void StopLoop(ICharacter? chara, bool shouldRemoveFromList)
     {
-        if (chara != null)
-        {
-            var character = CommonHelper.GetCharacter(chara);
+        if (chara == null) return;
 
+        if (chara is INpc)
             Stop(Service.Player, chara);
+        else
+            StopToIdle(Service.Player, chara);
 
-            var trackedCharacter = CommonHelper.TryGetCharacterFromTrackedList(chara.Address);
+        var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(chara.Address);
 
-            if (trackedCharacter != null && shouldRemoveFromList)
+        if (trackedCharacter != null && shouldRemoveFromList)
+        {
+            CommonHelper.RemoveChracterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
+
+            if (TrackedCharacters.Count == 0 && _updateHooked)
             {
-                CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
-
-                if (TrackedCharacters.Count == 0 && _updateHooked)
-                {
-                    Service.Framework.Update -= OnFrameworkUpdate;
-                    _updateHooked = false;
-                }
+                Service.Framework.Update -= OnFrameworkUpdate;
+                _updateHooked = false;
             }
         }
     }
@@ -152,18 +152,18 @@ internal static unsafe class EmotePlayer
     {
         foreach (var trackedCharacter in TrackedCharacters)
         {
-            var character = CommonHelper.TryGetPlayerCharacterFromCID(trackedCharacter.CID);
+            var character = CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
 
             if (character == null)
             {
-                CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
+                CommonHelper.RemoveChracterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
                 return;
             }
 
             if (CommonHelper.IsCharacterInObjectTable(trackedCharacter) == false)
             {
                 StopLoop(character, true);
-                CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
+                CommonHelper.RemoveChracterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
                 return;
             }
 
@@ -173,7 +173,7 @@ internal static unsafe class EmotePlayer
             if (delta.LengthSquared() > 1e-12f)
             {
                 StopLoop(character, true);
-                CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
+                CommonHelper.RemoveChracterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
                 return;
             }
 
@@ -182,7 +182,7 @@ internal static unsafe class EmotePlayer
             if (Service.InterruptEmoteOnRotate && System.Math.Abs(rot - trackedCharacter.LastPlayerRotation) > 1e-7f)
             {
                 StopLoop(character, true);
-                CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
+                CommonHelper.RemoveChracterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
                 return;
             }
 
@@ -191,7 +191,7 @@ internal static unsafe class EmotePlayer
             if (isWeaponDrawn != trackedCharacter.IsWeaponDrawn)
             {
                 StopLoop(character, true);
-                CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
+                CommonHelper.RemoveChracterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
                 return;
             }
         }
@@ -199,25 +199,25 @@ internal static unsafe class EmotePlayer
 
     public unsafe static void FaceTarget()
     {
-        if (Service.ClientState.LocalPlayer is not ICharacter localCharacter)
-            return;
-
-        if (Service.TargetManager.Target is not ICharacter targetCharacter)
+        if (Service.ClientState.LocalPlayer is not ICharacter localCharacter ||
+            Service.TargetManager.Target is not ICharacter targetCharacter)
             return;
 
         var rotToTarget = CommonHelper.GetRotationToTarget(localCharacter, targetCharacter);
 
-        var c = CommonHelper.GetCharacter(localCharacter);
-        c->Rotation = rotToTarget;
+        var character = CommonHelper.GetCharacter(localCharacter);
+        character->Rotation = rotToTarget;
     }
 
     public static void Dispose()
     {
         foreach (var trackedCharacter in TrackedCharacters)
         {
-            var character = CommonHelper.TryGetPlayerCharacterFromCID(trackedCharacter.CID);
+            var character = CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
 
-            if (character != null)
+            if (character is IPlayerCharacter)
+                StopToIdle(Service.Player, character);
+            else if (character is INpc)
                 Stop(Service.Player, character);
         }
 

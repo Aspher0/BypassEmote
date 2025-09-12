@@ -101,11 +101,6 @@ public sealed class Plugin : IDalamudPlugin
                 DisplayOrder = i,
             });
         }
-
-        Service.CommandManager.AddHandler("", new CommandInfo(OnCommand)
-        {
-            HelpMessage = ""
-        });
     }
 
     private void OnCommand(string command, string args)
@@ -127,27 +122,21 @@ public sealed class Plugin : IDalamudPlugin
 
         if (command == "/bet")
         {
-            if (Service.TargetManager.Target is not INpc npcTarget)
+            if (Service.TargetManager.Target is not INpc npcTarget || Service.TargetManager.Target.ObjectKind == ObjectKind.Companion)
             {
                 Service.ChatGui.Print("No NPC targeted.");
                 return;
             }
 
-            if (Service.TargetManager.Target.ObjectKind == ObjectKind.Companion)
-            {
-                Service.ChatGui.Print("Target is a minion, not an NPC.");
-                return;
-            }
-
             if (splitArgs.Length > 0)
             {
-                var emote = CommonHelper.TryGetEmoteFromStringCommand(splitArgs[0]);
-
                 if (splitArgs[0] == "stop")
                 {
                     EmotePlayer.StopLoop(npcTarget, true);
                     return;
                 }
+
+                var emote = CommonHelper.TryGetEmoteFromStringCommand(splitArgs[0]);
 
                 if (emote == null)
                 {
@@ -214,11 +203,11 @@ public sealed class Plugin : IDalamudPlugin
     // From https://github.com/RokasKil/EmoteLog/blob/master/EmoteLog/Hooks/EmoteReaderHook.cs#L11
     public unsafe void OnEmoteDetour(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2)
     {
-        var character = CommonHelper.TryGetPlayerCharacterFromAddress((nint)instigatorAddr);
+        var character = CommonHelper.TryGetCharacterFromAddress((nint)instigatorAddr);
 
         if (character != null)
         {
-            var trackedCharacter = CommonHelper.TryGetCharacterFromTrackedList(character.Address);
+            var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(character.Address);
 
             if (trackedCharacter == null)
             {

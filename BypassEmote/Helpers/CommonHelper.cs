@@ -20,55 +20,69 @@ public static class CommonHelper
 {
     public static unsafe Character* GetCharacter(ICharacter chara) => (Character*)chara.Address;
 
-    public static IPlayerCharacter? TryGetPlayerCharacterFromAddress(nint charaAddress)
+    public static ICharacter? TryGetCharacterFromAddress(nint charaAddress)
     {
         if (charaAddress == nint.Zero)
             return null;
 
-        return Service.Objects.PlayerObjects.FirstOrDefault(p => p.Address == charaAddress) as IPlayerCharacter;
+        return Service.Objects.FirstOrDefault(p => p is ICharacter && p.Address == charaAddress) as ICharacter;
     }
 
-    public static TrackedCharacter? TryGetCharacterFromTrackedList(nint charaAddress)
+    public static ICharacter? TryGetCharacterFromTrackedCharacter(TrackedCharacter? trackedCharacter)
     {
-        var CID = GetCIDFromPlayerPointer(charaAddress);
+        if (trackedCharacter == null) return null;
 
-        if (CID == null)
-            return null;
+        if (trackedCharacter.CID != null)
+            return TryGetCharacterFromCID(trackedCharacter.CID.Value);
+        else if (trackedCharacter.DataId != null)
+            return TryGetCharacterFromDataId(trackedCharacter.DataId.Value);
 
-        foreach (var lc in EmotePlayer.TrackedCharacters)
-        {
-            if (lc.CID == CID)
-            {
-                return lc;
-            }
-        }
         return null;
     }
 
-    public unsafe static TrackedCharacter? AddOrUpdateCharacterInTrackedList(nint charaAddress)
+    public static TrackedCharacter? TryGetTrackedCharacterFromAddress(nint charaAddress)
+    {
+        var castChar = TryGetCharacterFromAddress(charaAddress);
+        if (castChar == null) return null;
+
+        if (castChar is INpc)
+            return EmotePlayer.TrackedCharacters.FirstOrDefault(tc => tc.DataId == castChar.DataId);
+        else if (castChar is IPlayerCharacter)
+            return EmotePlayer.TrackedCharacters.FirstOrDefault(tc => tc.CID == GetCIDFromPlayerPointer(charaAddress));
+        else
+            return null;
+    }
+
+    public static TrackedCharacter? AddOrUpdateCharacterInTrackedList(nint charaAddress)
     {
         if (charaAddress == nint.Zero) return null;
 
-        var CID = GetCIDFromPlayerPointer(charaAddress);
+        var castChar = TryGetCharacterFromAddress(charaAddress);
 
-        if (CID == null) return null;
+        if (castChar == null) return null;
 
-        var chara = TryGetPlayerCharacterFromAddress(charaAddress);
+        var existing = TryGetTrackedCharacterFromAddress(charaAddress);
 
-        if (chara == null) return null;
-
-        var existing = TryGetCharacterFromTrackedList(charaAddress);
         if (existing != null)
         {
-            existing.CID = CID.Value;
-            //existing.ActiveLoopTimelineId = activeLoopTimelineId;
-            existing.LastPlayerPosition = chara.Position;
-            existing.LastPlayerRotation = chara.Rotation;
+            if (castChar is INpc)
+                existing.DataId = castChar.DataId;
+            else if (castChar is IPlayerCharacter)
+            {
+                var CID = GetCIDFromPlayerPointer(charaAddress);
+                if (CID == null) return null;
+                existing.CID = CID.Value;
+            }
+
+            existing.LastPlayerPosition = castChar.Position;
+            existing.LastPlayerRotation = castChar.Rotation;
             return existing;
         }
         else
         {
-            var newTracked = new TrackedCharacter(CID.Value, chara.Position, chara.Rotation, IsCharacterWeaponDrawn(charaAddress));
+            if (castChar is not INpc && castChar is not IPlayerCharacter) return null;
+
+            var newTracked = new TrackedCharacter((castChar is IPlayerCharacter ? GetCIDFromPlayerPointer(charaAddress) : null), (castChar is INpc ? castChar.DataId : null), castChar.Position, castChar.Rotation, IsCharacterWeaponDrawn(charaAddress));
             EmotePlayer.TrackedCharacters.Add(newTracked);
             return newTracked;
         }
@@ -78,36 +92,49 @@ public static class CommonHelper
     {
         if (charaAddress == nint.Zero) return null;
 
-        var character = TryGetPlayerCharacterFromAddress(charaAddress);
+        var castChar = TryGetCharacterFromAddress(charaAddress);
 
-        if (character == null) return null;
+        if (castChar is not IPlayerCharacter) return null;
 
-        var castChar = ((BattleChara*)character.Address);
-        return castChar->Character.ContentId;
+        var castBattleChara = (BattleChara*)castChar.Address;
+        return castBattleChara->Character.ContentId;
     }
 
-    public static IPlayerCharacter? TryGetPlayerCharacterFromCID(ulong cid)
+    public static ICharacter? TryGetCharacterFromCID(ulong cid)
     {
         return Service.Objects.PlayerObjects
             .Where(o => o is IPlayerCharacter)
-            .Select(o => o as IPlayerCharacter)
+            .Select(o => o as ICharacter)
             .FirstOrDefault(p => p != null && GetCIDFromPlayerPointer(p.Address) == cid);
     }
 
-    public static void RemoveCharacterFromTrackedListByCharacterAddress(nint charaAddress)
+    public static ICharacter? TryGetCharacterFromDataId(uint dataId)
+    {
+        return Service.Objects
+            .Where(o => o is ICharacter)
+            .Select(o => o as ICharacter)
+            .FirstOrDefault(p => p != null && p.DataId == dataId);
+    }
+
+    public static void RemoveCharacterFromTrackedListByAddress(nint charaAddress)
     {
         if (charaAddress == nint.Zero) return;
 
-        var CID = GetCIDFromPlayerPointer(charaAddress);
+        var castChar = TryGetCharacterFromAddress(charaAddress);
 
-        if (CID == null) return;
-
-        EmotePlayer.TrackedCharacters.RemoveAll(tc => tc.CID == CID.Value);
+        if (castChar is INpc)
+            EmotePlayer.TrackedCharacters.RemoveAll(tc => tc.DataId == castChar.DataId);
+        else if (castChar is IPlayerCharacter)
+        {
+            var CID = GetCIDFromPlayerPointer(charaAddress);
+            if (CID == null) return;
+            EmotePlayer.TrackedCharacters.RemoveAll(tc => tc.CID == CID);
+        }
     }
 
-    public static void RemoveChracterFromTrackedListByID(string id)
+    public static void RemoveChracterFromTrackedListByUniqueID(string uniqueId)
     {
-        EmotePlayer.TrackedCharacters.RemoveAll(tc => tc.UniqueId == id);
+        EmotePlayer.TrackedCharacters.RemoveAll(tc => tc.UniqueId == uniqueId);
     }
 
     public enum EmoteCategory
@@ -146,13 +173,9 @@ public static class CommonHelper
     public static EmoteCategory? TryGetEmoteCategory(Emote emote)
     {
         if (EmoteCategories.TryGetValue(emote.RowId, out var category))
-        {
             return category;
-        }
-        else
-        {
-            return null;
-        }
+
+        return null;
     }
     
     public static Emote? TryGetEmoteFromStringCommand(string command)
@@ -191,27 +214,27 @@ public static class CommonHelper
         return sb.ToString();
     }
 
-    public static unsafe bool IsCharacterInObjectTable(TrackedCharacter? trackedCharacter)
-    {
-        if (trackedCharacter == null) return false;
-
-        var character = TryGetPlayerCharacterFromCID(trackedCharacter.CID);
-
-        if (character == null) return false;
-
-        return Service.Objects.PlayerObjects.Any(o => o.Address == (nint)GetCharacter(character));
-    }
-
     public unsafe static bool IsEmoteUnlocked(uint emoteId)
     {
         return UIState.Instance()->IsEmoteUnlocked((ushort)emoteId);
     }
 
+    public static unsafe bool IsCharacterInObjectTable(TrackedCharacter? trackedCharacter)
+    {
+        if (trackedCharacter == null) return false;
+
+        var castChar = TryGetCharacterFromTrackedCharacter(trackedCharacter);
+
+        if (castChar == null) return false;
+
+        return Service.Objects.Any(o => o.Address == (nint)GetCharacter(castChar));
+    }
+
     public static unsafe bool IsCharacterWeaponDrawn(nint charaAddress)
     {
-        var character = TryGetPlayerCharacterFromAddress(charaAddress);
-        if (character == null) return false;
-        return character.StatusFlags.HasFlag(StatusFlags.WeaponOut);
+        var castChar = TryGetCharacterFromAddress(charaAddress);
+        if (castChar == null) return false;
+        return castChar.StatusFlags.HasFlag(StatusFlags.WeaponOut);
     }
 
     public static float GetRotationToTarget(ICharacter from, ICharacter to)
