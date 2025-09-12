@@ -150,21 +150,18 @@ internal static unsafe class EmotePlayer
 
     private static void OnFrameworkUpdate(IFramework framework)
     {
-        // Logging errors to debug issues
         foreach (var trackedCharacter in TrackedCharacters)
         {
             var character = CommonHelper.TryGetPlayerCharacterFromCID(trackedCharacter.CID);
 
             if (character == null)
             {
-                Service.Log.Error("[BYPASSEMOTE] Character became null, removing it from list.");
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
                 return;
             }
 
             if (CommonHelper.IsCharacterInObjectTable(trackedCharacter) == false)
             {
-                Service.Log.Error("[BYPASSEMOTE] Character not in object table, removing it from list.");
                 StopLoop(character, true);
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
                 return;
@@ -175,7 +172,6 @@ internal static unsafe class EmotePlayer
             var delta = pos - trackedCharacter.LastPlayerPosition;
             if (delta.LengthSquared() > 1e-12f)
             {
-                Service.Log.Error("[BYPASSEMOTE] Character moved, removing it from list.");
                 StopLoop(character, true);
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
                 return;
@@ -185,7 +181,6 @@ internal static unsafe class EmotePlayer
             var rot = character.Rotation;
             if (Service.InterruptEmoteOnRotate && System.Math.Abs(rot - trackedCharacter.LastPlayerRotation) > 1e-7f)
             {
-                Service.Log.Error("[BYPASSEMOTE] Character rotation changed, removing it from list.");
                 StopLoop(character, true);
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
                 return;
@@ -195,13 +190,10 @@ internal static unsafe class EmotePlayer
             var isWeaponDrawn = CommonHelper.IsCharacterWeaponDrawn(character.Address);
             if (isWeaponDrawn != trackedCharacter.IsWeaponDrawn)
             {
-                Service.Log.Error("[BYPASSEMOTE] Character weapon drawn flag changed, removing it from list.");
                 StopLoop(character, true);
                 CommonHelper.RemoveChracterFromTrackedListByID(trackedCharacter.UniqueId);
                 return;
             }
-
-            trackedCharacter.UpdateLastPosition();
         }
     }
 

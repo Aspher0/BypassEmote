@@ -6,6 +6,7 @@ using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using System;
+using Dalamud.Game.ClientState.Objects.SubKinds;
 
 namespace BypassEmote;
 
@@ -25,7 +26,7 @@ public class Service
     [PluginService] public static IGameConfig GameConfig { get; private set; } = null!;
     [PluginService] public static IGameGui GameGui { get; private set; } = null!;
     [PluginService] public static IAddonLifecycle AddonLifecycle { get; private set; } = null!;
-    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!; // provide game icons
+    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
 
     public static Plugin Plugin { get; set; } = null!;
     public static Configuration? Configuration { get; set; }
@@ -40,9 +41,17 @@ public class Service
 
     public static void InitializeService()
     {
+        ClientState.Login += RefreshLockedEmotes;
+        ClientState.Logout += (int type, int code) => ClearLockedEmoted();
+
         InitializeConfig();
         InitializeEmotes();
-        RefreshLockedEmotes();
+
+        Framework.RunOnFrameworkThread(() =>
+        {
+            if (ClientState.IsLoggedIn && ClientState.LocalPlayer != null)
+                RefreshLockedEmotes();
+        });
     }
 
     public static void InitializeConfig()
@@ -78,7 +87,10 @@ public class Service
 
     public static void RefreshLockedEmotes()
     {
-        LockedEmotes.Clear();
+        ClearLockedEmoted();
+
+        if (!ClientState.IsLoggedIn || ClientState.LocalPlayer == null)
+            return;
 
         if (emoteCommands == null || Emotes.Count == 0)
             return;
@@ -105,8 +117,16 @@ public class Service
         LockedEmotes.Reverse();
     }
 
+    public static void ClearLockedEmoted()
+    {
+        LockedEmotes.Clear();
+    }
+
     public static void Dispose()
     {
+        ClientState.Login -= RefreshLockedEmotes;
+        ClientState.Logout -= (int type, int code) => ClearLockedEmoted();
+
         EmotePlayer.Dispose();
     }
 }

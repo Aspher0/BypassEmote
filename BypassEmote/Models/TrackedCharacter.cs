@@ -6,7 +6,7 @@ namespace BypassEmote;
 
 public class TrackedCharacter
 {
-    public string UniqueId = new Guid().ToString();
+    public string UniqueId = Guid.NewGuid().ToString();
     public ulong CID;
     public Vector3 LastPlayerPosition;
     public float LastPlayerRotation;
