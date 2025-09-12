@@ -7,7 +7,8 @@ This is a simple plugin allowing you to play any game emote, regardless of wheth
 It is as simple as typing the usual emote command in chat.
 This is not an unlock cheat and is client side only, therefore, other people won't see your emotes and nothing will be sent to the server.
 
-After enabling the plugin, you can type /bypassemote or /be to open the configuration window.
-On the configuration window, you will be able to disable the plugin for yourself, which means the plugin will not play any emote for you anymore, and locked emotes will not be applied.
+After enabling the plugin, you can type /bypassemote or /be to open the locked emotes visualizer window.
+By adding the "c" or "config" argument (`/be c|config`), you will open the configuration window.
+In the configuration window, you will be able to disable the plugin for yourself, which means the plugin will not play any emote for you anymore when you type the commands in chat, and locked emotes will not be applied unless you use the locked emote visualizer.
 It will however keep IPC enabled, meaning any other plugin using BypassEmote's functions will still work. Meaning that, if you were to use a purely hypothetical syncing tool, you would still be able to see other people's emote, but they wouldn't apply to you, if you do not want to play any emote yourself but still want to see others'.
-You can also choose to automatically face your target, if any, when using an emote.
+You can also choose to enable or disable automatically facing your target, if any, when using an emote.
