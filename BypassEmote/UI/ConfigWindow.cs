@@ -19,7 +19,7 @@ public class ConfigWindow : Window, IDisposable
     public override void Draw()
     {
         var pluginEnabled = Service.Configuration!.PluginEnabled;
-        ImGui.Checkbox("Enable Bypass Emote", ref pluginEnabled);
+        ImGui.Checkbox("Enable Bypassing Emote Commands", ref pluginEnabled);
         Service.Configuration.UpdateConfiguration(() => Service.Configuration.PluginEnabled = pluginEnabled);
 
         var autoFaceTarget = Service.Configuration!.AutoFaceTarget;
