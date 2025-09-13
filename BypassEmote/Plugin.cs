@@ -10,6 +10,7 @@ using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using ECommons;
+using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.Shell;
@@ -18,6 +19,8 @@ using Lumina.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using static FFXIVClientStructs.FFXIV.Client.Game.Control.EmoteController;
 
 namespace BypassEmote;
 
@@ -31,9 +34,10 @@ public sealed class Plugin : IDalamudPlugin
     private readonly Hook<OnEmoteFuncDelegate> OnEmoteHook = null!;
 
     private Hook<ShellCommandModule.Delegates.ExecuteCommandInner>? ExecuteCommandInnerHook { get; init; }
+    private Hook<EmoteManager.Delegates.ExecuteEmote>? ExecuteEmoteHook { get; init; }
 
     private readonly List<Tuple<string, string>> commandNames = [
-        new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config"),
+        new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config. Use with argument <emote_name> to bypass any emote (including unlocked ones) on yourself: /be <emote_command>."),
         new Tuple<string, string>("/be", "Alias of /bypassemote."),
         new Tuple<string, string>("/bet", "Applies any emote to a targetted NPC. Usage: /bet <emote_command> or /bet stop. Only works on NPCs."),
     ];
@@ -67,6 +71,12 @@ public sealed class Plugin : IDalamudPlugin
             DetourExecuteCommand
         );
         ExecuteCommandInnerHook.Enable();
+
+        ExecuteEmoteHook = Service.InteropProvider.HookFromAddress<EmoteManager.Delegates.ExecuteEmote>(
+            EmoteManager.MemberFunctionPointers.ExecuteEmote,
+            DetourExecuteEmote
+        );
+        ExecuteEmoteHook.Enable();
 
         try
         {
@@ -110,13 +120,21 @@ public sealed class Plugin : IDalamudPlugin
 
         if (command == "/bypassemote" || command == "/be")
         {
-            if (splitArgs.Length > 0 && new List<string>() { "config", "c" }.Contains(splitArgs[0]))
+            if (splitArgs.Length == 0)
             {
-                OpenSettings();
+                OpenMainWindow();
                 return;
             }
 
-            OpenMainWindow();
+            var emote = CommonHelper.TryGetEmoteFromStringCommand(splitArgs[0]);
+
+            if (emote != null && Service.ClientState.LocalPlayer != null)
+            {
+                EmotePlayer.PlayEmote(Service.ClientState.LocalPlayer, emote.Value);
+                return;
+            }
+
+            OpenSettings();
             return;
         }
 
@@ -152,6 +170,8 @@ public sealed class Plugin : IDalamudPlugin
         }
     }
 
+    // Detour the execute command function so we can check if the player is trying to execute an emote command
+    // If they are, we check if they have the emote unlocked, if not unlocked we try to bypass it, if already unlocked, we let the game handle it
     private unsafe void DetourExecuteCommand(ShellCommandModule* commandModule, Utf8String* rawMessage, UIModule* uiModule)
     {
         if (!Service.Configuration!.PluginEnabled)
@@ -169,8 +189,6 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
-        var command = message[1..];
-
         if (Service.ClientState.LocalPlayer == null)
         {
             Service.Log.Error("Player not ready.");
@@ -178,9 +196,18 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
-        var foundEmote = LinqExtensions.FirstOrNull(Service.Emotes, e => e.Item1 == $"/{command}");
+        var foundEmote = LinqExtensions.FirstOrNull(Service.Emotes, e => e.Item1 == message);
 
         if (!foundEmote.HasValue)
+        {
+            ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
+            return;
+        }
+
+        var chara = Service.ClientState.LocalPlayer;
+
+        // Just a safety check, should never be null here
+        if (chara == null)
         {
             ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
             return;
@@ -194,12 +221,35 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
-        var chara = Service.ClientState.LocalPlayer;
         EmotePlayer.PlayEmote(chara, foundEmote.Value.Item2);
 
         ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
     }
 
+    // Detour the execute emote function to stop any currently playing bypassed looping emotes before executing a new base/obtained game emote
+    // Necessary since emote bypassing will prevent the player from executing any base/obtained emote
+    private unsafe bool DetourExecuteEmote(EmoteManager* emoteManager, ushort emoteId, PlayEmoteOption* playEmoteOption)
+    {
+        var chara = Service.ClientState.LocalPlayer;
+
+        // Just a safety check, should never be null here
+        if (chara == null)
+            return ExecuteEmoteHook!.Original(emoteManager, emoteId, playEmoteOption);
+
+        var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(chara.Address);
+
+        if (trackedCharacter != null)
+        {
+            Service.Log.Info($"DetourExecuteEmote - stopping all loops for {chara.Name.TextValue}");
+            EmotePlayer.StopLoop(chara, true);
+        }
+
+        return ExecuteEmoteHook!.Original(emoteManager, emoteId, playEmoteOption);
+    }
+
+    // Hooking this function to detect when an emote is played by any character (including the local player)
+    // This is necessary if a player is playing a bypassed looping emote and then tries to play
+    // a base/obtained game emote. In that case, we need to stop the bypassed looping emote first
     // From https://github.com/RokasKil/EmoteLog/blob/master/EmoteLog/Hooks/EmoteReaderHook.cs#L11
     public unsafe void OnEmoteDetour(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2)
     {
@@ -218,7 +268,9 @@ public sealed class Plugin : IDalamudPlugin
             EmotePlayer.StopLoop(character, true);
             var emote = Service.DataManager.GetExcelSheet<Emote>()?.GetRow(emoteId);
             if (emote != null)
+            {
                 EmotePlayer.PlayEmote(character, emote.Value);
+            }
         }
 
         OnEmoteHook.Original(unk, instigatorAddr, emoteId, targetId, unk2);
@@ -234,6 +286,9 @@ public sealed class Plugin : IDalamudPlugin
 
         ExecuteCommandInnerHook?.Disable();
         ExecuteCommandInnerHook?.Dispose();
+
+        ExecuteEmoteHook?.Disable();
+        ExecuteEmoteHook?.Dispose();
 
         OnEmoteHook?.Disable();
         OnEmoteHook?.Dispose();

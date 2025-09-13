@@ -4,6 +4,7 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 
 namespace BypassEmote;
 
@@ -20,6 +21,14 @@ internal static unsafe class EmotePlayer
             return;
 
         var emoteCategory = CommonHelper.GetEmoteCategory(emote);
+
+        var native = CommonHelper.GetCharacter(chara);
+
+        if (emoteCategory == CommonHelper.EmoteCategory.Looped && native->Mode == CharacterModes.EmoteLoop || native->Mode == CharacterModes.InPositionLoop)
+        {
+            Service.ChatGui.Print("You cannot bypass a looped emote while already playing an unlocked one.");
+            return;
+        }
 
         StopLoop(chara, false);
 
@@ -160,20 +169,20 @@ internal static unsafe class EmotePlayer
                 return;
             }
 
+            var charaName = character.Name.TextValue;
+
             if (CommonHelper.IsCharacterInObjectTable(trackedCharacter) == false)
             {
                 StopLoop(character, true);
-                CommonHelper.RemoveChracterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
                 return;
             }
 
             // Check if position has changed
             var pos = character.Position;
             var delta = pos - trackedCharacter.LastPlayerPosition;
-            if (delta.LengthSquared() > 1e-12f)
+            if (delta.LengthSquared() > 1e-3f)
             {
                 StopLoop(character, true);
-                CommonHelper.RemoveChracterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
                 return;
             }
 
@@ -182,7 +191,6 @@ internal static unsafe class EmotePlayer
             if (Service.InterruptEmoteOnRotate && System.Math.Abs(rot - trackedCharacter.LastPlayerRotation) > 1e-7f)
             {
                 StopLoop(character, true);
-                CommonHelper.RemoveChracterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
                 return;
             }
 
@@ -191,7 +199,6 @@ internal static unsafe class EmotePlayer
             if (isWeaponDrawn != trackedCharacter.IsWeaponDrawn)
             {
                 StopLoop(character, true);
-                CommonHelper.RemoveChracterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
                 return;
             }
         }

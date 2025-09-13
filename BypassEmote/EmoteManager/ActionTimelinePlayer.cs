@@ -79,10 +79,9 @@ public sealed class ActionTimelinePlayer : IDisposable
         if (st.OriginalBase is null)
             st.OriginalBase = new OriginalBase(native->Mode, native->ModeParam, native->Timeline.BaseOverride);
 
+        // Do not change mode for player characters since it can cause issues on the server if not handled properly.
         if (character is not IPlayerCharacter chara)
-        {
             native->SetMode(CharacterModes.AnimLock, 0);
-        }
 
         native->Timeline.BaseOverride = actionTimeline;
 
@@ -100,74 +99,6 @@ public sealed class ActionTimelinePlayer : IDisposable
     }
 
     /// <summary>
-    /// Stop the animation by setting speed to 0, wait a few ticks to reset local time on controls, then optionally run a post action
-    /// and restore previous speed.
-    /// </summary>
-    public async Task StopAndResetAsync(ICharacter character, Action? postStopAction = null, bool restoreSpeedAfterAction = false)
-    {
-        float oldSpeed;
-        unsafe { oldSpeed = GetNative(character)->Timeline.OverallSpeed; }
-
-        SetOverallSpeed(character, 0);
-
-        await RunOnTick(() =>
-        {
-            unsafe
-            {
-                var c = GetNative(character);
-                var drawObj = c->GameObject.DrawObject;
-                if (drawObj == null)
-                    return;
-                if (drawObj->Object.GetObjectType() != ObjectType.CharacterBase)
-                    return;
-
-                var charaBase = (CharacterBase*)drawObj;
-                if (charaBase->Skeleton == null)
-                    return;
-
-                var skeleton = charaBase->Skeleton;
-                for (int p = 0; p < skeleton->PartialSkeletonCount; ++p)
-                {
-                    var partial = &skeleton->PartialSkeletons[p];
-                    var animatedSkele = partial->GetHavokAnimatedSkeleton(0);
-                    if (animatedSkele == null)
-                        continue;
-
-                    for (int cidx = 0; cidx < animatedSkele->AnimationControls.Length; ++cidx)
-                    {
-                        var control = animatedSkele->AnimationControls[cidx].Value;
-                        if (control == null)
-                            continue;
-
-                        var binding = control->hkaAnimationControl.Binding;
-                        if (binding.ptr == null)
-                            continue;
-
-                        var anim = binding.ptr->Animation.ptr;
-                        if (anim == null)
-                            continue;
-
-                        if (control->PlaybackSpeed == 0)
-                        {
-                            control->hkaAnimationControl.LocalTime = 0;
-                        }
-                    }
-                }
-            }
-        }, delayTicks: 4);
-
-        postStopAction?.Invoke();
-
-        if (restoreSpeedAfterAction)
-        {
-            await RunOnTick(() =>
-            {
-                SetOverallSpeed(character, oldSpeed);
-            }, delayTicks: 2);
-        }
-    }
-
-    /// <summary>
     /// Reset the character's base override and original mode state and do a small blend to clear state.
     /// </summary>
     public unsafe void ResetBase(ICharacter character)
@@ -179,8 +110,13 @@ public sealed class ActionTimelinePlayer : IDisposable
         var ob = state.OriginalBase.Value;
 
         native->Timeline.BaseOverride = ob.OriginalTimeline;
-        native->Mode = ob.OriginalMode;
-        native->ModeParam = ob.OriginalInput;
+
+        // Do not change mode for player characters since it can cause issues on the server if not handled properly.
+        if (character is not INpc)
+        {
+            native->Mode = ob.OriginalMode;
+            native->ModeParam = ob.OriginalInput;
+        }
 
         state.OriginalBase = null;
 
@@ -197,6 +133,8 @@ public sealed class ActionTimelinePlayer : IDisposable
 
         if (!_states.TryGetValue(character.Address, out var state) || state.OriginalBase is null)
             return;
+
+        var ob = state.OriginalBase.Value;
 
         state.OriginalBase = null;
     }
@@ -290,24 +228,6 @@ public sealed class ActionTimelinePlayer : IDisposable
 
     private static unsafe Character* GetNative(ICharacter character)
         => (Character*)character.Address;
-
-    private Task RunOnTick(Action action, int delayTicks)
-    {
-        var tcs = new TaskCompletionSource();
-        int ticks = 0;
-        void Handler(IFramework f)
-        {
-            ticks++;
-            if (ticks >= delayTicks)
-            {
-                Service.Framework.Update -= Handler;
-                try { action(); } catch { /* ignore */ }
-                tcs.SetResult();
-            }
-        }
-        Service.Framework.Update += Handler;
-        return tcs.Task;
-    }
 
     private sealed class CharacterState
     {
