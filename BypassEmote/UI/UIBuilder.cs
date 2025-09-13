@@ -4,13 +4,17 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using BypassEmote.Helpers;
+using Lumina.Excel.Sheets;
+using System.Linq;
+using BypassEmote.Data;
 
 namespace BypassEmote.UI;
 
 public class UIBuilder : Window, IDisposable
 {
-    private enum LockedTab { All, General, Special }
+    private enum LockedTab { All, General, Special, Expressions, Other }
     private LockedTab _currentTab = LockedTab.All;
+    private string _searchText = string.Empty;
 
     public UIBuilder() : base("Bypass Emote - Locked Emotes##BypassEmoteMain", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
@@ -23,20 +27,24 @@ public class UIBuilder : Window, IDisposable
 
     public override void Draw()
     {
-        const string refreshLabel = "Refresh Locked Emotes";
-        var style = ImGui.GetStyle();
-        var textSize = ImGui.CalcTextSize(refreshLabel);
-        var buttonWidth = textSize.X + style.FramePadding.X * 2f;
-        var availX = ImGui.GetContentRegionAvail().X;
-        var offsetX = MathF.Max(0f, (availX - buttonWidth) * 0.5f);
-        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offsetX);
+        bool showAllEmotes = Service.Configuration!.ShowAllEmotes;
+        if (ImGui.Checkbox("Show all emotes", ref showAllEmotes))
+        {
+            Service.Configuration.UpdateConfiguration(() => Service.Configuration!.ShowAllEmotes = showAllEmotes);
+        }
 
-        if (ImGui.Button(refreshLabel))
+        ImGui.SameLine();
+
+        if (ImGui.Button("Refresh Locked Emotes"))
         {
             Service.RefreshLockedEmotes();
         }
 
         ImGui.Separator();
+
+        // Add search input field
+        ImGui.SetNextItemWidth(-1);
+        ImGui.InputTextWithHint("##SearchEmotes", "Search emotes...", ref _searchText, 256);
 
         if (ImGui.BeginTabBar("##LockedEmotesTabs"))
         {
@@ -55,6 +63,16 @@ public class UIBuilder : Window, IDisposable
                 _currentTab = LockedTab.Special;
                 ImGui.EndTabItem();
             }
+            if (ImGui.BeginTabItem("Expressions"))
+            {
+                _currentTab = LockedTab.Expressions;
+                ImGui.EndTabItem();
+            }
+            if (ImGui.BeginTabItem("Other"))
+            {
+                _currentTab = LockedTab.Other;
+                ImGui.EndTabItem();
+            }
             ImGui.EndTabBar();
         }
 
@@ -65,17 +83,29 @@ public class UIBuilder : Window, IDisposable
 
         ImGui.BeginChild("##LockedEmotesBox", new Vector2(avail.X, avail.Y), true, ImGuiWindowFlags.None);
 
-        foreach (var emote in Service.LockedEmotes)
+        var displayedEmotes = new List<(Emote, EmoteData.EmoteCategory)>(Service.LockedEmotes);
+
+        if (Service.Configuration!.ShowAllEmotes)
+            displayedEmotes = Service.Emotes.Select(e => (e, CommonHelper.GetEmoteCategory(e))).ToList() ?? new List<(Emote, EmoteData.EmoteCategory)>();
+
+        displayedEmotes = displayedEmotes.OrderByDescending(e => e.Item1.RowId).ToList();
+
+        foreach (var emote in displayedEmotes)
         {
-            // Filter based on selected tab
-            if (_currentTab == LockedTab.General && emote.Item2 != CommonHelper.EmoteCategory.OneShot)
-                continue;
-            if (_currentTab == LockedTab.Special && emote.Item2 != CommonHelper.EmoteCategory.Looped)
+            if (CommonHelper.GetEmotePlayType(emote.Item1) == EmoteData.EmotePlayType.DoNotPlay)
                 continue;
 
-            var display = emote.Item1.Name.ToString();
-            if (string.IsNullOrWhiteSpace(display))
-                display = emote.Item1.TextCommand.ValueNullable?.Command.ExtractText() ?? $"Emote {emote.Item1.RowId}";
+            // Filter based on selected tab
+            if (_currentTab == LockedTab.General && CommonHelper.GetEmoteCategory(emote.Item1) != EmoteData.EmoteCategory.General)
+                continue;
+            if (_currentTab == LockedTab.Special && CommonHelper.GetEmoteCategory(emote.Item1) != EmoteData.EmoteCategory.Special)
+                continue;
+            if (_currentTab == LockedTab.Expressions && CommonHelper.GetEmoteCategory(emote.Item1) != EmoteData.EmoteCategory.Expressions)
+                continue;
+            if (_currentTab == LockedTab.Other && CommonHelper.GetEmoteCategory(emote.Item1) != EmoteData.EmoteCategory.Unknown)
+                continue;
+
+            var display = CommonHelper.GetEmoteName(emote.Item1);
 
             // Build commands string (all associated, comma separated)
             var commands = new List<string>(4);
@@ -92,11 +122,18 @@ public class UIBuilder : Window, IDisposable
             AddCmd(tc?.Alias.ExtractText());
             AddCmd(tc?.ShortAlias.ExtractText());
 
+            var label = commands.Count > 0 ? $"{display} ({string.Join(", ", commands)})" : display;
+
+            // Filter based on search text
+            if (!string.IsNullOrWhiteSpace(_searchText) &&
+                !label.Contains(_searchText, StringComparison.OrdinalIgnoreCase))
+                continue;
+
             // Draw icon on the left
             var iconSize = 25f;
             try
             {
-                var iconTex = Service.TextureProvider.GetFromGameIcon((uint)emote.Item1.Icon);
+                var iconTex = Service.TextureProvider.GetFromGameIcon((uint)CommonHelper.GetEmoteIcon(emote.Item1));
                 var wrap = iconTex?.GetWrapOrEmpty();
                 if (wrap != null)
                 {
@@ -111,12 +148,8 @@ public class UIBuilder : Window, IDisposable
                 // ignore icon issues
             }
 
-            var label = commands.Count > 0 ? $"{display} ({string.Join(", ", commands)})" : display;
-
             if (ImGui.Selectable(label, false))
-            {
                 EmotePlayer.PlayEmote(Service.ClientState.LocalPlayer, emote.Item1);
-            }
         }
 
         ImGui.EndChild();

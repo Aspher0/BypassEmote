@@ -1,3 +1,4 @@
+using BypassEmote.Data;
 using BypassEmote.Helpers;
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Objects;
@@ -5,8 +6,6 @@ using Dalamud.IoC;
 using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
-using System;
-using Dalamud.Game.ClientState.Objects.SubKinds;
 
 namespace BypassEmote;
 
@@ -31,9 +30,10 @@ public class Service
     public static Plugin Plugin { get; set; } = null!;
     public static Configuration? Configuration { get; set; }
 
-    public static Lumina.Excel.ExcelSheet<Emote>? emoteCommands;
-    public static HashSet<(string, Emote)> Emotes = [];
-    public static List<(Emote, CommonHelper.EmoteCategory)> LockedEmotes = [];
+    public static Lumina.Excel.ExcelSheet<Emote>? EmoteSheet;
+    public static HashSet<(string, Emote)> EmoteCommands = [];
+    public static HashSet<Emote> Emotes= [];
+    public static List<(Emote, EmoteData.EmoteCategory)> LockedEmotes = [];
 
     public static ActionTimelinePlayer Player = new ActionTimelinePlayer();
 
@@ -43,6 +43,8 @@ public class Service
     {
         ClientState.Login += RefreshLockedEmotes;
         ClientState.Logout += (int type, int code) => ClearLockedEmoted();
+
+        EmoteSheet = DataManager.GetExcelSheet<Emote>();
 
         InitializeConfig();
         InitializeEmotes();
@@ -60,28 +62,34 @@ public class Service
         Configuration.Save();
     }
 
-    // From dodingdaga's Copycat
     public static void InitializeEmotes()
     {
-        emoteCommands = DataManager.GetExcelSheet<Emote>();
-        if (emoteCommands == null)
+        if (EmoteSheet == null)
         {
             Log.Error("Failed to read Emotes list");
             return;
         }
 
-        foreach (var emote in emoteCommands)
+        foreach (var emote in EmoteSheet)
         {
-            var cmd = emote.TextCommand.ValueNullable?.Command.ExtractText();
-            if (!string.IsNullOrEmpty(cmd)) Emotes.Add((cmd, emote));
-            cmd = emote.TextCommand.ValueNullable?.ShortCommand.ExtractText();
-            if (!string.IsNullOrEmpty(cmd)) Emotes.Add((cmd, emote));
-            cmd = emote.TextCommand.ValueNullable?.Alias.ExtractText();
-            if (!string.IsNullOrEmpty(cmd)) Emotes.Add((cmd, emote));
-            cmd = emote.TextCommand.ValueNullable?.ShortAlias.ExtractText();
-            if (!string.IsNullOrEmpty(cmd)) Emotes.Add((cmd, emote));
+            var textCommand = emote.TextCommand.ValueNullable;
+            
+            var cmd = textCommand?.Command.ExtractText();
+            if (!string.IsNullOrWhiteSpace(cmd)) EmoteCommands.Add((cmd, emote));
+
+            var shortCmd = textCommand?.ShortCommand.ExtractText();
+            if (!string.IsNullOrWhiteSpace(shortCmd)) EmoteCommands.Add((shortCmd, emote));
+
+            var alias = textCommand?.Alias.ExtractText();
+            if (!string.IsNullOrWhiteSpace(alias)) EmoteCommands.Add((alias, emote));
+
+            var shortAlias = textCommand?.ShortAlias.ExtractText();
+            if (!string.IsNullOrWhiteSpace(shortAlias)) EmoteCommands.Add((shortAlias, emote));
+
+            Emotes.Add(emote);
         }
-        if (Emotes.Count == 0)
+
+        if (EmoteCommands.Count == 0)
             Log.Error("Failed to build Emotes list");
     }
 
@@ -92,29 +100,14 @@ public class Service
         if (!ClientState.IsLoggedIn || ClientState.LocalPlayer == null)
             return;
 
-        if (emoteCommands == null || Emotes.Count == 0)
+        if (EmoteSheet == null || Emotes.Count == 0)
             return;
-
-        // Deduplicate by displayed emote name
-        var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var (_, emote) in Emotes)
+        
+        foreach (var emote in Emotes)
         {
             if (!CommonHelper.IsEmoteUnlocked(emote.RowId))
-            {
-                var name = emote.Name.ToString();
-                if (string.IsNullOrWhiteSpace(name))
-                    name = emote.TextCommand.ValueNullable?.Command.ExtractText() ?? $"Emote {emote.RowId}";
-
-                if (seenNames.Add(name))
-                {
-                    LockedEmotes.Add((emote, CommonHelper.GetRealEmoteCategory(emote)));
-                }
-            }
+                LockedEmotes.Add((emote, CommonHelper.GetEmoteCategory(emote)));
         }
-
-        // Show latest emotes first
-        LockedEmotes.Reverse();
     }
 
     public static void ClearLockedEmoted()

@@ -1,18 +1,18 @@
+using BypassEmote.Data;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using ECommons.MathHelpers;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using Lumina.Excel.Sheets;
 using Lumina.Extensions;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using ECommons.MathHelpers;
 
 namespace BypassEmote.Helpers;
 
@@ -137,44 +137,101 @@ public static class CommonHelper
         EmotePlayer.TrackedCharacters.RemoveAll(tc => tc.UniqueId == uniqueId);
     }
 
-    public enum EmoteCategory
+    public static string GetEmoteName(Emote emote)
     {
-        Looped = 1,
-        OneShot = 2,
+        var name = "";
+
+#if DEBUG
+        name = $"[{emote.RowId}] ";
+#endif
+
+        var specification = TryGetEmoteSpecification(emote);
+
+        if (specification == null)
+        {
+            return string.IsNullOrWhiteSpace(emote.Name.ToString()) ?
+                (emote.TextCommand.ValueNullable?.Command.ExtractText() ?? $"[{emote.RowId}] No name")
+                : name + $"{emote.Name.ToString()}";
+        }
+
+        if (specification.Value.Name != null)
+            name += specification.Value.Name;
+        else
+            name += GetRealEmoteNameById(emote.RowId);
+
+        return name;
     }
 
-    // TODO: Add custom behavior for /draw and /sheathe
-    public static readonly Dictionary<uint, EmoteCategory> EmoteCategories = new Dictionary<uint, EmoteCategory>
+    public static ushort GetEmoteIcon(Emote emote)
     {
-        { 62, EmoteCategory.OneShot }, // /megaflare
-        { 175, EmoteCategory.OneShot }, // /ultima
-        { 144, EmoteCategory.OneShot }, // /iceheart
-        { 138, EmoteCategory.OneShot }, // /zantetsuken
-    };
+        var specification = TryGetEmoteSpecification(emote);
 
-    public static EmoteCategory GetRealEmoteCategory(Emote emote)
-    {
-        var categoryString = emote.EmoteCategory.Value.Name.ToString();
+        if (specification == null || specification.Value.Icon == null)
+            return emote.Icon;
 
-        return (categoryString == "Special") ? EmoteCategory.Looped : EmoteCategory.OneShot;
+        return specification.Value.Icon.Value;
     }
 
-    public static EmoteCategory GetEmoteCategory(Emote emote)
+    public static string GetRealEmoteNameById(uint emoteId)
     {
-        var emoteCategory = TryGetEmoteCategory(emote);
-
-        if (emoteCategory != null) return emoteCategory.Value;
-
-        var categoryString = emote.EmoteCategory.Value.Name.ToString();
-
-        return (categoryString == "Special") ? EmoteCategory.Looped : EmoteCategory.OneShot;
+        var foundEmote = TryGetEmoteById(emoteId);
+        return foundEmote?.Name.ToString() ?? $"[{emoteId}] No name";
     }
 
-    public static EmoteCategory? TryGetEmoteCategory(Emote emote)
+    public static ushort? GetRealEmoteIconById(uint emoteId)
     {
-        if (EmoteCategories.TryGetValue(emote.RowId, out var category))
-            return category;
+        var foundEmote = TryGetEmoteById(emoteId);
+        return foundEmote?.Icon ?? null;
+    }
 
+    public static Emote? TryGetEmoteById(uint emoteId)
+    {
+        var foundEmote = LinqExtensions.FirstOrNull(Service.Emotes, e => e.RowId == emoteId);
+        return foundEmote ?? null;
+    }
+
+    public static EmoteData.EmoteCategory GetEmoteCategory(Emote emote)
+    {
+        var categoryString = GetEmoteCategoryString(emote);
+
+        switch (categoryString)
+        {
+            case "General":
+                return EmoteData.EmoteCategory.General;
+            case "Special":
+                return EmoteData.EmoteCategory.Special;
+            case "Expressions":
+                return EmoteData.EmoteCategory.Expressions;
+            default:
+                return EmoteData.EmoteCategory.Unknown;
+        }
+    }
+
+    public static string GetEmoteCategoryString(Emote emote) => emote.EmoteCategory.Value.Name.ToString();
+
+    public static EmoteData.EmotePlayType GetEmotePlayType(Emote emote)
+    {
+        var emoteSpecification = TryGetEmoteSpecification(emote);
+        if (emoteSpecification != null) return emoteSpecification.Value.PlayType;
+
+        return (GetEmoteCategory(emote) == EmoteData.EmoteCategory.Special) ? EmoteData.EmotePlayType.Looped : EmoteData.EmotePlayType.OneShot;
+    }
+
+    public static (object Object, EmoteData.EmotePlayType PlayType, string? Name, ushort? Icon)? TryGetEmoteSpecification(Emote emote)
+    {
+        foreach (var specification in EmoteData.EmoteSpecifications)
+        {
+            var emoteId = specification.Key;
+
+            // If emoteId is uint, and its value == emote.RowId then return it
+            if (emoteId is uint singleId && singleId == emote.RowId)
+                return (emoteId, specification.Value.PlayType, specification.Value.Name, specification.Value.Icon);
+
+            // If emoteId is Tuple and emote.RowId is between Tuple item 1 and item 2 both included then return it
+            if (emoteId is Tuple<uint, uint> range && emote.RowId >= range.Item1 && emote.RowId <= range.Item2)
+                return (emoteId, specification.Value.PlayType, specification.Value.Name, specification.Value.Icon);
+        }
+        
         return null;
     }
     
@@ -183,7 +240,7 @@ public static class CommonHelper
         if (command.StartsWith('/'))
             command = command[1..];
 
-        var foundEmote = LinqExtensions.FirstOrNull(Service.Emotes, e => e.Item1 == $"/{command}");
+        var foundEmote = LinqExtensions.FirstOrNull(Service.EmoteCommands, e => e.Item1 == $"/{command}");
         return foundEmote.HasValue ? foundEmote.Value.Item2 : null;
     }
 

@@ -2,7 +2,6 @@ using BypassEmote.Helpers;
 using BypassEmote.UI;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
-using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
@@ -19,7 +18,6 @@ using Lumina.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using static FFXIVClientStructs.FFXIV.Client.Game.Control.EmoteController;
 
 namespace BypassEmote;
@@ -196,7 +194,7 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
-        var foundEmote = LinqExtensions.FirstOrNull(Service.Emotes, e => e.Item1 == message);
+        var foundEmote = LinqExtensions.FirstOrNull(Service.EmoteCommands, e => e.Item1 == message);
 
         if (!foundEmote.HasValue)
         {
@@ -239,10 +237,7 @@ public sealed class Plugin : IDalamudPlugin
         var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(chara.Address);
 
         if (trackedCharacter != null)
-        {
-            Service.Log.Info($"DetourExecuteEmote - stopping all loops for {chara.Name.TextValue}");
             EmotePlayer.StopLoop(chara, true);
-        }
 
         return ExecuteEmoteHook!.Original(emoteManager, emoteId, playEmoteOption);
     }

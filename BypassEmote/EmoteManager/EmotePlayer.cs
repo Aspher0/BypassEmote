@@ -5,6 +5,7 @@ using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using BypassEmote.Data;
 
 namespace BypassEmote;
 
@@ -20,11 +21,14 @@ internal static unsafe class EmotePlayer
         if (chara == null)
             return;
 
-        var emoteCategory = CommonHelper.GetEmoteCategory(emote);
-
         var native = CommonHelper.GetCharacter(chara);
 
-        if (emoteCategory == CommonHelper.EmoteCategory.Looped && native->Mode == CharacterModes.EmoteLoop || native->Mode == CharacterModes.InPositionLoop)
+        var emotePlayType = CommonHelper.GetEmotePlayType(emote);
+
+        if (emotePlayType == EmoteData.EmotePlayType.DoNotPlay)
+            return;
+
+        if (emotePlayType == EmoteData.EmotePlayType.Looped && (native->Mode == CharacterModes.EmoteLoop || native->Mode == CharacterModes.InPositionLoop))
         {
             Service.ChatGui.Print("You cannot bypass a looped emote while already playing an unlocked one.");
             return;
@@ -35,9 +39,9 @@ internal static unsafe class EmotePlayer
         if (Service.ClientState.LocalPlayer != null && chara.Address == Service.ClientState.LocalPlayer.Address)
             FaceTarget();
 
-        switch (emoteCategory)
+        switch (emotePlayType)
         {
-            case CommonHelper.EmoteCategory.Looped:
+            case EmoteData.EmotePlayType.Looped:
                 {
                     PlayEmote(Service.Player, chara, emote);
                     var trackedCharacter = CommonHelper.AddOrUpdateCharacterInTrackedList(chara.Address);
@@ -54,7 +58,7 @@ internal static unsafe class EmotePlayer
 
                     break;
                 }
-            case CommonHelper.EmoteCategory.OneShot:
+            case EmoteData.EmotePlayType.OneShot:
             default:
                 {
                     ushort timelineId = (ushort)emote.ActionTimeline[0].RowId;
