@@ -28,12 +28,23 @@ internal static unsafe class EmotePlayer
         if (emotePlayType == EmoteData.EmotePlayType.DoNotPlay)
             return;
 
-        if (emotePlayType == EmoteData.EmotePlayType.Looped && (native->Mode == CharacterModes.EmoteLoop || native->Mode == CharacterModes.InPositionLoop))
+        if (native->Mode != CharacterModes.Normal)
         {
-            if (Service.ClientState.LocalPlayer != null && chara.Address == Service.ClientState.LocalPlayer.Address)
-                Service.ChatGui.Print("You cannot bypass a looped emote while already playing an unlocked one.");
+            if (native->Mode != CharacterModes.EmoteLoop && native->Mode != CharacterModes.InPositionLoop)
+            {
+                // Block: Not in allowed modes
+                if (Service.ClientState.LocalPlayer != null && chara.Address == Service.ClientState.LocalPlayer.Address)
+                    Service.ChatGui.Print("You cannot bypass this emote right now.");
+                return;
+            }
 
-            return;
+            if (emotePlayType != EmoteData.EmotePlayType.OneShot)
+            {
+                // Block: In EmoteLoop/InPositionLoop but not OneShot
+                if (Service.ClientState.LocalPlayer != null && chara.Address == Service.ClientState.LocalPlayer.Address)
+                    Service.ChatGui.Print("You cannot bypass this emote right now.");
+                return;
+            }
         }
 
         StopLoop(chara, false);
