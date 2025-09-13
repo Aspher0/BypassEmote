@@ -30,7 +30,9 @@ internal static unsafe class EmotePlayer
 
         if (emotePlayType == EmoteData.EmotePlayType.Looped && (native->Mode == CharacterModes.EmoteLoop || native->Mode == CharacterModes.InPositionLoop))
         {
-            Service.ChatGui.Print("You cannot bypass a looped emote while already playing an unlocked one.");
+            if (Service.ClientState.LocalPlayer != null && chara.Address == Service.ClientState.LocalPlayer.Address)
+                Service.ChatGui.Print("You cannot bypass a looped emote while already playing an unlocked one.");
+
             return;
         }
 
