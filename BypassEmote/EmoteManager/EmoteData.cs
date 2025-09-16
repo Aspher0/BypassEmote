@@ -42,6 +42,7 @@ public static class EmoteData
         { 177u, (EmotePlayType.DoNotPlay, null, null ) }, // Unknown emote, does nothing
         { 175u, (EmotePlayType.OneShot, null, null ) }, // Ultima
         { 168u, (EmotePlayType.DoNotPlay, null, null ) }, // Unknown emote, does nothing
+        { 151u, (EmotePlayType.Looped, null, null ) }, // Water flip
         { 147u, (EmotePlayType.OneShot, $"{CommonHelper.GetRealEmoteNameById(146u)} <No target>", CommonHelper.GetRealEmoteIconById(146u) ) }, // Dote
         { 144u, (EmotePlayType.OneShot, null, null ) }, // Diamond Dust
         { 138u, (EmotePlayType.OneShot, null, null ) }, // Zantetsuken

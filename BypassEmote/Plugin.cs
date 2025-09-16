@@ -1,5 +1,6 @@
 using BypassEmote.Helpers;
 using BypassEmote.UI;
+using BypassEmote.Managers;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.Command;
@@ -44,6 +45,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private UIBuilder MainWindow { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
+    private ChangelogWindow ChangelogWindow { get; init; }
 
     public unsafe Plugin()
     {
@@ -56,8 +58,10 @@ public sealed class Plugin : IDalamudPlugin
 
         MainWindow = new UIBuilder();
         ConfigWindow = new ConfigWindow();
+        ChangelogWindow = new ChangelogWindow();
         WindowSystem.AddWindow(MainWindow);
         WindowSystem.AddWindow(ConfigWindow);
+        WindowSystem.AddWindow(ChangelogWindow);
 
         SetupUI();
         SetupCommands();
@@ -85,17 +89,42 @@ public sealed class Plugin : IDalamudPlugin
         {
             Service.Log.Error("OnEmote Hook error");
         }
+
+        // Check if we should show changelog for new version
+        CheckAndShowChangelog();
+    }
+
+    private void CheckAndShowChangelog()
+    {
+        if (!Service.Configuration!.ShowChangelogOnUpdate)
+            return;
+
+        var latestVersion = ChangelogManager.GetLatestVersion();
+        if (string.IsNullOrWhiteSpace(latestVersion))
+            return;
+
+        var lastSeenVersion = Service.Configuration.LastSeenChangelogVersion;
+        
+        // Show changelog if it's the first time or if there's a new version
+        if (string.IsNullOrWhiteSpace(lastSeenVersion) || lastSeenVersion != latestVersion)
+        {
+            ChangelogWindow.ShowChangelogForVersion(latestVersion);
+            Service.Configuration.UpdateConfiguration(() => Service.Configuration.LastSeenChangelogVersion = latestVersion);
+        }
     }
 
     private void SetupUI()
     {
         PluginInterface.UiBuilder.Draw += () => WindowSystem.Draw();
-        PluginInterface.UiBuilder.OpenMainUi += OpenMainWindow;
-        PluginInterface.UiBuilder.OpenConfigUi += OpenSettings;
+        PluginInterface.UiBuilder.OpenMainUi += ToggleMainWindow;
+        PluginInterface.UiBuilder.OpenConfigUi += ToggleSettings;
     }
 
-    public void OpenMainWindow() => MainWindow.Toggle();
-    public void OpenSettings() => ConfigWindow.Toggle();
+    public void ToggleMainWindow() => MainWindow.Toggle();
+    public void ToggleSettings() => ConfigWindow.Toggle();
+    public void OpenMainWindow() => MainWindow.IsOpen = true;
+    public void OpenSettings() => ConfigWindow.IsOpen = true;
+    public void OpenChangelog() => ChangelogWindow.ShowChangelogForVersion();
 
     private void SetupCommands()
     {
@@ -120,7 +149,7 @@ public sealed class Plugin : IDalamudPlugin
         {
             if (splitArgs.Length == 0)
             {
-                OpenMainWindow();
+                ToggleMainWindow();
                 return;
             }
 
@@ -132,7 +161,7 @@ public sealed class Plugin : IDalamudPlugin
                 return;
             }
 
-            OpenSettings();
+            ToggleSettings();
             return;
         }
 
@@ -276,6 +305,7 @@ public sealed class Plugin : IDalamudPlugin
         WindowSystem.RemoveAllWindows();
         ConfigWindow.Dispose();
         MainWindow.Dispose();
+        ChangelogWindow.Dispose();
 
         Service.Dispose();
 

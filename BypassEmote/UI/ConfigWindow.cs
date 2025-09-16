@@ -1,4 +1,5 @@
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using System;
 using System.Numerics;
@@ -11,9 +12,17 @@ public class ConfigWindow : Window, IDisposable
     {
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(250, 100),
+            MinimumSize = new Vector2(350, 150),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
+
+        TitleBarButtons.Add(new()
+        {
+            Click = (m) => { if (m == ImGuiMouseButton.Left) Service.OpenKofi(); },
+            Icon = FontAwesomeIcon.Heart,
+            IconOffset = new(2, 2),
+            ShowTooltip = () => ImGui.SetTooltip("Support me"),
+        });
     }
 
     public override void Draw()
@@ -26,9 +35,16 @@ public class ConfigWindow : Window, IDisposable
         ImGui.Checkbox("Automatically Face Target On Emote", ref autoFaceTarget);
         Service.Configuration.UpdateConfiguration(() => Service.Configuration.AutoFaceTarget = autoFaceTarget);
 
-        //var interruptEmoteOnRotate = Service.Configuration!.InterruptEmoteOnRotate;
-        //ImGui.Checkbox("[WIP] Interrupt Emote On Character Rotation", ref interruptEmoteOnRotate);
-        //Service.Configuration.UpdateConfiguration(() => Service.Configuration.InterruptEmoteOnRotate = interruptEmoteOnRotate);
+        var showUpdateNotification = Service.Configuration!.ShowUpdateNotification;
+        if (ImGui.Checkbox("Show Update Notifications", ref showUpdateNotification))
+        {
+            Service.Configuration.UpdateConfiguration(() => Service.Configuration.ShowUpdateNotification = showUpdateNotification);
+            Service.OnUpdateNotificationConfigChanged(showUpdateNotification);
+        }
+
+        var showChangelogOnUpdate = Service.Configuration!.ShowChangelogOnUpdate;
+        if (ImGui.Checkbox("Show Changelog on Updates", ref showChangelogOnUpdate))
+        Service.Configuration.UpdateConfiguration(() => Service.Configuration.ShowChangelogOnUpdate = showChangelogOnUpdate);
     }
 
     public void Dispose() { }
