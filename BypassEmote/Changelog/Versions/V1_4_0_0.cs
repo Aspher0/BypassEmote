@@ -1,13 +1,9 @@
 using BypassEmote.Models;
 using Dalamud.Interface;
 using System.Collections.Generic;
-using System.Numerics;
 
 namespace BypassEmote.Changelog.Versions;
 
-/// <summary>
-/// Template for creating new changelog versions.
-/// </summary>
 public class V1_4_0_0 : BaseChangelogVersion
 {
     public override ChangelogVersion GetVersion()

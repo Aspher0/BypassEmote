@@ -11,13 +11,13 @@ using BypassEmote.Data;
 
 namespace BypassEmote.UI;
 
-public class UIBuilder : Window, IDisposable
+public class EmoteWindow : Window, IDisposable
 {
     private enum LockedTab { All, General, Special, Expressions, Other, Favorites }
     private LockedTab _currentTab = LockedTab.All;
     private string _searchText = string.Empty;
 
-    public UIBuilder() : base("Bypass Emote - Locked Emotes##BypassEmoteMain", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
+    public EmoteWindow() : base("Bypass Emote - Locked Emotes##BypassEmoteMain", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         SizeConstraints = new WindowSizeConstraints
         {
@@ -119,6 +119,7 @@ public class UIBuilder : Window, IDisposable
         if (Service.Configuration!.ShowAllEmotes || _currentTab == LockedTab.Favorites)
             displayedEmotes = Service.Emotes.Select(e => (e, CommonHelper.GetEmoteCategory(e))).ToList() ?? new List<(Emote, EmoteData.EmoteCategory)>();
 
+        displayedEmotes.RemoveAll(e => e.Item1.Order == 0);
         displayedEmotes = displayedEmotes.OrderByDescending(e => e.Item1.RowId).ToList();
 
         // Check if we're in favorites tab and if there are any favorites

@@ -43,7 +43,7 @@ public sealed class Plugin : IDalamudPlugin
 
     public readonly WindowSystem WindowSystem = new("BypassEmote");
 
-    private UIBuilder MainWindow { get; init; }
+    private EmoteWindow MainWindow { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
     private ChangelogWindow ChangelogWindow { get; init; }
 
@@ -56,7 +56,7 @@ public sealed class Plugin : IDalamudPlugin
 
         Service.InitializeService();
 
-        MainWindow = new UIBuilder();
+        MainWindow = new EmoteWindow();
         ConfigWindow = new ConfigWindow();
         ChangelogWindow = new ChangelogWindow();
         WindowSystem.AddWindow(MainWindow);
