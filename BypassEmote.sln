@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BypassEmote", "BypassEmote\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BypassEmote", "BypassEmote", "{0BDE1C2D-91A2-4DFE-867D-67F8A07134E6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoireLib", "NoireLib\NoireLib\NoireLib.csproj", "{F7E543B0-F274-CFAC-2586-0802A223F721}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -17,6 +19,10 @@ Global
 		{EE05D6C2-AECE-AE4B-0B90-B8A95201A92F}.Debug|x64.Build.0 = Debug|x64
 		{EE05D6C2-AECE-AE4B-0B90-B8A95201A92F}.Release|x64.ActiveCfg = Release|x64
 		{EE05D6C2-AECE-AE4B-0B90-B8A95201A92F}.Release|x64.Build.0 = Release|x64
+		{F7E543B0-F274-CFAC-2586-0802A223F721}.Debug|x64.ActiveCfg = Debug|x64
+		{F7E543B0-F274-CFAC-2586-0802A223F721}.Debug|x64.Build.0 = Debug|x64
+		{F7E543B0-F274-CFAC-2586-0802A223F721}.Release|x64.ActiveCfg = Release|x64
+		{F7E543B0-F274-CFAC-2586-0802A223F721}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

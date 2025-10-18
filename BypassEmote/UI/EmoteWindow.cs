@@ -1,13 +1,14 @@
+using BypassEmote.Data;
+using BypassEmote.Helpers;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Windowing;
 using Dalamud.Interface;
+using Dalamud.Interface.Windowing;
+using Lumina.Excel.Sheets;
+using NoireLib;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using BypassEmote.Helpers;
-using Lumina.Excel.Sheets;
 using System.Linq;
-using BypassEmote.Data;
+using System.Numerics;
 
 namespace BypassEmote.UI;
 
@@ -21,7 +22,7 @@ public class EmoteWindow : Window, IDisposable
     {
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(400, 450),
+            MinimumSize = new Vector2(400, 500),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
@@ -52,6 +53,28 @@ public class EmoteWindow : Window, IDisposable
 
     public override void Draw()
     {
+        var buttonText = "Refresh Locked Emotes";
+        var buttonWidth = ImGui.CalcTextSize(buttonText).X + ImGui.GetStyle().FramePadding.X * 2;
+        var availWidth = ImGui.GetContentRegionAvail().X;
+        ImGui.SetCursorPosX((availWidth - buttonWidth) * 0.5f);
+
+        if (ImGui.Button(buttonText))
+        {
+            Service.RefreshLockedEmotes();
+        }
+
+        ImGui.Separator();
+
+        // Calculate total width needed for both checkboxes
+        var showAllText = "Show all emotes";
+        var showIdsText = "Show IDs";
+        var showAllWidth = ImGui.CalcTextSize(showAllText).X + ImGui.GetStyle().FramePadding.X * 2 + ImGui.GetFrameHeight();
+        var showIdsWidth = ImGui.CalcTextSize(showIdsText).X + ImGui.GetStyle().FramePadding.X * 2 + ImGui.GetFrameHeight();
+        var spacing = ImGui.GetStyle().ItemSpacing.X;
+        var totalWidth = showAllWidth + spacing + showIdsWidth;
+        availWidth = ImGui.GetContentRegionAvail().X;
+        ImGui.SetCursorPosX((availWidth - totalWidth) * 0.5f);
+
         bool showAllEmotes = Service.Configuration!.ShowAllEmotes;
         if (ImGui.Checkbox("Show all emotes", ref showAllEmotes))
         {
@@ -60,14 +83,14 @@ public class EmoteWindow : Window, IDisposable
 
         ImGui.SameLine();
 
-        if (ImGui.Button("Refresh Locked Emotes"))
+        bool showEmoteIds = Service.Configuration!.ShowEmoteIds;
+        if (ImGui.Checkbox("Show IDs", ref showEmoteIds))
         {
-            Service.RefreshLockedEmotes();
+            Service.Configuration.UpdateConfiguration(() => Service.Configuration!.ShowEmoteIds = showEmoteIds);
         }
 
         ImGui.Separator();
 
-        // Add search input field
         ImGui.SetNextItemWidth(-1);
         ImGui.InputTextWithHint("##SearchEmotes", "Search emotes...", ref _searchText, 256);
 
@@ -153,7 +176,8 @@ public class EmoteWindow : Window, IDisposable
                 if (_currentTab == LockedTab.Other && CommonHelper.GetEmoteCategory(emote.Item1) != EmoteData.EmoteCategory.Unknown)
                     continue;
 
-                var display = CommonHelper.GetEmoteName(emote.Item1);
+                var displayedName = Service.Configuration!.ShowEmoteIds ? $"[{emote.Item1.RowId}] " : "";
+                displayedName += CommonHelper.GetEmoteName(emote.Item1);
 
                 // Build commands string (all associated, comma separated)
                 var commands = new List<string>(4);
@@ -170,7 +194,7 @@ public class EmoteWindow : Window, IDisposable
                 AddCmd(tc?.Alias.ExtractText());
                 AddCmd(tc?.ShortAlias.ExtractText());
 
-                var label = commands.Count > 0 ? $"{display} ({string.Join(", ", commands)})" : display;
+                var label = commands.Count > 0 ? $"{displayedName} ({string.Join(", ", commands)})" : displayedName;
 
                 // Filter based on search text
                 if (!string.IsNullOrWhiteSpace(_searchText) &&
@@ -220,7 +244,7 @@ public class EmoteWindow : Window, IDisposable
                 var iconSize = 25f;
                 try
                 {
-                    var iconTex = Service.TextureProvider.GetFromGameIcon((uint)CommonHelper.GetEmoteIcon(emote.Item1));
+                    var iconTex = NoireService.TextureProvider.GetFromGameIcon((uint)CommonHelper.GetEmoteIcon(emote.Item1));
                     var wrap = iconTex?.GetWrapOrEmpty();
                     if (wrap != null)
                     {
@@ -236,7 +260,7 @@ public class EmoteWindow : Window, IDisposable
                 }
 
                 if (ImGui.Selectable(label, false))
-                    EmotePlayer.PlayEmote(Service.ClientState.LocalPlayer, emote.Item1);
+                    EmotePlayer.PlayEmote(NoireService.ClientState.LocalPlayer, emote.Item1);
 
                 // Draw small info/exclamation icon to the right of the selectable with tooltip of sources
                 if (Service.EmoteSources.TryGetValue(emote.Item1.RowId, out var emoteSources) && 

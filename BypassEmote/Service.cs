@@ -1,9 +1,6 @@
 using BypassEmote.Data;
 using BypassEmote.Helpers;
 using Dalamud.Game;
-using Dalamud.Game.ClientState.Objects;
-using Dalamud.IoC;
-using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -15,6 +12,7 @@ using System.Linq;
 using System.Threading;
 using ECommons.DalamudServices.Legacy;
 using BypassEmote.Models;
+using NoireLib;
 
 namespace BypassEmote;
 
@@ -40,15 +38,15 @@ public class Service
     private static readonly HttpClient Http = new HttpClient() { Timeout = TimeSpan.FromSeconds(10) };
     private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
-    private static Timer? _updateCheckTimer;
-    private static bool _updateNotificationShown = false;
+    private static Timer? UpdateCheckTimer;
+    private static bool UpdateNotificationShown = false;
 
     public static void InitializeService()
     {
-        ClientState.Login += RefreshLockedEmotes;
-        ClientState.Logout += (int type, int code) => ClearLockedEmoted();
+        NoireService.ClientState.Login += RefreshLockedEmotes;
+        NoireService.ClientState.Logout += (int type, int code) => ClearLockedEmoted();
 
-        EmoteSheet = DataManager.GetExcelSheet<Emote>();
+        EmoteSheet = NoireService.DataManager.GetExcelSheet<Emote>();
 
         InitializeConfig();
         InitializeEmotes();
@@ -58,9 +56,9 @@ public class Service
 
         StartUpdateCheckTimer();
 
-        Framework.RunOnFrameworkThread(() =>
+        NoireService.Framework.RunOnFrameworkThread(() =>
         {
-            if (ClientState.IsLoggedIn && ClientState.LocalPlayer != null)
+            if (NoireService.ClientState.IsLoggedIn && NoireService.ClientState.LocalPlayer != null)
                 RefreshLockedEmotes();
         });
     }
@@ -75,7 +73,7 @@ public class Service
     {
         if (EmoteSheet == null)
         {
-            Log.Error("Failed to read Emotes list");
+            NoireLogger.LogError<Service>("Failed to read Emotes list, EmoteSheet is null.");
             return;
         }
 
@@ -99,14 +97,14 @@ public class Service
         }
 
         if (EmoteCommands.Count == 0)
-            Log.Error("Failed to build Emotes list");
+            NoireLogger.LogError<Service>("Failed to build Emotes list.");
     }
 
     public static void RefreshLockedEmotes()
     {
         ClearLockedEmoted();
 
-        if (!ClientState.IsLoggedIn || ClientState.LocalPlayer == null)
+        if (!NoireService.ClientState.IsLoggedIn || NoireService.ClientState.LocalPlayer == null)
             return;
 
         if (EmoteSheet == null || Emotes.Count == 0)
@@ -139,7 +137,7 @@ public class Service
         }
         catch (Exception ex)
         {
-            Log.Error($"Failed to open link: {ex.Message}");
+            NoireLogger.LogError<Service>(ex, $"Failed to open link.");
         }
     }
 
@@ -147,7 +145,7 @@ public class Service
     {
         if (enabled)
         {
-            _updateNotificationShown = false;
+            UpdateNotificationShown = false;
             StartUpdateCheckTimer();
         }
         else
@@ -162,7 +160,7 @@ public class Service
         {
             StopUpdateCheckTimer();
             
-            _updateCheckTimer = new Timer(async _ => await CheckForUpdateAsync(), 
+            UpdateCheckTimer = new Timer(async _ => await CheckForUpdateAsync(), 
                 null, 
                 TimeSpan.Zero, // Start now
                 TimeSpan.FromMinutes(30));
@@ -171,14 +169,14 @@ public class Service
 
     private static void StopUpdateCheckTimer()
     {
-        _updateCheckTimer?.Dispose();
-        _updateCheckTimer = null;
+        UpdateCheckTimer?.Dispose();
+        UpdateCheckTimer = null;
     }
 
     public static void Dispose()
     {
-        ClientState.Login -= RefreshLockedEmotes;
-        ClientState.Logout -= (int type, int code) => ClearLockedEmoted();
+        NoireService.ClientState.Login -= RefreshLockedEmotes;
+        NoireService.ClientState.Logout -= (int type, int code) => ClearLockedEmoted();
 
         StopUpdateCheckTimer();
         EmotePlayer.Dispose();
@@ -186,7 +184,7 @@ public class Service
 
     private static string GetGameLocaleParam()
     {
-        var lang = DataManager.Language;
+        var lang = NoireService.DataManager.Language;
         return lang switch
         {
             ClientLanguage.French => "fr",
@@ -210,7 +208,7 @@ public class Service
             var data = JsonSerializer.Deserialize<FfxivCollectResponse>(json, JsonOptions);
             if (data?.results is null || data.results.Count == 0)
             {
-                Log.Warning("FFXIVCollect emotes API returned no results.");
+                NoireLogger.LogWarning<Service>("FFXIVCollect emotes API returned no results.");
                 return;
             }
 
@@ -341,11 +339,11 @@ public class Service
                 }
             }
 
-            Log.Info($"Built EmoteSources for {EmoteSources.Count} emotes from FFXIVCollect.");
+            NoireLogger.LogInfo<Service>($"Built EmoteSources for {EmoteSources.Count} emotes from FFXIVCollect.");
         }
         catch (Exception ex)
         {
-            Log.Warning($"Failed to fetch FFXIVCollect emote sources: {ex.Message}");
+            NoireLogger.LogError<Service>(ex, $"Failed to fetch FFXIVCollect emote sources.");
         }
     }
 
@@ -354,7 +352,7 @@ public class Service
         try
         {
             // Skip if notifications are disabled or already shown
-            if (Configuration?.ShowUpdateNotification != true || _updateNotificationShown)
+            if (Configuration?.ShowUpdateNotification != true || UpdateNotificationShown)
                 return;
 
             var url = "https://raw.githubusercontent.com/Aspher0/BypassEmote/refs/heads/main/repo.json";
@@ -366,7 +364,7 @@ public class Service
             var entries = JsonSerializer.Deserialize<List<RepoEntry>>(json, JsonOptions);
             if (entries is null || entries.Count == 0)
             {
-                Log.Warning("Repo.json fetch returned no entries.");
+                NoireLogger.LogWarning<Service>("Repo.json fetch returned no entries.");
                 return;
             }
 
@@ -383,7 +381,7 @@ public class Service
 
             if (currentVersion < remoteVersion)
             {
-                _updateNotificationShown = true;
+                UpdateNotificationShown = true;
 
                 Plugin.PluginInterface.UiBuilder.AddNotification(
                     $"Bypass Emote has a new update available.\nCurrent version: {currentVersion}\nNew version: {remoteVersion}",
@@ -394,23 +392,7 @@ public class Service
         }
         catch (Exception ex)
         {
-            Log.Warning($"Failed to check for updates: {ex.Message}");
+            NoireLogger.LogError<Service>(ex, "Failed to check for updates.");
         }
     }
-
-    [PluginService] internal static IPluginLog Log { get; private set; } = null!;
-    [PluginService] internal static IClientState ClientState { get; private set; } = null!;
-    [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
-    [PluginService] internal static IGameInteropProvider InteropProvider { get; private set; } = null!;
-    [PluginService] internal static ISigScanner Scanner { get; private set; } = null!;
-    [PluginService] internal static IFramework Framework { get; private set; } = null!;
-    [PluginService] internal static ITargetManager TargetManager { get; private set; } = null!;
-    [PluginService] public static IChatGui ChatGui { get; private set; } = null!;
-    [PluginService] public static ICommandManager CommandManager { get; private set; } = null!;
-    [PluginService] public static IObjectTable Objects { get; private set; } = null!;
-    [PluginService] public static ICondition Condition { get; private set; } = null!;
-    [PluginService] public static IGameConfig GameConfig { get; private set; } = null!;
-    [PluginService] public static IGameGui GameGui { get; private set; } = null!;
-    [PluginService] public static IAddonLifecycle AddonLifecycle { get; private set; } = null!;
-    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
 }

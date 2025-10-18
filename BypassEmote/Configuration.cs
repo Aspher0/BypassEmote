@@ -14,15 +14,8 @@ public class Configuration : IPluginConfiguration
     public bool ShowAllEmotes { get; set; } = false;
     public bool ShowUpdateNotification { get; set; } = true;
     public List<uint> FavoriteEmotes { get; set; } = new List<uint>();
-
-    public string LastSeenChangelogVersion { get; set; } = string.Empty;
     public bool ShowChangelogOnUpdate { get; set; } = true;
-
-    public void ResetLastSeenChangelog()
-    {
-        LastSeenChangelogVersion = string.Empty;
-        Save();
-    }
+    public bool ShowEmoteIds { get; set; } = false;
 
     public void UpdateConfiguration(Action updateAction)
     {

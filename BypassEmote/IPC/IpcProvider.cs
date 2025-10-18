@@ -1,7 +1,8 @@
 using ECommons.EzIpcManager;
 using System;
 using Dalamud.Game.ClientState.Objects.SubKinds;
-using BypassEmote.Helpers;
+using NoireLib;
+using NoireLib.Helpers;
 
 namespace BypassEmote;
 
@@ -25,9 +26,9 @@ public class IpcProvider
     [EzIPC("PlayEmoteById")]
     public void PlayEmoteById(IntPtr characterAddress, uint emoteId)
     {
-        Service.Framework.RunOnFrameworkThread(() =>
+        NoireService.Framework.RunOnFrameworkThread(() =>
         {
-            var castChar = CommonHelper.TryGetCharacterFromAddress(characterAddress);
+            var castChar = CharacterHelper.TryGetCharacterFromAddress(characterAddress);
             if (castChar != null)
                 EmotePlayer.PlayEmoteById(castChar, emoteId);
         });

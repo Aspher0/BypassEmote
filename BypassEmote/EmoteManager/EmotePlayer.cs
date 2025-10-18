@@ -1,17 +1,18 @@
-using BypassEmote.Helpers;
+using BypassEmote.Data;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin.Services;
-using Lumina.Excel.Sheets;
-using System.Collections.Generic;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using BypassEmote.Data;
+using Lumina.Excel.Sheets;
+using NoireLib;
+using NoireLib.Helpers;
+using System.Collections.Generic;
 
 namespace BypassEmote;
 
 internal static unsafe class EmotePlayer
 {
-    private static bool _updateHooked;
+    private static bool UpdateHooked;
 
     // List of characters using a looped emote
     public static List<TrackedCharacter> TrackedCharacters = new List<TrackedCharacter>();
@@ -21,35 +22,35 @@ internal static unsafe class EmotePlayer
         if (chara == null)
             return;
 
-        var native = CommonHelper.GetCharacter(chara);
+        var native = CharacterHelper.GetCharacterAddress(chara);
 
-        var emotePlayType = CommonHelper.GetEmotePlayType(emote);
+        var emotePlayType = Helpers.CommonHelper.GetEmotePlayType(emote);
 
         if (emotePlayType == EmoteData.EmotePlayType.DoNotPlay)
             return;
 
-        if (native->Mode != CharacterModes.Normal)
+        if (chara is not INpc && (native->Mode != CharacterModes.Normal || CharacterHelper.IsCharacterSleeping(chara)))
         {
-            if (native->Mode != CharacterModes.EmoteLoop && native->Mode != CharacterModes.InPositionLoop)
+            if (CharacterHelper.IsCharacterSleeping(chara) || (native->Mode != CharacterModes.EmoteLoop && native->Mode != CharacterModes.InPositionLoop && native->Mode != CharacterModes.Mounted && native->Mode != CharacterModes.RidingPillion))
             {
                 // Block: Not in allowed modes
-                if (Service.ClientState.LocalPlayer != null && chara.Address == Service.ClientState.LocalPlayer.Address)
-                    Service.ChatGui.Print("You cannot bypass this emote right now.");
+                if (NoireService.ClientState.LocalPlayer != null && chara.Address == NoireService.ClientState.LocalPlayer.Address)
+                    NoireLogger.PrintToChat("You cannot bypass this emote right now.");
                 return;
             }
 
             if (emotePlayType != EmoteData.EmotePlayType.OneShot)
             {
                 // Block: In EmoteLoop/InPositionLoop but not OneShot
-                if (Service.ClientState.LocalPlayer != null && chara.Address == Service.ClientState.LocalPlayer.Address)
-                    Service.ChatGui.Print("You cannot bypass this emote right now.");
+                if (NoireService.ClientState.LocalPlayer != null && chara.Address == NoireService.ClientState.LocalPlayer.Address)
+                    NoireLogger.PrintToChat("You cannot bypass this emote right now.");
                 return;
             }
         }
 
         StopLoop(chara, false);
 
-        if (Service.ClientState.LocalPlayer != null && chara.Address == Service.ClientState.LocalPlayer.Address)
+        if (NoireService.ClientState.LocalPlayer != null && chara.Address == NoireService.ClientState.LocalPlayer.Address)
             FaceTarget();
 
         switch (emotePlayType)
@@ -57,16 +58,16 @@ internal static unsafe class EmotePlayer
             case EmoteData.EmotePlayType.Looped:
                 {
                     PlayEmote(Service.Player, chara, emote);
-                    var trackedCharacter = CommonHelper.AddOrUpdateCharacterInTrackedList(chara.Address);
+                    var trackedCharacter = Helpers.CommonHelper.AddOrUpdateCharacterInTrackedList(chara.Address);
 
                     if (trackedCharacter == null) break;
 
                     trackedCharacter.UpdateLastPosition();
 
-                    if (!_updateHooked && TrackedCharacters.Count > 0)
+                    if (!UpdateHooked && TrackedCharacters.Count > 0)
                     {
-                        Service.Framework.Update += OnFrameworkUpdate;
-                        _updateHooked = true;
+                        NoireService.Framework.Update += OnFrameworkUpdate;
+                        UpdateHooked = true;
                     }
 
                     break;
@@ -77,14 +78,14 @@ internal static unsafe class EmotePlayer
                     ushort timelineId = (ushort)emote.ActionTimeline[0].RowId;
                     if (timelineId == 0)
                         return;
-                    CommonHelper.RemoveCharacterFromTrackedListByAddress(chara.Address);
+                    Helpers.CommonHelper.RemoveCharacterFromTrackedListByAddress(chara.Address);
                     PlayOneShotEmote(chara, timelineId);
                     break;
                 }
         }
 
-        var local = Service.ClientState.LocalPlayer;
-        if (local != null && local.Address == (nint)CommonHelper.GetCharacter(chara))
+        var local = NoireService.ClientState.LocalPlayer;
+        if (local != null && local.Address == (nint)CharacterHelper.GetCharacterAddress(chara))
         {
             // Fire IPC event only if local player is the one playing the emote
             var provider = IpcProvider.Instance;
@@ -97,7 +98,7 @@ internal static unsafe class EmotePlayer
         if (chara == null)
             return;
 
-        var sheet = Service.DataManager.GetExcelSheet<Emote>();
+        var sheet = NoireService.DataManager.GetExcelSheet<Emote>();
         var emoteRow = sheet?.GetRow(emoteId);
 
         if (!emoteRow.HasValue)
@@ -148,28 +149,62 @@ internal static unsafe class EmotePlayer
     public static void PlayOneShotEmote(ICharacter? chara, ushort timelineId)
     {
         if (chara == null) return;
-        CommonHelper.GetCharacter(chara)->Timeline.TimelineSequencer.PlayTimeline(timelineId);
+
+        var native = CharacterHelper.GetCharacterAddress(chara);
+
+        if (CharacterHelper.IsCharacterSleeping(chara))
+            return;
+
+        bool isSitting = CharacterHelper.IsCharacterChairSitting(chara) || CharacterHelper.IsCharacterGroundSitting(chara);
+        bool isMounted = CharacterHelper.IsCharacterMounted(chara);
+        bool isRidingPillion = CharacterHelper.IsCharacterRidingPillion(chara);
+
+        if (isSitting || isMounted || isRidingPillion)
+        {
+            var sheet = Service.EmoteSheet;
+            if (sheet != null)
+            {
+                foreach (var emote in sheet)
+                {
+                    if ((ushort)emote.ActionTimeline[0].RowId == timelineId)
+                    {
+                        ushort upperBody = (ushort)emote.ActionTimeline[4].RowId;
+                        if (upperBody != 0)
+                        {
+                            native->Timeline.TimelineSequencer.PlayTimeline(upperBody);
+                            return;
+                        }
+                        break;
+                    }
+                }
+            }
+            return;
+        }
+
+        native->Timeline.TimelineSequencer.PlayTimeline(timelineId);
     }
 
     public static void StopLoop(ICharacter? chara, bool shouldRemoveFromList)
     {
         if (chara == null) return;
 
+        var trackedCharacter = Helpers.CommonHelper.TryGetTrackedCharacterFromAddress(chara.Address);
+
+        if (trackedCharacter == null) return;
+
         if (chara is INpc)
             Stop(Service.Player, chara);
         else
             StopToIdle(Service.Player, chara);
 
-        var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(chara.Address);
-
-        if (trackedCharacter != null && shouldRemoveFromList)
+        if (shouldRemoveFromList)
         {
-            CommonHelper.RemoveChracterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
+            Helpers.CommonHelper.RemoveCharacterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
 
-            if (TrackedCharacters.Count == 0 && _updateHooked)
+            if (TrackedCharacters.Count == 0 && UpdateHooked)
             {
-                Service.Framework.Update -= OnFrameworkUpdate;
-                _updateHooked = false;
+                NoireService.Framework.Update -= OnFrameworkUpdate;
+                UpdateHooked = false;
             }
         }
     }
@@ -178,17 +213,18 @@ internal static unsafe class EmotePlayer
     {
         foreach (var trackedCharacter in TrackedCharacters)
         {
-            var character = CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
+            var character = Helpers.CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
 
             if (character == null)
             {
-                CommonHelper.RemoveChracterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
+                Helpers.CommonHelper.RemoveCharacterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
                 return;
             }
 
             var charaName = character.Name.TextValue;
+            var trackedChara = Helpers.CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
 
-            if (CommonHelper.IsCharacterInObjectTable(trackedCharacter) == false)
+            if (trackedChara == null || !CharacterHelper.IsCharacterInObjectTable(trackedChara))
             {
                 StopLoop(character, true);
                 return;
@@ -212,7 +248,7 @@ internal static unsafe class EmotePlayer
             }
 
             // Check if weapon drawn state has changed
-            var isWeaponDrawn = CommonHelper.IsCharacterWeaponDrawn(character.Address);
+            var isWeaponDrawn = CharacterHelper.IsCharacterWeaponDrawn(character.Address);
             if (isWeaponDrawn != trackedCharacter.IsWeaponDrawn)
             {
                 StopLoop(character, true);
@@ -223,13 +259,18 @@ internal static unsafe class EmotePlayer
 
     public unsafe static void FaceTarget()
     {
-        if (Service.ClientState.LocalPlayer is not ICharacter localCharacter ||
-            Service.TargetManager.Target is not ICharacter targetCharacter)
+        if (NoireService.ClientState.LocalPlayer is not ICharacter localCharacter ||
+            NoireService.TargetManager.Target is not ICharacter targetCharacter)
             return;
 
-        var rotToTarget = CommonHelper.GetRotationToTarget(localCharacter, targetCharacter);
+        if (CharacterHelper.IsCharacterChairSitting(localCharacter) ||
+            CharacterHelper.IsCharacterGroundSitting(localCharacter) ||
+            CharacterHelper.IsCharacterSleeping(localCharacter))
+            return;
 
-        var character = CommonHelper.GetCharacter(localCharacter);
+        var rotToTarget = Helpers.CommonHelper.GetRotationToTarget(localCharacter, targetCharacter);
+
+        var character = CharacterHelper.GetCharacterAddress(localCharacter);
         character->Rotation = rotToTarget;
     }
 
@@ -237,7 +278,7 @@ internal static unsafe class EmotePlayer
     {
         foreach (var trackedCharacter in TrackedCharacters)
         {
-            var character = CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
+            var character = Helpers.CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
 
             if (character is IPlayerCharacter)
                 StopToIdle(Service.Player, character);
@@ -247,6 +288,6 @@ internal static unsafe class EmotePlayer
 
         Service.Player.Dispose();
 
-        Service.Framework.Update -= OnFrameworkUpdate;
+        NoireService.Framework.Update -= OnFrameworkUpdate;
     }
 }

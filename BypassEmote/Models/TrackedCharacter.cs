@@ -1,5 +1,5 @@
-using BypassEmote.Helpers;
 using Dalamud.Game.ClientState.Objects.Types;
+using NoireLib.Helpers;
 using System;
 using System.Numerics;
 
@@ -9,15 +9,15 @@ public class TrackedCharacter
 {
     public string UniqueId = Guid.NewGuid().ToString();
     public ulong? CID;
-    public uint? DataId;
+    public uint? BaseId;
     public Vector3 LastPlayerPosition;
     public float LastPlayerRotation;
     public bool IsWeaponDrawn;
 
-    public TrackedCharacter(ulong? cid, uint? dataId, Vector3 lastPlayerPos, float lastPlayerRot, bool isWeaponDrawn)
+    public TrackedCharacter(ulong? cid, uint? baseId, Vector3 lastPlayerPos, float lastPlayerRot, bool isWeaponDrawn)
     {
         CID = cid;
-        DataId = dataId;
+        BaseId = baseId;
         LastPlayerPosition = lastPlayerPos;
         LastPlayerRotation = lastPlayerRot;
         IsWeaponDrawn = isWeaponDrawn;
@@ -28,15 +28,15 @@ public class TrackedCharacter
         ICharacter? character;
 
         if (CID != null)
-            character = CommonHelper.TryGetCharacterFromCID(CID.Value);
-        else if (DataId != null)
-            character = CommonHelper.TryGetCharacterFromDataId(DataId.Value);
+            character = CharacterHelper.TryGetCharacterFromCID(CID.Value);
+        else if (BaseId != null)
+            character = CharacterHelper.TryGetCharacterFromBaseId(BaseId.Value);
         else
             return;
 
         if (character == null) return;
         LastPlayerPosition = character.Position;
         LastPlayerRotation = character.Rotation;
-        IsWeaponDrawn = CommonHelper.IsCharacterWeaponDrawn(character.Address);
+        IsWeaponDrawn = CharacterHelper.IsCharacterWeaponDrawn(character.Address);
     }
 }

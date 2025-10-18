@@ -23,8 +23,6 @@ public sealed class ActionTimelinePlayer : IDisposable
         _states.Clear();
     }
 
-    // --- Public API ---
-
     public unsafe float GetOverallSpeed(ICharacter character)
     {
         var native = GetNative(character);
@@ -77,8 +75,8 @@ public sealed class ActionTimelinePlayer : IDisposable
             st.OriginalBase = new OriginalBase(native->Mode, native->ModeParam, native->Timeline.BaseOverride);
 
         // Do not change mode for player characters since it can cause issues on the server if not handled properly.
-        if (character is not IPlayerCharacter chara)
-            native->SetMode(CharacterModes.AnimLock, 0);
+        //if (character is not IPlayerCharacter chara)
+        //    native->SetMode(CharacterModes.AnimLock, 0);
 
         native->Timeline.BaseOverride = actionTimeline;
 
