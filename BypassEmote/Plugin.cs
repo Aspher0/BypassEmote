@@ -1,9 +1,11 @@
 using BypassEmote.UI;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
+using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -14,15 +16,13 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.Shell;
 using Lumina.Excel.Sheets;
 using Lumina.Extensions;
+using NoireLib;
+using NoireLib.Changelog;
+using NoireLib.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using static FFXIVClientStructs.FFXIV.Client.Game.Control.EmoteController;
-using NoireLib;
-using NoireLib.Changelog;
-using NoireLib.Helpers;
-using Dalamud.Interface;
-using Dalamud.Bindings.ImGui;
 
 namespace BypassEmote;
 

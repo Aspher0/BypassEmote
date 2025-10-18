@@ -13,6 +13,7 @@ using System.Threading;
 using ECommons.DalamudServices.Legacy;
 using BypassEmote.Models;
 using NoireLib;
+using NoireLib.Helpers.Colors;
 
 namespace BypassEmote;
 
@@ -388,6 +389,8 @@ public class Service
                     "Update Available",
                     NotificationType.Info,
                     300000);
+
+                NoireLogger.PrintToChatRGB($"A new update is available. Please update the plugin in /xlplugins. Current version: {currentVersion} - New version: {remoteVersion}.", "[Bypass Emote] ", ColorHelper.HexToVector3("#FCC203"));
             }
         }
         catch (Exception ex)
