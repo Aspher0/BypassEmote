@@ -1,6 +1,9 @@
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
+using NoireLib;
+using NoireLib.Changelog;
+using NoireLib.UpdateTracker;
 using System;
 using System.Numerics;
 
@@ -39,12 +42,18 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.Checkbox("Show Update Notifications", ref showUpdateNotification))
         {
             Service.Configuration.UpdateConfiguration(() => Service.Configuration.ShowUpdateNotification = showUpdateNotification);
-            //Service.OnUpdateNotificationConfigChanged(showUpdateNotification);
+            var updateTracker = NoireLibMain.GetModule<NoireUpdateTracker>();
+            updateTracker?.SetShouldShowNotificationOnUpdate(Service.Configuration.ShowUpdateNotification);
+            updateTracker?.SetShouldPrintMessageInChatOnUpdate(Service.Configuration.ShowUpdateNotification);
         }
 
         var showChangelogOnUpdate = Service.Configuration!.ShowChangelogOnUpdate;
         if (ImGui.Checkbox("Show Changelog on Updates", ref showChangelogOnUpdate))
-        Service.Configuration.UpdateConfiguration(() => Service.Configuration.ShowChangelogOnUpdate = showChangelogOnUpdate);
+        {
+            Service.Configuration.UpdateConfiguration(() => Service.Configuration.ShowChangelogOnUpdate = showChangelogOnUpdate);
+            var changelogManager = NoireLibMain.GetModule<NoireChangelogManager>();
+            changelogManager?.SetAutomaticallyShowChangelog(Service.Configuration.ShowChangelogOnUpdate);
+        }
     }
 
     public void Dispose() { }

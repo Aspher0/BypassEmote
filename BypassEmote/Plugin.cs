@@ -90,7 +90,7 @@ public sealed class Plugin : IDalamudPlugin
             NoireLogger.LogError(this, ex, "OnEmote Hook error");
         }
 
-        var changelogManager = new NoireChangelogManager(true, "ChangelogModule", Service.Configuration!.ShowChangelogOnUpdate);
+        var changelogManager = new NoireChangelogManager(true, "ChangelogModule", true, Service.Configuration!.ShowChangelogOnUpdate);
         NoireLibMain.AddModule(changelogManager)?
             .SetTitleBarButtons(
             [

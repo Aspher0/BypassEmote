@@ -10,6 +10,7 @@ public class V1_5_x_x : BaseChangelogVersion
     {
         CreateV1_5_0_0(),
         CreateV1_5_1_0(),
+        CreateV1_5_1_1(),
     };
 
     private static ChangelogVersion CreateV1_5_0_0()
@@ -44,7 +45,7 @@ public class V1_5_x_x : BaseChangelogVersion
         => new ChangelogVersion
         {
             Version = new(1, 5, 1, 0),
-            Date = "21-10-2025",
+            Date = "22-10-2025",
             Title = "Bugfix, new UI option and various internal changes",
             TitleColor = Blue,
             Description = "",
@@ -63,6 +64,22 @@ public class V1_5_x_x : BaseChangelogVersion
 
                 Header("Technical Changes", Blue, FontAwesomeIcon.Code, Blue),
                 Entry("Refactored the code to use the new NoireLib helpers and utilities.", White, 1),
+            }
+        };
+
+    private static ChangelogVersion CreateV1_5_1_1()
+        => new ChangelogVersion
+        {
+            Version = new(1, 5, 1, 2),
+            Date = "22-10-2025",
+            Title = "Hotfix",
+            TitleColor = Blue,
+            Description = "",
+            Entries = new List<ChangelogEntry>
+            {
+                    Header("Bug Fixes", LightRed, FontAwesomeIcon.Wrench, LightRed),
+                    Entry("Fixed the changelog that would not show anymore.", White, 1),
+                    Entry("Fixed the settings to show the changelog and print in chat on update that were not enforced anymore.", White, 1),
             }
         };
 }
