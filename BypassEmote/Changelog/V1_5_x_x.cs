@@ -23,19 +23,19 @@ public class V1_5_x_x : BaseChangelogVersion
             Description = "Fixed emote playing capabilities, now allowing to bypass emotes when sitting or on a mount. Integrated NoireLib for improved utilities and features.",
             Entries = new List<ChangelogEntry>
             {
-                Header("New Features", Orange, FontAwesomeIcon.Plus, Orange),
+                Header("New Features", Orange, 0, FontAwesomeIcon.Plus, Orange),
                 Entry("You can now emote while sitting, groundsitting, mounted or riding pillion.", Orange, 1, FontAwesomeIcon.Chair, Orange),
                 Entry("You can now show emote IDs in the emote list.", White, 1, FontAwesomeIcon.ListOl, Orange),
 
                 Separator(),
 
-                Header("Bug Fixes", LightRed, FontAwesomeIcon.Wrench, LightRed),
+                Header("Bug Fixes", LightRed, 0, FontAwesomeIcon.Wrench, LightRed),
                 Entry("Fixed a bug where Dalamud UI language would be used to get emote commands instead of game language when typing auto-translate emote commands.", White, 1, FontAwesomeIcon.Language, LightRed),
                 Entry("Fixed a bug where NPCs emotes would bypass once and then block afterwards.", White, 1, FontAwesomeIcon.PeopleGroup, LightRed),
 
                 Separator(),
 
-                Header("Technical Changes", Blue, FontAwesomeIcon.Code, Blue),
+                Header("Technical Changes", Blue, 0, FontAwesomeIcon.Code, Blue),
                 Entry("Integrated NoireLib for improved utilities and changelog system.", White, 1, FontAwesomeIcon.Book, Blue),
                 Entry("Refactored emote and character helpers to use NoireLib utilities.", White, 1, FontAwesomeIcon.CodeBranch, Blue),
             }
@@ -51,19 +51,19 @@ public class V1_5_x_x : BaseChangelogVersion
             Description = "",
             Entries = new List<ChangelogEntry>
             {
-                Header("New Features", Orange, FontAwesomeIcon.Plus, Orange),
+                Header("New Features", Orange, 0, FontAwesomeIcon.Plus, Orange),
                 Entry("For debug purposes, you can now show absolutely *all* in game emotes, including invalid ones, with an option in the emote window. Look for \"Show Invalid Emotes\".", White, 1, FontAwesomeIcon.Bug, Orange),
 
                 Separator(),
 
-                Header("Bug Fixes", LightRed, FontAwesomeIcon.Wrench, LightRed),
-                Entry("Emotes previously in the \"Other\" tab had disappeared. Those are now back.", White, 1),
-                Entry("Other various bug fixes.", White, 1),
+                Header("Bug Fixes", LightRed, 0, FontAwesomeIcon.Wrench, LightRed),
+                EntryBullet("Emotes previously in the \"Other\" tab had disappeared. Those are now back.", White, 1),
+                EntryBullet("Other various bug fixes.", White, 1),
 
                 Separator(),
 
-                Header("Technical Changes", Blue, FontAwesomeIcon.Code, Blue),
-                Entry("Refactored the code to use the new NoireLib helpers and utilities.", White, 1),
+                Header("Technical Changes", Blue, 0, FontAwesomeIcon.Code, Blue),
+                EntryBullet("Refactored the code to use the new NoireLib helpers and utilities.", White, 1),
             }
         };
 
@@ -74,12 +74,12 @@ public class V1_5_x_x : BaseChangelogVersion
             Date = "22-10-2025",
             Title = "Hotfix",
             TitleColor = Blue,
-            Description = "",
+            Description = "Bug Hotfix",
             Entries = new List<ChangelogEntry>
             {
-                    Header("Bug Fixes", LightRed, FontAwesomeIcon.Wrench, LightRed),
-                    Entry("Fixed the changelog that would not show anymore.", White, 1),
-                    Entry("Fixed the settings to show the changelog and print in chat on update that were not enforced anymore.", White, 1),
+                    Header("Bug Fixes", LightRed, 0, FontAwesomeIcon.Wrench, LightRed),
+                    EntryBullet("Fixed the changelog that would not show anymore.", White, 1),
+                    EntryBullet("Fixed the settings to show the changelog and print in chat on update that were not enforced anymore.", White, 1),
             }
         };
 }

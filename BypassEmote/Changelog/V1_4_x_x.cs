@@ -25,45 +25,45 @@ public class V1_4_x_x : BaseChangelogVersion
             Description = "Major update introducing a comprehensive changelog system with UI integration, configuration tracking, and enhanced user experience features.",
             Entries = new List<ChangelogEntry>
             {
-                Header("Changelog system", Orange, FontAwesomeIcon.Book),
-                Entry("Introduced ChangelogWindow UI for viewing updates", Blue, 1),
-                    Entry("Accessible via main plugin window book button", null, 2),
-                    Entry("Clean, organized display of version history", null, 2),
-                    Entry("Interactive elements and color-coded entries", null, 2),
+                Header("Changelog system", Orange, 0, FontAwesomeIcon.Book),
+                EntryBullet("Introduced ChangelogWindow UI for viewing updates", Blue, 1),
+                    EntryBullet("Accessible via main plugin window book button", null, 2),
+                    EntryBullet("Clean, organized display of version history", null, 2),
+                    EntryBullet("Interactive elements and color-coded entries", null, 2),
 
-                Entry("Comprehensive changelog management system", null, 1),
-                    Entry("Versioned changelog entries with structured data", null, 2),
-                    Entry("Automatic changelog version tracking", null, 2),
-                    Entry("Support for rich formatting and icons", null, 2),
-
-                Separator(),
-
-                Header("Added new emote data collected from FFXIVCollect", Orange, FontAwesomeIcon.Database),
-                    Entry("Added which patch the emote is from", null, 1),
-                    Entry("Added the obtention methods to get the emote", null, 1),
+                EntryBullet("Comprehensive changelog management system", null, 1),
+                    EntryBullet("Versioned changelog entries with structured data", null, 2),
+                    EntryBullet("Automatic changelog version tracking", null, 2),
+                    EntryBullet("Support for rich formatting and icons", null, 2),
 
                 Separator(),
 
-                Header("Configuration & Settings", Orange, FontAwesomeIcon.Cog),
-                Entry("Updated configuration system to track changelog versions", null, 1),
-                    Entry("Show changelog on update", Blue, 2),
-                    Entry("Last seen changelog version tracking", null, 2),
-                Entry("Added an option to show update notifications", Blue, 1),
+                Header("Added new emote data collected from FFXIVCollect", Orange, 0, FontAwesomeIcon.Database),
+                    EntryBullet("Added which patch the emote is from", null, 1),
+                    EntryBullet("Added the obtention methods to get the emote", null, 1),
 
                 Separator(),
 
-                Header("User Interface", Orange, FontAwesomeIcon.Eye),
-                Entry("Enhanced main plugin window with new action buttons in the title bar", null, 1),
-                    Entry("Added changelog button in title bar", Blue, 2),
-                    Entry("New settings access button", Blue, 2),
-                    Button("Integrated support button (Ko-Fi)", pastelPink, "Donate", null, pastelPink, (m) => { Service.OpenKofi();  }),
+                Header("Configuration & Settings", Orange, 0, FontAwesomeIcon.Cog),
+                EntryBullet("Updated configuration system to track changelog versions", null, 1),
+                    EntryBullet("Show changelog on update", Blue, 2),
+                    EntryBullet("Last seen changelog version tracking", null, 2),
+                EntryBullet("Added an option to show update notifications", Blue, 1),
 
-                Entry("Added favorited emotes feature", Blue, 1, FontAwesomeIcon.Star, Orange),
-                    Entry("Easily access frequently used emotes", null, 2),
-                    Entry("Mark/unmark emotes as favorites", null, 2),
-                    Entry("View all favorited emotes in the \"Fav\" tab", null, 2),
+                Separator(),
 
-                Entry("Added an info circle you can hover to see what patch the emote is from, and how to obtain it", Blue, 1, FontAwesomeIcon.InfoCircle, null),
+                Header("User Interface", Orange, 0, FontAwesomeIcon.Eye),
+                EntryBullet("Enhanced main plugin window with new action buttons in the title bar", null, 1),
+                    EntryBullet("Added changelog button in title bar", Blue, 2),
+                    EntryBullet("New settings access button", Blue, 2),
+                    Button("Integrated support button (Ko-Fi)", pastelPink, "Donate", null, pastelPink, (m) => { Service.OpenKofi();  }, 1, FontAwesomeIcon.Donate, pastelPink),
+
+                Entry("Added favorited emotes feature", Orange, 1, FontAwesomeIcon.Star, Orange),
+                    EntryBullet("Easily access frequently used emotes", null, 2),
+                    EntryBullet("Mark/unmark emotes as favorites", null, 2),
+                    EntryBullet("View all favorited emotes in the \"Fav\" tab", null, 2),
+
+                Entry("Added an info circle you can hover to see what patch the emote is from, and how to obtain it", Blue, 1, FontAwesomeIcon.InfoCircle, White),
             }
         };
     }
@@ -79,7 +79,7 @@ public class V1_4_x_x : BaseChangelogVersion
             Entries = new List<ChangelogEntry>
             {
                 Header("Improved Emote Detection", Orange),
-                Entry("The game will now display Patch 7.35 game emotes.", Blue, 1),
+                EntryBullet("The game will now display Patch 7.35 game emotes.", Orange, 1),
             }
         };
 }
