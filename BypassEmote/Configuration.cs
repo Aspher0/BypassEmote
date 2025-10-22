@@ -16,6 +16,7 @@ public class Configuration : IPluginConfiguration
     public List<uint> FavoriteEmotes { get; set; } = new List<uint>();
     public bool ShowChangelogOnUpdate { get; set; } = true;
     public bool ShowEmoteIds { get; set; } = false;
+    public bool ShowInvalidEmotes { get; set; } = false;
 
     public void UpdateConfiguration(Action updateAction)
     {

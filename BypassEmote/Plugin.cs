@@ -15,10 +15,10 @@ using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.Shell;
 using Lumina.Excel.Sheets;
-using Lumina.Extensions;
 using NoireLib;
 using NoireLib.Changelog;
 using NoireLib.Helpers;
+using NoireLib.UpdateTracker;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,8 +35,8 @@ public sealed class Plugin : IDalamudPlugin
     public delegate void OnEmoteFuncDelegate(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2);
     private readonly Hook<OnEmoteFuncDelegate> onEmoteHook = null!;
 
-    private Hook<ShellCommandModule.Delegates.ExecuteCommandInner>? ExecuteCommandInnerHook { get; init; }
-    private Hook<EmoteManager.Delegates.ExecuteEmote>? ExecuteEmoteHook { get; init; }
+    private Hook<ShellCommandModule.Delegates.ExecuteCommandInner> ExecuteCommandInnerHook { get; init; }
+    private Hook<EmoteManager.Delegates.ExecuteEmote> ExecuteEmoteHook { get; init; }
 
     private readonly List<Tuple<string, string>> commandNames = [
         new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config. Use with argument <emote_name> to bypass any emote (including unlocked ones) on yourself: /be <emote_command>."),
@@ -51,8 +51,8 @@ public sealed class Plugin : IDalamudPlugin
 
     public unsafe Plugin()
     {
-        ECommonsMain.Init(PluginInterface, this);
         NoireLibMain.Initialize(PluginInterface, this);
+        ECommonsMain.Init(PluginInterface, this);
 
         Service.Plugin = this;
 
@@ -90,8 +90,8 @@ public sealed class Plugin : IDalamudPlugin
             NoireLogger.LogError(this, ex, "OnEmote Hook error");
         }
 
-        var cm = new NoireChangelogManager(true, "ChangelogModule", Service.Configuration!.ShowChangelogOnUpdate);
-        NoireLibMain.AddModule(cm)?
+        var changelogManager = new NoireChangelogManager(true, "ChangelogModule", Service.Configuration!.ShowChangelogOnUpdate);
+        NoireLibMain.AddModule(changelogManager)?
             .SetTitleBarButtons(
             [
                 new()
@@ -110,6 +110,11 @@ public sealed class Plugin : IDalamudPlugin
                     ShowTooltip = () => ImGui.SetTooltip("Support me"),
                 },
             ]);
+
+        NoireLibMain.AddModule(new NoireUpdateTracker(true,
+            "UpdateTrackerModule",
+            true,
+            "https://raw.githubusercontent.com/Aspher0/BypassEmote/refs/heads/main/repo.json"));
     }
 
     private void SetupUI()
@@ -152,7 +157,7 @@ public sealed class Plugin : IDalamudPlugin
                 return;
             }
 
-            var emote = Helpers.CommonHelper.TryGetEmoteFromStringCommand(splitArgs[0]);
+            var emote = EmoteHelper.GetEmoteByCommand(splitArgs[0]);
 
             if (emote != null && NoireService.ClientState.LocalPlayer != null)
             {
@@ -180,7 +185,7 @@ public sealed class Plugin : IDalamudPlugin
                     return;
                 }
 
-                var emote = Helpers.CommonHelper.TryGetEmoteFromStringCommand(splitArgs[0]);
+                var emote = EmoteHelper.GetEmoteByCommand(splitArgs[0]);
 
                 if (emote == null)
                 {
@@ -202,7 +207,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         if (!Service.Configuration!.PluginEnabled)
         {
-            ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
+            ExecuteCommandInnerHook.Original(commandModule, rawMessage, uiModule);
             return;
         }
 
@@ -211,22 +216,22 @@ public sealed class Plugin : IDalamudPlugin
 
         if (message.IsNullOrEmpty() || !message.StartsWith('/'))
         {
-            ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
+            ExecuteCommandInnerHook.Original(commandModule, rawMessage, uiModule);
             return;
         }
 
         if (NoireService.ClientState.LocalPlayer == null)
         {
             NoireLogger.LogError(this, "Player not ready.", "[DetourExecuteCommand] ");
-            ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
+            ExecuteCommandInnerHook.Original(commandModule, rawMessage, uiModule);
             return;
         }
 
-        var foundEmote = LinqExtensions.FirstOrNull(Service.EmoteCommands, e => e.Item1 == message);
+        var foundEmote = EmoteHelper.GetEmoteByCommand(message.TrimStart('/'));
 
         if (!foundEmote.HasValue)
         {
-            ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
+            ExecuteCommandInnerHook.Original(commandModule, rawMessage, uiModule);
             return;
         }
 
@@ -235,21 +240,21 @@ public sealed class Plugin : IDalamudPlugin
         // Just a safety check, should never be null here
         if (chara == null)
         {
-            ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
+            ExecuteCommandInnerHook.Original(commandModule, rawMessage, uiModule);
             return;
         }
 
-        var isEmoteUnlocked = Helpers.CommonHelper.IsEmoteUnlocked(foundEmote.Value.Item2.RowId);
+        var isEmoteUnlocked = EmoteHelper.IsEmoteUnlocked(foundEmote.Value.RowId);
 
         if (isEmoteUnlocked)
         {
-            ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
+            ExecuteCommandInnerHook.Original(commandModule, rawMessage, uiModule);
             return;
         }
 
-        EmotePlayer.PlayEmote(chara, foundEmote.Value.Item2);
+        EmotePlayer.PlayEmote(chara, foundEmote.Value);
 
-        ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
+        ExecuteCommandInnerHook.Original(commandModule, rawMessage, uiModule);
     }
 
     // Detour the execute emote function to stop any currently playing bypassed looping emotes before executing a new base/obtained game emote
@@ -260,14 +265,14 @@ public sealed class Plugin : IDalamudPlugin
 
         // Just a safety check, should never be null here
         if (chara == null)
-            return ExecuteEmoteHook!.Original(emoteManager, emoteId, playEmoteOption);
+            return ExecuteEmoteHook.Original(emoteManager, emoteId, playEmoteOption);
 
         var trackedCharacter = Helpers.CommonHelper.TryGetTrackedCharacterFromAddress(chara.Address);
 
         if (trackedCharacter != null)
             EmotePlayer.StopLoop(chara, true);
 
-        return ExecuteEmoteHook!.Original(emoteManager, emoteId, playEmoteOption);
+        return ExecuteEmoteHook.Original(emoteManager, emoteId, playEmoteOption);
     }
 
     // Hooking this function to detect when an emote is played by any character (including the local player)

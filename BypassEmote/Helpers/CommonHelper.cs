@@ -3,11 +3,10 @@ using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Utility;
 using ECommons.MathHelpers;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using Lumina.Excel.Sheets;
-using Lumina.Extensions;
 using Lumina.Text.ReadOnly;
 using NoireLib;
 using NoireLib.Helpers;
@@ -106,6 +105,14 @@ public static class CommonHelper
         EmotePlayer.TrackedCharacters.RemoveAll(tc => tc.UniqueId == uniqueId);
     }
 
+    public static bool IsEmoteDisplayable(Emote emote)
+    {
+        if (TryGetEmoteSpecification(emote) != null)
+            return true;
+
+        return !emote.Name.ToString().IsNullOrWhitespace();
+    }
+
     public static string GetEmoteName(Emote emote)
     {
         var name = "";
@@ -114,8 +121,8 @@ public static class CommonHelper
 
         if (specification == null)
         {
-            return string.IsNullOrWhiteSpace(emote.Name.ToString()) ?
-                (emote.TextCommand.ValueNullable?.Command.ExtractText() ?? $"[{emote.RowId}] No name")
+            return emote.Name.ToString().IsNullOrWhitespace() ?
+                (emote.TextCommand.ValueNullable?.Command.ExtractText() ?? $"No name")
                 : name + $"{emote.Name.ToString()}";
         }
 
@@ -139,47 +146,22 @@ public static class CommonHelper
 
     public static string GetRealEmoteNameById(uint emoteId)
     {
-        var foundEmote = TryGetEmoteById(emoteId);
-        return foundEmote?.Name.ToString() ?? $"[{emoteId}] No name";
+        var foundEmote = EmoteHelper.GetEmoteById(emoteId);
+        return foundEmote?.Name.ToString() ?? $"No name";
     }
 
     public static ushort? GetRealEmoteIconById(uint emoteId)
     {
-        var foundEmote = TryGetEmoteById(emoteId);
+        var foundEmote = EmoteHelper.GetEmoteById(emoteId);
         return foundEmote?.Icon ?? null;
     }
-
-    public static Emote? TryGetEmoteById(uint emoteId)
-    {
-        var foundEmote = LinqExtensions.FirstOrNull(Service.Emotes, e => e.RowId == emoteId);
-        return foundEmote ?? null;
-    }
-
-    public static EmoteData.EmoteCategory GetEmoteCategory(Emote emote)
-    {
-        var categoryString = GetEmoteCategoryString(emote);
-
-        switch (categoryString)
-        {
-            case "General":
-                return EmoteData.EmoteCategory.General;
-            case "Special":
-                return EmoteData.EmoteCategory.Special;
-            case "Expressions":
-                return EmoteData.EmoteCategory.Expressions;
-            default:
-                return EmoteData.EmoteCategory.Unknown;
-        }
-    }
-
-    public static string GetEmoteCategoryString(Emote emote) => emote.EmoteCategory.Value.Name.ToString();
 
     public static EmoteData.EmotePlayType GetEmotePlayType(Emote emote)
     {
         var emoteSpecification = TryGetEmoteSpecification(emote);
         if (emoteSpecification != null) return emoteSpecification.Value.PlayType;
 
-        return (GetEmoteCategory(emote) == EmoteData.EmoteCategory.Special) ? EmoteData.EmotePlayType.Looped : EmoteData.EmotePlayType.OneShot;
+        return (EmoteHelper.GetEmoteCategory(emote) == NoireLib.Enums.EmoteCategory.Special) ? EmoteData.EmotePlayType.Looped : EmoteData.EmotePlayType.OneShot;
     }
 
     public static (object Object, EmoteData.EmotePlayType PlayType, string? Name, ushort? Icon)? TryGetEmoteSpecification(Emote emote)
@@ -198,15 +180,6 @@ public static class CommonHelper
         }
         
         return null;
-    }
-    
-    public static Emote? TryGetEmoteFromStringCommand(string command)
-    {
-        if (command.StartsWith('/'))
-            command = command[1..];
-
-        var foundEmote = LinqExtensions.FirstOrNull(Service.EmoteCommands, e => e.Item1 == $"/{command}");
-        return foundEmote.HasValue ? foundEmote.Value.Item2 : null;
     }
 
     public static unsafe ReadOnlySpan<byte> GetUtf8Span(Utf8String* s) => s == null ? ReadOnlySpan<byte>.Empty : new ReadOnlySpan<byte>(s->StringPtr, (int)s->Length);
@@ -227,11 +200,6 @@ public static class CommonHelper
             }
         }
         return sb.ToString();
-    }
-
-    public unsafe static bool IsEmoteUnlocked(uint emoteId)
-    {
-        return UIState.Instance()->IsEmoteUnlocked((ushort)emoteId);
     }
 
     public static float GetRotationToTarget(ICharacter from, ICharacter to)

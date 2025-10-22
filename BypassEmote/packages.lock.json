@@ -20,8 +20,11 @@
         "resolved": "3.0.1.14",
         "contentHash": "lqe2BlFaB6BS2MFXQsu33pIr/axjGmz4K4PoJwYwgcZGvt3JJqFIGLXTHUTYeWvT3eEfByPT0FQ7IdTCHQNdhA=="
       },
-      "noirelib": {
-        "type": "Project"
+      "NoireLib": {
+        "type": "Direct",
+        "requested": "[1.1.0, )",
+        "resolved": "1.1.0",
+        "contentHash": "S7SXZAxaLNpxDhdRkE0CM++Uu4T5yQm7faz5EJWOpkXSNrarHszjD9N9EhdTJYxYbJlO29Ssp7tQql5eJkbBag=="
       }
     }
   }

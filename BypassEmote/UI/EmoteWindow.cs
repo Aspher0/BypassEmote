@@ -1,10 +1,11 @@
 using BypassEmote.Data;
-using BypassEmote.Helpers;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Lumina.Excel.Sheets;
 using NoireLib;
+using NoireLib.Helpers;
+using NoireLib.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +16,8 @@ namespace BypassEmote.UI;
 public class EmoteWindow : Window, IDisposable
 {
     private enum LockedTab { All, General, Special, Expressions, Other, Favorites }
-    private LockedTab _currentTab = LockedTab.All;
-    private string _searchText = string.Empty;
+    private LockedTab currentTab = LockedTab.All;
+    private string searchText = string.Empty;
 
     public EmoteWindow() : base("Bypass Emote - Locked Emotes##BypassEmoteMain", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
@@ -67,11 +68,13 @@ public class EmoteWindow : Window, IDisposable
 
         // Calculate total width needed for both checkboxes
         var showAllText = "Show all emotes";
+        var showInvalidText = "Show invalid emotes";
         var showIdsText = "Show IDs";
         var showAllWidth = ImGui.CalcTextSize(showAllText).X + ImGui.GetStyle().FramePadding.X * 2 + ImGui.GetFrameHeight();
+        var showInvalidWidth = ImGui.CalcTextSize(showInvalidText).X + ImGui.GetStyle().FramePadding.X * 2 + ImGui.GetFrameHeight();
         var showIdsWidth = ImGui.CalcTextSize(showIdsText).X + ImGui.GetStyle().FramePadding.X * 2 + ImGui.GetFrameHeight();
         var spacing = ImGui.GetStyle().ItemSpacing.X;
-        var totalWidth = showAllWidth + spacing + showIdsWidth;
+        var totalWidth = showAllWidth + spacing + showInvalidWidth + spacing + showIdsWidth;
         availWidth = ImGui.GetContentRegionAvail().X;
         ImGui.SetCursorPosX((availWidth - totalWidth) * 0.5f);
 
@@ -79,6 +82,14 @@ public class EmoteWindow : Window, IDisposable
         if (ImGui.Checkbox("Show all emotes", ref showAllEmotes))
         {
             Service.Configuration.UpdateConfiguration(() => Service.Configuration!.ShowAllEmotes = showAllEmotes);
+        }
+
+        ImGui.SameLine();
+
+        bool showInvalidEmotes = Service.Configuration!.ShowInvalidEmotes;
+        if (ImGui.Checkbox("Show Invalid Emotes", ref showInvalidEmotes))
+        {
+            Service.Configuration.UpdateConfiguration(() => Service.Configuration!.ShowInvalidEmotes = showInvalidEmotes);
         }
 
         ImGui.SameLine();
@@ -92,38 +103,38 @@ public class EmoteWindow : Window, IDisposable
         ImGui.Separator();
 
         ImGui.SetNextItemWidth(-1);
-        ImGui.InputTextWithHint("##SearchEmotes", "Search emotes...", ref _searchText, 256);
+        ImGui.InputTextWithHint("##SearchEmotes", "Search emotes...", ref searchText, 256);
 
         if (ImGui.BeginTabBar("##LockedEmotesTabs", ImGuiTabBarFlags.FittingPolicyScroll))
         {
             if (ImGui.BeginTabItem("All"))
             {
-                _currentTab = LockedTab.All;
+                currentTab = LockedTab.All;
                 ImGui.EndTabItem();
             }
             if (ImGui.BeginTabItem("General"))
             {
-                _currentTab = LockedTab.General;
+                currentTab = LockedTab.General;
                 ImGui.EndTabItem();
             }
             if (ImGui.BeginTabItem("Special"))
             {
-                _currentTab = LockedTab.Special;
+                currentTab = LockedTab.Special;
                 ImGui.EndTabItem();
             }
             if (ImGui.BeginTabItem("Expressions"))
             {
-                _currentTab = LockedTab.Expressions;
+                currentTab = LockedTab.Expressions;
                 ImGui.EndTabItem();
             }
             if (ImGui.BeginTabItem("Other"))
             {
-                _currentTab = LockedTab.Other;
+                currentTab = LockedTab.Other;
                 ImGui.EndTabItem();
             }
             if (ImGui.BeginTabItem("Fav", ImGuiTabItemFlags.Leading))
             {
-                _currentTab = LockedTab.Favorites;
+                currentTab = LockedTab.Favorites;
                 ImGui.EndTabItem();
             }
 
@@ -137,16 +148,24 @@ public class EmoteWindow : Window, IDisposable
 
         ImGui.BeginChild("##LockedEmotesBox", new Vector2(avail.X, avail.Y), true, ImGuiWindowFlags.None);
 
-        var displayedEmotes = new List<(Emote, EmoteData.EmoteCategory)>(Service.LockedEmotes);
+        var displayedEmotes = new List<(Emote, NoireLib.Enums.EmoteCategory)>(Service.LockedEmotes);
 
-        if (Service.Configuration!.ShowAllEmotes || _currentTab == LockedTab.Favorites)
-            displayedEmotes = Service.Emotes.Select(e => (e, CommonHelper.GetEmoteCategory(e))).ToList() ?? new List<(Emote, EmoteData.EmoteCategory)>();
+        if (Service.Configuration!.ShowAllEmotes || currentTab == LockedTab.Favorites)
+        {
+            var emoteSheet = ExcelSheetHelper.GetSheet<Emote>();
 
-        displayedEmotes.RemoveAll(e => e.Item1.Order == 0);
+            displayedEmotes = emoteSheet != null
+                ? emoteSheet.Select(e => (e, EmoteHelper.GetEmoteCategory(e))).ToList()
+                : new List<(Emote, NoireLib.Enums.EmoteCategory)>();
+        }
+
+        if (!Service.Configuration.ShowInvalidEmotes && currentTab != LockedTab.Favorites)
+            displayedEmotes.RemoveAll(e => !Helpers.CommonHelper.IsEmoteDisplayable(e.Item1));
+
         displayedEmotes = displayedEmotes.OrderByDescending(e => e.Item1.RowId).ToList();
 
         // Check if we're in favorites tab and if there are any favorites
-        if (_currentTab == LockedTab.Favorites && Service.Configuration.FavoriteEmotes.Count == 0)
+        if (currentTab == LockedTab.Favorites && Service.Configuration.FavoriteEmotes.Count == 0)
         {
             // Center the "No favorited emote" message
             var textSize = ImGui.CalcTextSize("No favorited emote");
@@ -161,23 +180,23 @@ public class EmoteWindow : Window, IDisposable
         {
             foreach (var emote in displayedEmotes)
             {
-                if (CommonHelper.GetEmotePlayType(emote.Item1) == EmoteData.EmotePlayType.DoNotPlay)
+                if (Helpers.CommonHelper.GetEmotePlayType(emote.Item1) == EmoteData.EmotePlayType.DoNotPlay)
                     continue;
 
                 // Filter based on selected tab
-                if (_currentTab == LockedTab.Favorites && !Service.Configuration.FavoriteEmotes.Contains(emote.Item1.RowId))
+                if (currentTab == LockedTab.Favorites && !Service.Configuration.FavoriteEmotes.Contains(emote.Item1.RowId))
                     continue;
-                if (_currentTab == LockedTab.General && CommonHelper.GetEmoteCategory(emote.Item1) != EmoteData.EmoteCategory.General)
+                if (currentTab == LockedTab.General && emote.Item2 != NoireLib.Enums.EmoteCategory.General)
                     continue;
-                if (_currentTab == LockedTab.Special && CommonHelper.GetEmoteCategory(emote.Item1) != EmoteData.EmoteCategory.Special)
+                if (currentTab == LockedTab.Special && emote.Item2 != NoireLib.Enums.EmoteCategory.Special)
                     continue;
-                if (_currentTab == LockedTab.Expressions && CommonHelper.GetEmoteCategory(emote.Item1) != EmoteData.EmoteCategory.Expressions)
+                if (currentTab == LockedTab.Expressions && emote.Item2 != NoireLib.Enums.EmoteCategory.Expressions)
                     continue;
-                if (_currentTab == LockedTab.Other && CommonHelper.GetEmoteCategory(emote.Item1) != EmoteData.EmoteCategory.Unknown)
+                if (currentTab == LockedTab.Other && emote.Item2 != NoireLib.Enums.EmoteCategory.Unknown)
                     continue;
 
                 var displayedName = Service.Configuration!.ShowEmoteIds ? $"[{emote.Item1.RowId}] " : "";
-                displayedName += CommonHelper.GetEmoteName(emote.Item1);
+                displayedName += Helpers.CommonHelper.GetEmoteName(emote.Item1);
 
                 // Build commands string (all associated, comma separated)
                 var commands = new List<string>(4);
@@ -197,8 +216,8 @@ public class EmoteWindow : Window, IDisposable
                 var label = commands.Count > 0 ? $"{displayedName} ({string.Join(", ", commands)})" : displayedName;
 
                 // Filter based on search text
-                if (!string.IsNullOrWhiteSpace(_searchText) &&
-                    !label.Contains(_searchText, StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrWhiteSpace(searchText) &&
+                    !label.Contains(searchText, StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 // Draw favorite star on the very left
@@ -244,7 +263,7 @@ public class EmoteWindow : Window, IDisposable
                 var iconSize = 25f;
                 try
                 {
-                    var iconTex = NoireService.TextureProvider.GetFromGameIcon((uint)CommonHelper.GetEmoteIcon(emote.Item1));
+                    var iconTex = NoireService.TextureProvider.GetFromGameIcon((uint)Helpers.CommonHelper.GetEmoteIcon(emote.Item1));
                     var wrap = iconTex?.GetWrapOrEmpty();
                     if (wrap != null)
                     {

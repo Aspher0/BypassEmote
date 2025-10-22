@@ -1,6 +1,6 @@
 using Dalamud.Interface;
 using NoireLib.Changelog;
-using NoireLib.Helpers.Colors;
+using NoireLib.Helpers;
 using System.Collections.Generic;
 
 namespace BypassEmote.Changelog.Versions;

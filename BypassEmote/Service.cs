@@ -1,19 +1,14 @@
-using BypassEmote.Data;
-using BypassEmote.Helpers;
 using Dalamud.Game;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Dalamud.Interface.ImGuiNotification;
 using System;
-using System.Linq;
-using System.Threading;
-using ECommons.DalamudServices.Legacy;
 using BypassEmote.Models;
 using NoireLib;
-using NoireLib.Helpers.Colors;
+using NoireLib.Helpers;
+using NoireLib.Internal;
 
 namespace BypassEmote;
 
@@ -24,10 +19,7 @@ public class Service
     public static Plugin Plugin { get; set; } = null!;
     public static Configuration? Configuration { get; set; }
 
-    public static Lumina.Excel.ExcelSheet<Emote>? EmoteSheet;
-    public static HashSet<(string, Emote)> EmoteCommands = [];
-    public static HashSet<Emote> Emotes= [];
-    public static List<(Emote, EmoteData.EmoteCategory)> LockedEmotes = [];
+    public static List<(Emote, NoireLib.Enums.EmoteCategory)> LockedEmotes = [];
 
     // Dictionary: Emote RowId -> (patch, List of (source type, source text)) from ffxivcollect
     public static Dictionary<uint, (string? Patch, List<(string Type, string Text)> Sources)> EmoteSources { get; } = new();
@@ -39,23 +31,14 @@ public class Service
     private static readonly HttpClient Http = new HttpClient() { Timeout = TimeSpan.FromSeconds(10) };
     private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
-    private static Timer? UpdateCheckTimer;
-    private static bool UpdateNotificationShown = false;
-
     public static void InitializeService()
     {
         NoireService.ClientState.Login += RefreshLockedEmotes;
-        NoireService.ClientState.Logout += (int type, int code) => ClearLockedEmoted();
-
-        EmoteSheet = NoireService.DataManager.GetExcelSheet<Emote>();
+        NoireService.ClientState.Logout += (int type, int code) => ClearLockedEmotes();
 
         InitializeConfig();
-        InitializeEmotes();
 
-        // Fetch emote sources from FFXIVCollect API
         _ = FetchAndBuildEmoteSourcesAsync();
-
-        StartUpdateCheckTimer();
 
         NoireService.Framework.RunOnFrameworkThread(() =>
         {
@@ -70,122 +53,36 @@ public class Service
         Configuration.Save();
     }
 
-    public static void InitializeEmotes()
-    {
-        if (EmoteSheet == null)
-        {
-            NoireLogger.LogError<Service>("Failed to read Emotes list, EmoteSheet is null.");
-            return;
-        }
-
-        foreach (var emote in EmoteSheet)
-        {
-            var textCommand = emote.TextCommand.ValueNullable;
-            
-            var cmd = textCommand?.Command.ExtractText();
-            if (!string.IsNullOrWhiteSpace(cmd)) EmoteCommands.Add((cmd, emote));
-
-            var shortCmd = textCommand?.ShortCommand.ExtractText();
-            if (!string.IsNullOrWhiteSpace(shortCmd)) EmoteCommands.Add((shortCmd, emote));
-
-            var alias = textCommand?.Alias.ExtractText();
-            if (!string.IsNullOrWhiteSpace(alias)) EmoteCommands.Add((alias, emote));
-
-            var shortAlias = textCommand?.ShortAlias.ExtractText();
-            if (!string.IsNullOrWhiteSpace(shortAlias)) EmoteCommands.Add((shortAlias, emote));
-
-            Emotes.Add(emote);
-        }
-
-        if (EmoteCommands.Count == 0)
-            NoireLogger.LogError<Service>("Failed to build Emotes list.");
-    }
-
     public static void RefreshLockedEmotes()
     {
-        ClearLockedEmoted();
+        ClearLockedEmotes();
 
         if (!NoireService.ClientState.IsLoggedIn || NoireService.ClientState.LocalPlayer == null)
             return;
 
-        if (EmoteSheet == null || Emotes.Count == 0)
+        var emoteSheet = ExcelSheetHelper.GetSheet<Emote>();
+
+        if (emoteSheet == null)
             return;
         
-        foreach (var emote in Emotes)
+        foreach (var emote in emoteSheet)
         {
-            if (!CommonHelper.IsEmoteUnlocked(emote.RowId))
-                LockedEmotes.Add((emote, CommonHelper.GetEmoteCategory(emote)));
+            if (!EmoteHelper.IsEmoteUnlocked(emote.RowId))
+                LockedEmotes.Add((emote, EmoteHelper.GetEmoteCategory(emote)));
         }
     }
 
-    public static void ClearLockedEmoted()
+    public static void ClearLockedEmotes()
     {
         LockedEmotes.Clear();
     }
 
-    public static void OpenKofi() => OpenLinkInDefaultBrowser("https://ko-fi.com/aspher0");
-
-    public static void OpenLinkInDefaultBrowser(string url)
-    {
-        try
-        {
-            var psi = new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = url,
-                UseShellExecute = true
-            };
-            System.Diagnostics.Process.Start(psi);
-        }
-        catch (Exception ex)
-        {
-            NoireLogger.LogError<Service>(ex, $"Failed to open link.");
-        }
-    }
-
-    public static void OnUpdateNotificationConfigChanged(bool enabled)
-    {
-        if (enabled)
-        {
-            UpdateNotificationShown = false;
-            StartUpdateCheckTimer();
-        }
-        else
-        {
-            StopUpdateCheckTimer();
-        }
-    }
-
-    private static void StartUpdateCheckTimer()
-    {
-        if (Configuration?.ShowUpdateNotification == true)
-        {
-            StopUpdateCheckTimer();
-            
-            UpdateCheckTimer = new Timer(async _ => await CheckForUpdateAsync(), 
-                null, 
-                TimeSpan.Zero, // Start now
-                TimeSpan.FromMinutes(30));
-        }
-    }
-
-    private static void StopUpdateCheckTimer()
-    {
-        UpdateCheckTimer?.Dispose();
-        UpdateCheckTimer = null;
-    }
-
-    public static void Dispose()
-    {
-        NoireService.ClientState.Login -= RefreshLockedEmotes;
-        NoireService.ClientState.Logout -= (int type, int code) => ClearLockedEmoted();
-
-        StopUpdateCheckTimer();
-        EmotePlayer.Dispose();
-    }
+    public static void OpenKofi() => CommonHelper.OpenUrl("https://ko-fi.com/aspher0");
 
     private static string GetGameLocaleParam()
     {
-        var lang = NoireService.DataManager.Language;
+        var lang = NoireService.ClientState.ClientLanguage;
+
         return lang switch
         {
             ClientLanguage.French => "fr",
@@ -213,14 +110,6 @@ public class Service
                 return;
             }
 
-            // Build a case-insensitive map of command -> Emote for quick lookup
-            var commandToEmote = new Dictionary<string, Emote>(System.StringComparer.OrdinalIgnoreCase);
-            foreach (var (cmd, emote) in EmoteCommands)
-            {
-                if (!string.IsNullOrWhiteSpace(cmd) && !commandToEmote.ContainsKey(cmd))
-                    commandToEmote[cmd] = emote;
-            }
-
             lock (EmoteSources)
                 EmoteSources.Clear();
 
@@ -236,10 +125,9 @@ public class Service
                     var cmd = part.Trim();
                     if (string.IsNullOrEmpty(cmd)) continue;
 
-                    if (!cmd.StartsWith('/'))
-                        cmd = "/" + cmd;
-
-                    if (commandToEmote.TryGetValue(cmd, out var emote))
+                    // Use EmoteHelper to find emote by command
+                    var emote = EmoteHelper.GetEmoteByCommand(cmd);
+                    if (emote.HasValue)
                     {
                         var entries = new HashSet<(string Type, string Text)>();
                         if (r.sources != null)
@@ -258,10 +146,10 @@ public class Service
                         {
                             lock (EmoteSources)
                             {
-                                if (!EmoteSources.TryGetValue(emote.RowId, out var existing))
+                                if (!EmoteSources.TryGetValue(emote.Value.RowId, out var existing))
                                 {
                                     existing = (r.patch, new List<(string Type, string Text)>());
-                                    EmoteSources[emote.RowId] = existing;
+                                    EmoteSources[emote.Value.RowId] = existing;
                                 }
                                 else
                                 {
@@ -269,7 +157,7 @@ public class Service
                                     if (string.IsNullOrWhiteSpace(existing.Patch) && !string.IsNullOrWhiteSpace(r.patch))
                                     {
                                         existing.Patch = r.patch;
-                                        EmoteSources[emote.RowId] = existing;
+                                        EmoteSources[emote.Value.RowId] = existing;
                                     }
                                 }
 
@@ -288,53 +176,49 @@ public class Service
 
                 if (!matched && r.id.HasValue)
                 {
-                    // Optional: try fallback match by id if their id matches RowId
+                    // Optional: try fallback match by id
                     var id = (uint)r.id.Value;
-                    foreach (var emote in Emotes)
+                    var emote = EmoteHelper.GetEmoteById(id);
+                    if (emote.HasValue)
                     {
-                        if (emote.RowId == id)
+                        var entries = new HashSet<(string Type, string Text)>();
+                        if (r.sources != null)
                         {
-                            var entries = new HashSet<(string Type, string Text)>();
-                            if (r.sources != null)
+                            foreach (var s in r.sources)
                             {
-                                foreach (var s in r.sources)
+                                if (!string.IsNullOrWhiteSpace(s.text))
                                 {
-                                    if (!string.IsNullOrWhiteSpace(s.text))
-                                    {
-                                        var ty = string.IsNullOrWhiteSpace(s.type) ? "Unknown" : s.type!;
-                                        entries.Add((ty, s.text!));
-                                    }
+                                    var ty = string.IsNullOrWhiteSpace(s.type) ? "Unknown" : s.type!;
+                                    entries.Add((ty, s.text!));
                                 }
                             }
+                        }
 
-                            if (entries.Count > 0 || !string.IsNullOrWhiteSpace(r.patch))
+                        if (entries.Count > 0 || !string.IsNullOrWhiteSpace(r.patch))
+                        {
+                            lock (EmoteSources)
                             {
-                                lock (EmoteSources)
+                                if (!EmoteSources.TryGetValue(emote.Value.RowId, out var existing))
                                 {
-                                    if (!EmoteSources.TryGetValue(emote.RowId, out var existing))
+                                    existing = (r.patch, new List<(string Type, string Text)>());
+                                    EmoteSources[emote.Value.RowId] = existing;
+                                }
+                                else
+                                {
+                                    // Update patch if we don't have one yet
+                                    if (string.IsNullOrWhiteSpace(existing.Patch) && !string.IsNullOrWhiteSpace(r.patch))
                                     {
-                                        existing = (r.patch, new List<(string Type, string Text)>());
-                                        EmoteSources[emote.RowId] = existing;
-                                    }
-                                    else
-                                    {
-                                        // Update patch if we don't have one yet
-                                        if (string.IsNullOrWhiteSpace(existing.Patch) && !string.IsNullOrWhiteSpace(r.patch))
-                                        {
-                                            existing.Patch = r.patch;
-                                            EmoteSources[emote.RowId] = existing;
-                                        }
-                                    }
-
-                                    foreach (var t in entries)
-                                    {
-                                        if (!existing.Sources.Contains(t))
-                                            existing.Sources.Add(t);
+                                        existing.Patch = r.patch;
+                                        EmoteSources[emote.Value.RowId] = existing;
                                     }
                                 }
-                            }
 
-                            break;
+                                foreach (var t in entries)
+                                {
+                                    if (!existing.Sources.Contains(t))
+                                        existing.Sources.Add(t);
+                                }
+                            }
                         }
                     }
                 }
@@ -348,54 +232,11 @@ public class Service
         }
     }
 
-    private static async Task CheckForUpdateAsync()
+    public static void Dispose()
     {
-        try
-        {
-            // Skip if notifications are disabled or already shown
-            if (Configuration?.ShowUpdateNotification != true || UpdateNotificationShown)
-                return;
+        NoireService.ClientState.Login -= RefreshLockedEmotes;
+        NoireService.ClientState.Logout -= (int type, int code) => ClearLockedEmotes();
 
-            var url = "https://raw.githubusercontent.com/Aspher0/BypassEmote/refs/heads/main/repo.json";
-            using var req = new HttpRequestMessage(HttpMethod.Get, url);
-            using var resp = await Http.SendAsync(req).ConfigureAwait(false);
-            resp.EnsureSuccessStatusCode();
-
-            var json = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var entries = JsonSerializer.Deserialize<List<RepoEntry>>(json, JsonOptions);
-            if (entries is null || entries.Count == 0)
-            {
-                NoireLogger.LogWarning<Service>("Repo.json fetch returned no entries.");
-                return;
-            }
-
-            var remote = entries.FirstOrDefault(e => string.Equals(e.InternalName, "BypassEmote", StringComparison.OrdinalIgnoreCase));
-            if (remote == null || string.IsNullOrWhiteSpace(remote.AssemblyVersion))
-                return;
-
-            Version? remoteVersion = null;
-            try { remoteVersion = new Version(remote.AssemblyVersion); } catch { }
-            if (remoteVersion == null)
-                return;
-
-            var currentVersion = typeof(Plugin).Assembly.GetName(). Version ?? new Version(0, 0, 0, 0);
-
-            if (currentVersion < remoteVersion)
-            {
-                UpdateNotificationShown = true;
-
-                Plugin.PluginInterface.UiBuilder.AddNotification(
-                    $"Bypass Emote has a new update available.\nCurrent version: {currentVersion}\nNew version: {remoteVersion}",
-                    "Update Available",
-                    NotificationType.Info,
-                    300000);
-
-                NoireLogger.PrintToChatRGB($"A new update is available. Please update the plugin in /xlplugins. Current version: {currentVersion} - New version: {remoteVersion}.", "[Bypass Emote] ", ColorHelper.HexToVector3("#FCC203"));
-            }
-        }
-        catch (Exception ex)
-        {
-            NoireLogger.LogError<Service>(ex, "Failed to check for updates.");
-        }
+        EmotePlayer.Dispose();
     }
 }

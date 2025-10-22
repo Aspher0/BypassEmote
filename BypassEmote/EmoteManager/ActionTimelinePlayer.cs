@@ -15,12 +15,12 @@ namespace BypassEmote;
 public sealed class ActionTimelinePlayer : IDisposable
 {
     // Per-character state tracking
-    private readonly Dictionary<nint, CharacterState> _states = new();
+    private readonly Dictionary<nint, CharacterState> states = new();
 
     public void Dispose()
     {
         // Best-effort cleanup: just drop our state tracking.
-        _states.Clear();
+        states.Clear();
     }
 
     public unsafe float GetOverallSpeed(ICharacter character)
@@ -38,7 +38,7 @@ public sealed class ActionTimelinePlayer : IDisposable
 
     public void ResetOverallSpeed(ICharacter character)
     {
-        if (!_states.TryGetValue(character.Address, out var state))
+        if (!states.TryGetValue(character.Address, out var state))
             return;
 
         state.OverallSpeedOverride = null;
@@ -53,7 +53,7 @@ public sealed class ActionTimelinePlayer : IDisposable
 
     public void ClearLipsOverride(ICharacter character)
     {
-        if (_states.TryGetValue(character.Address, out var state))
+        if (states.TryGetValue(character.Address, out var state))
             state.LipsOverride = 0;
     }
 
@@ -98,7 +98,7 @@ public sealed class ActionTimelinePlayer : IDisposable
     /// </summary>
     public unsafe void ResetBase(ICharacter character)
     {
-        if (!_states.TryGetValue(character.Address, out var state) || state.OriginalBase is null)
+        if (!states.TryGetValue(character.Address, out var state) || state.OriginalBase is null)
             return;
 
         var native = GetNative(character);
@@ -126,7 +126,7 @@ public sealed class ActionTimelinePlayer : IDisposable
         native->Timeline.BaseOverride = 0;
         Blend(character, 3);
 
-        if (!_states.TryGetValue(character.Address, out var state) || state.OriginalBase is null)
+        if (!states.TryGetValue(character.Address, out var state) || state.OriginalBase is null)
             return;
 
         var ob = state.OriginalBase.Value;
@@ -159,7 +159,7 @@ public sealed class ActionTimelinePlayer : IDisposable
 
     public bool HasBaseOverride(ICharacter character)
     {
-        return _states.TryGetValue(character.Address, out var st) && st.OriginalBase is not null;
+        return states.TryGetValue(character.Address, out var st) && st.OriginalBase is not null;
     }
 
     // --- Per-slot speed controls ---
@@ -192,7 +192,7 @@ public sealed class ActionTimelinePlayer : IDisposable
 
     public void ResetPerSlotSpeeds(ICharacter character)
     {
-        if (_states.TryGetValue(character.Address, out var st))
+        if (states.TryGetValue(character.Address, out var st))
         {
             st.SlotSpeedOverrides.Clear();
             st.SlotsDirty = false;
@@ -201,7 +201,7 @@ public sealed class ActionTimelinePlayer : IDisposable
 
     public bool CheckAndResetDirtySlots(ICharacter character)
     {
-        if (_states.TryGetValue(character.Address, out var st) && st.SlotsDirty)
+        if (states.TryGetValue(character.Address, out var st) && st.SlotsDirty)
         {
             st.SlotsDirty = false;
             return true;
@@ -213,10 +213,10 @@ public sealed class ActionTimelinePlayer : IDisposable
 
     private CharacterState GetOrCreateState(ICharacter character)
     {
-        if (!_states.TryGetValue(character.Address, out var s))
+        if (!states.TryGetValue(character.Address, out var s))
         {
             s = new CharacterState();
-            _states[character.Address] = s;
+            states[character.Address] = s;
         }
         return s;
     }

@@ -13,14 +13,6 @@ public static class EmoteData
         DoNotPlay = 0,
     }
 
-    public enum EmoteCategory
-    {
-        General = 1,
-        Special = 2,
-        Expressions = 3,
-        Unknown = 0,
-    }
-
     // Emote ID, (PlayType, Optional Name Override, Optional Icon Override)
     public static readonly Dictionary<object, (EmotePlayType PlayType, string? Name, ushort? Icon)> EmoteSpecifications = new Dictionary<object, (EmotePlayType PlayType, string? Name, ushort? Icon)>
     {

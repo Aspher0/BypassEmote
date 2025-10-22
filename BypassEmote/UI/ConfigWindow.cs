@@ -39,7 +39,7 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.Checkbox("Show Update Notifications", ref showUpdateNotification))
         {
             Service.Configuration.UpdateConfiguration(() => Service.Configuration.ShowUpdateNotification = showUpdateNotification);
-            Service.OnUpdateNotificationConfigChanged(showUpdateNotification);
+            //Service.OnUpdateNotificationConfigChanged(showUpdateNotification);
         }
 
         var showChangelogOnUpdate = Service.Configuration!.ShowChangelogOnUpdate;

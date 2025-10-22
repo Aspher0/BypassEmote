@@ -6,6 +6,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Helpers;
+using NoireLib.Internal;
 using System.Collections.Generic;
 
 namespace BypassEmote;
@@ -161,7 +162,7 @@ internal static unsafe class EmotePlayer
 
         if (isSitting || isMounted || isRidingPillion)
         {
-            var sheet = Service.EmoteSheet;
+            var sheet = ExcelSheetHelper.GetSheet<Emote>();
             if (sheet != null)
             {
                 foreach (var emote in sheet)
