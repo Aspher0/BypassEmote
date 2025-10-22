@@ -70,7 +70,7 @@ public class V1_5_x_x : BaseChangelogVersion
     private static ChangelogVersion CreateV1_5_1_1()
         => new ChangelogVersion
         {
-            Version = new(1, 5, 1, 2),
+            Version = new(1, 5, 1, 1),
             Date = "22-10-2025",
             Title = "Hotfix",
             TitleColor = Blue,
