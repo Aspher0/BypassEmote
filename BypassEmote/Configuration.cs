@@ -1,31 +1,22 @@
-using Dalamud.Configuration;
+using NoireLib.Configuration;
 using System;
 using System.Collections.Generic;
 
 namespace BypassEmote;
 
 [Serializable]
-public class Configuration : IPluginConfiguration
+public class Configuration : NoireConfigBase<Configuration>
 {
-    public int Version { get; set; } = Service.ConfigVersion;
+    public override string GetConfigFileName() => "Configuration";
 
-    public bool PluginEnabled { get; set; } = true;
-    public bool AutoFaceTarget { get; set; } = true;
-    public bool ShowAllEmotes { get; set; } = false;
-    public bool ShowUpdateNotification { get; set; } = true;
-    public List<uint> FavoriteEmotes { get; set; } = new List<uint>();
-    public bool ShowChangelogOnUpdate { get; set; } = true;
-    public bool ShowEmoteIds { get; set; } = false;
-    public bool ShowInvalidEmotes { get; set; } = false;
+    public int Version { get; set; } = 0;
 
-    public void UpdateConfiguration(Action updateAction)
-    {
-        updateAction();
-        Save();
-    }
-
-    public void Save()
-    {
-        Plugin.PluginInterface.SavePluginConfig(this);
-    }
+    [AutoSave] public virtual bool PluginEnabled { get; set; } = true;
+    [AutoSave] public virtual bool AutoFaceTarget { get; set; } = true;
+    [AutoSave] public virtual bool ShowAllEmotes { get; set; } = false;
+    [AutoSave] public virtual bool ShowUpdateNotification { get; set; } = true;
+    [AutoSave] public virtual List<uint> FavoriteEmotes { get; set; } = new List<uint>();
+    [AutoSave] public virtual bool ShowChangelogOnUpdate { get; set; } = true;
+    [AutoSave] public virtual bool ShowEmoteIds { get; set; } = false;
+    [AutoSave] public virtual bool ShowInvalidEmotes { get; set; } = false;
 }

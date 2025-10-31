@@ -30,29 +30,29 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
-        var pluginEnabled = Service.Configuration!.PluginEnabled;
-        ImGui.Checkbox("Enable Bypassing Emote Commands", ref pluginEnabled);
-        Service.Configuration.UpdateConfiguration(() => Service.Configuration.PluginEnabled = pluginEnabled);
+        var pluginEnabled = Configuration.Instance.PluginEnabled;
+        if (ImGui.Checkbox("Enable Bypassing Emote Commands", ref pluginEnabled))
+            Configuration.Instance.PluginEnabled = pluginEnabled;
 
-        var autoFaceTarget = Service.Configuration!.AutoFaceTarget;
-        ImGui.Checkbox("Automatically Face Target On Emote", ref autoFaceTarget);
-        Service.Configuration.UpdateConfiguration(() => Service.Configuration.AutoFaceTarget = autoFaceTarget);
+        var autoFaceTarget = Configuration.Instance.AutoFaceTarget;
+        if (ImGui.Checkbox("Automatically Face Target On Emote", ref autoFaceTarget))
+            Configuration.Instance.AutoFaceTarget = autoFaceTarget;
 
-        var showUpdateNotification = Service.Configuration!.ShowUpdateNotification;
+        var showUpdateNotification = Configuration.Instance.ShowUpdateNotification;
         if (ImGui.Checkbox("Show Update Notifications", ref showUpdateNotification))
         {
-            Service.Configuration.UpdateConfiguration(() => Service.Configuration.ShowUpdateNotification = showUpdateNotification);
+            Configuration.Instance.ShowUpdateNotification = showUpdateNotification;
             var updateTracker = NoireLibMain.GetModule<NoireUpdateTracker>();
-            updateTracker?.SetShouldShowNotificationOnUpdate(Service.Configuration.ShowUpdateNotification);
-            updateTracker?.SetShouldPrintMessageInChatOnUpdate(Service.Configuration.ShowUpdateNotification);
+            updateTracker?.SetShouldShowNotificationOnUpdate(Configuration.Instance.ShowUpdateNotification);
+            updateTracker?.SetShouldPrintMessageInChatOnUpdate(Configuration.Instance.ShowUpdateNotification);
         }
 
-        var showChangelogOnUpdate = Service.Configuration!.ShowChangelogOnUpdate;
+        var showChangelogOnUpdate = Configuration.Instance.ShowChangelogOnUpdate;
         if (ImGui.Checkbox("Show Changelog on Updates", ref showChangelogOnUpdate))
         {
-            Service.Configuration.UpdateConfiguration(() => Service.Configuration.ShowChangelogOnUpdate = showChangelogOnUpdate);
+            Configuration.Instance.ShowChangelogOnUpdate = showChangelogOnUpdate;
             var changelogManager = NoireLibMain.GetModule<NoireChangelogManager>();
-            changelogManager?.SetAutomaticallyShowChangelog(Service.Configuration.ShowChangelogOnUpdate);
+            changelogManager?.SetAutomaticallyShowChangelog(Configuration.Instance.ShowChangelogOnUpdate);
         }
     }
 

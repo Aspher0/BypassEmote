@@ -1,4 +1,5 @@
 using Dalamud.Game.ClientState.Objects.Types;
+using Lumina.Excel.Sheets;
 using NoireLib.Helpers;
 using System;
 using System.Numerics;
@@ -13,14 +14,22 @@ public class TrackedCharacter
     public Vector3 LastPlayerPosition;
     public float LastPlayerRotation;
     public bool IsWeaponDrawn;
+    public uint? PlayingEmoteId = null;
+    public bool ScheduledForRemoval = false;
 
-    public TrackedCharacter(ulong? cid, uint? baseId, Vector3 lastPlayerPos, float lastPlayerRot, bool isWeaponDrawn)
+    public TrackedCharacter(ulong? cid, uint? baseId, Vector3 lastPlayerPos, float lastPlayerRot, bool isWeaponDrawn, uint playingEmoteId)
     {
         CID = cid;
         BaseId = baseId;
         LastPlayerPosition = lastPlayerPos;
         LastPlayerRotation = lastPlayerRot;
         IsWeaponDrawn = isWeaponDrawn;
+        PlayingEmoteId = playingEmoteId;
+    }
+
+    public void UpdatePlayingEmoteId(Emote emote)
+    {
+        PlayingEmoteId = emote.RowId;
     }
 
     public void UpdateLastPosition()

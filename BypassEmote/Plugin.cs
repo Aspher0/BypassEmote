@@ -54,9 +54,7 @@ public sealed class Plugin : IDalamudPlugin
         NoireLibMain.Initialize(PluginInterface, this);
         ECommonsMain.Init(PluginInterface, this);
 
-        Service.Plugin = this;
-
-        Service.InitializeService();
+        Service.InitializeService(this);
 
         MainWindow = new EmoteWindow();
         ConfigWindow = new ConfigWindow();
@@ -90,7 +88,7 @@ public sealed class Plugin : IDalamudPlugin
             NoireLogger.LogError(this, ex, "OnEmote Hook error");
         }
 
-        var changelogManager = new NoireChangelogManager(true, "ChangelogModule", true, Service.Configuration!.ShowChangelogOnUpdate);
+        var changelogManager = new NoireChangelogManager(true, "ChangelogModule", true, Configuration.Instance.ShowChangelogOnUpdate);
         NoireLibMain.AddModule(changelogManager)?
             .SetTitleBarButtons(
             [
@@ -132,7 +130,6 @@ public sealed class Plugin : IDalamudPlugin
 
     private void SetupCommands()
     {
-        // Register primary commands with incremental DisplayOrder based on iteration index
         for (int i = 0; i < commandNames.Count; i++)
         {
             var (command, help) = (commandNames[i].Item1, commandNames[i].Item2);
@@ -194,7 +191,8 @@ public sealed class Plugin : IDalamudPlugin
                 }
 
                 EmotePlayer.PlayEmote(npcTarget, emote.Value);
-            } else
+            }
+            else
             {
                 NoireLogger.PrintToChat("Usage: /bet <emote_command> or /bet stop");
             }
@@ -205,7 +203,7 @@ public sealed class Plugin : IDalamudPlugin
     // If they are, we check if they have the emote unlocked, if not unlocked we try to bypass it, if already unlocked, we let the game handle it
     private unsafe void DetourExecuteCommand(ShellCommandModule* commandModule, Utf8String* rawMessage, UIModule* uiModule)
     {
-        if (!Service.Configuration!.PluginEnabled)
+        if (!Configuration.Instance.PluginEnabled)
         {
             ExecuteCommandInnerHook.Original(commandModule, rawMessage, uiModule);
             return;
@@ -296,9 +294,7 @@ public sealed class Plugin : IDalamudPlugin
             EmotePlayer.StopLoop(character, true);
             var emote = NoireService.DataManager.GetExcelSheet<Emote>()?.GetRow(emoteId);
             if (emote != null)
-            {
                 EmotePlayer.PlayEmote(character, emote.Value);
-            }
         }
 
         onEmoteHook.Original(unk, instigatorAddr, emoteId, targetId, unk2);

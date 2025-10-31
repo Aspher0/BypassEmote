@@ -14,10 +14,7 @@ namespace BypassEmote;
 
 public class Service
 {
-    public static int ConfigVersion => 0;
-
     public static Plugin Plugin { get; set; } = null!;
-    public static Configuration? Configuration { get; set; }
 
     public static List<(Emote, NoireLib.Enums.EmoteCategory)> LockedEmotes = [];
 
@@ -26,17 +23,15 @@ public class Service
 
     public static ActionTimelinePlayer Player = new ActionTimelinePlayer();
 
-    public static bool InterruptEmoteOnRotate { get; set; } = false;
-
     private static readonly HttpClient Http = new HttpClient() { Timeout = TimeSpan.FromSeconds(10) };
     private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
-    public static void InitializeService()
+    public static void InitializeService(Plugin plugin)
     {
+        Plugin = plugin;
+
         NoireService.ClientState.Login += RefreshLockedEmotes;
         NoireService.ClientState.Logout += (int type, int code) => ClearLockedEmotes();
-
-        InitializeConfig();
 
         _ = FetchAndBuildEmoteSourcesAsync();
 
@@ -45,12 +40,6 @@ public class Service
             if (NoireService.ClientState.IsLoggedIn && NoireService.ClientState.LocalPlayer != null)
                 RefreshLockedEmotes();
         });
-    }
-
-    public static void InitializeConfig()
-    {
-        Configuration = Plugin.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-        Configuration.Save();
     }
 
     public static void RefreshLockedEmotes()
@@ -64,7 +53,7 @@ public class Service
 
         if (emoteSheet == null)
             return;
-        
+
         foreach (var emote in emoteSheet)
         {
             if (!EmoteHelper.IsEmoteUnlocked(emote.RowId))
@@ -77,7 +66,7 @@ public class Service
         LockedEmotes.Clear();
     }
 
-    public static void OpenKofi() => CommonHelper.OpenUrl("https://ko-fi.com/aspher0");
+    public static void OpenKofi() => SystemHelper.OpenUrl("https://ko-fi.com/aspher0");
 
     private static string GetGameLocaleParam()
     {

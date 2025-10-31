@@ -43,7 +43,7 @@ public static class CommonHelper
             return null;
     }
 
-    public static TrackedCharacter? AddOrUpdateCharacterInTrackedList(nint charaAddress)
+    public static TrackedCharacter? AddOrUpdateCharacterInTrackedList(nint charaAddress, Emote emote)
     {
         if (charaAddress == nint.Zero) return null;
 
@@ -66,6 +66,7 @@ public static class CommonHelper
 
             existing.LastPlayerPosition = castChar.Position;
             existing.LastPlayerRotation = castChar.Rotation;
+            existing.UpdatePlayingEmoteId(emote);
             return existing;
         }
         else
@@ -77,7 +78,8 @@ public static class CommonHelper
                 (castChar is INpc ? castChar.BaseId : null),
                 castChar.Position,
                 castChar.Rotation,
-                CharacterHelper.IsCharacterWeaponDrawn(charaAddress)
+                CharacterHelper.IsCharacterWeaponDrawn(charaAddress),
+                emote.RowId
             );
             EmotePlayer.TrackedCharacters.Add(newTracked);
             return newTracked;
@@ -178,7 +180,7 @@ public static class CommonHelper
             if (emoteId is Tuple<uint, uint> range && emote.RowId >= range.Item1 && emote.RowId <= range.Item2)
                 return (emoteId, specification.Value.PlayType, specification.Value.Name, specification.Value.Icon);
         }
-        
+
         return null;
     }
 

@@ -78,27 +78,21 @@ public class EmoteWindow : Window, IDisposable
         availWidth = ImGui.GetContentRegionAvail().X;
         ImGui.SetCursorPosX((availWidth - totalWidth) * 0.5f);
 
-        bool showAllEmotes = Service.Configuration!.ShowAllEmotes;
+        bool showAllEmotes = Configuration.Instance.ShowAllEmotes;
         if (ImGui.Checkbox("Show all emotes", ref showAllEmotes))
-        {
-            Service.Configuration.UpdateConfiguration(() => Service.Configuration!.ShowAllEmotes = showAllEmotes);
-        }
+            Configuration.Instance.ShowAllEmotes = showAllEmotes;
 
         ImGui.SameLine();
 
-        bool showInvalidEmotes = Service.Configuration!.ShowInvalidEmotes;
+        bool showInvalidEmotes = Configuration.Instance.ShowInvalidEmotes;
         if (ImGui.Checkbox("Show Invalid Emotes", ref showInvalidEmotes))
-        {
-            Service.Configuration.UpdateConfiguration(() => Service.Configuration!.ShowInvalidEmotes = showInvalidEmotes);
-        }
+            Configuration.Instance.ShowInvalidEmotes = showInvalidEmotes;
 
         ImGui.SameLine();
 
-        bool showEmoteIds = Service.Configuration!.ShowEmoteIds;
+        bool showEmoteIds = Configuration.Instance.ShowEmoteIds;
         if (ImGui.Checkbox("Show IDs", ref showEmoteIds))
-        {
-            Service.Configuration.UpdateConfiguration(() => Service.Configuration!.ShowEmoteIds = showEmoteIds);
-        }
+            Configuration.Instance.ShowEmoteIds = showEmoteIds;
 
         ImGui.Separator();
 
@@ -150,7 +144,7 @@ public class EmoteWindow : Window, IDisposable
 
         var displayedEmotes = new List<(Emote, NoireLib.Enums.EmoteCategory)>(Service.LockedEmotes);
 
-        if (Service.Configuration!.ShowAllEmotes || currentTab == LockedTab.Favorites)
+        if (Configuration.Instance.ShowAllEmotes || currentTab == LockedTab.Favorites)
         {
             var emoteSheet = ExcelSheetHelper.GetSheet<Emote>();
 
@@ -159,13 +153,13 @@ public class EmoteWindow : Window, IDisposable
                 : new List<(Emote, NoireLib.Enums.EmoteCategory)>();
         }
 
-        if (!Service.Configuration.ShowInvalidEmotes && currentTab != LockedTab.Favorites)
+        if (!Configuration.Instance.ShowInvalidEmotes && currentTab != LockedTab.Favorites)
             displayedEmotes.RemoveAll(e => !Helpers.CommonHelper.IsEmoteDisplayable(e.Item1));
 
         displayedEmotes = displayedEmotes.OrderByDescending(e => e.Item1.RowId).ToList();
 
         // Check if we're in favorites tab and if there are any favorites
-        if (currentTab == LockedTab.Favorites && Service.Configuration.FavoriteEmotes.Count == 0)
+        if (currentTab == LockedTab.Favorites && Configuration.Instance.FavoriteEmotes.Count == 0)
         {
             // Center the "No favorited emote" message
             var textSize = ImGui.CalcTextSize("No favorited emote");
@@ -184,7 +178,7 @@ public class EmoteWindow : Window, IDisposable
                     continue;
 
                 // Filter based on selected tab
-                if (currentTab == LockedTab.Favorites && !Service.Configuration.FavoriteEmotes.Contains(emote.Item1.RowId))
+                if (currentTab == LockedTab.Favorites && !Configuration.Instance.FavoriteEmotes.Contains(emote.Item1.RowId))
                     continue;
                 if (currentTab == LockedTab.General && emote.Item2 != NoireLib.Enums.EmoteCategory.General)
                     continue;
@@ -195,7 +189,7 @@ public class EmoteWindow : Window, IDisposable
                 if (currentTab == LockedTab.Other && emote.Item2 != NoireLib.Enums.EmoteCategory.Unknown)
                     continue;
 
-                var displayedName = Service.Configuration!.ShowEmoteIds ? $"[{emote.Item1.RowId}] " : "";
+                var displayedName = Configuration.Instance.ShowEmoteIds ? $"[{emote.Item1.RowId}] " : "";
                 displayedName += Helpers.CommonHelper.GetEmoteName(emote.Item1);
 
                 // Build commands string (all associated, comma separated)
@@ -222,7 +216,7 @@ public class EmoteWindow : Window, IDisposable
 
                 // Draw favorite star on the very left
                 var starSize = 20f;
-                var isFavorite = Service.Configuration.FavoriteEmotes.Contains(emote.Item1.RowId);
+                var isFavorite = Configuration.Instance.FavoriteEmotes.Contains(emote.Item1.RowId);
                 var starColor = isFavorite ? new Vector4(1f, 0.9f, 0f, 1f) : new Vector4(0.35f, 0.35f, 0.35f, 1f); // Yellow if favorite, gray if not
                 var starIcon = FontAwesomeIcon.Star;
 
@@ -282,7 +276,7 @@ public class EmoteWindow : Window, IDisposable
                     EmotePlayer.PlayEmote(NoireService.ClientState.LocalPlayer, emote.Item1);
 
                 // Draw small info/exclamation icon to the right of the selectable with tooltip of sources
-                if (Service.EmoteSources.TryGetValue(emote.Item1.RowId, out var emoteSources) && 
+                if (Service.EmoteSources.TryGetValue(emote.Item1.RowId, out var emoteSources) &&
                     (!string.IsNullOrWhiteSpace(emoteSources.Patch) || emoteSources.Sources.Count > 0))
                 {
                     ImGui.SameLine();
@@ -299,7 +293,7 @@ public class EmoteWindow : Window, IDisposable
                     if (ImGui.IsItemHovered())
                     {
                         ImGui.BeginTooltip();
-                        
+
                         // Display patch information as the first line if available
                         if (!string.IsNullOrWhiteSpace(emoteSources.Patch))
                         {
@@ -307,13 +301,13 @@ public class EmoteWindow : Window, IDisposable
                             if (emoteSources.Sources.Count > 0)
                                 ImGui.Separator();
                         }
-                        
+
                         // Display sources
                         foreach (var entry in emoteSources.Sources)
                         {
                             ImGui.Text($"{entry.Type}: {entry.Text}");
                         }
-                        
+
                         ImGui.EndTooltip();
                     }
                 }
@@ -327,17 +321,16 @@ public class EmoteWindow : Window, IDisposable
 
     private void ToggleFavorite(uint emoteId)
     {
-        Service.Configuration!.UpdateConfiguration(() =>
+        if (Configuration.Instance.FavoriteEmotes.Contains(emoteId))
         {
-            if (Service.Configuration.FavoriteEmotes.Contains(emoteId))
-            {
-                Service.Configuration.FavoriteEmotes.Remove(emoteId);
-            }
-            else
-            {
-                Service.Configuration.FavoriteEmotes.Add(emoteId);
-            }
-        });
+            Configuration.Instance.FavoriteEmotes.Remove(emoteId);
+        }
+        else
+        {
+            Configuration.Instance.FavoriteEmotes.Add(emoteId);
+        }
+
+        Configuration.Instance.Save();
     }
 
     public void Dispose() { }

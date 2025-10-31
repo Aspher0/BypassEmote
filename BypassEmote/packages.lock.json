@@ -22,9 +22,25 @@
       },
       "NoireLib": {
         "type": "Direct",
-        "requested": "[1.1.0.1, )",
-        "resolved": "1.1.0.1",
-        "contentHash": "Oc6iEBHLtq7XsR5NmD88dLhnkOkRvYOIfwaCcuLGpYB34wmBdvAr+VoEBWsjUWSBnbKGraIXI2kir0IfpU8jLw=="
+        "requested": "[1.2.1.1, )",
+        "resolved": "1.2.1.1",
+        "contentHash": "IY8bgnIVvqWhh8e/LpVyxtdsBeyNM6BfZXT8T0BPAzh2ekgEu/CfsafqesmwfRSa8yvsP6TclcOWYZiAoiUOvQ==",
+        "dependencies": {
+          "Castle.Core": "5.2.1"
+        }
+      },
+      "Castle.Core": {
+        "type": "Transitive",
+        "resolved": "5.2.1",
+        "contentHash": "wHARzQA695jwwKreOzNsq54KiGqKP38tv8hi8e2FXDEC/sA6BtrX90tVPDkOfVu13PbEzr00TCV8coikl+D1Iw==",
+        "dependencies": {
+          "System.Diagnostics.EventLog": "6.0.0"
+        }
+      },
+      "System.Diagnostics.EventLog": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "lcyUiXTsETK2ALsZrX+nWuHSIQeazhqPphLfaRxzdGaG93+0kELqpgEHtwWOlQe7+jSFnKwaCAgL4kjeZCQJnw=="
       }
     }
   }
