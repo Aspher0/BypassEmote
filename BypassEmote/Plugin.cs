@@ -54,6 +54,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private EmoteWindow MainWindow { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
+    private DebugWindow DebugWindow { get; init; }
 
 
     // ======================================
@@ -76,6 +77,12 @@ public sealed class Plugin : IDalamudPlugin
 
         MainWindow = new EmoteWindow();
         ConfigWindow = new ConfigWindow();
+
+#if DEBUG
+        DebugWindow = new DebugWindow();
+        WindowSystem.AddWindow(DebugWindow);
+#endif
+
         WindowSystem.AddWindow(MainWindow);
         WindowSystem.AddWindow(ConfigWindow);
 
@@ -191,6 +198,7 @@ public sealed class Plugin : IDalamudPlugin
 
     public void ToggleMainWindow() => MainWindow.Toggle();
     public void ToggleSettings() => ConfigWindow.Toggle();
+    public void ToggleDebug() => DebugWindow.Toggle();
     public void OpenMainWindow() => MainWindow.IsOpen = true;
     public void OpenSettings() => ConfigWindow.IsOpen = true;
     public void OpenChangelog() => NoireLibMain.GetModule<NoireChangelogManager>()?.ShowWindow();
@@ -233,6 +241,13 @@ public sealed class Plugin : IDalamudPlugin
                         EmotePlayer.SyncEmotes(true);
                         return;
                     }
+#if DEBUG
+                case "debug":
+                    {
+                        DebugWindow.Toggle();
+                        return;
+                    }
+#endif
                 default:
                     break;
             }
@@ -392,6 +407,9 @@ public sealed class Plugin : IDalamudPlugin
         WindowSystem.RemoveAllWindows();
         ConfigWindow.Dispose();
         MainWindow.Dispose();
+#if DEBUG
+        DebugWindow.Dispose();
+#endif
 
         Service.Dispose();
 

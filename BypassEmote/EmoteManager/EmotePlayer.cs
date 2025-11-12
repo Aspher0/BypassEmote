@@ -19,6 +19,7 @@ internal static unsafe class EmotePlayer
 
     // List of characters using a looped emote
     public static List<TrackedCharacter> TrackedCharacters = new List<TrackedCharacter>();
+    private static DelayedTrigger delayedTrigger = new(500);
 
     public static void PlayEmote(ICharacter? chara, Emote emote)
     {
@@ -34,7 +35,12 @@ internal static unsafe class EmotePlayer
                 NoireService.ClientState.LocalPlayer.IsDead)
                 return;
 
-            if (NoireService.Condition.Any(ConditionFlag.OccupiedInCutSceneEvent, ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78))
+            if (NoireService.Condition.Any(
+                ConditionFlag.OccupiedInCutSceneEvent,
+                ConditionFlag.WatchingCutscene,
+                ConditionFlag.WatchingCutscene78,
+                ConditionFlag.OccupiedInEvent,
+                ConditionFlag.OccupiedInQuestEvent))
                 return;
         }
 
@@ -103,9 +109,13 @@ internal static unsafe class EmotePlayer
         var local = NoireService.ClientState.LocalPlayer;
         if (local != null && local.Address == chara.Address)
         {
-            // Fire IPC event only if local player is the one playing the emote
+            // Fire IPC event after delay only if local player is the one playing the emote
             var provider = IpcProvider.Instance;
-            provider?.LocalEmotePlayed?.Invoke(local, emote.RowId);
+
+            delayedTrigger.Start(() =>
+            {
+                provider?.LocalEmotePlayed?.Invoke(local, emote.RowId);
+            });
         }
     }
 
@@ -228,9 +238,18 @@ internal static unsafe class EmotePlayer
 
             if (trackedCharacter != null)
             {
+                // Tell IPC Callers that the emote has stopped immediately and again after the delay
+                // Kinda hacky-whacky way to ensure the emote stop is registered properly with sync but it works.
+                // This is needed to avoid the server position desync issue.
+                // When player A moves and bypasses an emote, this player might still be moving on player B's screen when player A starts the emote, causing a false-positive "stop emote" message
                 uint playingEmoteId = trackedCharacter.PlayingEmoteId ?? 0;
                 var provider = IpcProvider.Instance;
-                provider?.LocalEmotePlayed?.Invoke(playerCharacter, 0); // Tell IPC Callers that the emote has stopped
+                provider?.LocalEmotePlayed?.Invoke(playerCharacter, 0);
+
+                delayedTrigger.Start(() =>
+                {
+                    provider?.LocalEmotePlayed?.Invoke(playerCharacter, 0);
+                });
             }
         }
 
@@ -266,6 +285,13 @@ internal static unsafe class EmotePlayer
 
     private static void OnFrameworkUpdate(IFramework framework)
     {
+        /*
+         * I know Stop() invokes the IPC to send a stop message to mare, so you might think it doesn't make sense to track other characters on framework update.
+         * The issue is that if the stop message is shomehow not properly sent or received, the character would be stuck in the looped emote forever.
+         * To avoid this, we track every characters, except if it's the local player, any position or rotation change will stop the emote.
+         * If this is another player, we allow a small margin of error to avoid stopping the emote on minor movements caused by server position/rotation desync.
+         */
+
         foreach (var trackedCharacter in TrackedCharacters)
         {
             var character = Helpers.CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
@@ -275,6 +301,8 @@ internal static unsafe class EmotePlayer
                 Helpers.CommonHelper.RemoveCharacterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
                 return;
             }
+
+            var isLocalPlayer = NoireService.ClientState.LocalPlayer != null && character.Address == NoireService.ClientState.LocalPlayer.Address;
 
             var charaName = character.Name.TextValue;
             var trackedChara = Helpers.CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
@@ -286,14 +314,22 @@ internal static unsafe class EmotePlayer
             }
 
             var pos = character.Position;
-            if (pos != trackedCharacter.LastPlayerPosition)
+            var deltaPosDistance = MathHelper.Distance(pos, trackedCharacter.LastPlayerPosition);
+            if ((isLocalPlayer && pos != trackedCharacter.LastPlayerPosition) ||
+                (!isLocalPlayer && deltaPosDistance > 0.5))
+            // 0.5 of margin of error for other players, in case the "stop emote" message is not correctly sent/received, this acts as a "failsafe" for that scenario
             {
                 StopLoop(character, true);
                 return;
             }
 
             var rot = character.Rotation;
-            if (rot != trackedCharacter.LastPlayerRotation)
+            var normalizedCurrentRotation = MathHelper.NormalizeAngle(MathHelper.ToDegrees(rot));
+            var normalizedLastObservedRotation = MathHelper.NormalizeAngle(MathHelper.ToDegrees(trackedCharacter.LastPlayerRotation));
+            var difference = MathHelper.Abs(MathHelper.DeltaAngle(normalizedCurrentRotation, normalizedLastObservedRotation));
+            if ((isLocalPlayer && rot != trackedCharacter.LastPlayerRotation) ||
+                (!isLocalPlayer && difference > 20))
+            // Same reason as for the position, 20 degrees of margin of error for other players
             {
                 if (trackedCharacter.PlayingEmoteId.HasValue)
                 {
@@ -416,7 +452,7 @@ internal static unsafe class EmotePlayer
         }
 
         Service.Player.Dispose();
-
+        delayedTrigger.Dispose();
         NoireService.Framework.Update -= OnFrameworkUpdate;
     }
 }
