@@ -60,13 +60,11 @@ public class EmoteWindow : Window, IDisposable
         ImGui.SetCursorPosX((availWidth - buttonWidth) * 0.5f);
 
         if (ImGui.Button(buttonText))
-        {
             Service.RefreshLockedEmotes();
-        }
 
         ImGui.Separator();
 
-        // Calculate total width needed for both checkboxes
+        // Calculate total width needed for checkboxes
         var showAllText = "Show all emotes";
         var showInvalidText = "Show invalid emotes";
         var showIdsText = "Show IDs";
@@ -322,15 +320,11 @@ public class EmoteWindow : Window, IDisposable
     private void ToggleFavorite(uint emoteId)
     {
         if (Configuration.Instance.FavoriteEmotes.Contains(emoteId))
-        {
             Configuration.Instance.FavoriteEmotes.Remove(emoteId);
-        }
         else
-        {
             Configuration.Instance.FavoriteEmotes.Add(emoteId);
-        }
 
-        Configuration.Instance.Save();
+        Configuration.Instance.Save(); // Needed until I update NoireLib to auto-save list changes
     }
 
     public void Dispose() { }

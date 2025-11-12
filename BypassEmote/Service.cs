@@ -114,7 +114,6 @@ public class Service
                     var cmd = part.Trim();
                     if (string.IsNullOrEmpty(cmd)) continue;
 
-                    // Use EmoteHelper to find emote by command
                     var emote = EmoteHelper.GetEmoteByCommand(cmd);
                     if (emote.HasValue)
                     {

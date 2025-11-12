@@ -1,8 +1,10 @@
 using BypassEmote.UI;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.Command;
+using Dalamud.Game.Network;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.Interface;
@@ -11,6 +13,7 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using ECommons;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
+using FFXIVClientStructs.FFXIV.Client.Network;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.Shell;
@@ -19,9 +22,11 @@ using NoireLib;
 using NoireLib.Changelog;
 using NoireLib.Helpers;
 using NoireLib.UpdateTracker;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using static FFXIVClientStructs.FFXIV.Client.Game.Control.EmoteController;
 
 namespace BypassEmote;
@@ -37,6 +42,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private Hook<ShellCommandModule.Delegates.ExecuteCommandInner> ExecuteCommandInnerHook { get; init; }
     private Hook<EmoteManager.Delegates.ExecuteEmote> ExecuteEmoteHook { get; init; }
+    private Hook<PacketDispatcher.Delegates.OnReceivePacket> OnReceivePacketHook { get; init; }
 
     private readonly List<Tuple<string, string>> commandNames = [
         new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config. Use with argument <emote_name> to bypass any emote (including unlocked ones) on yourself: /be <emote_command>."),
@@ -48,6 +54,18 @@ public sealed class Plugin : IDalamudPlugin
 
     private EmoteWindow MainWindow { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
+
+
+    // ======================================
+    public static NetworkHandler NetworkHandler { get; private set; } = null!;
+
+    [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+    private delegate byte ProcessZonePacketUpDelegate(nint a1, nint dataPtr, nint a3, byte a4);
+    private static Hook<ProcessZonePacketUpDelegate> ProcessZonePacketUpHook;
+
+    public delegate void ZoneUpMessageDelegate(nint dataPtr, ushort opCode);
+    public static event ZoneUpMessageDelegate OnZoneUpMessageDelegate;
+    // ======================================
 
     public unsafe Plugin()
     {
@@ -65,6 +83,16 @@ public sealed class Plugin : IDalamudPlugin
         SetupCommands();
 
         Ipc = new IpcProvider();
+
+#if DEBUG
+        // ======================================
+        ProcessZonePacketUpHook = NoireService.GameInteropProvider.HookFromAddress<ProcessZonePacketUpDelegate>(NoireService.SigScanner.ScanText("48 89 5C 24 ?? 48 89 74 24 ?? 4C 89 64 24 ?? 55 41 56 41 57 48 8B EC 48 83 EC 70"), NetworkMessageDetour);
+        ProcessZonePacketUpHook.Enable();
+
+        NetworkHandler = new NetworkHandler();
+        OnZoneUpMessageDelegate += OnZoneUpMessage;
+        // ======================================
+#endif
 
         ExecuteCommandInnerHook = NoireService.GameInteropProvider.HookFromAddress<ShellCommandModule.Delegates.ExecuteCommandInner>(
             ShellCommandModule.MemberFunctionPointers.ExecuteCommandInner,
@@ -88,7 +116,10 @@ public sealed class Plugin : IDalamudPlugin
             NoireLogger.LogError(this, ex, "OnEmote Hook error");
         }
 
-        var changelogManager = new NoireChangelogManager(true, "ChangelogModule", true, Configuration.Instance.ShowChangelogOnUpdate);
+        // Listen for Condition Changes, to cancel emotes when casting and interacting with objects/NPCs
+        NoireService.Condition.ConditionChange += OnConditionChanged;
+
+        var changelogManager = new NoireChangelogManager("ChangelogModule", true, true, Configuration.Instance.ShowChangelogOnUpdate);
         NoireLibMain.AddModule(changelogManager)?
             .SetTitleBarButtons(
             [
@@ -109,11 +140,47 @@ public sealed class Plugin : IDalamudPlugin
                 },
             ]);
 
-        NoireLibMain.AddModule(new NoireUpdateTracker(true,
-            "UpdateTrackerModule",
+        NoireLibMain.AddModule(new NoireUpdateTracker("UpdateTrackerModule",
+            true,
             true,
             "https://raw.githubusercontent.com/Aspher0/BypassEmote/refs/heads/main/repo.json"));
     }
+
+    // Track condition change and cancel emotes if the player starts casting, mounting, or interacting with an object/NPC
+    private void OnConditionChanged(ConditionFlag flag, bool value)
+    {
+        if (flag.EqualsAny(
+            ConditionFlag.Casting,
+            ConditionFlag.Casting87,
+            ConditionFlag.OccupiedInEvent,
+            ConditionFlag.OccupiedInQuestEvent,
+            ConditionFlag.Mounted))
+        {
+            if (value && NoireService.ClientState.LocalPlayer != null)
+                EmotePlayer.StopLoop(NoireService.ClientState.LocalPlayer, true);
+        }
+    }
+
+    // ======================================
+    private static byte NetworkMessageDetour(nint a1, nint dataPtr, nint a3, byte a4)
+    {
+        if (dataPtr != 0)
+            OnZoneUpMessageDelegate?.Invoke(dataPtr + 0x20, (ushort)Marshal.ReadInt16(dataPtr));
+        return ProcessZonePacketUpHook.Original(a1, dataPtr, a3, a4);
+    }
+
+    public void OnZoneUpMessage(nint dataPtr, ushort opCode)
+    {
+        try
+        {
+            NetworkHandler.VerifyNetworkMessage(dataPtr, opCode, NetworkMessageDirection.ZoneUp);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Exception in OnNetworkMessage");
+        }
+    }
+    // ======================================
 
     private void SetupUI()
     {
@@ -126,7 +193,7 @@ public sealed class Plugin : IDalamudPlugin
     public void ToggleSettings() => ConfigWindow.Toggle();
     public void OpenMainWindow() => MainWindow.IsOpen = true;
     public void OpenSettings() => ConfigWindow.IsOpen = true;
-    public void OpenChangelog() => NoireLibMain.GetModule<NoireChangelogManager>()?.ShowChangelogWindow();
+    public void OpenChangelog() => NoireLibMain.GetModule<NoireChangelogManager>()?.ShowWindow();
 
     private void SetupCommands()
     {
@@ -154,6 +221,21 @@ public sealed class Plugin : IDalamudPlugin
                 return;
             }
 
+            switch (splitArgs[0])
+            {
+                case "sync":
+                    {
+                        EmotePlayer.SyncEmotes(false);
+                        return;
+                    }
+                case "syncall":
+                    {
+                        EmotePlayer.SyncEmotes(true);
+                        return;
+                    }
+                default:
+                    break;
+            }
             var emote = EmoteHelper.GetEmoteByCommand(splitArgs[0]);
 
             if (emote != null && NoireService.ClientState.LocalPlayer != null)
@@ -225,7 +307,8 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
-        var foundEmote = EmoteHelper.GetEmoteByCommand(message.TrimStart('/'));
+        var command = message.Split(' ')[0];
+        var foundEmote = EmoteHelper.GetEmoteByCommand(command.TrimStart('/'));
 
         if (!foundEmote.HasValue)
         {
@@ -256,7 +339,7 @@ public sealed class Plugin : IDalamudPlugin
     }
 
     // Detour the execute emote function to stop any currently playing bypassed looping emotes before executing a new base/obtained game emote
-    // Necessary since emote bypassing will prevent the player from executing any base/obtained emote
+    // Necessary since emote bypassing will prevent the player from executing any base/obtained emote otherwise
     private unsafe bool DetourExecuteEmote(EmoteManager* emoteManager, ushort emoteId, PlayEmoteOption* playEmoteOption)
     {
         var chara = NoireService.ClientState.LocalPlayer;
@@ -320,6 +403,16 @@ public sealed class Plugin : IDalamudPlugin
 
         onEmoteHook?.Disable();
         onEmoteHook?.Dispose();
+
+        NoireService.Condition.ConditionChange -= OnConditionChanged;
+
+#if DEBUG
+        // ======================================
+        OnZoneUpMessageDelegate -= OnZoneUpMessage;
+        ProcessZonePacketUpHook?.Disable();
+        ProcessZonePacketUpHook?.Dispose();
+        // ======================================
+#endif
 
         ECommonsMain.Dispose();
         NoireLibMain.Dispose();

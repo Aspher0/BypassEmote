@@ -10,17 +10,19 @@ public class TrackedCharacter
 {
     public string UniqueId = Guid.NewGuid().ToString();
     public ulong? CID;
-    public uint? BaseId;
+    public uint? BaseId; // For NPCs
+    public ushort? ObjectIndex; // For NPCs, specifically mannequins since you can have multiple mannequins of the same retainer
     public Vector3 LastPlayerPosition;
     public float LastPlayerRotation;
     public bool IsWeaponDrawn;
     public uint? PlayingEmoteId = null;
     public bool ScheduledForRemoval = false;
 
-    public TrackedCharacter(ulong? cid, uint? baseId, Vector3 lastPlayerPos, float lastPlayerRot, bool isWeaponDrawn, uint playingEmoteId)
+    public TrackedCharacter(ulong? cid, uint? baseId, ushort? objectIndex, Vector3 lastPlayerPos, float lastPlayerRot, bool isWeaponDrawn, uint playingEmoteId)
     {
         CID = cid;
         BaseId = baseId;
+        ObjectIndex = objectIndex;
         LastPlayerPosition = lastPlayerPos;
         LastPlayerRotation = lastPlayerRot;
         IsWeaponDrawn = isWeaponDrawn;
@@ -38,8 +40,8 @@ public class TrackedCharacter
 
         if (CID != null)
             character = CharacterHelper.TryGetCharacterFromCID(CID.Value);
-        else if (BaseId != null)
-            character = CharacterHelper.TryGetCharacterFromBaseId(BaseId.Value);
+        else if (BaseId != null && ObjectIndex != null)
+            character = Helpers.CommonHelper.TryGetCharacterFromBaseIdAndObjectIndex(BaseId.Value, ObjectIndex.Value);
         else
             return;
 

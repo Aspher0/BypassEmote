@@ -36,8 +36,8 @@ public static class EmoteData
         { 117u, (EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(52u)} <Pose 3>", CommonHelper.GetRealEmoteIconById(52u) ) }, // Groundsit
         { 108u, (EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose 4>", CommonHelper.GetRealEmoteIconById(90u) ) }, // Change pose
         { 107u, (EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose 3>", CommonHelper.GetRealEmoteIconById(90u) ) }, // Change pose
-        { 100u, (EmotePlayType.DoNotPlay, $"{CommonHelper.GetRealEmoteNameById(88u)} <Pose 2>", CommonHelper.GetRealEmoteIconById(13u) ) }, // Bed pose, DO NOT PLAY since it forces lying down and prevents movement
-        { 99u, (EmotePlayType.DoNotPlay, $"{CommonHelper.GetRealEmoteNameById(88u)} <Pose 1>", CommonHelper.GetRealEmoteIconById(13u) ) }, // Bed pose, DO NOT PLAY since it forces lying down and prevents movement
+        { 100u, (EmotePlayType.DoNotPlay, $"{CommonHelper.GetRealEmoteNameById(88u)} <Pose 2>", CommonHelper.GetRealEmoteIconById(13u) ) }, // Bed pose, DO NOT PLAY since it messes with the character and the server
+        { 99u, (EmotePlayType.DoNotPlay, $"{CommonHelper.GetRealEmoteNameById(88u)} <Pose 1>", CommonHelper.GetRealEmoteIconById(13u) ) }, // Bed pose, DO NOT PLAY since it messes with the character and the server
         { 98u, (EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(52u)} <Pose 2>", CommonHelper.GetRealEmoteIconById(52u) ) }, // Groundsit
         { 97u, (EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(52u)} <Pose 1>", CommonHelper.GetRealEmoteIconById(52u) ) }, // Groundsit
         { 96u, (EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(50u)} <Pose 2>", CommonHelper.GetRealEmoteIconById(50u) ) }, // Chair sit
@@ -45,8 +45,8 @@ public static class EmoteData
         { 93u, (EmotePlayType.Looped, $"Drawn weapon <Pose 1>", CommonHelper.GetRealEmoteIconById(238u) ) }, // Pose 1 when weapon is drawn
         { 92u, (EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose 2>", CommonHelper.GetRealEmoteIconById(90u) ) }, // Change pose
         { 91u, (EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose 1>", CommonHelper.GetRealEmoteIconById(90u) ) }, // Change pose
-        { 89u, (EmotePlayType.DoNotPlay, $"{CommonHelper.GetRealEmoteNameById(51u)} <From bed pose>", CommonHelper.GetRealEmoteIconById(51u) ) }, // Stand up from bed pose, DO NOY PLAY since it prevents movement for a moment
-        { 88u, (EmotePlayType.DoNotPlay, null, CommonHelper.GetRealEmoteIconById(13u) ) }, // Bed pose, DO NOT PLAY since it forces lying down and prevents movement
+        { 89u, (EmotePlayType.DoNotPlay, $"{CommonHelper.GetRealEmoteNameById(51u)} <From bed pose>", CommonHelper.GetRealEmoteIconById(51u) ) }, // Stand up from bed pose, DO NOT PLAY since it messes with the character and the server
+        { 88u, (EmotePlayType.DoNotPlay, null, CommonHelper.GetRealEmoteIconById(13u) ) }, // Bed pose, DO NOT PLAY since it messes with the character and the server
         { 87u, (EmotePlayType.OneShot, $"{CommonHelper.GetRealEmoteNameById(87u)} <No target>", CommonHelper.GetRealEmoteIconById(87u) ) }, // Throw snowball without a target
         { 86u, (EmotePlayType.OneShot, $"{CommonHelper.GetRealEmoteNameById(86u)} <With target>", CommonHelper.GetRealEmoteIconById(86u) ) }, // Throw snowball with a target
         { 62u, (EmotePlayType.OneShot, null, null ) }, // Megaflare

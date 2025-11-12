@@ -4,7 +4,6 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Utility;
-using ECommons.MathHelpers;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
@@ -24,8 +23,8 @@ public static class CommonHelper
 
         if (trackedCharacter.CID != null)
             return CharacterHelper.TryGetCharacterFromCID(trackedCharacter.CID.Value);
-        else if (trackedCharacter.BaseId != null)
-            return CharacterHelper.TryGetCharacterFromBaseId(trackedCharacter.BaseId.Value);
+        else if (trackedCharacter.BaseId != null && trackedCharacter.ObjectIndex != null)
+            return TryGetCharacterFromBaseIdAndObjectIndex(trackedCharacter.BaseId.Value, trackedCharacter.ObjectIndex.Value);
 
         return null;
     }
@@ -43,7 +42,7 @@ public static class CommonHelper
             return null;
     }
 
-    public static TrackedCharacter? AddOrUpdateCharacterInTrackedList(nint charaAddress, Emote emote)
+    public static unsafe TrackedCharacter? AddOrUpdateCharacterInTrackedList(nint charaAddress, Emote emote)
     {
         if (charaAddress == nint.Zero) return null;
 
@@ -76,6 +75,7 @@ public static class CommonHelper
             var newTracked = new TrackedCharacter(
                 (castChar is IPlayerCharacter ? CharacterHelper.GetCIDFromPlayerCharacterAddress(charaAddress) : null),
                 (castChar is INpc ? castChar.BaseId : null),
+                (castChar is INpc ? castChar.ObjectIndex : null),
                 castChar.Position,
                 castChar.Rotation,
                 CharacterHelper.IsCharacterWeaponDrawn(charaAddress),
@@ -100,6 +100,13 @@ public static class CommonHelper
             if (CID == null) return;
             EmotePlayer.TrackedCharacters.RemoveAll(tc => tc.CID == CID);
         }
+    }
+
+    public static ICharacter? TryGetCharacterFromBaseIdAndObjectIndex(uint baseId, ushort objectIndex)
+    {
+        return (from o in NoireService.ObjectTable
+                where o is ICharacter
+                select o as ICharacter).FirstOrDefault((ICharacter p) => p != null && p.BaseId == baseId && p.ObjectIndex == objectIndex);
     }
 
     public static void RemoveCharacterFromTrackedListByUniqueID(string uniqueId)
@@ -206,6 +213,6 @@ public static class CommonHelper
 
     public static float GetRotationToTarget(ICharacter from, ICharacter to)
     {
-        return MathHelper.GetAngleBetweenPoints(new(from.Position.Z, from.Position.X), new(to.Position.Z, to.Position.X));
+        return ECommons.MathHelpers.MathHelper.GetAngleBetweenPoints(new(from.Position.Z, from.Position.X), new(to.Position.Z, to.Position.X));
     }
 }
