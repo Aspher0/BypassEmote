@@ -9,6 +9,7 @@ public class V1_6_x_x : BaseChangelogVersion
     public override List<ChangelogVersion> GetVersions() => new()
     {
         CreateV1_6_0_0(),
+        CreateV1_6_1_2(),
     };
 
     private static ChangelogVersion CreateV1_6_0_0()
@@ -32,6 +33,25 @@ public class V1_6_x_x : BaseChangelogVersion
                 Separator(),
                 Header("Technical Changes", Blue, 0, FontAwesomeIcon.Wrench),
                 EntryBullet("Improved how the syncing works, and specifically how other players are handled when they stop emoting.", White, 1),
+            }
+        };
+
+    private static ChangelogVersion CreateV1_6_1_2()
+        => new ChangelogVersion
+        {
+            Version = new(1, 6, 1, 2),
+            Date = "14-11-2025",
+            Title = "Various bug fixes",
+            TitleColor = Blue,
+            Description = "Fixes a few bugs with some specific emotes and syncing.",
+            Entries = new List<ChangelogEntry>
+            {
+                Header("Bug fixes", LightRed, 0, FontAwesomeIcon.Bug),
+                EntryBullet("Fixed some emotes not being bypassed properly, for example /waterfloat and /waterflip.", White, 1),
+                EntryBullet("Improved how the syncing works (again), and specifically how other players are handled when they stop emoting.\n" +
+                    "A small delay will be added before the emote is sent over IPC.\nFurthermore, movement detections for other players has been improved to " +
+                    "add some leeway so that the emote doesnt get stopped when the player is still moving a bit.", White, 1),
+                EntryBullet("Fixed emotes bypassing under some conditions that are not valid (Casting, in cutscene, in GPose, In event ...).", White, 1),
             }
         };
 }

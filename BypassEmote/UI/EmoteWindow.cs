@@ -1,4 +1,4 @@
-using BypassEmote.Data;
+using BypassEmote.Models;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
@@ -172,7 +172,7 @@ public class EmoteWindow : Window, IDisposable
         {
             foreach (var emote in displayedEmotes)
             {
-                if (Helpers.CommonHelper.GetEmotePlayType(emote.Item1) == EmoteData.EmotePlayType.DoNotPlay)
+                if (Helpers.CommonHelper.GetEmotePlayType(emote.Item1) == EmotePlayType.DoNotPlay)
                     continue;
 
                 // Filter based on selected tab

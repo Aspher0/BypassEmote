@@ -1,4 +1,5 @@
-using BypassEmote.Data;
+using BypassEmote.Helpers;
+using BypassEmote.Models;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -46,9 +47,9 @@ internal static unsafe class EmotePlayer
 
         var native = CharacterHelper.GetCharacterAddress(chara);
 
-        var emotePlayType = Helpers.CommonHelper.GetEmotePlayType(emote);
+        var emotePlayType = CommonHelper.GetEmotePlayType(emote);
 
-        if (emotePlayType == EmoteData.EmotePlayType.DoNotPlay)
+        if (emotePlayType == EmotePlayType.DoNotPlay)
             return;
 
         if (chara is not INpc && !IsCharacterInBypassedLoop(chara) && (native->Mode != CharacterModes.Normal || CharacterHelper.IsCharacterSleeping(chara)))
@@ -61,7 +62,7 @@ internal static unsafe class EmotePlayer
                 return;
             }
 
-            if (emotePlayType != EmoteData.EmotePlayType.OneShot)
+            if (emotePlayType != EmotePlayType.OneShot)
             {
                 // Block: In EmoteLoop/InPositionLoop but not OneShot
                 if (NoireService.ClientState.LocalPlayer != null && chara.Address == NoireService.ClientState.LocalPlayer.Address)
@@ -77,10 +78,10 @@ internal static unsafe class EmotePlayer
 
         switch (emotePlayType)
         {
-            case EmoteData.EmotePlayType.Looped:
+            case EmotePlayType.Looped:
                 {
                     PlayEmote(Service.Player, chara, emote);
-                    var trackedCharacter = Helpers.CommonHelper.AddOrUpdateCharacterInTrackedList(chara.Address, emote);
+                    var trackedCharacter = CommonHelper.AddOrUpdateCharacterInTrackedList(chara.Address, emote);
 
                     if (trackedCharacter == null) break;
 
@@ -94,10 +95,15 @@ internal static unsafe class EmotePlayer
 
                     break;
                 }
-            case EmoteData.EmotePlayType.OneShot:
+            case EmotePlayType.OneShot:
             default:
                 {
                     ushort timelineId = (ushort)emote.ActionTimeline[0].RowId;
+
+                    var specifications = CommonHelper.TryGetEmoteSpecification(emote);
+                    if (specifications != null && specifications.SpecificOneShotActionTimelineSlot.HasValue) // Some emotes have the one-shot timeline in slot 4 (i.e. waterflip)
+                        timelineId = (ushort)emote.ActionTimeline[specifications.SpecificOneShotActionTimelineSlot.Value].RowId;
+
                     if (timelineId == 0)
                         return;
                     StopLoop(chara, true);
@@ -121,7 +127,7 @@ internal static unsafe class EmotePlayer
 
     public static bool IsCharacterInBypassedLoop(ICharacter chara)
     {
-        var foundCharacter = Helpers.CommonHelper.TryGetTrackedCharacterFromAddress(chara.Address);
+        var foundCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(chara.Address);
         return foundCharacter != null;
     }
 
@@ -156,6 +162,11 @@ internal static unsafe class EmotePlayer
         ushort loop = (ushort)emote.ActionTimeline[0].RowId; // Standard/Loop
         ushort intro = (ushort)emote.ActionTimeline[1].RowId; // Intro
 
+        var specifications = CommonHelper.TryGetEmoteSpecification(emote);
+
+        if (specifications != null && specifications.SpecificLoopActionTimelineSlot.HasValue) // Some emotes have the loop timeline in slot 4 (i.e. waterfloat)
+            loop = (ushort)emote.ActionTimeline[specifications.SpecificLoopActionTimelineSlot.Value].RowId;
+
         if (blendIntro && intro != 0)
             player.ExperimentalBlend(actor, intro, 1);
 
@@ -167,6 +178,7 @@ internal static unsafe class EmotePlayer
 
         /* Commented out because it seems unnecessary to check for other timelines if the loop timeline is not defined.
          * In practice, emotes without a loop timeline are usually one-shot emotes, which are handled with PlayOneShotEmote.
+         * I'm keeping it just in case
          */
 
         //ushort upper = (ushort)emote.ActionTimeline[4].RowId; // Upper-body (SimpleBlend), I don't think this one is needed, it will never happen probably
@@ -207,11 +219,11 @@ internal static unsafe class EmotePlayer
             var sheet = ExcelSheetHelper.GetSheet<Emote>();
             if (sheet != null)
             {
-                foreach (var emote in sheet)
+                foreach (var e in sheet)
                 {
-                    if ((ushort)emote.ActionTimeline[0].RowId == timelineId)
+                    if ((ushort)e.ActionTimeline[0].RowId == timelineId)
                     {
-                        ushort upperBody = (ushort)emote.ActionTimeline[4].RowId;
+                        ushort upperBody = (ushort)e.ActionTimeline[4].RowId;
                         if (upperBody != 0)
                         {
                             native->Timeline.TimelineSequencer.PlayTimeline(upperBody);
@@ -224,7 +236,6 @@ internal static unsafe class EmotePlayer
             return;
         }
 
-        // Fixes /dote and similar emotes to target the correct character
         Service.Player.ExperimentalBlend(chara, timelineId);
     }
 
@@ -234,7 +245,7 @@ internal static unsafe class EmotePlayer
         if (ShouldNotifyIpc && character is IPlayerCharacter playerCharacter && local != null && local.Address == character.Address)
         {
             // Fire IPC event only if local player is stopping a looped emote
-            var trackedCharacter = Helpers.CommonHelper.TryGetTrackedCharacterFromAddress(character.Address);
+            var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(character.Address);
 
             if (trackedCharacter != null)
             {
@@ -262,7 +273,7 @@ internal static unsafe class EmotePlayer
     {
         if (chara == null) return;
 
-        var trackedCharacter = Helpers.CommonHelper.TryGetTrackedCharacterFromAddress(chara.Address);
+        var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(chara.Address);
 
         if (trackedCharacter == null) return;
 
@@ -273,7 +284,7 @@ internal static unsafe class EmotePlayer
 
         if (shouldRemoveFromList)
         {
-            Helpers.CommonHelper.RemoveCharacterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
+            CommonHelper.RemoveCharacterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
 
             if (TrackedCharacters.Count == 0 && UpdateHooked)
             {
@@ -294,18 +305,18 @@ internal static unsafe class EmotePlayer
 
         foreach (var trackedCharacter in TrackedCharacters)
         {
-            var character = Helpers.CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
+            var character = CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
 
             if (character == null)
             {
-                Helpers.CommonHelper.RemoveCharacterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
+                CommonHelper.RemoveCharacterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
                 return;
             }
 
             var isLocalPlayer = NoireService.ClientState.LocalPlayer != null && character.Address == NoireService.ClientState.LocalPlayer.Address;
 
             var charaName = character.Name.TextValue;
-            var trackedChara = Helpers.CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
+            var trackedChara = CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
 
             if (trackedChara == null || !CharacterHelper.IsCharacterInObjectTable(trackedChara))
             {
@@ -364,7 +375,7 @@ internal static unsafe class EmotePlayer
             {
                 if (obj is IPlayerCharacter || obj is INpc)
                 {
-                    var trackedCharacter = Helpers.CommonHelper.TryGetTrackedCharacterFromAddress(obj.Address);
+                    var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(obj.Address);
                     var isTracked = trackedCharacter != null;
 
                     if (obj is IPlayerCharacter character)
@@ -378,7 +389,7 @@ internal static unsafe class EmotePlayer
         {
             foreach (var trackedCharacter in TrackedCharacters)
             {
-                var character = Helpers.CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
+                var character = CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
                 if (character == null) continue;
                 charactersToSync.Add((character, true, trackedCharacter));
             }
@@ -432,7 +443,7 @@ internal static unsafe class EmotePlayer
             CharacterHelper.IsCharacterSleeping(localCharacter))
             return;
 
-        var rotToTarget = Helpers.CommonHelper.GetRotationToTarget(localCharacter, targetCharacter);
+        var rotToTarget = CommonHelper.GetRotationToTarget(localCharacter, targetCharacter);
 
         var character = CharacterHelper.GetCharacterAddress(localCharacter);
         character->Rotation = rotToTarget;
@@ -442,7 +453,7 @@ internal static unsafe class EmotePlayer
     {
         foreach (var trackedCharacter in TrackedCharacters)
         {
-            var character = Helpers.CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
+            var character = CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
 
             if (character != null)
             {

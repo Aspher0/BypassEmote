@@ -1,4 +1,5 @@
 using BypassEmote.Data;
+using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Text.SeStringHandling;
@@ -135,8 +136,8 @@ public static class CommonHelper
                 : name + $"{emote.Name.ToString()}";
         }
 
-        if (specification.Value.Name != null)
-            name += specification.Value.Name;
+        if (specification.Name != null)
+            name += specification.Name;
         else
             name += GetRealEmoteNameById(emote.RowId);
 
@@ -147,10 +148,10 @@ public static class CommonHelper
     {
         var specification = TryGetEmoteSpecification(emote);
 
-        if (specification == null || specification.Value.Icon == null)
+        if (specification == null || specification.Icon == null)
             return emote.Icon;
 
-        return specification.Value.Icon.Value;
+        return specification.Icon.Value;
     }
 
     public static string GetRealEmoteNameById(uint emoteId)
@@ -165,27 +166,20 @@ public static class CommonHelper
         return foundEmote?.Icon ?? null;
     }
 
-    public static EmoteData.EmotePlayType GetEmotePlayType(Emote emote)
+    public static EmotePlayType GetEmotePlayType(Emote emote)
     {
         var emoteSpecification = TryGetEmoteSpecification(emote);
-        if (emoteSpecification != null) return emoteSpecification.Value.PlayType;
+        if (emoteSpecification != null) return emoteSpecification.PlayType;
 
-        return (EmoteHelper.GetEmoteCategory(emote) == NoireLib.Enums.EmoteCategory.Special) ? EmoteData.EmotePlayType.Looped : EmoteData.EmotePlayType.OneShot;
+        return (EmoteHelper.GetEmoteCategory(emote) == NoireLib.Enums.EmoteCategory.Special) ? EmotePlayType.Looped : EmotePlayType.OneShot;
     }
 
-    public static (object Object, EmoteData.EmotePlayType PlayType, string? Name, ushort? Icon)? TryGetEmoteSpecification(Emote emote)
+    public static EmoteSpecification? TryGetEmoteSpecification(Emote emote)
     {
         foreach (var specification in EmoteData.EmoteSpecifications)
         {
-            var emoteId = specification.Key;
-
-            // If emoteId is uint, and its value == emote.RowId then return it
-            if (emoteId is uint singleId && singleId == emote.RowId)
-                return (emoteId, specification.Value.PlayType, specification.Value.Name, specification.Value.Icon);
-
-            // If emoteId is Tuple and emote.RowId is between Tuple item 1 and item 2 both included then return it
-            if (emoteId is Tuple<uint, uint> range && emote.RowId >= range.Item1 && emote.RowId <= range.Item2)
-                return (emoteId, specification.Value.PlayType, specification.Value.Name, specification.Value.Icon);
+            if (specification.Matches(emote.RowId))
+                return specification;
         }
 
         return null;
