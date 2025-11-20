@@ -1,4 +1,5 @@
 using BypassEmote.Helpers;
+using BypassEmote.IPC;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.SubKinds;
@@ -121,6 +122,7 @@ internal static unsafe class EmotePlayer
             delayedTrigger.Start(() =>
             {
                 provider?.LocalEmotePlayed?.Invoke(local, emote.RowId);
+                provider?.OnStateChanged?.Invoke(new IpcData(emote.RowId).Serialize());
             });
         }
     }
@@ -256,10 +258,12 @@ internal static unsafe class EmotePlayer
                 uint playingEmoteId = trackedCharacter.PlayingEmoteId ?? 0;
                 var provider = IpcProvider.Instance;
                 provider?.LocalEmotePlayed?.Invoke(playerCharacter, 0);
+                provider?.OnStateChanged?.Invoke(new IpcData(0).Serialize());
 
                 delayedTrigger.Start(() =>
                 {
                     provider?.LocalEmotePlayed?.Invoke(playerCharacter, 0);
+                    provider?.OnStateChanged?.Invoke(new IpcData(0).Serialize());
                 });
             }
         }
