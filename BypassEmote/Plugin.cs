@@ -13,7 +13,6 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using ECommons;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
-using FFXIVClientStructs.FFXIV.Client.Network;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.Shell;
@@ -42,7 +41,6 @@ public sealed class Plugin : IDalamudPlugin
 
     private Hook<ShellCommandModule.Delegates.ExecuteCommandInner> ExecuteCommandInnerHook { get; init; }
     private Hook<EmoteManager.Delegates.ExecuteEmote> ExecuteEmoteHook { get; init; }
-    private Hook<PacketDispatcher.Delegates.OnReceivePacket> OnReceivePacketHook { get; init; }
 
     private readonly List<Tuple<string, string>> commandNames = [
         new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config. Use with argument <emote_name> to bypass any emote (including unlocked ones) on yourself: /be <emote_command>."),
