@@ -180,7 +180,6 @@ public sealed class ActionTimelinePlayer : IDisposable
         var ob = state.OriginalBase.Value;
 
         // Do not change mode for player characters since it can cause issues on the server if not handled properly.
-        // I seem to have found the way to do it properly without issues so I'll re-enable it.
         //if (character is IPlayerCharacter)
         //{
         //    var localChar = NoireService.ClientState.LocalPlayer;
