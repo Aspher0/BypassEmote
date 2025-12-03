@@ -1,14 +1,13 @@
+using BypassEmote.Models;
 using Dalamud.Game;
 using Lumina.Excel.Sheets;
+using NoireLib;
+using NoireLib.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System;
-using BypassEmote.Models;
-using NoireLib;
-using NoireLib.Helpers;
-using NoireLib.Internal;
 
 namespace BypassEmote;
 
@@ -37,7 +36,7 @@ public class Service
 
         NoireService.Framework.RunOnFrameworkThread(() =>
         {
-            if (NoireService.ClientState.IsLoggedIn && NoireService.ClientState.LocalPlayer != null)
+            if (NoireService.ClientState.IsLoggedIn && NoireService.ObjectTable.LocalPlayer != null)
                 RefreshLockedEmotes();
         });
     }
@@ -46,7 +45,7 @@ public class Service
     {
         ClearLockedEmotes();
 
-        if (!NoireService.ClientState.IsLoggedIn || NoireService.ClientState.LocalPlayer == null)
+        if (!NoireService.ClientState.IsLoggedIn || NoireService.ObjectTable.LocalPlayer == null)
             return;
 
         var emoteSheet = ExcelSheetHelper.GetSheet<Emote>();

@@ -5,7 +5,6 @@ using Dalamud.Interface.Windowing;
 using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Helpers;
-using NoireLib.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -271,7 +270,7 @@ public class EmoteWindow : Window, IDisposable
                 }
 
                 if (ImGui.Selectable(label, false))
-                    EmotePlayer.PlayEmote(NoireService.ClientState.LocalPlayer, emote.Item1);
+                    EmotePlayer.PlayEmote(NoireService.ObjectTable.LocalPlayer, emote.Item1);
 
                 // Draw small info/exclamation icon to the right of the selectable with tooltip of sources
                 if (Service.EmoteSources.TryGetValue(emote.Item1.RowId, out var emoteSources) &&

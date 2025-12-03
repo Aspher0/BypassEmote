@@ -10,7 +10,6 @@ using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Helpers;
-using NoireLib.Internal;
 using System.Collections.Generic;
 
 namespace BypassEmote;
@@ -21,7 +20,6 @@ internal static unsafe class EmotePlayer
 
     // List of characters using a looped emote
     public static List<TrackedCharacter> TrackedCharacters = new List<TrackedCharacter>();
-    private static DelayedTrigger delayedTrigger = new(500);
 
     public static void PlayEmote(ICharacter? chara, Emote emote)
     {
@@ -31,10 +29,10 @@ internal static unsafe class EmotePlayer
         if (NoireService.ClientState.IsGPosing)
             return;
 
-        if (NoireService.ClientState.LocalPlayer != null && chara.Address == NoireService.ClientState.LocalPlayer.Address)
+        if (NoireService.ObjectTable.LocalPlayer != null && chara.Address == NoireService.ObjectTable.LocalPlayer.Address)
         {
-            if (NoireService.ClientState.LocalPlayer.IsCasting ||
-                NoireService.ClientState.LocalPlayer.IsDead)
+            if (NoireService.ObjectTable.LocalPlayer.IsCasting ||
+                NoireService.ObjectTable.LocalPlayer.IsDead)
                 return;
 
             if (NoireService.Condition.Any(
@@ -58,7 +56,7 @@ internal static unsafe class EmotePlayer
             if (CharacterHelper.IsCharacterSleeping(chara) || (native->Mode != CharacterModes.EmoteLoop && native->Mode != CharacterModes.InPositionLoop && native->Mode != CharacterModes.Mounted && native->Mode != CharacterModes.RidingPillion))
             {
                 // Block: Not in allowed modes
-                if (NoireService.ClientState.LocalPlayer != null && chara.Address == NoireService.ClientState.LocalPlayer.Address)
+                if (NoireService.ObjectTable.LocalPlayer != null && chara.Address == NoireService.ObjectTable.LocalPlayer.Address)
                     NoireLogger.PrintToChat("You cannot bypass this emote right now.");
                 return;
             }
@@ -66,15 +64,17 @@ internal static unsafe class EmotePlayer
             if (emotePlayType != EmotePlayType.OneShot)
             {
                 // Block: In EmoteLoop/InPositionLoop but not OneShot
-                if (NoireService.ClientState.LocalPlayer != null && chara.Address == NoireService.ClientState.LocalPlayer.Address)
+                if (NoireService.ObjectTable.LocalPlayer != null && chara.Address == NoireService.ObjectTable.LocalPlayer.Address)
                     NoireLogger.PrintToChat("You cannot bypass this emote right now.");
                 return;
             }
         }
 
-        StopLoop(chara, false);
+        var emoteCategory = EmoteHelper.GetEmoteCategory(emote);
+        if (emoteCategory != NoireLib.Enums.EmoteCategory.Expressions)
+            StopLoop(chara, false);
 
-        if (NoireService.ClientState.LocalPlayer != null && chara.Address == NoireService.ClientState.LocalPlayer.Address)
+        if (NoireService.ObjectTable.LocalPlayer != null && chara.Address == NoireService.ObjectTable.LocalPlayer.Address)
             FaceTarget();
 
         switch (emotePlayType)
@@ -107,23 +107,24 @@ internal static unsafe class EmotePlayer
 
                     if (timelineId == 0)
                         return;
-                    StopLoop(chara, true);
+                    StopLoop(chara, true); // I know this is redundant but this will ensure any looping emote will be completely stopped
                     PlayOneShotEmote(chara, timelineId);
                     break;
                 }
         }
 
-        var local = NoireService.ClientState.LocalPlayer;
+        var local = NoireService.ObjectTable.LocalPlayer;
         if (local != null && local.Address == chara.Address)
         {
             // Fire IPC event after delay only if local player is the one playing the emote
             var provider = IpcProvider.Instance;
 
-            delayedTrigger.Start(() =>
+            DelayerHelper.Clear();
+            DelayerHelper.Start("PlayBypassedEmote", () =>
             {
                 provider?.LocalEmotePlayed?.Invoke(local, emote.RowId);
                 provider?.OnStateChanged?.Invoke(new IpcData(emote.RowId).Serialize());
-            });
+            }, 500);
         }
     }
 
@@ -138,7 +139,7 @@ internal static unsafe class EmotePlayer
         if (chara == null)
             return;
 
-        var local = NoireService.ClientState.LocalPlayer;
+        var local = NoireService.ObjectTable.LocalPlayer;
         if (local != null && chara.Address == local.Address)
             return;
 
@@ -243,7 +244,7 @@ internal static unsafe class EmotePlayer
 
     public static void Stop(ActionTimelinePlayer player, ICharacter character, bool ShouldNotifyIpc, bool force = false)
     {
-        var local = NoireService.ClientState.LocalPlayer;
+        var local = NoireService.ObjectTable.LocalPlayer;
         if (ShouldNotifyIpc && character is IPlayerCharacter playerCharacter && local != null && local.Address == character.Address)
         {
             // Fire IPC event only if local player is stopping a looped emote
@@ -257,14 +258,17 @@ internal static unsafe class EmotePlayer
                 // When player A moves and bypasses an emote, this player might still be moving on player B's screen when player A starts the emote, causing a false-positive "stop emote" message
                 uint playingEmoteId = trackedCharacter.PlayingEmoteId ?? 0;
                 var provider = IpcProvider.Instance;
-                provider?.LocalEmotePlayed?.Invoke(playerCharacter, 0);
-                provider?.OnStateChanged?.Invoke(new IpcData(0).Serialize());
+                var ipcDataStop = new IpcData(0).Serialize();
 
-                delayedTrigger.Start(() =>
+                provider?.LocalEmotePlayed?.Invoke(playerCharacter, 0);
+                provider?.OnStateChanged?.Invoke(ipcDataStop);
+
+                DelayerHelper.Clear();
+                DelayerHelper.Start("StopBypassingEmote", () =>
                 {
                     provider?.LocalEmotePlayed?.Invoke(playerCharacter, 0);
-                    provider?.OnStateChanged?.Invoke(new IpcData(0).Serialize());
-                });
+                    provider?.OnStateChanged?.Invoke(ipcDataStop);
+                }, 500);
             }
         }
 
@@ -317,7 +321,7 @@ internal static unsafe class EmotePlayer
                 return;
             }
 
-            var isLocalPlayer = NoireService.ClientState.LocalPlayer != null && character.Address == NoireService.ClientState.LocalPlayer.Address;
+            var isLocalPlayer = NoireService.ObjectTable.LocalPlayer != null && character.Address == NoireService.ObjectTable.LocalPlayer.Address;
 
             var charaName = character.Name.TextValue;
             var trackedChara = CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
@@ -438,7 +442,7 @@ internal static unsafe class EmotePlayer
 
     public unsafe static void FaceTarget()
     {
-        if (NoireService.ClientState.LocalPlayer is not ICharacter localCharacter ||
+        if (NoireService.ObjectTable.LocalPlayer is not ICharacter localCharacter ||
             NoireService.TargetManager.Target is not ICharacter targetCharacter)
             return;
 
@@ -467,7 +471,6 @@ internal static unsafe class EmotePlayer
         }
 
         Service.Player.Dispose();
-        delayedTrigger.Dispose();
         NoireService.Framework.Update -= OnFrameworkUpdate;
     }
 }

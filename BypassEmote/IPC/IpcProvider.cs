@@ -87,7 +87,7 @@ public class IpcProvider
     {
         IpcData data = new IpcData(0);
 
-        var localPlayer = NoireService.ClientState.LocalPlayer;
+        var localPlayer = NoireService.ObjectTable.LocalPlayer;
         if (localPlayer == null) return data.Serialize();
 
         var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(localPlayer.Address);

@@ -90,7 +90,7 @@ public sealed class ActionTimelinePlayer : IDisposable
         //// Do not change mode for player characters since it can cause issues on the server if not handled properly.
         //if (character is IPlayerCharacter chara)
         //{
-        //    var localChar = NoireService.ClientState.LocalPlayer;
+        //    var localChar = NoireService.ObjectTable.LocalPlayer;
         //    if (emotePlayType == Data.EmoteData.EmotePlayType.Looped && localChar != null && character.Address == localChar.Address)
         //        native->SetMode(newMode, (byte)emoteModeId);
         //}
@@ -182,7 +182,7 @@ public sealed class ActionTimelinePlayer : IDisposable
         // Do not change mode for player characters since it can cause issues on the server if not handled properly.
         //if (character is IPlayerCharacter)
         //{
-        //    var localChar = NoireService.ClientState.LocalPlayer;
+        //    var localChar = NoireService.ObjectTable.LocalPlayer;
 
         //    if (localChar != null && character.Address == localChar.Address)
         //    {

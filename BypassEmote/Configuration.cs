@@ -8,8 +8,7 @@ namespace BypassEmote;
 public class Configuration : NoireConfigBase<Configuration>
 {
     public override string GetConfigFileName() => "Configuration";
-
-    public int Version { get; set; } = 0;
+    public override int Version { get; set; } = 1;
 
     [AutoSave] public virtual bool PluginEnabled { get; set; } = true;
     [AutoSave] public virtual bool AutoFaceTarget { get; set; } = true;

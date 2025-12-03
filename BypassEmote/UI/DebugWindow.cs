@@ -20,15 +20,15 @@ public class DebugWindow : Window, IDisposable
         SizeConstraints = new WindowSizeConstraints
         {
             MinimumSize = new Vector2(300, 200),
-            MaximumSize = new Vector2(600, 300),
+            MaximumSize = new Vector2(float.MinValue, float.MaxValue),
         };
     }
 
     public override void Draw()
     {
-        if (NoireService.ClientState.LocalPlayer != null)
+        if (NoireService.ObjectTable.LocalPlayer != null)
         {
-            var player = NoireService.ClientState.LocalPlayer;
+            var player = NoireService.ObjectTable.LocalPlayer;
 
             if (ImGui.Button("Set Position 1"))
             {
@@ -65,6 +65,17 @@ public class DebugWindow : Window, IDisposable
             ImGui.Text($"Rotation 1: {normalized1}");
             ImGui.Text($"Rotation 2: {normalized2}");
             ImGui.Text($"Rotation Difference: {difference}");
+
+            ImGui.Separator();
+
+            ImGui.Text($"Player Address: {player.Address:X}");
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                ImGui.SetTooltip("Click to copy");
+                if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+                    ImGui.SetClipboardText($"{player.Address:X}");
+            }
         }
         else
         {
