@@ -1,5 +1,5 @@
-using NoireLib.Changelog;
 using Dalamud.Interface;
+using NoireLib.Changelog;
 using System.Collections.Generic;
 
 namespace BypassEmote.Changelog.Versions;
@@ -10,6 +10,7 @@ public class V1_6_x_x : BaseChangelogVersion
     {
         CreateV1_6_0_0(),
         CreateV1_6_1_2(),
+        CreateV1_6_2_0(),
     };
 
     private static ChangelogVersion CreateV1_6_0_0()
@@ -52,6 +53,25 @@ public class V1_6_x_x : BaseChangelogVersion
                     "A small delay will be added before the emote is sent over IPC.\nFurthermore, movement detections for other players has been improved to " +
                     "add some leeway so that the emote doesnt get stopped when the player is still moving a bit.", White, 1),
                 EntryBullet("Fixed emotes bypassing under some conditions that are not valid (Casting, in cutscene, in GPose, In event ...).", White, 1),
+            }
+        };
+
+    private static ChangelogVersion CreateV1_6_2_0()
+        => new ChangelogVersion
+        {
+            Version = new(1, 6, 2, 0),
+            Date = "05-12-2025",
+            Title = "Facial expressions",
+            TitleColor = Blue,
+            Description = "Fixed a few bugs concerning facial expressions and facing targets.",
+            Entries = new List<ChangelogEntry>
+            {
+                Header("Bug fixes", LightRed, 0, FontAwesomeIcon.Bug),
+                EntryBullet("Prevented facial expressions from stopping bypassed looped emotes.", White, 1),
+                EntryBullet("Facial expression emotes no longer makes the character face its target.", White, 1),
+                EntryBullet("Additionnaly, the character will no longer rotate when emoting to itself (self-targetting).", White, 1),
+                EntryBullet("Commands /be sync and /be syncall will now better handle syncing emotes that have intro + loop phases, " +
+                    "hence improving the \"syncing\", where a slight delay would occur before for those type of emotes.", Orange, 1),
             }
         };
 }

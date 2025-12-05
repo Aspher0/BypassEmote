@@ -16,15 +16,15 @@
       },
       "ECommons": {
         "type": "Direct",
-        "requested": "[3.0.1.30, )",
-        "resolved": "3.0.1.30",
-        "contentHash": "+SkBZ/57BFnBRcN5+XXwlo1Ikqd6HgrRR7OdesBjeLm3y6l70LFo8QjHvCMNTFEePztPlqXNZR/UAq0YBq73ng=="
+        "requested": "[3.0.1.32, )",
+        "resolved": "3.0.1.32",
+        "contentHash": "OqmNYOrdnNBDnod+JvqyktD+sE2/I7RAp4uZXXXcSKThV8q9pFyrZhZhhYDcMhhAJMtWKeWt5FTiKLgYMH4eCQ=="
       },
       "NoireLib": {
         "type": "Direct",
-        "requested": "[1.3.2.1, )",
-        "resolved": "1.3.2.1",
-        "contentHash": "51ZqPqvh3K6sgaXi5zu+7UzBCGX+S98vqRfaBbEr+m+70TUnjVZzEpw4zRew06F5T50uHjuiOT2WnCWxmMlVjA==",
+        "requested": "[1.3.2.2, )",
+        "resolved": "1.3.2.2",
+        "contentHash": "XbclO73ysfjq+UwTX7HFA/j11X9o1ndnwLvOzTzGJnySMzlJ0N/bkiI+BNoLij9An1JuWAn1PZSs79dU4/n/2g==",
         "dependencies": {
           "Castle.Core": "5.2.1"
         }
