@@ -3,6 +3,7 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Memory;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using Lumina.Excel.Sheets;
+using NoireLib;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -105,6 +106,12 @@ public sealed class ActionTimelinePlayer : IDisposable
 
         native->Timeline.BaseOverride = actionTimeline;
 
+        if (character.Address == NoireService.ObjectTable.LocalPlayer?.Address)
+        {
+            var emoteSpec = CommonHelper.TryGetEmoteSpecification(emote);
+            Service.SimpleHeelsIpcCaller.RegisterEmoteOverride(character.ObjectIndex, emote.EmoteMode.RowId, emoteSpec?.Cpose ?? 0);
+        }
+
         if (interrupt)
             SimpleBlend(character, actionTimeline);
     }
@@ -119,7 +126,7 @@ public sealed class ActionTimelinePlayer : IDisposable
     }
 
     // Thank you to Senko for the help and for providing this function
-    public unsafe void ExperimentalBlend(ICharacter character, ushort actionTimeline, int prio = -1)
+    public unsafe void ExperimentalBlend(ICharacter character, Emote? emote, ushort actionTimeline, int prio = -1)
     {
         var native = GetNative(character);
         var animParams = (ActionTimelineAnimParams*)MemoryHelper.Allocate(0x60);
@@ -141,6 +148,12 @@ public sealed class ActionTimelinePlayer : IDisposable
         animParams->Unk42 = 0; // unknown
         native->Timeline.TimelineSequencer.PlayTimeline(actionTimeline, animParams);
         MemoryHelper.Free((nint)animParams);
+
+        if (character.Address == NoireService.ObjectTable.LocalPlayer?.Address && emote != null)
+        {
+            var emoteSpec = CommonHelper.TryGetEmoteSpecification(emote.Value);
+            Service.SimpleHeelsIpcCaller.RegisterEmoteOverride(character.ObjectIndex, emote.Value.EmoteMode.RowId, emoteSpec?.Cpose ?? 0);
+        }
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x60)]
@@ -197,7 +210,10 @@ public sealed class ActionTimelinePlayer : IDisposable
 
         state.OriginalBase = null;
 
-        SimpleBlend(character, 3);
+        ExperimentalBlend(character, null, 3);
+
+        if (character.Address == NoireService.ObjectTable.LocalPlayer?.Address)
+            Service.SimpleHeelsIpcCaller.ClearEmoteOverride(character.ObjectIndex);
     }
 
     public unsafe void ResetToIdle(ICharacter character)

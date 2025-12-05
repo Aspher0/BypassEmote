@@ -1,3 +1,4 @@
+using BypassEmote.IPC;
 using BypassEmote.Models;
 using Dalamud.Game;
 using Lumina.Excel.Sheets;
@@ -14,6 +15,7 @@ namespace BypassEmote;
 public class Service
 {
     public static Plugin Plugin { get; set; } = null!;
+    public static SimpleHeels_IPC_Caller SimpleHeelsIpcCaller { get; } = new SimpleHeels_IPC_Caller();
 
     public static List<(Emote, NoireLib.Enums.EmoteCategory)> LockedEmotes = [];
 

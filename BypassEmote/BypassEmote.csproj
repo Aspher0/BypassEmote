@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Dalamud.NET.Sdk/13.1.0">
   <PropertyGroup>
-    <Version>1.6.1.2</Version>
+    <Version>1.6.2.0</Version>
     <Description>A simple plugin that lets you play any game emote, whether you unlocked it or not.\nClient side only.\nJust type the emote command as you would normally.\nWorks with custom animations and syncable over Mare.</Description>
     <PackageProjectUrl>https://github.com/Aspher0/BypassEmote</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>

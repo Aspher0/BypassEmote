@@ -12,13 +12,13 @@ public static class EmoteData
         new EmoteSpecification(289u, EmotePlayType.OneShot, $"{CommonHelper.GetRealEmoteNameById(288u)} <Looking up>" ), // Photograph
         new EmoteSpecification(287u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(283u)} <Lower bouquet>" ), // Bouquet while targetting another player using Bouquet
         new EmoteSpecification(268u, EmotePlayType.OneShot, $"{CommonHelper.GetRealEmoteNameById(267)} <No target>"), // All saint's charm without a target
-        new EmoteSpecification(255u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(50u)} <Pose4>", CommonHelper.GetRealEmoteIconById(50u) ), // Chair sit
-        new EmoteSpecification(254u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(50u)} <Pose3>", CommonHelper.GetRealEmoteIconById(50u) ), // Chair sit
-        new EmoteSpecification(253u, EmotePlayType.Looped, "Umbrella <Pose3>" ),
-        new EmoteSpecification(244u, EmotePlayType.Looped, "Umbrella <Pose2>" ),
-        new EmoteSpecification(243u, EmotePlayType.Looped, "Umbrella <Pose1>" ),
-        new EmoteSpecification(219u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose6>", CommonHelper.GetRealEmoteIconById(90u) ), // Change pose
-        new EmoteSpecification(218u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose5>", CommonHelper.GetRealEmoteIconById(90u) ), // Change pose
+        new EmoteSpecification(255u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(50u)} <Pose4>", CommonHelper.GetRealEmoteIconById(50u), cpose: 4 ), // Chair sit
+        new EmoteSpecification(254u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(50u)} <Pose3>", CommonHelper.GetRealEmoteIconById(50u), cpose: 3 ), // Chair sit
+        new EmoteSpecification(253u, EmotePlayType.Looped, "Umbrella <Pose3>", cpose: 3 ),
+        new EmoteSpecification(244u, EmotePlayType.Looped, "Umbrella <Pose2>", cpose: 2 ),
+        new EmoteSpecification(243u, EmotePlayType.Looped, "Umbrella <Pose1>", cpose: 1 ),
+        new EmoteSpecification(219u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose6>", CommonHelper.GetRealEmoteIconById(90u), cpose: 6 ), // Change pose
+        new EmoteSpecification(218u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose5>", CommonHelper.GetRealEmoteIconById(90u), cpose: 5 ), // Change pose
         new EmoteSpecification(179u, EmotePlayType.OneShot, $"{CommonHelper.GetRealEmoteNameById(178u)} <No target>" ), // Splash without a target
         new EmoteSpecification(175u, EmotePlayType.OneShot ), // Ultima
         new EmoteSpecification(151u, EmotePlayType.OneShot, specificOneShotActionTimelineSlot: 4 ), // Water flip
@@ -26,18 +26,18 @@ public static class EmoteData
         new EmoteSpecification(147u, EmotePlayType.OneShot, $"{CommonHelper.GetRealEmoteNameById(146u)} <No target>", CommonHelper.GetRealEmoteIconById(146u) ), // Dote
         new EmoteSpecification(144u, EmotePlayType.OneShot ), // Diamond Dust
         new EmoteSpecification(138u, EmotePlayType.OneShot ), // Zantetsuken
-        new EmoteSpecification(117u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(52u)} <Pose3>", CommonHelper.GetRealEmoteIconById(52u) ), // Groundsit
-        new EmoteSpecification(108u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose4>", CommonHelper.GetRealEmoteIconById(90u) ), // Change pose
-        new EmoteSpecification(107u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose3>", CommonHelper.GetRealEmoteIconById(90u) ), // Change pose
-        new EmoteSpecification(100u, EmotePlayType.DoNotPlay, $"{CommonHelper.GetRealEmoteNameById(88u)} <Pose2>", CommonHelper.GetRealEmoteIconById(13u) ), // Bed pose, DO NOT PLAY since it messes with the character and the server
-        new EmoteSpecification(99u, EmotePlayType.DoNotPlay, $"{CommonHelper.GetRealEmoteNameById(88u)} <Pose1>", CommonHelper.GetRealEmoteIconById(13u) ), // Bed pose, DO NOT PLAY since it messes with the character and the server
-        new EmoteSpecification(98u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(52u)} <Pose2>", CommonHelper.GetRealEmoteIconById(52u) ), // Groundsit
-        new EmoteSpecification(97u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(52u)} <Pose1>", CommonHelper.GetRealEmoteIconById(52u) ), // Groundsit
-        new EmoteSpecification(96u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(50u)} <Pose2>", CommonHelper.GetRealEmoteIconById(50u) ), // Chair sit
-        new EmoteSpecification(95u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(50u)} <Pose1>", CommonHelper.GetRealEmoteIconById(50u) ), // Chair sit
-        new EmoteSpecification(93u, EmotePlayType.Looped, $"Drawn weapon <Pose1>", CommonHelper.GetRealEmoteIconById(238u) ), // Pose1 when weapon is drawn
-        new EmoteSpecification(92u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose2>", CommonHelper.GetRealEmoteIconById(90u) ), // Change pose
-        new EmoteSpecification(91u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose1>", CommonHelper.GetRealEmoteIconById(90u) ), // Change pose
+        new EmoteSpecification(117u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(52u)} <Pose3>", CommonHelper.GetRealEmoteIconById(52u), cpose: 3 ), // Groundsit
+        new EmoteSpecification(108u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose4>", CommonHelper.GetRealEmoteIconById(90u), cpose: 4 ), // Change pose
+        new EmoteSpecification(107u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose3>", CommonHelper.GetRealEmoteIconById(90u), cpose: 3 ), // Change pose
+        new EmoteSpecification(100u, EmotePlayType.DoNotPlay, $"{CommonHelper.GetRealEmoteNameById(88u)} <Pose2>", CommonHelper.GetRealEmoteIconById(13u), cpose: 2 ), // Bed pose, DO NOT PLAY since it messes with the character and the server
+        new EmoteSpecification(99u, EmotePlayType.DoNotPlay, $"{CommonHelper.GetRealEmoteNameById(88u)} <Pose1>", CommonHelper.GetRealEmoteIconById(13u), cpose: 1 ), // Bed pose, DO NOT PLAY since it messes with the character and the server
+        new EmoteSpecification(98u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(52u)} <Pose2>", CommonHelper.GetRealEmoteIconById(52u), cpose: 2 ), // Groundsit
+        new EmoteSpecification(97u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(52u)} <Pose1>", CommonHelper.GetRealEmoteIconById(52u), cpose: 1 ), // Groundsit
+        new EmoteSpecification(96u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(50u)} <Pose2>", CommonHelper.GetRealEmoteIconById(50u), cpose: 2 ), // Chair sit
+        new EmoteSpecification(95u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(50u)} <Pose1>", CommonHelper.GetRealEmoteIconById(50u), cpose: 1 ), // Chair sit
+        new EmoteSpecification(93u, EmotePlayType.Looped, $"Drawn weapon <Pose1>", CommonHelper.GetRealEmoteIconById(238u), cpose: 1 ), // Pose1 when weapon is drawn
+        new EmoteSpecification(92u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose2>", CommonHelper.GetRealEmoteIconById(90u), cpose: 2 ), // Change pose
+        new EmoteSpecification(91u, EmotePlayType.Looped, $"{CommonHelper.GetRealEmoteNameById(90u)} <Pose1>", CommonHelper.GetRealEmoteIconById(90u), cpose: 1 ), // Change pose
         new EmoteSpecification(89u, EmotePlayType.DoNotPlay, $"{CommonHelper.GetRealEmoteNameById(51u)} <From bed pose>", CommonHelper.GetRealEmoteIconById(51u) ), // Stand up from bed pose, DO NOT PLAY since it messes with the character and the server
         new EmoteSpecification(88u, EmotePlayType.DoNotPlay, null, CommonHelper.GetRealEmoteIconById(13u) ), // Bed pose, DO NOT PLAY since it messes with the character and the server
         new EmoteSpecification(87u, EmotePlayType.OneShot, $"{CommonHelper.GetRealEmoteNameById(87u)} <No target>", CommonHelper.GetRealEmoteIconById(87u) ), // Throw snowball without a target

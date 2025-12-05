@@ -1,5 +1,3 @@
-using static BypassEmote.Data.EmoteData;
-
 namespace BypassEmote.Models;
 
 public class EmoteSpecification
@@ -13,6 +11,7 @@ public class EmoteSpecification
     public ushort? Icon { get; }
     public int? SpecificOneShotActionTimelineSlot { get; }
     public int? SpecificLoopActionTimelineSlot { get; }
+    public byte Cpose { get; } = 0;
 
     public EmoteSpecification(
         uint id,
@@ -20,7 +19,8 @@ public class EmoteSpecification
         string? name = null,
         ushort? icon = null,
         int? specificOneShotActionTimelineSlot = null,
-        int? specificLoopActionTimelineSlot = null)
+        int? specificLoopActionTimelineSlot = null,
+        byte cpose = 0)
     {
         SingleId = id;
         PlayType = playType;
@@ -28,6 +28,7 @@ public class EmoteSpecification
         Icon = icon;
         SpecificOneShotActionTimelineSlot = specificOneShotActionTimelineSlot;
         SpecificLoopActionTimelineSlot = specificLoopActionTimelineSlot;
+        Cpose = cpose;
     }
 
     public EmoteSpecification(
@@ -37,7 +38,8 @@ public class EmoteSpecification
         string? name = null,
         ushort? icon = null,
         int? specificOneShotActionTimelineSlot = null,
-        int? specificLoopActionTimelineSlot = null)
+        int? specificLoopActionTimelineSlot = null,
+        byte cpose = 0)
     {
         RangeStart = startId;
         RangeEnd = endId;
@@ -46,6 +48,7 @@ public class EmoteSpecification
         Icon = icon;
         SpecificOneShotActionTimelineSlot = specificOneShotActionTimelineSlot;
         SpecificLoopActionTimelineSlot = specificLoopActionTimelineSlot;
+        Cpose = cpose;
     }
 
     public bool Matches(uint rowId)

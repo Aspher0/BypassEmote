@@ -74,7 +74,9 @@ internal static unsafe class EmotePlayer
         if (emoteCategory != NoireLib.Enums.EmoteCategory.Expressions)
             StopLoop(chara, false);
 
-        if (NoireService.ObjectTable.LocalPlayer != null && chara.Address == NoireService.ObjectTable.LocalPlayer.Address)
+        if (NoireService.ObjectTable.LocalPlayer != null &&
+            chara.Address == NoireService.ObjectTable.LocalPlayer.Address &&
+            emoteCategory != NoireLib.Enums.EmoteCategory.Expressions)
             FaceTarget();
 
         switch (emotePlayType)
@@ -107,7 +109,10 @@ internal static unsafe class EmotePlayer
 
                     if (timelineId == 0)
                         return;
-                    StopLoop(chara, true); // I know this is redundant but this will ensure any looping emote will be completely stopped
+
+                    if (emoteCategory != NoireLib.Enums.EmoteCategory.Expressions)
+                        StopLoop(chara, true); // I know this is redundant but this will ensure any looping emote will be completely stopped and removed from tracked list
+
                     PlayOneShotEmote(chara, timelineId);
                     break;
                 }
@@ -119,7 +124,7 @@ internal static unsafe class EmotePlayer
             // Fire IPC event after delay only if local player is the one playing the emote
             var provider = IpcProvider.Instance;
 
-            DelayerHelper.Clear();
+            DelayerHelper.CancelAll();
             DelayerHelper.Start("PlayBypassedEmote", () =>
             {
                 provider?.LocalEmotePlayed?.Invoke(local, emote.RowId);
@@ -171,7 +176,7 @@ internal static unsafe class EmotePlayer
             loop = (ushort)emote.ActionTimeline[specifications.SpecificLoopActionTimelineSlot.Value].RowId;
 
         if (blendIntro && intro != 0)
-            player.ExperimentalBlend(actor, intro, 1);
+            player.ExperimentalBlend(actor, emote, intro, 1);
 
         if (loop != 0)
         {
@@ -239,7 +244,7 @@ internal static unsafe class EmotePlayer
             return;
         }
 
-        Service.Player.ExperimentalBlend(chara, timelineId);
+        Service.Player.ExperimentalBlend(chara, null, timelineId);
     }
 
     public static void Stop(ActionTimelinePlayer player, ICharacter character, bool ShouldNotifyIpc, bool force = false)
@@ -263,7 +268,7 @@ internal static unsafe class EmotePlayer
                 provider?.LocalEmotePlayed?.Invoke(playerCharacter, 0);
                 provider?.OnStateChanged?.Invoke(ipcDataStop);
 
-                DelayerHelper.Clear();
+                DelayerHelper.CancelAll();
                 DelayerHelper.Start("StopBypassingEmote", () =>
                 {
                     provider?.LocalEmotePlayed?.Invoke(playerCharacter, 0);
@@ -413,7 +418,9 @@ internal static unsafe class EmotePlayer
                 var emote = EmoteHelper.GetEmoteById(characterToSync.TrackedCharacter.PlayingEmoteId.Value);
                 if (emote.HasValue)
                 {
-                    PlayEmote(Service.Player, characterToSync.Character, emote.Value);
+                    //PlayEmote(Service.Player, characterToSync.Character, emote.Value); // Causes slight desync on looped emotes with intro
+                    ushort loop = (ushort)emote.Value.ActionTimeline[0].RowId;
+                    Service.Player.ExperimentalBlend(characterToSync.Character, emote, loop); // Seems to work better for loop anims with an intro, otherwise there will be a slight desync
                     continue;
                 }
             }
@@ -444,6 +451,9 @@ internal static unsafe class EmotePlayer
     {
         if (NoireService.ObjectTable.LocalPlayer is not ICharacter localCharacter ||
             NoireService.TargetManager.Target is not ICharacter targetCharacter)
+            return;
+
+        if (localCharacter.Address == targetCharacter.Address)
             return;
 
         if (CharacterHelper.IsCharacterChairSitting(localCharacter) ||
