@@ -1,30 +1,30 @@
 {
   "version": 1,
   "dependencies": {
-    "net9.0-windows7.0": {
+    "net10.0-windows7.0": {
       "DalamudPackager": {
         "type": "Direct",
-        "requested": "[13.1.0, )",
-        "resolved": "13.1.0",
-        "contentHash": "XdoNhJGyFby5M/sdcRhnc5xTop9PHy+H50PTWpzLhJugjB19EDBiHD/AsiDF66RETM+0qKUdJBZrNuebn7qswQ=="
+        "requested": "[14.0.0, )",
+        "resolved": "14.0.0",
+        "contentHash": "9c1q/eAeAs82mkQWBOaCvbt3GIQxAIadz5b/7pCXDIy9nHPtnRc+tDXEvKR+M36Wvi7n+qBTevRupkLUQp6DFA=="
       },
       "DotNet.ReproducibleBuilds": {
         "type": "Direct",
-        "requested": "[1.2.25, )",
-        "resolved": "1.2.25",
-        "contentHash": "xCXiw7BCxHJ8pF6wPepRUddlh2dlQlbr81gXA72hdk4FLHkKXas7EH/n+fk5UCA/YfMqG1Z6XaPiUjDbUNBUzg=="
+        "requested": "[1.2.39, )",
+        "resolved": "1.2.39",
+        "contentHash": "fcFN01tDTIQqDuTwr1jUQK/geofiwjG5DycJQOnC72i1SsLAk1ELe+apBOuZ11UMQG8YKFZG1FgvjZPbqHyatg=="
       },
       "ECommons": {
         "type": "Direct",
-        "requested": "[3.0.1.32, )",
-        "resolved": "3.0.1.32",
-        "contentHash": "OqmNYOrdnNBDnod+JvqyktD+sE2/I7RAp4uZXXXcSKThV8q9pFyrZhZhhYDcMhhAJMtWKeWt5FTiKLgYMH4eCQ=="
+        "requested": "[3.1.0.2, )",
+        "resolved": "3.1.0.2",
+        "contentHash": "NFVf3G23lRGnZ7xEIFWzXc61LHfLfkyw2NwYc/sYoldehzurPc49Kg4DbVksqSyhEknsTTD0LkpcxPNV16ziUw=="
       },
       "NoireLib": {
         "type": "Direct",
-        "requested": "[1.3.2.2, )",
-        "resolved": "1.3.2.2",
-        "contentHash": "XbclO73ysfjq+UwTX7HFA/j11X9o1ndnwLvOzTzGJnySMzlJ0N/bkiI+BNoLij9An1JuWAn1PZSs79dU4/n/2g==",
+        "requested": "[1.3.3, )",
+        "resolved": "1.3.3",
+        "contentHash": "pzI9a5Af7457wUZco0Abx3WkhZqd6410fOn/U4O4H53A0V1kCsIrUWRKNzR1P2cU69R9pY8+BK2LVPiFNQt4GA==",
         "dependencies": {
           "Castle.Core": "5.2.1"
         }

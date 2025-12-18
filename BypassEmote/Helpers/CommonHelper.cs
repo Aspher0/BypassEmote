@@ -144,7 +144,7 @@ public static class CommonHelper
         return name;
     }
 
-    public static ushort GetEmoteIcon(Emote emote)
+    public static uint GetEmoteIcon(Emote emote)
     {
         var specification = TryGetEmoteSpecification(emote);
 
@@ -160,7 +160,7 @@ public static class CommonHelper
         return foundEmote?.Name.ToString() ?? $"No name";
     }
 
-    public static ushort? GetRealEmoteIconById(uint emoteId)
+    public static uint? GetRealEmoteIconById(uint emoteId)
     {
         var foundEmote = EmoteHelper.GetEmoteById(emoteId);
         return foundEmote?.Icon ?? null;

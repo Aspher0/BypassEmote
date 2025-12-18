@@ -254,7 +254,7 @@ public class EmoteWindow : Window, IDisposable
                 var iconSize = 25f;
                 try
                 {
-                    var iconTex = NoireService.TextureProvider.GetFromGameIcon((uint)Helpers.CommonHelper.GetEmoteIcon(emote.Item1));
+                    var iconTex = NoireService.TextureProvider.GetFromGameIcon(Helpers.CommonHelper.GetEmoteIcon(emote.Item1));
                     var wrap = iconTex?.GetWrapOrEmpty();
                     if (wrap != null)
                     {

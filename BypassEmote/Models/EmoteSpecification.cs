@@ -8,7 +8,7 @@ public class EmoteSpecification
 
     public EmotePlayType PlayType { get; }
     public string? Name { get; }
-    public ushort? Icon { get; }
+    public uint? Icon { get; }
     public int? SpecificOneShotActionTimelineSlot { get; }
     public int? SpecificLoopActionTimelineSlot { get; }
     public byte Cpose { get; } = 0;
@@ -17,7 +17,7 @@ public class EmoteSpecification
         uint id,
         EmotePlayType playType = EmotePlayType.OneShot,
         string? name = null,
-        ushort? icon = null,
+        uint? icon = null,
         int? specificOneShotActionTimelineSlot = null,
         int? specificLoopActionTimelineSlot = null,
         byte cpose = 0)
@@ -36,7 +36,7 @@ public class EmoteSpecification
         uint endId,
         EmotePlayType playType = EmotePlayType.DoNotPlay,
         string? name = null,
-        ushort? icon = null,
+        uint? icon = null,
         int? specificOneShotActionTimelineSlot = null,
         int? specificLoopActionTimelineSlot = null,
         byte cpose = 0)
