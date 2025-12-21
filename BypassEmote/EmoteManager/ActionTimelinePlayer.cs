@@ -27,46 +27,6 @@ public sealed class ActionTimelinePlayer : IDisposable
         states.Clear();
     }
 
-    //public unsafe float GetOverallSpeed(ICharacter character)
-    //{
-    //    var native = GetNative(character);
-    //    return native->Timeline.OverallSpeed;
-    //}
-
-    //public unsafe void SetOverallSpeed(ICharacter character, float speed)
-    //{
-    //    var native = GetNative(character);
-    //    GetOrCreateState(character).OverallSpeedOverride = speed;
-    //    native->Timeline.OverallSpeed = speed;
-    //}
-
-    //public void ResetOverallSpeed(ICharacter character)
-    //{
-    //    if (!states.TryGetValue(character.Address, out var state))
-    //        return;
-
-    //    state.OverallSpeedOverride = null;
-    //}
-
-    //public unsafe void SetLipsOverride(ICharacter character, ushort lipsTimeline)
-    //{
-    //    var native = GetNative(character);
-    //    native->Timeline.SetLipsOverrideTimeline(lipsTimeline);
-    //    GetOrCreateState(character).LipsOverride = lipsTimeline;
-    //}
-
-    //public void ClearLipsOverride(ICharacter character)
-    //{
-    //    if (states.TryGetValue(character.Address, out var state))
-    //        state.LipsOverride = 0;
-    //}
-
-    //public unsafe ushort GetCurrentBaseOverride(ICharacter character)
-    //{
-    //    var native = GetNative(character);
-    //    return native->Timeline.BaseOverride;
-    //}
-
     /// <summary>
     /// Play the given action timeline as a base override. If interrupt == true, the timeline is blended in immediately.
     /// </summary>
@@ -83,27 +43,6 @@ public sealed class ActionTimelinePlayer : IDisposable
         var emoteMode = emote.EmoteMode;
         var emoteModeId = emoteMode.RowId;
 
-        //// 11 = InPositionLoop = Sit, GroundSit, Sleep
-        //var newMode = emoteMode.Value.ConditionMode == 11 ? CharacterModes.InPositionLoop : CharacterModes.EmoteLoop;
-
-        //var emotePlayType = CommonHelper.GetEmotePlayType(emote);
-
-        //// Do not change mode for player characters since it can cause issues on the server if not handled properly.
-        //if (character is IPlayerCharacter chara)
-        //{
-        //    var localChar = NoireService.ObjectTable.LocalPlayer;
-        //    if (emotePlayType == Data.EmoteData.EmotePlayType.Looped && localChar != null && character.Address == localChar.Address)
-        //        native->SetMode(newMode, (byte)emoteModeId);
-        //}
-        //else if (character is INpc npc)
-        //    native->SetMode(newMode, (byte)emoteModeId);
-
-        /*
-         * Maybe I can change the character mode of others and not change it for the local player, but
-         * the issue right now is that setting mode on others make their position "desync" and "jitter" with framework update
-         * Also, it's kinda pointless to change the mode of others and not the local player, so I will not touch modes for now.
-         */
-
         native->Timeline.BaseOverride = actionTimeline;
 
         if (character.Address == NoireService.ObjectTable.LocalPlayer?.Address)
@@ -113,16 +52,7 @@ public sealed class ActionTimelinePlayer : IDisposable
         }
 
         if (interrupt)
-            SimpleBlend(character, actionTimeline);
-    }
-
-    /// <summary>
-    /// Trigger a one-shot blend timeline.
-    /// </summary>
-    public unsafe void SimpleBlend(ICharacter character, ushort actionTimeline)
-    {
-        var native = GetNative(character);
-        native->Timeline.TimelineSequencer.PlayTimeline(actionTimeline);
+            ExperimentalBlend(character, emote, actionTimeline);
     }
 
     // Thank you to Senko for the help and for providing this function
@@ -156,31 +86,6 @@ public sealed class ActionTimelinePlayer : IDisposable
         }
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x60)]
-    public unsafe struct ActionTimelineAnimParams
-    {
-        [FieldOffset(0x00)] public nint vtblAddr;
-        [FieldOffset(0x10)] public float Unk0;
-        [FieldOffset(0x14)] public float Unk4;
-        [FieldOffset(0x18)] public float Unk8;
-        [FieldOffset(0x1C)] public float UnkC;
-        [FieldOffset(0x20)] public float Unk10;
-        [FieldOffset(0x24)] public float Intensity;
-        [FieldOffset(0x28)] public float StartTS;
-        [FieldOffset(0x2C)] public float Unk1C; // Default -1.0
-        [FieldOffset(0x30)] public ulong Unk20;
-        [FieldOffset(0x38)] public ulong TargetObjId;
-        [FieldOffset(0x40)] public uint Unk30;
-        [FieldOffset(0x44)] public uint Priority; // 0-7, or -1 for anim default
-        [FieldOffset(0x48)] public int Unk38; // default -1 (0xFFFFFFFF)
-        [FieldOffset(0x4C)] public byte Unk3C; // typically 0xFF or 0
-        [FieldOffset(0x4D)] public byte Unk3D; // always 0?
-        [FieldOffset(0x4E)] public byte Unk3E; // always 0?
-        [FieldOffset(0x4F)] public byte Unk3F; // always 0?
-        [FieldOffset(0x50)] public byte Unk40; // always 0?
-        [FieldOffset(0x52)] public byte Unk42;
-    }
-
     /// <summary>
     /// Reset the character's base override and original mode state and do a small blend to clear state.
     /// </summary>
@@ -192,20 +97,6 @@ public sealed class ActionTimelinePlayer : IDisposable
         var native = GetNative(character);
         var ob = state.OriginalBase.Value;
 
-        // Do not change mode for player characters since it can cause issues on the server if not handled properly.
-        //if (character is IPlayerCharacter)
-        //{
-        //    var localChar = NoireService.ObjectTable.LocalPlayer;
-
-        //    if (localChar != null && character.Address == localChar.Address)
-        //    {
-        //        NoireLogger.LogDebug($"Restoring original mode {ob.OriginalMode} and param {ob.OriginalInput} for player character.");
-        //        native->SetMode(ob.OriginalMode, ob.OriginalInput);
-        //    }
-        //}
-        //else if (character is INpc)
-        //    native->SetMode(ob.OriginalMode, ob.OriginalInput);
-
         native->Timeline.BaseOverride = ob.OriginalTimeline;
 
         state.OriginalBase = null;
@@ -214,21 +105,6 @@ public sealed class ActionTimelinePlayer : IDisposable
 
         if (character.Address == NoireService.ObjectTable.LocalPlayer?.Address)
             Service.SimpleHeelsIpcCaller.ClearEmoteOverride(character.ObjectIndex);
-    }
-
-    public unsafe void ResetToIdle(ICharacter character)
-    {
-        var native = GetNative(character);
-
-        native->Timeline.BaseOverride = 0;
-        SimpleBlend(character, 3);
-
-        if (!states.TryGetValue(character.Address, out var state) || state.OriginalBase is null)
-            return;
-
-        var ob = state.OriginalBase.Value;
-
-        state.OriginalBase = null;
     }
 
     public void Stop(ICharacter character, bool force)
@@ -242,26 +118,33 @@ public sealed class ActionTimelinePlayer : IDisposable
         }
     }
 
-    //public void StopToIdle(ICharacter character)
-    //{
-    //    ResetToIdle(character);
-    //    //ResetOverallSpeed(character);
-    //}
-
-    //public void Reset(ICharacter character)
-    //{
-    //    ClearLipsOverride(character);
-    //    ResetPerSlotSpeeds(character);
-    //    ResetBase(character);
-    //    ResetOverallSpeed(character);
-    //}
-
     public bool HasBaseOverride(ICharacter character)
     {
         return states.TryGetValue(character.Address, out var st) && st.OriginalBase is not null;
     }
 
-    // --- Per-slot speed controls ---
+    // --- speed controls ---
+
+    //public unsafe float GetOverallSpeed(ICharacter character)
+    //{
+    //    var native = GetNative(character);
+    //    return native->Timeline.OverallSpeed;
+    //}
+
+    //public unsafe void SetOverallSpeed(ICharacter character, float speed)
+    //{
+    //    var native = GetNative(character);
+    //    GetOrCreateState(character).OverallSpeedOverride = speed;
+    //    native->Timeline.OverallSpeed = speed;
+    //}
+
+    //public void ResetOverallSpeed(ICharacter character)
+    //{
+    //    if (!states.TryGetValue(character.Address, out var state))
+    //        return;
+
+    //    state.OverallSpeedOverride = null;
+    //}
 
     //public unsafe float GetSlotSpeed(ICharacter character, int slotIndex)
     //{
@@ -333,4 +216,29 @@ public sealed class ActionTimelinePlayer : IDisposable
     }
 
     private readonly record struct OriginalBase(CharacterModes OriginalMode, byte OriginalInput, ushort OriginalTimeline);
+}
+
+[StructLayout(LayoutKind.Explicit, Size = 0x60)]
+public unsafe struct ActionTimelineAnimParams
+{
+    [FieldOffset(0x00)] public nint vtblAddr;
+    [FieldOffset(0x10)] public float Unk0;
+    [FieldOffset(0x14)] public float Unk4;
+    [FieldOffset(0x18)] public float Unk8;
+    [FieldOffset(0x1C)] public float UnkC;
+    [FieldOffset(0x20)] public float Unk10;
+    [FieldOffset(0x24)] public float Intensity;
+    [FieldOffset(0x28)] public float StartTS;
+    [FieldOffset(0x2C)] public float Unk1C; // Default -1.0
+    [FieldOffset(0x30)] public ulong Unk20;
+    [FieldOffset(0x38)] public ulong TargetObjId;
+    [FieldOffset(0x40)] public uint Unk30;
+    [FieldOffset(0x44)] public uint Priority; // 0-7, or -1 for anim default
+    [FieldOffset(0x48)] public int Unk38; // default -1 (0xFFFFFFFF)
+    [FieldOffset(0x4C)] public byte Unk3C; // typically 0xFF or 0
+    [FieldOffset(0x4D)] public byte Unk3D; // always 0?
+    [FieldOffset(0x4E)] public byte Unk3E; // always 0?
+    [FieldOffset(0x4F)] public byte Unk3F; // always 0?
+    [FieldOffset(0x50)] public byte Unk40; // always 0?
+    [FieldOffset(0x52)] public byte Unk42;
 }

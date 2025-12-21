@@ -16,6 +16,7 @@ public class Service
 {
     public static Plugin Plugin { get; set; } = null!;
     public static SimpleHeels_IPC_Caller SimpleHeelsIpcCaller { get; } = new SimpleHeels_IPC_Caller();
+    public static IpcProvider Ipc { get; private set; } = new IpcProvider();
 
     public static List<(Emote, NoireLib.Enums.EmoteCategory)> LockedEmotes = [];
 

@@ -34,8 +34,6 @@ public sealed class Plugin : IDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
 
-    internal static IpcProvider? Ipc { get; private set; }
-
     public delegate void OnEmoteFuncDelegate(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2);
     private readonly Hook<OnEmoteFuncDelegate> onEmoteHook = null!;
 
@@ -86,8 +84,6 @@ public sealed class Plugin : IDalamudPlugin
 
         SetupUI();
         SetupCommands();
-
-        Ipc = new IpcProvider();
 
 #if DEBUG
         // ======================================

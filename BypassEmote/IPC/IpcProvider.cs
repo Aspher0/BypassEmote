@@ -10,14 +10,11 @@ namespace BypassEmote;
 
 public class IpcProvider
 {
-    public static IpcProvider? Instance { get; private set; }
-
     public static int MajorVersion => 1;
     public static int MinorVersion => 1;
 
     public IpcProvider()
     {
-        Instance = this;
         EzIPC.Init(this);
     }
 

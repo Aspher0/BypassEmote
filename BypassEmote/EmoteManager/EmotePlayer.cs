@@ -122,7 +122,11 @@ internal static unsafe class EmotePlayer
         if (local != null && local.Address == chara.Address)
         {
             // Fire IPC event after delay only if local player is the one playing the emote
-            var provider = IpcProvider.Instance;
+            // The delay tries to ensure that your character has stopped moving on other clients (other players' screens) before notifying IPC subscribers
+            // This is due to the slight desync/delay there is between 2 players when performing any action because this is how the game servers work
+            // Without this delay, other players might see your character perform the bypassed emote, but then you will still be moving thus stopping the bypassed emote
+            // This is also mitigated by the OnFrameworkUpdate check for position/rotation changes, but this delay helps a lot with consistency
+            var provider = Service.Ipc;
 
             DelayerHelper.CancelAll();
             DelayerHelper.Start("PlayBypassedEmote", () =>
@@ -142,10 +146,6 @@ internal static unsafe class EmotePlayer
     public static void PlayEmoteById(ICharacter? chara, uint emoteId)
     {
         if (chara == null)
-            return;
-
-        var local = NoireService.ObjectTable.LocalPlayer;
-        if (local != null && chara.Address == local.Address)
             return;
 
         if (emoteId == 0)
@@ -262,7 +262,7 @@ internal static unsafe class EmotePlayer
                 // This is needed to avoid the server position desync issue.
                 // When player A moves and bypasses an emote, this player might still be moving on player B's screen when player A starts the emote, causing a false-positive "stop emote" message
                 uint playingEmoteId = trackedCharacter.PlayingEmoteId ?? 0;
-                var provider = IpcProvider.Instance;
+                var provider = Service.Ipc;
                 var ipcDataStop = new IpcData(0).Serialize();
 
                 provider?.LocalEmotePlayed?.Invoke(playerCharacter, 0);
@@ -279,8 +279,6 @@ internal static unsafe class EmotePlayer
 
         player.Stop(character, force);
     }
-
-    //public static void StopToIdle(ActionTimelinePlayer player, ICharacter character) => player.StopToIdle(character);
 
     public static void StopLoop(ICharacter? chara, bool shouldRemoveFromList)
     {
