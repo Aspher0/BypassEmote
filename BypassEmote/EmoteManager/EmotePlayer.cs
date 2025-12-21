@@ -448,10 +448,10 @@ internal static unsafe class EmotePlayer
     public unsafe static void FaceTarget()
     {
         if (NoireService.ObjectTable.LocalPlayer is not ICharacter localCharacter ||
-            NoireService.TargetManager.Target is not ICharacter targetCharacter)
+            NoireService.TargetManager.Target is not IGameObject targetObject)
             return;
 
-        if (localCharacter.Address == targetCharacter.Address)
+        if (localCharacter.Address == targetObject.Address)
             return;
 
         if (CharacterHelper.IsCharacterChairSitting(localCharacter) ||
@@ -459,10 +459,10 @@ internal static unsafe class EmotePlayer
             CharacterHelper.IsCharacterSleeping(localCharacter))
             return;
 
-        var rotToTarget = CommonHelper.GetRotationToTarget(localCharacter, targetCharacter);
+        var rotToTarget = CommonHelper.GetRotationToTarget(localCharacter, targetObject);
 
         var character = CharacterHelper.GetCharacterAddress(localCharacter);
-        character->Rotation = rotToTarget;
+        character->SetRotation(rotToTarget);
     }
 
     public static void Dispose()

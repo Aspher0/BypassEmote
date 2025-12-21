@@ -13,11 +13,14 @@ public class IpcData
     {
         get
         {
-            var name = EmoteHelper.GetEmoteById(EmoteId)?.Name.ExtractText();
+            var emote = EmoteHelper.GetEmoteById(EmoteId);
+            if (emote == null) return null;
+            var name = CommonHelper.GetEmoteName(emote.Value);
             return string.IsNullOrWhiteSpace(name) ? null : name;
         }
     }
     public bool IsLooping => IsLoopedEmote();
+    public bool IsStopped => EmoteId == 0;
 
     [JsonConstructor]
     public IpcData(uint emoteId)

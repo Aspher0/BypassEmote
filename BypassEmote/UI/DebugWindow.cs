@@ -233,7 +233,7 @@ public class DebugWindow : Window, IDisposable
         ImGui.Separator();
         ImGui.TextWrapped("Current IPC Data (Looping only):");
 
-        using (ImRaii.Child("IpcDataBlock", new Vector2(-1, 105), true))
+        using (ImRaii.Child("IpcDataBlock", new Vector2(-1, 150), true))
         {
             var ipcData = Service.Ipc.GetStateForLocalPlayer();
 
@@ -246,7 +246,7 @@ public class DebugWindow : Window, IDisposable
                     {
                         WriteIndented = true,
                         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never,
-                        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                     });
                     ImGui.TextUnformatted(formattedJson);
                 }

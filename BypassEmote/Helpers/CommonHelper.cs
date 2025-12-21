@@ -205,7 +205,7 @@ public static class CommonHelper
         return sb.ToString();
     }
 
-    public static float GetRotationToTarget(ICharacter from, ICharacter to)
+    public static float GetRotationToTarget(ICharacter from, IGameObject to)
     {
         return ECommons.MathHelpers.MathHelper.GetAngleBetweenPoints(new(from.Position.Z, from.Position.X), new(to.Position.Z, to.Position.X));
     }
