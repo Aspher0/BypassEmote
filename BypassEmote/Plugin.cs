@@ -121,6 +121,8 @@ public sealed class Plugin : IDalamudPlugin
         // Listen for Condition Changes, to cancel emotes when casting and interacting with objects/NPCs
         NoireService.Condition.ConditionChange += OnConditionChanged;
 
+        Service.Ipc.NotifyReady();
+
         var changelogManager = new NoireChangelogManager("ChangelogModule", true, true, Configuration.Instance.ShowChangelogOnUpdate);
         NoireLibMain.AddModule(changelogManager)?
             .SetTitleBarButtons(

@@ -1,6 +1,7 @@
 using BypassEmote.IPC;
 using BypassEmote.Models;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Lumina.Excel.Sheets;
@@ -35,12 +36,48 @@ public class DebugWindow : Window, IDisposable
             MaximumSize = new Vector2(float.MinValue, float.MaxValue),
         };
 
-        Service.Ipc.OnStateChanged += LogStateChanged;
+        Service.Ipc.OnReady += Logready;
+        Service.Ipc.OnStateChange += LogStateChanged;
+        Service.Ipc.OnEmoteStateStart += LogEmoteStateStart;
+        Service.Ipc.OnEmoteStateStop += LogEmoteStateStop;
+        Service.Ipc.OnStateChangeImmediate += LogStateChangedImmediate;
+        Service.Ipc.OnEmoteStateStartImmediate += LogEmoteStateStartImmediate;
+        Service.Ipc.OnEmoteStateStopImmediate += LogEmoteStateStopImmediate;
+    }
+
+    private void Logready()
+    {
+        NoireLogger.LogDebug(this, $"BypassEmote IPC is Ready");
     }
 
     private void LogStateChanged(string newState)
     {
-        NoireLogger.LogDebug($"State changed: {newState}");
+        NoireLogger.LogDebug(this, $"BypassEmote IPC sent state changed message. Data: {newState}");
+    }
+
+    private void LogEmoteStateStart(bool isLooping, string ipcData)
+    {
+        NoireLogger.LogDebug(this, $"BypassEmote IPC sent start message. IsLooping: {isLooping}, Data: {ipcData}");
+    }
+
+    private void LogEmoteStateStop()
+    {
+        NoireLogger.LogDebug(this, $"BypassEmote IPC sent stop message");
+    }
+
+    private void LogStateChangedImmediate(string obj)
+    {
+        NoireLogger.LogDebug(this, $"BypassEmote IPC sent IMMEDIATE state changed message. Data: {obj}");
+    }
+
+    private void LogEmoteStateStartImmediate(bool isLooping, string ipcData)
+    {
+        NoireLogger.LogDebug(this, $"BypassEmote IPC sent IMMEDIATE start message. IsLooping: {isLooping}, Data: {ipcData}");
+    }
+
+    private void LogEmoteStateStopImmediate()
+    {
+        NoireLogger.LogDebug(this, $"BypassEmote IPC sent IMMEDIATE stop message");
     }
 
     public override void Draw()
@@ -126,7 +163,6 @@ public class DebugWindow : Window, IDisposable
 
     private void InitCache()
     {
-        // Initialize emote list if needed
         if (cachedEmoteList == null)
         {
             var emoteSheet = ExcelSheetHelper.GetSheet<Emote>();
@@ -148,12 +184,12 @@ public class DebugWindow : Window, IDisposable
     private void DrawIpcTestsTab()
     {
         ImGui.Text($"IPC Version: {Service.Ipc.ApiVersion().ToString()}");
+        ImGui.Text($"IPC Is Ready: {Service.Ipc.IsReady()}");
 
         ImGui.Separator();
 
         InitCache();
 
-        // Emote selection combo
         ImGui.Text("Select Emote:");
 
         var selectedEmoteName = selectedEmoteId == 0 ? "None" : GetEmoteDisplayName(selectedEmoteId);
@@ -164,31 +200,26 @@ public class DebugWindow : Window, IDisposable
         {
             if (combo)
             {
-                // Search bar
                 ImGui.SetNextItemWidth(-1);
                 ImGui.InputTextWithHint("##EmoteSearch", "Search emotes...", ref emoteSearchText, 256);
 
-                // "None" option
                 bool isNoneSelected = selectedEmoteId == 0;
                 if (ImGui.Selectable("None", isNoneSelected))
                 {
                     selectedEmoteId = 0;
                 }
 
-                // Emote list with icons
                 foreach (var emote in cachedEmoteList)
                 {
                     var emoteName = Helpers.CommonHelper.GetEmoteName(emote);
                     var emoteId = emote.RowId;
 
-                    // Filter based on search text
                     if (!string.IsNullOrWhiteSpace(emoteSearchText) &&
                         !emoteName.Contains(emoteSearchText, StringComparison.OrdinalIgnoreCase))
                         continue;
 
                     var initialPosY = ImGui.GetCursorPosY();
 
-                    // Draw icon
                     var iconSize = 25f;
                     try
                     {
@@ -223,36 +254,80 @@ public class DebugWindow : Window, IDisposable
         ImGui.SameLine();
 
         if (ImGui.Button("Set local player state") && NoireService.ObjectTable.LocalPlayer != null)
-            Service.Ipc.SetStateForPlayer(NoireService.ObjectTable.LocalPlayer.Address, new IpcData(selectedEmoteId).Serialize());
+            Service.Ipc.SetStateForCharacter(NoireService.ObjectTable.LocalPlayer.Address, new IpcData(selectedEmoteId).Serialize());
 
         ImGui.SameLine();
 
         if (ImGui.Button("Set target state") && NoireService.TargetManager.Target != null)
-            Service.Ipc.SetStateForPlayer(NoireService.TargetManager.Target.Address, new IpcData(selectedEmoteId).Serialize());
+            Service.Ipc.SetStateForCharacter(NoireService.TargetManager.Target.Address, new IpcData(selectedEmoteId).Serialize());
+
+        if (ImGui.Button("Clear local player state") && NoireService.ObjectTable.LocalPlayer != null)
+            Service.Ipc.ClearStateForCharacter(NoireService.ObjectTable.LocalPlayer.Address);
+
+        ImGui.SameLine();
+
+        if (ImGui.Button("Clear target state") && NoireService.TargetManager.Target != null)
+            Service.Ipc.ClearStateForCharacter(NoireService.TargetManager.Target.Address);
 
         ImGui.Separator();
-        ImGui.TextWrapped("Current IPC Data (Looping only):");
+        ImGui.Text("Current Local Player IPC Data (Looping only):");
 
-        using (ImRaii.Child("IpcDataBlock", new Vector2(-1, 150), true))
+        using (var child = ImRaii.Child("IpcDataBlockLocal", new Vector2(-1, 125), true))
         {
-            var ipcData = Service.Ipc.GetStateForLocalPlayer();
-
-            if (!string.IsNullOrEmpty(ipcData))
+            if (child)
             {
-                try
+                var ipcData = Service.Ipc.GetStateForLocalPlayer();
+
+                if (!string.IsNullOrEmpty(ipcData))
                 {
-                    var jsonDocument = JsonDocument.Parse(ipcData);
-                    var formattedJson = JsonSerializer.Serialize(jsonDocument, new JsonSerializerOptions
+                    try
                     {
-                        WriteIndented = true,
-                        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never,
-                        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                    });
-                    ImGui.TextUnformatted(formattedJson);
+                        var jsonDocument = JsonDocument.Parse(ipcData);
+                        var formattedJson = JsonSerializer.Serialize(jsonDocument, new JsonSerializerOptions
+                        {
+                            WriteIndented = true,
+                            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never,
+                            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                        });
+                        ImGui.TextUnformatted(formattedJson);
+                    }
+                    catch
+                    {
+                        ImGui.TextUnformatted(ipcData);
+                    }
                 }
-                catch
+            }
+        }
+
+        ImGui.Separator();
+        ImGui.Text("Current Target IPC Data (Looping only):");
+
+        using (var child = ImRaii.Child("IpcDataBlockTarget", new Vector2(-1, 125), true))
+        {
+            if (child)
+            {
+                if (NoireService.TargetManager.Target is ICharacter targettedChar)
                 {
-                    ImGui.TextUnformatted(ipcData);
+                    var ipcData = Service.Ipc.GetStateForCharacter(targettedChar.Address);
+
+                    if (!string.IsNullOrEmpty(ipcData))
+                    {
+                        try
+                        {
+                            var jsonDocument = JsonDocument.Parse(ipcData);
+                            var formattedJson = JsonSerializer.Serialize(jsonDocument, new JsonSerializerOptions
+                            {
+                                WriteIndented = true,
+                                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never,
+                                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                            });
+                            ImGui.TextUnformatted(formattedJson);
+                        }
+                        catch
+                        {
+                            ImGui.TextUnformatted(ipcData);
+                        }
+                    }
                 }
             }
         }
@@ -270,6 +345,12 @@ public class DebugWindow : Window, IDisposable
 
     public void Dispose()
     {
-        Service.Ipc.OnStateChanged -= LogStateChanged;
+        Service.Ipc.OnReady -= Logready;
+        Service.Ipc.OnStateChange -= LogStateChanged;
+        Service.Ipc.OnEmoteStateStart -= LogEmoteStateStart;
+        Service.Ipc.OnEmoteStateStop -= LogEmoteStateStop;
+        Service.Ipc.OnStateChangeImmediate -= LogStateChangedImmediate;
+        Service.Ipc.OnEmoteStateStartImmediate -= LogEmoteStateStartImmediate;
+        Service.Ipc.OnEmoteStateStopImmediate -= LogEmoteStateStopImmediate;
     }
 }

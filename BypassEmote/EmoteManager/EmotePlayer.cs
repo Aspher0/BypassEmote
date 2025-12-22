@@ -127,12 +127,16 @@ internal static unsafe class EmotePlayer
             // Without this delay, other players might see your character perform the bypassed emote, but then you will still be moving thus stopping the bypassed emote
             // This is also mitigated by the OnFrameworkUpdate check for position/rotation changes, but this delay helps a lot with consistency
             var provider = Service.Ipc;
+            var ipcData = new IpcData(emote.RowId);
+
+            provider?.OnStateChangeImmediate?.Invoke(ipcData.Serialize());
+            provider?.OnEmoteStateStartImmediate?.Invoke(ipcData.IsLoopedEmote(), ipcData.Serialize());
 
             DelayerHelper.CancelAll();
             DelayerHelper.Start("PlayBypassedEmote", () =>
             {
-                provider?.LocalEmotePlayed?.Invoke(local, emote.RowId);
-                provider?.OnStateChanged?.Invoke(new IpcData(emote.RowId).Serialize());
+                provider?.OnStateChange?.Invoke(ipcData.Serialize());
+                provider?.OnEmoteStateStart?.Invoke(ipcData.IsLoopedEmote(), ipcData.Serialize());
             }, 500);
         }
     }
@@ -265,14 +269,17 @@ internal static unsafe class EmotePlayer
                 var provider = Service.Ipc;
                 var ipcDataStop = new IpcData(0).Serialize();
 
-                provider?.LocalEmotePlayed?.Invoke(playerCharacter, 0);
-                provider?.OnStateChanged?.Invoke(ipcDataStop);
+                provider?.OnStateChangeImmediate?.Invoke(ipcDataStop);
+                provider?.OnEmoteStateStopImmediate?.Invoke();
+
+                provider?.OnStateChange?.Invoke(ipcDataStop);
+                provider?.OnEmoteStateStop?.Invoke();
 
                 DelayerHelper.CancelAll();
                 DelayerHelper.Start("StopBypassingEmote", () =>
                 {
-                    provider?.LocalEmotePlayed?.Invoke(playerCharacter, 0);
-                    provider?.OnStateChanged?.Invoke(ipcDataStop);
+                    provider?.OnStateChange?.Invoke(ipcDataStop);
+                    provider?.OnEmoteStateStop?.Invoke();
                 }, 500);
             }
         }

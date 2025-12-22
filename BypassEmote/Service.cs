@@ -227,6 +227,7 @@ public class Service
         NoireService.ClientState.Login -= RefreshLockedEmotes;
         NoireService.ClientState.Logout -= (int type, int code) => ClearLockedEmotes();
 
+        Ipc.Dispose();
         EmotePlayer.Dispose();
     }
 }
