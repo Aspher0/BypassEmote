@@ -391,8 +391,11 @@ internal static unsafe class EmotePlayer
                )
             // 0.5 of margin of error for other players, in case the "stop emote" message is not correctly sent/received, this acts as a "failsafe" for that scenario
             {
-                StopLoop(character, true);
-                return;
+                if (ShouldStopEmote(isNpc, isLocalPlayerOwned))
+                {
+                    StopLoop(character, true);
+                    return;
+                }
             }
 
             var rot = character.Rotation;
@@ -409,8 +412,11 @@ internal static unsafe class EmotePlayer
                     var emote = EmoteHelper.GetEmoteById(trackedCharacter.PlayingEmoteId.Value);
                     if (emote != null && emote.Value.EmoteMode.RowId != 0 && emote.Value.EmoteMode.Value.Camera)
                     {
-                        StopLoop(character, true);
-                        return;
+                        if (ShouldStopEmote(isNpc, isLocalPlayerOwned))
+                        {
+                            StopLoop(character, true);
+                            return;
+                        }
                     }
                 }
             }
@@ -422,6 +428,16 @@ internal static unsafe class EmotePlayer
                 return;
             }
         }
+    }
+
+    private static bool ShouldStopEmote(bool isNpc, bool isLocalPlayerOwned)
+    {
+        // Is companion -> check config
+        if (isNpc && isLocalPlayerOwned)
+            return Configuration.Instance.StopCompanionEmoteOnCompanionMove;
+
+        // Otherwise always stop
+        return true;
     }
 
     //From SimpleHeels by Caraxi to sync NPCs

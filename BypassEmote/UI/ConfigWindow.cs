@@ -15,7 +15,7 @@ public class ConfigWindow : Window, IDisposable
     {
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(350, 150),
+            MinimumSize = new Vector2(350, 170),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
@@ -54,6 +54,10 @@ public class ConfigWindow : Window, IDisposable
             var changelogManager = NoireLibMain.GetModule<NoireChangelogManager>();
             changelogManager?.SetAutomaticallyShowChangelog(Configuration.Instance.ShowChangelogOnUpdate);
         }
+
+        var stopCompanionEmoteOnCompanionMove = Configuration.Instance.StopCompanionEmoteOnCompanionMove;
+        if (ImGui.Checkbox("Stop Companion Emote on Move", ref stopCompanionEmoteOnCompanionMove))
+            Configuration.Instance.StopCompanionEmoteOnCompanionMove = stopCompanionEmoteOnCompanionMove;
     }
 
     public void Dispose() { }

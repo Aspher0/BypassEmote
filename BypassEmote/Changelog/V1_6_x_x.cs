@@ -96,6 +96,8 @@ public class V1_6_x_x : BaseChangelogVersion
                 EntryBullet("Added the /bem command to apply emotes to your minion, provided it's been summoned and turned human.\n" +
                     "You do not need to target the minion, and just like /bet, you can use an emote argument or the stop argument (/bem stop, /bem beesknees, /bem /tea, ...).\n" +
                     "Useful for untargettable minions such as the cushion or the campfire.", Orange, 1),
+                EntryBullet("Added a configuration option to choose whether you want your minion to stop emoting when it moves.\n" +
+                    "Useful for the Plush Cushion or the Campfire if you're using SimpleHeels' temporary offsets.", White, 1),
             }
         };
 }
