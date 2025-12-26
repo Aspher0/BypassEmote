@@ -8,6 +8,9 @@ namespace BypassEmote.IPC;
 [Serializable]
 public class IpcData
 {
+    public nint CharacterAddress;
+    public bool IsCompanion => CommonHelper.IsLocalPlayerCompanionByAddress(CharacterAddress);
+
     public uint EmoteId;
     public string? EmoteName
     {
@@ -23,9 +26,10 @@ public class IpcData
     public bool IsStopped => EmoteId == 0;
 
     [JsonConstructor]
-    public IpcData(uint emoteId)
+    public IpcData(uint emoteId, nint characterAddress)
     {
         EmoteId = emoteId;
+        CharacterAddress = characterAddress;
     }
 
     public IpcData(string json)

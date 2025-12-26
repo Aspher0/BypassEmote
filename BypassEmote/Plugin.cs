@@ -1,8 +1,10 @@
+using BypassEmote.Helpers;
 using BypassEmote.UI;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Command;
 using Dalamud.Game.Network;
 using Dalamud.Game.Text.SeStringHandling;
@@ -44,6 +46,7 @@ public sealed class Plugin : IDalamudPlugin
         new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config. Use with argument <emote_name> to bypass any emote (including unlocked ones) on yourself: /be <emote_command>."),
         new Tuple<string, string>("/be", "Alias of /bypassemote."),
         new Tuple<string, string>("/bet", "Applies any emote to a targetted NPC. Usage: /bet <emote_command> or /bet stop. Only works on NPCs."),
+        new Tuple<string, string>("/bem", "Applies any emote to your minion if summoned, without needing to target it. Usage: /bem <emote_command> or /bem stop. Only works on your own minions."),
     ];
 
     public readonly WindowSystem WindowSystem = new("BypassEmote");
@@ -218,6 +221,7 @@ public sealed class Plugin : IDalamudPlugin
         string[] splitArgs = args.Split(' ');
         splitArgs = splitArgs.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
 
+        // Self
         if (command == "/bypassemote" || command == "/be")
         {
             if (splitArgs.Length == 0)
@@ -260,11 +264,25 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
+        // Target NPC / Minion
         if (command == "/bet")
         {
-            if (NoireService.TargetManager.Target is not INpc npcTarget || NoireService.TargetManager.Target.ObjectKind == ObjectKind.Companion)
+            var target = NoireService.TargetManager.Target;
+
+            if (target is not INpc && target is not IBattleNpc)
             {
                 NoireLogger.PrintToChat("No NPC targeted.");
+                return;
+            }
+
+            var targettedChar = target as ICharacter;
+
+            if (targettedChar == null)
+                return;
+
+            if (target.ObjectKind == ObjectKind.Companion && !CommonHelper.IsLocalObject(targettedChar))
+            {
+                NoireLogger.PrintToChat("You can only target your own companion.");
                 return;
             }
 
@@ -272,7 +290,7 @@ public sealed class Plugin : IDalamudPlugin
             {
                 if (splitArgs[0] == "stop")
                 {
-                    EmotePlayer.StopLoop(npcTarget, true);
+                    EmotePlayer.StopLoop(targettedChar, true);
                     return;
                 }
 
@@ -284,11 +302,54 @@ public sealed class Plugin : IDalamudPlugin
                     return;
                 }
 
-                EmotePlayer.PlayEmote(npcTarget, emote.Value);
+                EmotePlayer.PlayEmote(targettedChar, emote.Value);
             }
             else
             {
                 NoireLogger.PrintToChat("Usage: /bet <emote_command> or /bet stop");
+            }
+        }
+
+        // Minion
+        if (command == "/bem")
+        {
+            if (NoireService.ObjectTable.LocalPlayer == null)
+                return;
+
+            var minionAddress = CommonHelper.GetCompanionAddress(NoireService.ObjectTable.LocalPlayer);
+
+            if (minionAddress == 0)
+            {
+                NoireLogger.PrintToChat("No minion summoned.");
+                return;
+            }
+
+            var minion = NoireService.ObjectTable.First(o => o.Address == minionAddress);
+
+            if (minion is not ICharacter minionCharacter)
+                return;
+
+            if (splitArgs.Length > 0)
+            {
+                if (splitArgs[0] == "stop")
+                {
+                    EmotePlayer.StopLoop(minionCharacter, true);
+                    return;
+                }
+
+                var emote = EmoteHelper.GetEmoteByCommand(splitArgs[0]);
+
+                if (emote == null)
+                {
+                    NoireLogger.PrintToChat($"Emote command not found: {splitArgs[0]}");
+                    return;
+                }
+
+                EmotePlayer.PlayEmote(minionCharacter, emote.Value);
+            }
+            else
+            {
+                NoireLogger.PrintToChat("Usage: /bem <emote_command> or /bem stop");
             }
         }
     }
@@ -302,8 +363,8 @@ public sealed class Plugin : IDalamudPlugin
         if (!Configuration.Instance.PluginEnabled)
             return;
 
-        var seMsg = SeString.Parse(Helpers.CommonHelper.GetUtf8Span(rawMessage));
-        var message = Helpers.CommonHelper.Utf8StringToPlainText(seMsg);
+        var seMsg = SeString.Parse(CommonHelper.GetUtf8Span(rawMessage));
+        var message = CommonHelper.Utf8StringToPlainText(seMsg);
 
         if (message.IsNullOrEmpty() || !message.StartsWith('/'))
             return;
@@ -340,7 +401,7 @@ public sealed class Plugin : IDalamudPlugin
         if (chara == null)
             return ExecuteEmoteHook.Original(emoteManager, emoteId, playEmoteOption);
 
-        var trackedCharacter = Helpers.CommonHelper.TryGetTrackedCharacterFromAddress(chara.Address);
+        var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(chara.Address);
 
         if (trackedCharacter != null)
         {
@@ -367,7 +428,7 @@ public sealed class Plugin : IDalamudPlugin
 
             if (character != null)
             {
-                var trackedCharacter = Helpers.CommonHelper.TryGetTrackedCharacterFromAddress(character.Address);
+                var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(character.Address);
 
                 if (trackedCharacter == null)
                     return;

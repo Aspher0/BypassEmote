@@ -10,7 +10,7 @@ namespace BypassEmote;
 public class IpcProvider
 {
     public static int MajorVersion => 2;
-    public static int MinorVersion => 0;
+    public static int MinorVersion => 1;
 
     private bool _isReady { get; set; } = false;
     private bool _disposed { get; set; } = false;
@@ -112,13 +112,14 @@ public class IpcProvider
         if (_disposed)
             throw new ObjectDisposedException("IpcProvider");
 
-        IpcData data = new IpcData(0);
+        IpcData data = new IpcData(0, 0);
 
         var localPlayer = NoireService.ObjectTable.LocalPlayer;
         if (localPlayer == null) return data.Serialize();
 
         var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(localPlayer.Address);
         data.EmoteId = trackedCharacter?.PlayingEmoteId ?? 0;
+        data.CharacterAddress = localPlayer.Address;
 
         return data.Serialize();
     }
@@ -134,7 +135,7 @@ public class IpcProvider
         if (_disposed)
             throw new ObjectDisposedException("IpcProvider");
 
-        IpcData data = new IpcData(0);
+        IpcData data = new IpcData(0, characterAddress);
 
         var castChar = CharacterHelper.TryGetCharacterFromAddress(characterAddress);
         if (castChar == null)
@@ -148,14 +149,19 @@ public class IpcProvider
 
 
 
-
-
-
     /// <summary>
     /// An event that fires when BypassEmote becomes ready.
     /// </summary>
     [EzIPCEvent("OnReady")]
     public Action? OnReady;
+
+    /// <summary>
+    /// An event that fires when BypassEmote is disposing.
+    /// </summary>
+    [EzIPCEvent("OnDispose")]
+    public Action? OnDispose;
+
+
 
     /// <summary>
     /// An event that fires when the state of the local player changes (i.e.: when bypassing or stopping emotes).<br/>
@@ -186,6 +192,22 @@ public class IpcProvider
     public Action<string>? OnStateChangeImmediate;
 
     /// <summary>
+    /// Same as <see cref="OnStateChange"/> but for companions such as minions.
+    /// Contains the address of the companion and the serialized IPC data.
+    /// </summary>
+    [EzIPCEvent("OnCompanionStateChange")]
+    public Action<nint, string>? OnCompanionStateChange;
+
+    /// <summary>
+    /// Same as <see cref="OnStateChangeImmediate"/> but for companions such as minions.<br/>
+    /// Contains the address of the companion and the serialized IPC data.
+    /// </summary>
+    [EzIPCEvent("OnCompanionStateChangeImmediate")]
+    public Action<nint, string>? OnCompanionStateChangeImmediate;
+
+
+
+    /// <summary>
     /// An event that fires when the local player starts bypassing an emote.<br/>
     /// Contains:<br/>
     /// - A boolean indicating whether the emote is looping (true = looping, false = one-shot or facial expression).<br/>
@@ -211,6 +233,22 @@ public class IpcProvider
     public Action<bool, string>? OnEmoteStateStartImmediate;
 
     /// <summary>
+    /// Same as <see cref="OnEmoteStateStart"/> but for companions such as minions.
+    /// Contains the address of the companion, a boolean indicating whether the emote is looping and the serialized IPC data.
+    /// </summary>
+    [EzIPCEvent("OnCompanionEmoteStateStart")]
+    public Action<nint, bool, string>? OnCompanionEmoteStateStart;
+
+    /// <summary>
+    /// Same as <see cref="OnEmoteStateStartImmediate"/> but for companions such as minions.<br/>
+    /// Contains the address of the companion, a boolean indicating whether the emote is looping and the serialized IPC data.
+    /// </summary>
+    [EzIPCEvent("OnCompanionEmoteStateStartImmediate")]
+    public Action<nint, bool, string>? OnCompanionEmoteStateStartImmediate;
+
+
+
+    /// <summary>
     /// An event that fires when the state of a character is cleared (i.e.: when stopping a looping emote).<br/>
     /// </summary>
     /// <remarks>
@@ -233,8 +271,16 @@ public class IpcProvider
     public Action? OnEmoteStateStopImmediate;
 
     /// <summary>
-    /// An event that fires when BypassEmote is disposing.
+    /// Same as <see cref="OnEmoteStateStop"/> but for companions such as minions.
+    /// Contains the address of the companion.
     /// </summary>
-    [EzIPCEvent("OnDispose")]
-    public Action? OnDispose;
+    [EzIPCEvent("OnCompanionEmoteStateStop")]
+    public Action<nint>? OnCompanionEmoteStateStop;
+
+    /// <summary>
+    /// Same as <see cref="OnEmoteStateStopImmediate"/> but for companions such as minions.<br/>
+    /// Contains the address of the companion.
+    /// </summary>
+    [EzIPCEvent("OnCompanionEmoteStateStopImmediate")]
+    public Action<nint>? OnCompanionEmoteStateStopImmediate;
 }

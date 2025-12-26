@@ -35,7 +35,7 @@ public static class CommonHelper
         var castChar = CharacterHelper.TryGetCharacterFromAddress(charaAddress);
         if (castChar == null) return null;
 
-        if (castChar is INpc)
+        if (castChar is INpc || castChar is IBattleNpc)
             return EmotePlayer.TrackedCharacters.FirstOrDefault(tc => tc.BaseId == castChar.BaseId);
         else if (castChar is IPlayerCharacter)
             return EmotePlayer.TrackedCharacters.FirstOrDefault(tc => tc.CID == CharacterHelper.GetCIDFromPlayerCharacterAddress(charaAddress));
@@ -55,7 +55,7 @@ public static class CommonHelper
 
         if (existing != null)
         {
-            if (castChar is INpc)
+            if (castChar is INpc || castChar is IBattleNpc)
                 existing.BaseId = castChar.BaseId;
             else if (castChar is IPlayerCharacter)
             {
@@ -71,12 +71,12 @@ public static class CommonHelper
         }
         else
         {
-            if (castChar is not INpc && castChar is not IPlayerCharacter) return null;
+            if (castChar is not INpc && castChar is not IBattleNpc && castChar is not IPlayerCharacter) return null;
 
             var newTracked = new TrackedCharacter(
                 (castChar is IPlayerCharacter ? CharacterHelper.GetCIDFromPlayerCharacterAddress(charaAddress) : null),
-                (castChar is INpc ? castChar.BaseId : null),
-                (castChar is INpc ? castChar.ObjectIndex : null),
+                (castChar is INpc || castChar is IBattleNpc ? castChar.BaseId : null),
+                (castChar is INpc || castChar is IBattleNpc ? castChar.ObjectIndex : null),
                 castChar.Position,
                 castChar.Rotation,
                 CharacterHelper.IsCharacterWeaponDrawn(charaAddress),
@@ -93,7 +93,7 @@ public static class CommonHelper
 
         var castChar = CharacterHelper.TryGetCharacterFromAddress(charaAddress);
 
-        if (castChar is INpc)
+        if (castChar is INpc || castChar is IBattleNpc)
             EmotePlayer.TrackedCharacters.RemoveAll(tc => tc.BaseId == castChar.BaseId);
         else if (castChar is IPlayerCharacter)
         {
@@ -208,5 +208,33 @@ public static class CommonHelper
     public static float GetRotationToTarget(ICharacter from, IGameObject to)
     {
         return ECommons.MathHelpers.MathHelper.GetAngleBetweenPoints(new(from.Position.Z, from.Position.X), new(to.Position.Z, to.Position.X));
+    }
+
+    // Only for minions, return 0 for a buddy somehow
+    public unsafe static nint GetCompanionAddress(ICharacter ownerCharacter)
+    {
+        var native = CharacterHelper.GetCharacterAddress(ownerCharacter);
+        return (nint)native->CompanionData.CompanionObject;
+    }
+
+    public unsafe static bool IsLocalPlayerCompanionByAddress(nint companionAddress)
+    {
+        var local = NoireService.ObjectTable.LocalPlayer;
+        if (local == null)
+            return false;
+        return companionAddress == GetCompanionAddress(local);
+    }
+
+    public static bool IsLocalObject(ICharacter chara)
+    {
+        var localPlayer = NoireService.ObjectTable.LocalPlayer;
+
+        if (localPlayer == null)
+            return false;
+
+        var playerAddress = localPlayer.Address;
+        var companionAddress = GetCompanionAddress(localPlayer);
+
+        return playerAddress == chara.Address || companionAddress == chara.Address;
     }
 }

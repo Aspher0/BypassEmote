@@ -38,46 +38,17 @@ public class DebugWindow : Window, IDisposable
 
         Service.Ipc.OnReady += Logready;
         Service.Ipc.OnStateChange += LogStateChanged;
+        Service.Ipc.OnCompanionStateChange += LogCompanionStateChanged;
         Service.Ipc.OnEmoteStateStart += LogEmoteStateStart;
+        Service.Ipc.OnCompanionEmoteStateStart += LogCompanionEmoteStateStart;
         Service.Ipc.OnEmoteStateStop += LogEmoteStateStop;
+        Service.Ipc.OnCompanionEmoteStateStop += LogCompanionEmoteStateStop;
         Service.Ipc.OnStateChangeImmediate += LogStateChangedImmediate;
+        Service.Ipc.OnCompanionStateChangeImmediate += LogCompanionStateChangedImmediate;
         Service.Ipc.OnEmoteStateStartImmediate += LogEmoteStateStartImmediate;
+        Service.Ipc.OnCompanionEmoteStateStartImmediate += LogCompanionEmoteStateStartImmediate;
         Service.Ipc.OnEmoteStateStopImmediate += LogEmoteStateStopImmediate;
-    }
-
-    private void Logready()
-    {
-        NoireLogger.LogDebug(this, $"BypassEmote IPC is Ready");
-    }
-
-    private void LogStateChanged(string newState)
-    {
-        NoireLogger.LogDebug(this, $"BypassEmote IPC sent state changed message. Data: {newState}");
-    }
-
-    private void LogEmoteStateStart(bool isLooping, string ipcData)
-    {
-        NoireLogger.LogDebug(this, $"BypassEmote IPC sent start message. IsLooping: {isLooping}, Data: {ipcData}");
-    }
-
-    private void LogEmoteStateStop()
-    {
-        NoireLogger.LogDebug(this, $"BypassEmote IPC sent stop message");
-    }
-
-    private void LogStateChangedImmediate(string obj)
-    {
-        NoireLogger.LogDebug(this, $"BypassEmote IPC sent IMMEDIATE state changed message. Data: {obj}");
-    }
-
-    private void LogEmoteStateStartImmediate(bool isLooping, string ipcData)
-    {
-        NoireLogger.LogDebug(this, $"BypassEmote IPC sent IMMEDIATE start message. IsLooping: {isLooping}, Data: {ipcData}");
-    }
-
-    private void LogEmoteStateStopImmediate()
-    {
-        NoireLogger.LogDebug(this, $"BypassEmote IPC sent IMMEDIATE stop message");
+        Service.Ipc.OnCompanionEmoteStateStopImmediate += LogCompanionEmoteStateStopImmediate;
     }
 
     public override void Draw()
@@ -94,6 +65,12 @@ public class DebugWindow : Window, IDisposable
             {
                 if (tab)
                     DrawIpcTestsTab();
+            }
+
+            using (var tab = ImRaii.TabItem("Tracked Characters"))
+            {
+                if (tab)
+                    DrawTrackedCharactersTab();
             }
         }
     }
@@ -254,12 +231,12 @@ public class DebugWindow : Window, IDisposable
         ImGui.SameLine();
 
         if (ImGui.Button("Set local player state") && NoireService.ObjectTable.LocalPlayer != null)
-            Service.Ipc.SetStateForCharacter(NoireService.ObjectTable.LocalPlayer.Address, new IpcData(selectedEmoteId).Serialize());
+            Service.Ipc.SetStateForCharacter(NoireService.ObjectTable.LocalPlayer.Address, new IpcData(selectedEmoteId, NoireService.ObjectTable.LocalPlayer.Address).Serialize());
 
         ImGui.SameLine();
 
         if (ImGui.Button("Set target state") && NoireService.TargetManager.Target != null)
-            Service.Ipc.SetStateForCharacter(NoireService.TargetManager.Target.Address, new IpcData(selectedEmoteId).Serialize());
+            Service.Ipc.SetStateForCharacter(NoireService.TargetManager.Target.Address, new IpcData(selectedEmoteId, NoireService.TargetManager.Target.Address).Serialize());
 
         if (ImGui.Button("Clear local player state") && NoireService.ObjectTable.LocalPlayer != null)
             Service.Ipc.ClearStateForCharacter(NoireService.ObjectTable.LocalPlayer.Address);
@@ -333,6 +310,36 @@ public class DebugWindow : Window, IDisposable
         }
     }
 
+    private void DrawTrackedCharactersTab()
+    {
+        ImGui.Text("Tracked Characters:");
+
+        using (var child = ImRaii.Child("BlockTrackedCharacters", new Vector2(-1, -1), true))
+        {
+            if (child)
+            {
+                try
+                {
+                    var formattedJson = JsonSerializer.Serialize(
+                        EmotePlayer.TrackedCharacters,
+                        new JsonSerializerOptions
+                        {
+                            WriteIndented = true,
+                            IncludeFields = true,
+                            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never,
+                            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                        });
+
+                    ImGui.TextUnformatted(formattedJson);
+                }
+                catch (Exception ex)
+                {
+                    ImGui.TextUnformatted($"Serialization error: {ex.Message}");
+                }
+            }
+        }
+    }
+
     private string GetEmoteDisplayName(uint emoteId)
     {
         if (emoteId == 0) return "None";
@@ -343,14 +350,47 @@ public class DebugWindow : Window, IDisposable
         return Helpers.CommonHelper.GetEmoteName(emote.Value);
     }
 
+    private void Logready()
+        => NoireLogger.LogDebug(this, $"BypassEmote IPC is Ready");
+    private void LogStateChanged(string newState)
+        => NoireLogger.LogDebug(this, $"BypassEmote IPC sent state changed message. Data: {newState}");
+    private void LogCompanionStateChanged(nint ownedObjAddress, string ipcData)
+        => NoireLogger.LogDebug($"BypassEmote IPC sent state changed message for owned object {ownedObjAddress}. Data: {{newState}}\"");
+    private void LogEmoteStateStart(bool isLooping, string ipcData)
+        => NoireLogger.LogDebug(this, $"BypassEmote IPC sent start message. IsLooping: {isLooping}, Data: {ipcData}");
+    private void LogCompanionEmoteStateStart(nint ownedObjAddress, bool isLooping, string ipcData)
+        => NoireLogger.LogDebug($"BypassEmote IPC sent start message for owned object {ownedObjAddress}. IsLooping: {isLooping}, Data: {ipcData}");
+    private void LogEmoteStateStop()
+        => NoireLogger.LogDebug(this, $"BypassEmote IPC sent stop message");
+    private void LogCompanionEmoteStateStop(nint ownedObjAddress)
+        => NoireLogger.LogDebug($"BypassEmote IPC sent stop message for owned object {ownedObjAddress}");
+    private void LogStateChangedImmediate(string ipcData)
+        => NoireLogger.LogDebug(this, $"BypassEmote IPC sent IMMEDIATE state changed message. Data: {ipcData}");
+    private void LogCompanionStateChangedImmediate(nint ownedObjAddress, string ipcData)
+        => NoireLogger.LogDebug($"BypassEmote IPC sent IMMEDIATE state changed message for owned object {ownedObjAddress}. Data: {ipcData}");
+    private void LogEmoteStateStartImmediate(bool isLooping, string ipcData)
+        => NoireLogger.LogDebug(this, $"BypassEmote IPC sent IMMEDIATE start message. IsLooping: {isLooping}, Data: {ipcData}");
+    private void LogCompanionEmoteStateStartImmediate(nint ownedObjAddress, bool isLooping, string ipcData)
+        => NoireLogger.LogDebug($"BypassEmote IPC sent IMMEDIATE start message for owned object {ownedObjAddress}. IsLooping: {isLooping}, Data: {ipcData}");
+    private void LogEmoteStateStopImmediate()
+        => NoireLogger.LogDebug(this, $"BypassEmote IPC sent IMMEDIATE stop message");
+    private void LogCompanionEmoteStateStopImmediate(nint ownedObjAddress)
+        => NoireLogger.LogDebug($"BypassEmote IPC sent IMMEDIATE stop message for owned object {ownedObjAddress}");
+
     public void Dispose()
     {
         Service.Ipc.OnReady -= Logready;
         Service.Ipc.OnStateChange -= LogStateChanged;
+        Service.Ipc.OnCompanionStateChange -= LogCompanionStateChanged;
         Service.Ipc.OnEmoteStateStart -= LogEmoteStateStart;
+        Service.Ipc.OnCompanionEmoteStateStart -= LogCompanionEmoteStateStart;
         Service.Ipc.OnEmoteStateStop -= LogEmoteStateStop;
+        Service.Ipc.OnCompanionEmoteStateStop -= LogCompanionEmoteStateStop;
         Service.Ipc.OnStateChangeImmediate -= LogStateChangedImmediate;
+        Service.Ipc.OnCompanionStateChangeImmediate -= LogCompanionStateChangedImmediate;
         Service.Ipc.OnEmoteStateStartImmediate -= LogEmoteStateStartImmediate;
+        Service.Ipc.OnCompanionEmoteStateStartImmediate -= LogCompanionEmoteStateStartImmediate;
         Service.Ipc.OnEmoteStateStopImmediate -= LogEmoteStateStopImmediate;
+        Service.Ipc.OnCompanionEmoteStateStopImmediate -= LogCompanionEmoteStateStopImmediate;
     }
 }

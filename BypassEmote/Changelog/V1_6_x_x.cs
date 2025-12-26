@@ -11,6 +11,7 @@ public class V1_6_x_x : BaseChangelogVersion
         CreateV1_6_0_0(),
         CreateV1_6_1_2(),
         CreateV1_6_2_0(),
+        CreateV1_6_5_0(),
     };
 
     private static ChangelogVersion CreateV1_6_0_0()
@@ -72,6 +73,29 @@ public class V1_6_x_x : BaseChangelogVersion
                 EntryBullet("Additionnaly, the character will no longer rotate when emoting to itself (self-targetting).", White, 1),
                 EntryBullet("Commands /be sync and /be syncall will now better handle syncing emotes that have intro + loop phases, " +
                     "hence improving the \"syncing\", where a slight delay would occur before for those type of emotes.", Orange, 1),
+            }
+        };
+
+    private static ChangelogVersion CreateV1_6_5_0()
+        => new ChangelogVersion
+        {
+            Version = new(1, 6, 5, 0),
+            Date = "26-12-2025",
+            Title = "Minions & Battle NPCs support",
+            TitleColor = Blue,
+            Description = "Added support for Minions & Battle NPCs. Revised IPC.",
+            Entries = new List<ChangelogEntry>
+            {
+                Header("Bug fixes", LightRed, 0, FontAwesomeIcon.Bug),
+                EntryBullet("Fixed a bug with facing targets.", White, 1),
+                Header("Technical Changes", Blue, 0, FontAwesomeIcon.Wrench),
+                EntryBullet("Added support for Minions. You can now apply any emote to your own minions provided they have been turned human.", Blue, 1),
+                EntryBullet("Added support for Battle NPCs. You can now apply any emote Battle NPCs in the world.", Blue, 1),
+                EntryBullet("Revised IPC to support above changes.", White, 1),
+                Header("New Features", Orange, 0, FontAwesomeIcon.Book),
+                EntryBullet("Added the /bem command to apply emotes to your minion, provided it's been summoned and turned human.\n" +
+                    "You do not need to target the minion, and just like /bet, you can use an emote argument or the stop argument (/bem stop, /bem beesknees, /bem /tea, ...).\n" +
+                    "Useful for untargettable minions such as the cushion or the campfire.", Orange, 1),
             }
         };
 }

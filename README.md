@@ -16,6 +16,7 @@ A good use case of using `/be <emote>` while having unlocked the emote is if you
 - Using `/be sync` or `/be syncall` will allow to reset every players animations to 0, hence "syncing" duo emotes, for example. Using `/be sync` will only sync players bypassing emotes, meanwhile `/be syncall` will sync every player on the map.<br/>
 Moreover, sync commands will reset any sound associated to the emote, but please note that those two commands will only reset sounds if the owning player is using BypassEmote to play the emote. It will not reset sounds if the player is emoting normally.<br/>
 - By targetting an NPC and typing `/bet <emote_command>` or `/bet stop`, it will apply the provided animation to the targetted NPC, or completely stop it.
+- By typing `/bem <emote_command>` or `/bem stop`, it will apply the provided animation to your minion if summoned, or completely stop it. You do not need to target your minion, and of course you would need to turn it into a human first with glamourer.
 
 In the configuration window, you will be able to disable the plugin for yourself, which means the plugin will not play any emote for you anymore when you type the commands in chat, and locked emotes will not be applied unless you use the plugin's UI.
 
