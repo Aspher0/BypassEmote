@@ -10,7 +10,7 @@ namespace BypassEmote;
 public class IpcProvider
 {
     public static int MajorVersion => 2;
-    public static int MinorVersion => 1;
+    public static int MinorVersion => 2;
 
     private bool _isReady { get; set; } = false;
     private bool _disposed { get; set; } = false;
