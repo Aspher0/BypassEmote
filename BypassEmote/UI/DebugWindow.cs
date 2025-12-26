@@ -38,17 +38,17 @@ public class DebugWindow : Window, IDisposable
 
         Service.Ipc.OnReady += Logready;
         Service.Ipc.OnStateChange += LogStateChanged;
-        Service.Ipc.OnCompanionStateChange += LogCompanionStateChanged;
+        Service.Ipc.OnOwnedObjectStateChange += LogOwnedObjectStateChanged;
         Service.Ipc.OnEmoteStateStart += LogEmoteStateStart;
-        Service.Ipc.OnCompanionEmoteStateStart += LogCompanionEmoteStateStart;
+        Service.Ipc.OnOwnedObjectEmoteStateStart += LogOwnedObjectEmoteStateStart;
         Service.Ipc.OnEmoteStateStop += LogEmoteStateStop;
-        Service.Ipc.OnCompanionEmoteStateStop += LogCompanionEmoteStateStop;
+        Service.Ipc.OnOwnedObjectEmoteStateStop += LogOwnedObjectEmoteStateStop;
         Service.Ipc.OnStateChangeImmediate += LogStateChangedImmediate;
-        Service.Ipc.OnCompanionStateChangeImmediate += LogCompanionStateChangedImmediate;
+        Service.Ipc.OnOwnedObjectStateChangeImmediate += LogOwnedObjectStateChangedImmediate;
         Service.Ipc.OnEmoteStateStartImmediate += LogEmoteStateStartImmediate;
-        Service.Ipc.OnCompanionEmoteStateStartImmediate += LogCompanionEmoteStateStartImmediate;
+        Service.Ipc.OnOwnedObjectEmoteStateStartImmediate += LogOwnedObjectEmoteStateStartImmediate;
         Service.Ipc.OnEmoteStateStopImmediate += LogEmoteStateStopImmediate;
-        Service.Ipc.OnCompanionEmoteStateStopImmediate += LogCompanionEmoteStateStopImmediate;
+        Service.Ipc.OnOwnedObjectEmoteStateStopImmediate += LogOwnedObjectEmoteStateStopImmediate;
     }
 
     public override void Draw()
@@ -354,43 +354,43 @@ public class DebugWindow : Window, IDisposable
         => NoireLogger.LogDebug(this, $"BypassEmote IPC is Ready");
     private void LogStateChanged(string newState)
         => NoireLogger.LogDebug(this, $"BypassEmote IPC sent state changed message. Data: {newState}");
-    private void LogCompanionStateChanged(nint ownedObjAddress, string ipcData)
+    private void LogOwnedObjectStateChanged(nint ownedObjAddress, string ipcData)
         => NoireLogger.LogDebug($"BypassEmote IPC sent state changed message for owned object {ownedObjAddress}. Data: {{newState}}\"");
     private void LogEmoteStateStart(bool isLooping, string ipcData)
         => NoireLogger.LogDebug(this, $"BypassEmote IPC sent start message. IsLooping: {isLooping}, Data: {ipcData}");
-    private void LogCompanionEmoteStateStart(nint ownedObjAddress, bool isLooping, string ipcData)
+    private void LogOwnedObjectEmoteStateStart(nint ownedObjAddress, bool isLooping, string ipcData)
         => NoireLogger.LogDebug($"BypassEmote IPC sent start message for owned object {ownedObjAddress}. IsLooping: {isLooping}, Data: {ipcData}");
     private void LogEmoteStateStop()
         => NoireLogger.LogDebug(this, $"BypassEmote IPC sent stop message");
-    private void LogCompanionEmoteStateStop(nint ownedObjAddress)
+    private void LogOwnedObjectEmoteStateStop(nint ownedObjAddress)
         => NoireLogger.LogDebug($"BypassEmote IPC sent stop message for owned object {ownedObjAddress}");
     private void LogStateChangedImmediate(string ipcData)
         => NoireLogger.LogDebug(this, $"BypassEmote IPC sent IMMEDIATE state changed message. Data: {ipcData}");
-    private void LogCompanionStateChangedImmediate(nint ownedObjAddress, string ipcData)
+    private void LogOwnedObjectStateChangedImmediate(nint ownedObjAddress, string ipcData)
         => NoireLogger.LogDebug($"BypassEmote IPC sent IMMEDIATE state changed message for owned object {ownedObjAddress}. Data: {ipcData}");
     private void LogEmoteStateStartImmediate(bool isLooping, string ipcData)
         => NoireLogger.LogDebug(this, $"BypassEmote IPC sent IMMEDIATE start message. IsLooping: {isLooping}, Data: {ipcData}");
-    private void LogCompanionEmoteStateStartImmediate(nint ownedObjAddress, bool isLooping, string ipcData)
+    private void LogOwnedObjectEmoteStateStartImmediate(nint ownedObjAddress, bool isLooping, string ipcData)
         => NoireLogger.LogDebug($"BypassEmote IPC sent IMMEDIATE start message for owned object {ownedObjAddress}. IsLooping: {isLooping}, Data: {ipcData}");
     private void LogEmoteStateStopImmediate()
         => NoireLogger.LogDebug(this, $"BypassEmote IPC sent IMMEDIATE stop message");
-    private void LogCompanionEmoteStateStopImmediate(nint ownedObjAddress)
+    private void LogOwnedObjectEmoteStateStopImmediate(nint ownedObjAddress)
         => NoireLogger.LogDebug($"BypassEmote IPC sent IMMEDIATE stop message for owned object {ownedObjAddress}");
 
     public void Dispose()
     {
         Service.Ipc.OnReady -= Logready;
         Service.Ipc.OnStateChange -= LogStateChanged;
-        Service.Ipc.OnCompanionStateChange -= LogCompanionStateChanged;
+        Service.Ipc.OnOwnedObjectStateChange -= LogOwnedObjectStateChanged;
         Service.Ipc.OnEmoteStateStart -= LogEmoteStateStart;
-        Service.Ipc.OnCompanionEmoteStateStart -= LogCompanionEmoteStateStart;
+        Service.Ipc.OnOwnedObjectEmoteStateStart -= LogOwnedObjectEmoteStateStart;
         Service.Ipc.OnEmoteStateStop -= LogEmoteStateStop;
-        Service.Ipc.OnCompanionEmoteStateStop -= LogCompanionEmoteStateStop;
+        Service.Ipc.OnOwnedObjectEmoteStateStop -= LogOwnedObjectEmoteStateStop;
         Service.Ipc.OnStateChangeImmediate -= LogStateChangedImmediate;
-        Service.Ipc.OnCompanionStateChangeImmediate -= LogCompanionStateChangedImmediate;
+        Service.Ipc.OnOwnedObjectStateChangeImmediate -= LogOwnedObjectStateChangedImmediate;
         Service.Ipc.OnEmoteStateStartImmediate -= LogEmoteStateStartImmediate;
-        Service.Ipc.OnCompanionEmoteStateStartImmediate -= LogCompanionEmoteStateStartImmediate;
+        Service.Ipc.OnOwnedObjectEmoteStateStartImmediate -= LogOwnedObjectEmoteStateStartImmediate;
         Service.Ipc.OnEmoteStateStopImmediate -= LogEmoteStateStopImmediate;
-        Service.Ipc.OnCompanionEmoteStateStopImmediate -= LogCompanionEmoteStateStopImmediate;
+        Service.Ipc.OnOwnedObjectEmoteStateStopImmediate -= LogOwnedObjectEmoteStateStopImmediate;
     }
 }

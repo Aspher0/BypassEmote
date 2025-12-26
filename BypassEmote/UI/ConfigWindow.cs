@@ -56,7 +56,7 @@ public class ConfigWindow : Window, IDisposable
         }
 
         var stopCompanionEmoteOnCompanionMove = Configuration.Instance.StopCompanionEmoteOnCompanionMove;
-        if (ImGui.Checkbox("Stop Companion Emote on Move", ref stopCompanionEmoteOnCompanionMove))
+        if (ImGui.Checkbox("Stop Companion/Pet Emote on Move", ref stopCompanionEmoteOnCompanionMove))
             Configuration.Instance.StopCompanionEmoteOnCompanionMove = stopCompanionEmoteOnCompanionMove;
     }
 

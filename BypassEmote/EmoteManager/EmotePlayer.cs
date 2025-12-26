@@ -146,14 +146,14 @@ internal static unsafe class EmotePlayer
             else
             {
                 // Is Companion
-                provider?.OnCompanionStateChangeImmediate?.Invoke(chara.Address, ipcData.Serialize());
-                provider?.OnCompanionEmoteStateStartImmediate?.Invoke(chara.Address, ipcData.IsLoopedEmote(), ipcData.Serialize());
+                provider?.OnOwnedObjectStateChangeImmediate?.Invoke(chara.Address, ipcData.Serialize());
+                provider?.OnOwnedObjectEmoteStateStartImmediate?.Invoke(chara.Address, ipcData.IsLoopedEmote(), ipcData.Serialize());
 
                 DelayerHelper.CancelAll();
-                DelayerHelper.Start("PlayBypassedEmoteCompanion", () =>
+                DelayerHelper.Start("PlayBypassedEmoteOwnedObject", () =>
                 {
-                    provider?.OnCompanionStateChange?.Invoke(chara.Address, ipcData.Serialize());
-                    provider?.OnCompanionEmoteStateStart?.Invoke(chara.Address, ipcData.IsLoopedEmote(), ipcData.Serialize());
+                    provider?.OnOwnedObjectStateChange?.Invoke(chara.Address, ipcData.Serialize());
+                    provider?.OnOwnedObjectEmoteStateStart?.Invoke(chara.Address, ipcData.IsLoopedEmote(), ipcData.Serialize());
                 }, 500);
             }
         }
@@ -307,17 +307,17 @@ internal static unsafe class EmotePlayer
                 else
                 {
                     // Is Companion
-                    provider?.OnCompanionStateChangeImmediate?.Invoke(character.Address, ipcDataStop);
-                    provider?.OnCompanionEmoteStateStopImmediate?.Invoke(character.Address);
+                    provider?.OnOwnedObjectStateChangeImmediate?.Invoke(character.Address, ipcDataStop);
+                    provider?.OnOwnedObjectEmoteStateStopImmediate?.Invoke(character.Address);
 
-                    provider?.OnCompanionStateChange?.Invoke(character.Address, ipcDataStop);
-                    provider?.OnCompanionEmoteStateStop?.Invoke(character.Address);
+                    provider?.OnOwnedObjectStateChange?.Invoke(character.Address, ipcDataStop);
+                    provider?.OnOwnedObjectEmoteStateStop?.Invoke(character.Address);
 
                     DelayerHelper.CancelAll();
-                    DelayerHelper.Start("StopBypassingEmoteCompanion", () =>
+                    DelayerHelper.Start("StopBypassingEmoteOwnedObject", () =>
                     {
-                        provider?.OnCompanionStateChange?.Invoke(character.Address, ipcDataStop);
-                        provider?.OnCompanionEmoteStateStop?.Invoke(character.Address);
+                        provider?.OnOwnedObjectStateChange?.Invoke(character.Address, ipcDataStop);
+                        provider?.OnOwnedObjectEmoteStateStop?.Invoke(character.Address);
                     }, 500);
                 }
             }

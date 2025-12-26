@@ -13,6 +13,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
+using Dalamud.Utility;
 using ECommons;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.System.String;
@@ -45,8 +46,9 @@ public sealed class Plugin : IDalamudPlugin
     private readonly List<Tuple<string, string>> commandNames = [
         new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config. Use with argument <emote_name> to bypass any emote (including unlocked ones) on yourself: /be <emote_command>."),
         new Tuple<string, string>("/be", "Alias of /bypassemote."),
-        new Tuple<string, string>("/bet", "Applies any emote to a targetted NPC. Usage: /bet <emote_command> or /bet stop. Only works on NPCs."),
-        new Tuple<string, string>("/bem", "Applies any emote to your minion if summoned, without needing to target it. Usage: /bem <emote_command> or /bem stop. Only works on your own minions."),
+        new Tuple<string, string>("/bet", "Applies any emote to a targetted NPC. Usage: /bet <emote_command> or /bet stop. Only works on NPCs and owned minions/pets."),
+        new Tuple<string, string>("/bem", "Applies any emote to your own minion if summoned, without needing to target it. Usage: /bem <emote_command> or /bem stop."),
+        new Tuple<string, string>("/bep", "Applies any emote to your own pet (carbuncle) if summoned, without needing to target it. Usage: /bep <emote_command> or /bep stop."),
     ];
 
     public readonly WindowSystem WindowSystem = new("BypassEmote");
@@ -218,140 +220,143 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnCommand(string command, string args)
     {
-        string[] splitArgs = args.Split(' ');
+        string[] splitArgs = args.Trim().Split(' ');
         splitArgs = splitArgs.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
+        var arg = splitArgs.FirstOrDefault();
 
-        // Self
-        if (command == "/bypassemote" || command == "/be")
+        switch (command)
         {
-            if (splitArgs.Length == 0)
-            {
-                ToggleMainWindow();
+            case "/bypassemote":
+            case "/be":
+                HandleMainCommand(arg);
                 return;
-            }
 
-            switch (splitArgs[0])
-            {
-                case "sync":
-                    {
-                        EmotePlayer.SyncEmotes(false);
-                        return;
-                    }
-                case "syncall":
-                    {
-                        EmotePlayer.SyncEmotes(true);
-                        return;
-                    }
-#if DEBUG
-                case "debug":
-                    {
-                        DebugWindow.Toggle();
-                        return;
-                    }
-#endif
-                default:
-                    break;
-            }
-            var emote = EmoteHelper.GetEmoteByCommand(splitArgs[0]);
-
-            if (emote != null && NoireService.ObjectTable.LocalPlayer != null)
-            {
-                EmotePlayer.PlayEmote(NoireService.ObjectTable.LocalPlayer, emote.Value);
+            case "/bet":
+                HandleTargetCommand(arg);
                 return;
-            }
 
-            ToggleSettings();
+            case "/bem":
+                HandleMinionCommand(arg);
+                return;
+
+            case "/bep":
+                HandlePetCommand(arg);
+                return;
+        }
+    }
+
+    private void HandleMainCommand(string? arg)
+    {
+        if (arg.IsNullOrWhitespace())
+        {
+            MainWindow.Toggle();
             return;
         }
 
-        // Target NPC / Minion
-        if (command == "/bet")
+        if (arg == "sync")
         {
-            var target = NoireService.TargetManager.Target;
-
-            if (target is not INpc && target is not IBattleNpc)
-            {
-                NoireLogger.PrintToChat("No NPC targeted.");
-                return;
-            }
-
-            var targettedChar = target as ICharacter;
-
-            if (targettedChar == null)
-                return;
-
-            if (target.ObjectKind == ObjectKind.Companion && !CommonHelper.IsLocalObject(targettedChar))
-            {
-                NoireLogger.PrintToChat("You can only target your own companion.");
-                return;
-            }
-
-            if (splitArgs.Length > 0)
-            {
-                if (splitArgs[0] == "stop")
-                {
-                    EmotePlayer.StopLoop(targettedChar, true);
-                    return;
-                }
-
-                var emote = EmoteHelper.GetEmoteByCommand(splitArgs[0]);
-
-                if (emote == null)
-                {
-                    NoireLogger.PrintToChat($"Emote command not found: {splitArgs[0]}");
-                    return;
-                }
-
-                EmotePlayer.PlayEmote(targettedChar, emote.Value);
-            }
-            else
-            {
-                NoireLogger.PrintToChat("Usage: /bet <emote_command> or /bet stop");
-            }
+            EmotePlayer.SyncEmotes(false);
+            return;
         }
 
-        // Minion
-        if (command == "/bem")
+        if (arg == "syncall")
         {
-            if (NoireService.ObjectTable.LocalPlayer == null)
-                return;
-
-            var minionAddress = CommonHelper.GetCompanionAddress(NoireService.ObjectTable.LocalPlayer);
-
-            if (minionAddress == 0)
-            {
-                NoireLogger.PrintToChat("No minion summoned.");
-                return;
-            }
-
-            var minion = NoireService.ObjectTable.First(o => o.Address == minionAddress);
-
-            if (minion is not ICharacter minionCharacter)
-                return;
-
-            if (splitArgs.Length > 0)
-            {
-                if (splitArgs[0] == "stop")
-                {
-                    EmotePlayer.StopLoop(minionCharacter, true);
-                    return;
-                }
-
-                var emote = EmoteHelper.GetEmoteByCommand(splitArgs[0]);
-
-                if (emote == null)
-                {
-                    NoireLogger.PrintToChat($"Emote command not found: {splitArgs[0]}");
-                    return;
-                }
-
-                EmotePlayer.PlayEmote(minionCharacter, emote.Value);
-            }
-            else
-            {
-                NoireLogger.PrintToChat("Usage: /bem <emote_command> or /bem stop");
-            }
+            EmotePlayer.SyncEmotes(true);
+            return;
         }
+
+#if DEBUG
+        if (arg == "debug")
+        {
+            DebugWindow.Toggle();
+            return;
+        }
+#endif
+
+        var emote = EmoteHelper.GetEmoteByCommand(arg.ToString());
+        if (emote.HasValue && NoireService.ObjectTable.LocalPlayer is { } player)
+            EmotePlayer.PlayEmote(player, emote.Value);
+        else
+            ConfigWindow.Toggle();
+    }
+
+    private void HandleTargetCommand(string? arg)
+    {
+        if (NoireService.TargetManager.Target is not ICharacter target ||
+            target is not INpc && target is not IBattleNpc)
+        {
+            NoireLogger.PrintToChat("No NPC targeted.");
+            return;
+        }
+
+        // If minion (Companion) or pet (subkind == 2)
+        if ((target.ObjectKind == ObjectKind.Companion || target.SubKind == 2) && !CommonHelper.IsLocalObject(target))
+        {
+            NoireLogger.PrintToChat("You can only target your own minion / pet.");
+            return;
+        }
+
+        HandleEmoteCommand(target, arg, "Usage: /bet <emote_command> or /bet stop");
+    }
+
+    private void HandleMinionCommand(string? arg)
+    {
+        if (NoireService.ObjectTable.LocalPlayer is not { } player)
+            return;
+
+        var addr = CommonHelper.GetCompanionAddress(player);
+        if (addr == 0)
+        {
+            NoireLogger.PrintToChat("No minion summoned.");
+            return;
+        }
+
+        if (NoireService.ObjectTable.FirstOrDefault(o => o.Address == addr) is not ICharacter minion)
+            return;
+
+        HandleEmoteCommand(minion, arg, "Usage: /bem <emote_command> or /bem stop");
+    }
+
+    private void HandlePetCommand(string? arg)
+    {
+        if (NoireService.ObjectTable.LocalPlayer is not { } player)
+            return;
+
+        var addr = CommonHelper.GetPetAddress(player);
+        if (addr == 0)
+        {
+            NoireLogger.PrintToChat("No pet summoned.");
+            return;
+        }
+
+        if (NoireService.ObjectTable.FirstOrDefault(o => o.Address == addr) is not ICharacter pet)
+            return;
+
+        HandleEmoteCommand(pet, arg, "Usage: /bep <emote_command> or /bep stop");
+    }
+
+    private static void HandleEmoteCommand(ICharacter character, string? arg, string usage)
+    {
+        if (arg.IsNullOrWhitespace())
+        {
+            NoireLogger.PrintToChat(usage);
+            return;
+        }
+
+        if (arg == "stop")
+        {
+            EmotePlayer.StopLoop(character, true);
+            return;
+        }
+
+        var emote = EmoteHelper.GetEmoteByCommand(arg);
+        if (!emote.HasValue)
+        {
+            NoireLogger.PrintToChat($"Emote not found: {arg}");
+            return;
+        }
+
+        EmotePlayer.PlayEmote(character, emote.Value);
     }
 
     // Detour the execute command function so we can check if the player is trying to execute an emote command
@@ -366,7 +371,7 @@ public sealed class Plugin : IDalamudPlugin
         var seMsg = SeString.Parse(CommonHelper.GetUtf8Span(rawMessage));
         var message = CommonHelper.Utf8StringToPlainText(seMsg);
 
-        if (message.IsNullOrEmpty() || !message.StartsWith('/'))
+        if (string.IsNullOrEmpty(message) || !message.StartsWith('/'))
             return;
 
         if (NoireService.ObjectTable.LocalPlayer == null)

@@ -9,7 +9,7 @@ namespace BypassEmote.IPC;
 public class IpcData
 {
     public nint CharacterAddress;
-    public bool IsCompanion => CommonHelper.IsLocalPlayerCompanionByAddress(CharacterAddress);
+    public bool IsCompanionOrPet => CommonHelper.IsObjectOwnedByLocalPlayer(CharacterAddress);
 
     public uint EmoteId;
     public string? EmoteName

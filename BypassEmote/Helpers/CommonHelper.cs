@@ -5,6 +5,7 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Utility;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
@@ -217,12 +218,19 @@ public static class CommonHelper
         return (nint)native->CompanionData.CompanionObject;
     }
 
-    public unsafe static bool IsLocalPlayerCompanionByAddress(nint companionAddress)
+    public unsafe static nint GetPetAddress(ICharacter chara)
+    {
+        var native = CharacterHelper.GetCharacterAddress(chara);
+        var manager = CharacterManager.Instance();
+        return (nint)manager->LookupPetByOwnerObject((BattleChara*)native);
+    }
+
+    public unsafe static bool IsObjectOwnedByLocalPlayer(nint objectAddress)
     {
         var local = NoireService.ObjectTable.LocalPlayer;
         if (local == null)
             return false;
-        return companionAddress == GetCompanionAddress(local);
+        return objectAddress == GetCompanionAddress(local) || objectAddress == GetPetAddress(local);
     }
 
     public static bool IsLocalObject(ICharacter chara)
@@ -234,7 +242,8 @@ public static class CommonHelper
 
         var playerAddress = localPlayer.Address;
         var companionAddress = GetCompanionAddress(localPlayer);
+        var petAddress = GetPetAddress(localPlayer);
 
-        return playerAddress == chara.Address || companionAddress == chara.Address;
+        return playerAddress == chara.Address || companionAddress == chara.Address || petAddress == chara.Address;
     }
 }

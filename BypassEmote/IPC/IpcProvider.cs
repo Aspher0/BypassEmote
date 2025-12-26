@@ -192,18 +192,18 @@ public class IpcProvider
     public Action<string>? OnStateChangeImmediate;
 
     /// <summary>
-    /// Same as <see cref="OnStateChange"/> but for companions such as minions.
-    /// Contains the address of the companion and the serialized IPC data.
+    /// Same as <see cref="OnStateChange"/> but for companions or pets, such as minions and carbuncles.
+    /// Contains the address of the companion/pet and the serialized IPC data.
     /// </summary>
-    [EzIPCEvent("OnCompanionStateChange")]
-    public Action<nint, string>? OnCompanionStateChange;
+    [EzIPCEvent("OnOwnedObjectStateChange")]
+    public Action<nint, string>? OnOwnedObjectStateChange;
 
     /// <summary>
-    /// Same as <see cref="OnStateChangeImmediate"/> but for companions such as minions.<br/>
-    /// Contains the address of the companion and the serialized IPC data.
+    /// Same as <see cref="OnStateChangeImmediate"/> but for companions or pets, such as minions and carbuncles.<br/>
+    /// Contains the address of the companion/pet and the serialized IPC data.
     /// </summary>
-    [EzIPCEvent("OnCompanionStateChangeImmediate")]
-    public Action<nint, string>? OnCompanionStateChangeImmediate;
+    [EzIPCEvent("OnOwnedObjectStateChangeImmediate")]
+    public Action<nint, string>? OnOwnedObjectStateChangeImmediate;
 
 
 
@@ -233,18 +233,18 @@ public class IpcProvider
     public Action<bool, string>? OnEmoteStateStartImmediate;
 
     /// <summary>
-    /// Same as <see cref="OnEmoteStateStart"/> but for companions such as minions.
-    /// Contains the address of the companion, a boolean indicating whether the emote is looping and the serialized IPC data.
+    /// Same as <see cref="OnEmoteStateStart"/> but for companions or pets, such as minions and carbuncles.
+    /// Contains the address of the companion/pet, a boolean indicating whether the emote is looping and the serialized IPC data.
     /// </summary>
-    [EzIPCEvent("OnCompanionEmoteStateStart")]
-    public Action<nint, bool, string>? OnCompanionEmoteStateStart;
+    [EzIPCEvent("OnOwnedObjectEmoteStateStart")]
+    public Action<nint, bool, string>? OnOwnedObjectEmoteStateStart;
 
     /// <summary>
-    /// Same as <see cref="OnEmoteStateStartImmediate"/> but for companions such as minions.<br/>
-    /// Contains the address of the companion, a boolean indicating whether the emote is looping and the serialized IPC data.
+    /// Same as <see cref="OnEmoteStateStartImmediate"/> but for companions or pets, such as minions and carbuncles.<br/>
+    /// Contains the address of the companion/pet, a boolean indicating whether the emote is looping and the serialized IPC data.
     /// </summary>
-    [EzIPCEvent("OnCompanionEmoteStateStartImmediate")]
-    public Action<nint, bool, string>? OnCompanionEmoteStateStartImmediate;
+    [EzIPCEvent("OnOwnedObjectEmoteStateStartImmediate")]
+    public Action<nint, bool, string>? OnOwnedObjectEmoteStateStartImmediate;
 
 
 
@@ -271,16 +271,16 @@ public class IpcProvider
     public Action? OnEmoteStateStopImmediate;
 
     /// <summary>
-    /// Same as <see cref="OnEmoteStateStop"/> but for companions such as minions.
-    /// Contains the address of the companion.
+    /// Same as <see cref="OnEmoteStateStop"/> but for companions or pets, such as minions and carbuncles.
+    /// Contains the address of the companion/pet.
     /// </summary>
-    [EzIPCEvent("OnCompanionEmoteStateStop")]
-    public Action<nint>? OnCompanionEmoteStateStop;
+    [EzIPCEvent("OnOwnedObjectEmoteStateStop")]
+    public Action<nint>? OnOwnedObjectEmoteStateStop;
 
     /// <summary>
-    /// Same as <see cref="OnEmoteStateStopImmediate"/> but for companions such as minions.<br/>
-    /// Contains the address of the companion.
+    /// Same as <see cref="OnEmoteStateStopImmediate"/> but for companions or pets, such as minions and carbuncles.<br/>
+    /// Contains the address of the companion/pet.
     /// </summary>
-    [EzIPCEvent("OnCompanionEmoteStateStopImmediate")]
-    public Action<nint>? OnCompanionEmoteStateStopImmediate;
+    [EzIPCEvent("OnOwnedObjectEmoteStateStopImmediate")]
+    public Action<nint>? OnOwnedObjectEmoteStateStopImmediate;
 }
