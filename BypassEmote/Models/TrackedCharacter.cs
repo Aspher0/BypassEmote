@@ -1,3 +1,4 @@
+using BypassEmote.IPC;
 using Dalamud.Game.ClientState.Objects.Types;
 using Lumina.Excel.Sheets;
 using NoireLib.Helpers;
@@ -9,6 +10,7 @@ namespace BypassEmote;
 public class TrackedCharacter
 {
     public string UniqueId = Guid.NewGuid().ToString();
+    public bool IsLocalObject;
     public ulong? CID;
     public uint? BaseId; // For NPCs
     public ushort? ObjectIndex; // For NPCs, specifically mannequins since you can have multiple mannequins of the same retainer
@@ -16,10 +18,22 @@ public class TrackedCharacter
     public float LastPlayerRotation;
     public bool IsWeaponDrawn;
     public uint? PlayingEmoteId = null;
+    public IpcData? ReceivedIpcData = null; // Received from IPC *only* (AKA: Another player)
     public bool ScheduledForRemoval = false;
 
-    public TrackedCharacter(ulong? cid, uint? baseId, ushort? objectIndex, Vector3 lastPlayerPos, float lastPlayerRot, bool isWeaponDrawn, uint playingEmoteId)
+
+    public TrackedCharacter(
+        bool isLocalObject,
+        ulong? cid,
+        uint? baseId,
+        ushort? objectIndex,
+        Vector3 lastPlayerPos,
+        float lastPlayerRot,
+        bool isWeaponDrawn,
+        uint playingEmoteId,
+        IpcData? ipcData = null)
     {
+        IsLocalObject = isLocalObject;
         CID = cid;
         BaseId = baseId;
         ObjectIndex = objectIndex;
@@ -27,6 +41,7 @@ public class TrackedCharacter
         LastPlayerRotation = lastPlayerRot;
         IsWeaponDrawn = isWeaponDrawn;
         PlayingEmoteId = playingEmoteId;
+        ReceivedIpcData = ipcData;
     }
 
     public void UpdatePlayingEmoteId(Emote emote)

@@ -11,7 +11,7 @@ public class V1_6_x_x : BaseChangelogVersion
         CreateV1_6_0_0(),
         CreateV1_6_1_2(),
         CreateV1_6_2_0(),
-        CreateV1_6_5_2(),
+        CreateV1_6_6_0(),
     };
 
     private static ChangelogVersion CreateV1_6_0_0()
@@ -76,29 +76,31 @@ public class V1_6_x_x : BaseChangelogVersion
             }
         };
 
-    private static ChangelogVersion CreateV1_6_5_2()
+    private static ChangelogVersion CreateV1_6_6_0()
         => new ChangelogVersion
         {
-            Version = new(1, 6, 5, 2),
-            Date = "26-12-2025",
-            Title = "Minions & Battle NPCs support",
+            Version = new(1, 6, 6, 0),
+            Date = "04-01-2025",
+            Title = "Minions, Pets, Chocobos & Battle NPCs support",
             TitleColor = Blue,
-            Description = "Added support for Minions & Battle NPCs. Revised IPC.",
+            Description = "Added support for Minions, Pets, Chocobos & Battle NPCs. Revised IPC.",
             Entries = new List<ChangelogEntry>
             {
                 Header("Bug fixes", LightRed, 0, FontAwesomeIcon.Bug),
                 EntryBullet("Fixed a bug with facing targets.", White, 1),
                 Header("Technical Changes", Blue, 0, FontAwesomeIcon.Wrench),
-                EntryBullet("Added support for Minions. You can now apply any emote to your own minions provided they have been turned human.", Blue, 1),
+                EntryBullet("Added support for Minions, Pets and Chocobos. You can now apply any emote to your own minions, pets and chocobos provided they have been summoned and turned human.", Blue, 1),
                 EntryBullet("Added support for Battle NPCs. You can now apply any emote Battle NPCs in the world.", Blue, 1),
                 EntryBullet("Revised IPC to support above changes.", White, 1),
                 Header("New Features", Orange, 0, FontAwesomeIcon.Book),
                 EntryBullet("Added the /bem command to apply emotes to your minion, provided it's been summoned and turned human.\n" +
                     "You do not need to target the minion, and just like /bet, you can use an emote argument or the stop argument (/bem stop, /bem beesknees, /bem /tea, ...).\n" +
                     "Useful for untargettable minions such as the cushion or the campfire.", Orange, 1),
-                EntryBullet("Additionally, added the /bep command to apply emotes to your pet (carbuncle ...), provided it's been summoned and turned human.", Orange, 1),
-                EntryBullet("Added a configuration option to choose whether you want your minion or pet to stop emoting when it moves.\n" +
-                    "Useful for the Plush Cushion or the Campfire if you're using SimpleHeels' temporary offsets.", White, 1),
+                EntryBullet("Additionally, added the /bep command to apply emotes to your pet (carbuncle and eos), provided it's been summoned and turned human.", Orange, 1),
+                EntryBullet("Additionally, added the /bec command to apply emotes to your chocobo, provided it's been summoned and turned human.", Orange, 1),
+                EntryBullet("Added the possibility to apply emotes to your owned entities from the emote selector window (/be) via right click.", Orange, 1),
+                EntryBullet("Added a configuration option to choose whether you want your minion, pet or chocobo to stop emoting when it moves.\n" +
+                    "Useful for the Plush Cushion or the Campfire if you're using SimpleHeels' temporary offsets, or for non-static entities.", White, 1),
             }
         };
 }

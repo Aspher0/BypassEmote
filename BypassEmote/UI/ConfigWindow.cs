@@ -1,3 +1,4 @@
+using BypassEmote.Helpers;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
@@ -55,9 +56,12 @@ public class ConfigWindow : Window, IDisposable
             changelogManager?.SetAutomaticallyShowChangelog(Configuration.Instance.ShowChangelogOnUpdate);
         }
 
-        var stopCompanionEmoteOnCompanionMove = Configuration.Instance.StopCompanionEmoteOnCompanionMove;
+        var stopCompanionEmoteOnCompanionMove = Configuration.Instance.StopOwnedObjectEmoteOnMove;
         if (ImGui.Checkbox("Stop Companion/Pet Emote on Move", ref stopCompanionEmoteOnCompanionMove))
-            Configuration.Instance.StopCompanionEmoteOnCompanionMove = stopCompanionEmoteOnCompanionMove;
+        {
+            Configuration.Instance.StopOwnedObjectEmoteOnMove = stopCompanionEmoteOnCompanionMove;
+            IpcHelper.NotifyConfigChanged();
+        }
     }
 
     public void Dispose() { }

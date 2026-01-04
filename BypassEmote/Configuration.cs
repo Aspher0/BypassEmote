@@ -18,5 +18,5 @@ public class Configuration : NoireConfigBase<Configuration>
     [AutoSave] public virtual bool ShowChangelogOnUpdate { get; set; } = true;
     [AutoSave] public virtual bool ShowEmoteIds { get; set; } = false;
     [AutoSave] public virtual bool ShowInvalidEmotes { get; set; } = false;
-    [AutoSave] public virtual bool StopCompanionEmoteOnCompanionMove { get; set; } = false;
+    [AutoSave] public virtual bool StopOwnedObjectEmoteOnMove { get; set; } = false;
 }

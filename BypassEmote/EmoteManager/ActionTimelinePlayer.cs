@@ -55,27 +55,26 @@ public sealed class ActionTimelinePlayer : IDisposable
             ExperimentalBlend(character, emote, actionTimeline);
     }
 
-    // Thank you to Senko for the help and for providing this function
     public unsafe void ExperimentalBlend(ICharacter character, Emote? emote, ushort actionTimeline, int prio = -1)
     {
         var native = GetNative(character);
         var animParams = (ActionTimelineAnimParams*)MemoryHelper.Allocate(0x60);
         Unsafe.InitBlockUnaligned(animParams, 0, 0x60);
-        animParams->Unk0 = 0.0f; // unknown
-        animParams->Unk4 = 0.0f; // unknown
-        animParams->Unk8 = 0.0f; // unknown
-        animParams->UnkC = 0.0f; // gets reset to 0.0f when played
-        animParams->Unk10 = 0.0f; // unknown
-        animParams->Intensity = 1.0f; // range from 0.0f to 1.0f
-        animParams->StartTS = 0.0f; // time offset to start animation at. can pass 0.001f to skip some emote audios
-        animParams->Unk1C = -1.0f; // unknown
-        animParams->Unk20 = 0; // unknown
-        animParams->TargetObjId = character.TargetObjectId; // target for dote/allsaintscharm etc.
-        animParams->Unk30 = 0; // unknown
-        animParams->Priority = (uint)prio; // -1 for anim default. using priority 0 gets the anim immediately cancelled by the idle pose
-        animParams->Unk38 = -1; // unknown
-        animParams->Unk3C = (actionTimeline == 3123) ? (byte)0 : (byte)0xFF; // original creator has no idea what they did here or why, and neither do I. 3123 corresponds to emote/pose01_start
-        animParams->Unk42 = 0; // unknown
+        animParams->Unk0 = 0.0f;
+        animParams->Unk4 = 0.0f;
+        animParams->Unk8 = 0.0f;
+        animParams->UnkC = 0.0f;
+        animParams->Unk10 = 0.0f;
+        animParams->Intensity = 1.0f;
+        animParams->StartTS = 0.0f;
+        animParams->Unk1C = -1.0f;
+        animParams->Unk20 = 0;
+        animParams->TargetObjId = character.TargetObjectId;
+        animParams->Unk30 = 0;
+        animParams->Priority = (uint)prio;
+        animParams->Unk38 = -1;
+        animParams->Unk3C = (actionTimeline == 3123) ? (byte)0 : (byte)0xFF;
+        animParams->Unk42 = 0;
         native->Timeline.TimelineSequencer.PlayTimeline(actionTimeline, animParams);
         MemoryHelper.Free((nint)animParams);
 
@@ -229,16 +228,16 @@ public unsafe struct ActionTimelineAnimParams
     [FieldOffset(0x20)] public float Unk10;
     [FieldOffset(0x24)] public float Intensity;
     [FieldOffset(0x28)] public float StartTS;
-    [FieldOffset(0x2C)] public float Unk1C; // Default -1.0
+    [FieldOffset(0x2C)] public float Unk1C;
     [FieldOffset(0x30)] public ulong Unk20;
     [FieldOffset(0x38)] public ulong TargetObjId;
     [FieldOffset(0x40)] public uint Unk30;
     [FieldOffset(0x44)] public uint Priority; // 0-7, or -1 for anim default
-    [FieldOffset(0x48)] public int Unk38; // default -1 (0xFFFFFFFF)
-    [FieldOffset(0x4C)] public byte Unk3C; // typically 0xFF or 0
-    [FieldOffset(0x4D)] public byte Unk3D; // always 0?
-    [FieldOffset(0x4E)] public byte Unk3E; // always 0?
-    [FieldOffset(0x4F)] public byte Unk3F; // always 0?
-    [FieldOffset(0x50)] public byte Unk40; // always 0?
+    [FieldOffset(0x48)] public int Unk38;
+    [FieldOffset(0x4C)] public byte Unk3C;
+    [FieldOffset(0x4D)] public byte Unk3D;
+    [FieldOffset(0x4E)] public byte Unk3E;
+    [FieldOffset(0x4F)] public byte Unk3F;
+    [FieldOffset(0x50)] public byte Unk40;
     [FieldOffset(0x52)] public byte Unk42;
 }

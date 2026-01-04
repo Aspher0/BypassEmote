@@ -6,7 +6,6 @@ using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Command;
-using Dalamud.Game.Network;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.Interface;
@@ -24,11 +23,9 @@ using NoireLib.Changelog;
 using NoireLib.Enums;
 using NoireLib.Helpers;
 using NoireLib.UpdateTracker;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using static FFXIVClientStructs.FFXIV.Client.Game.Control.EmoteController;
 
 namespace BypassEmote;
@@ -44,11 +41,13 @@ public sealed class Plugin : IDalamudPlugin
     private Hook<EmoteManager.Delegates.ExecuteEmote> ExecuteEmoteHook { get; init; }
 
     private readonly List<Tuple<string, string>> commandNames = [
-        new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config. Use with argument <emote_name> to bypass any emote (including unlocked ones) on yourself: /be <emote_command>."),
+        new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config." +
+            "Use with argument <emote_name> to bypass any emote (including unlocked ones) on yourself: /bypassemote <emote_command>."),
         new Tuple<string, string>("/be", "Alias of /bypassemote."),
         new Tuple<string, string>("/bet", "Applies any emote to a targetted NPC. Usage: /bet <emote_command> or /bet stop. Only works on NPCs and owned minions/pets."),
         new Tuple<string, string>("/bem", "Applies any emote to your own minion if summoned, without needing to target it. Usage: /bem <emote_command> or /bem stop."),
-        new Tuple<string, string>("/bep", "Applies any emote to your own pet (carbuncle) if summoned, without needing to target it. Usage: /bep <emote_command> or /bep stop."),
+        new Tuple<string, string>("/bep", "Applies any emote to your own pet (carbuncle/eos) if summoned, without needing to target it. Usage: /bep <emote_command> or /bep stop."),
+        new Tuple<string, string>("/bec", "Applies any emote to your own chocobo if summoned, without needing to target it. Usage: /bec <emote_command> or /bec stop."),
     ];
 
     public readonly WindowSystem WindowSystem = new("BypassEmote");
@@ -56,18 +55,6 @@ public sealed class Plugin : IDalamudPlugin
     private EmoteWindow MainWindow { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
     private DebugWindow DebugWindow { get; init; }
-
-
-    // ======================================
-    public static NetworkHandler NetworkHandler { get; private set; } = null!;
-
-    [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
-    private delegate byte ProcessZonePacketUpDelegate(nint a1, nint dataPtr, nint a3, byte a4);
-    private static Hook<ProcessZonePacketUpDelegate> ProcessZonePacketUpHook;
-
-    public delegate void ZoneUpMessageDelegate(nint dataPtr, ushort opCode);
-    public static event ZoneUpMessageDelegate OnZoneUpMessageDelegate;
-    // ======================================
 
     public unsafe Plugin()
     {
@@ -89,16 +76,6 @@ public sealed class Plugin : IDalamudPlugin
 
         SetupUI();
         SetupCommands();
-
-#if DEBUG
-        // ======================================
-        ProcessZonePacketUpHook = NoireService.GameInteropProvider.HookFromAddress<ProcessZonePacketUpDelegate>(NoireService.SigScanner.ScanText("48 89 5C 24 ?? 48 89 74 24 ?? 4C 89 64 24 ?? 55 41 56 41 57 48 8B EC 48 83 EC 70"), NetworkMessageDetour);
-        ProcessZonePacketUpHook.Enable();
-
-        NetworkHandler = new NetworkHandler();
-        OnZoneUpMessageDelegate += OnZoneUpMessage;
-        // ======================================
-#endif
 
         ExecuteCommandInnerHook = NoireService.GameInteropProvider.HookFromAddress<ShellCommandModule.Delegates.ExecuteCommandInner>(
             ShellCommandModule.MemberFunctionPointers.ExecuteCommandInner,
@@ -170,27 +147,6 @@ public sealed class Plugin : IDalamudPlugin
         }
     }
 
-    // ======================================
-    private static byte NetworkMessageDetour(nint a1, nint dataPtr, nint a3, byte a4)
-    {
-        if (dataPtr != 0)
-            OnZoneUpMessageDelegate?.Invoke(dataPtr + 0x20, (ushort)Marshal.ReadInt16(dataPtr));
-        return ProcessZonePacketUpHook.Original(a1, dataPtr, a3, a4);
-    }
-
-    public void OnZoneUpMessage(nint dataPtr, ushort opCode)
-    {
-        try
-        {
-            NetworkHandler.VerifyNetworkMessage(dataPtr, opCode, NetworkMessageDirection.ZoneUp);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Exception in OnNetworkMessage");
-        }
-    }
-    // ======================================
-
     private void SetupUI()
     {
         PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
@@ -242,6 +198,10 @@ public sealed class Plugin : IDalamudPlugin
             case "/bep":
                 HandlePetCommand(arg);
                 return;
+
+            case "/bec":
+                HandleChocoboCommand(arg);
+                return;
         }
     }
 
@@ -249,7 +209,13 @@ public sealed class Plugin : IDalamudPlugin
     {
         if (arg.IsNullOrWhitespace())
         {
-            MainWindow.Toggle();
+            ToggleMainWindow();
+            return;
+        }
+
+        if (arg == "c" || arg == "config")
+        {
+            ToggleSettings();
             return;
         }
 
@@ -266,18 +232,17 @@ public sealed class Plugin : IDalamudPlugin
         }
 
 #if DEBUG
-        if (arg == "debug")
+        if (arg == "d" || arg == "debug")
         {
-            DebugWindow.Toggle();
+            ToggleDebug();
             return;
         }
 #endif
 
-        var emote = EmoteHelper.GetEmoteByCommand(arg.ToString());
-        if (emote.HasValue && NoireService.ObjectTable.LocalPlayer is { } player)
-            EmotePlayer.PlayEmote(player, emote.Value);
+        if (NoireService.ObjectTable.LocalPlayer != null)
+            HandleEmoteCommand(NoireService.ObjectTable.LocalPlayer, arg, "Usage: /be <emote_command> or /be stop");
         else
-            ConfigWindow.Toggle();
+            NoireLogger.PrintToChat($"Error trying to process command");
     }
 
     private void HandleTargetCommand(string? arg)
@@ -290,9 +255,9 @@ public sealed class Plugin : IDalamudPlugin
         }
 
         // If minion (Companion) or pet (subkind == 2)
-        if ((target.ObjectKind == ObjectKind.Companion || target.SubKind == 2) && !CommonHelper.IsLocalObject(target))
+        if ((target.ObjectKind == ObjectKind.Companion || target.SubKind == 2 || target.SubKind == 3) && !CommonHelper.IsLocalObject(target))
         {
-            NoireLogger.PrintToChat("You can only target your own minion / pet.");
+            NoireLogger.PrintToChat("You can only target your own minion, pet, chocobo.");
             return;
         }
 
@@ -301,7 +266,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private void HandleMinionCommand(string? arg)
     {
-        if (NoireService.ObjectTable.LocalPlayer is not { } player)
+        if (NoireService.ObjectTable.LocalPlayer is not IPlayerCharacter player)
             return;
 
         var addr = CommonHelper.GetCompanionAddress(player);
@@ -319,7 +284,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private void HandlePetCommand(string? arg)
     {
-        if (NoireService.ObjectTable.LocalPlayer is not { } player)
+        if (NoireService.ObjectTable.LocalPlayer is not IPlayerCharacter player)
             return;
 
         var addr = CommonHelper.GetPetAddress(player);
@@ -333,6 +298,24 @@ public sealed class Plugin : IDalamudPlugin
             return;
 
         HandleEmoteCommand(pet, arg, "Usage: /bep <emote_command> or /bep stop");
+    }
+
+    private void HandleChocoboCommand(string? arg)
+    {
+        if (NoireService.ObjectTable.LocalPlayer is not IPlayerCharacter player)
+            return;
+
+        var addr = CommonHelper.GetBuddyAddress(player);
+        if (addr == 0)
+        {
+            NoireLogger.PrintToChat("No chocobo summoned.");
+            return;
+        }
+
+        if (NoireService.ObjectTable.FirstOrDefault(o => o.Address == addr) is not ICharacter buddy)
+            return;
+
+        HandleEmoteCommand(buddy, arg, "Usage: /bec <emote_command> or /bec stop");
     }
 
     private static void HandleEmoteCommand(ICharacter character, string? arg, string usage)
@@ -350,9 +333,17 @@ public sealed class Plugin : IDalamudPlugin
         }
 
         var emote = EmoteHelper.GetEmoteByCommand(arg);
+        var isNumericArg = uint.TryParse(arg, out var commandUint);
+
+        if (isNumericArg)
+        {
+            var emoteById = EmoteHelper.GetEmoteById(commandUint);
+            emote = emoteById;
+        }
+
         if (!emote.HasValue)
         {
-            NoireLogger.PrintToChat($"Emote not found: {arg}");
+            NoireLogger.PrintToChat($"Emote not found: {arg}\n{usage}");
             return;
         }
 
@@ -478,14 +469,6 @@ public sealed class Plugin : IDalamudPlugin
         onEmoteHook?.Dispose();
 
         NoireService.Condition.ConditionChange -= OnConditionChanged;
-
-#if DEBUG
-        // ======================================
-        OnZoneUpMessageDelegate -= OnZoneUpMessage;
-        ProcessZonePacketUpHook?.Disable();
-        ProcessZonePacketUpHook?.Dispose();
-        // ======================================
-#endif
 
         ECommonsMain.Dispose();
         NoireLibMain.Dispose();

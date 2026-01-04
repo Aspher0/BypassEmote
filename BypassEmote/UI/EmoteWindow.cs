@@ -1,6 +1,9 @@
 using BypassEmote.Models;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Game.ClientState.Objects.SubKinds;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface;
+using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Lumina.Excel.Sheets;
 using NoireLib;
@@ -17,6 +20,7 @@ public class EmoteWindow : Window, IDisposable
     private enum LockedTab { All, General, Special, Expressions, Other, Favorites }
     private LockedTab currentTab = LockedTab.All;
     private string searchText = string.Empty;
+    private Emote? contextMenuEmote = null;
 
     public EmoteWindow() : base("Bypass Emote - Locked Emotes##BypassEmoteMain", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
@@ -231,9 +235,7 @@ public class EmoteWindow : Window, IDisposable
                 ImGui.SetCursorPosY(initialPosY + MathF.Max(0, (25f - starSize) * 0.5f));
 
                 if (ImGui.Button($"{starIcon.ToIconString()}##star_{emote.Item1.RowId}", new Vector2(starSize, starSize)))
-                {
                     ToggleFavorite(emote.Item1.RowId);
-                }
 
                 ImGui.PopStyleVar();
                 ImGui.PopStyleColor(4);
@@ -241,9 +243,7 @@ public class EmoteWindow : Window, IDisposable
 
                 // Set cursor for pointer on hover
                 if (ImGui.IsItemHovered())
-                {
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-                }
 
                 ImGui.SameLine();
 
@@ -272,6 +272,17 @@ public class EmoteWindow : Window, IDisposable
                 if (ImGui.Selectable(label, false))
                     EmotePlayer.PlayEmote(NoireService.ObjectTable.LocalPlayer, emote.Item1);
 
+                var selectableHovered = ImGui.IsItemHovered();
+
+                // Handle right-click context menu
+                if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
+                {
+                    contextMenuEmote = emote.Item1;
+                    ImGui.OpenPopup($"emote_context_menu_{emote.Item1.RowId}");
+                }
+
+                var infoIconHovered = false;
+
                 // Draw small info/exclamation icon to the right of the selectable with tooltip of sources
                 if (Service.EmoteSources.TryGetValue(emote.Item1.RowId, out var emoteSources) &&
                     (!string.IsNullOrWhiteSpace(emoteSources.Patch) || emoteSources.Sources.Count > 0))
@@ -287,7 +298,9 @@ public class EmoteWindow : Window, IDisposable
                     ImGui.PopStyleColor();
                     ImGui.PopFont();
 
-                    if (ImGui.IsItemHovered())
+                    infoIconHovered = ImGui.IsItemHovered();
+
+                    if (infoIconHovered)
                     {
                         ImGui.BeginTooltip();
 
@@ -308,6 +321,42 @@ public class EmoteWindow : Window, IDisposable
                         ImGui.EndTooltip();
                     }
                 }
+
+                if (selectableHovered && !infoIconHovered)
+                {
+                    ImGui.BeginTooltip();
+                    ImGui.TextUnformatted("Left-click to apply to yourself");
+                    ImGui.TextUnformatted("Right-click for more options");
+                    ImGui.EndTooltip();
+                }
+            }
+        }
+
+        // Draw context menu outside the loop
+        if (contextMenuEmote.HasValue)
+        {
+            using (var popup = ImRaii.ContextPopupItem($"emote_context_menu_{contextMenuEmote.Value.RowId}"))
+            {
+                if (popup)
+                {
+                    if (ImGui.MenuItem("Apply emote on Minion"))
+                    {
+                        if (contextMenuEmote.HasValue)
+                            ApplyEmoteOnMinion(contextMenuEmote.Value);
+                    }
+
+                    if (ImGui.MenuItem("Apply emote on Pet"))
+                    {
+                        if (contextMenuEmote.HasValue)
+                            ApplyEmoteOnPet(contextMenuEmote.Value);
+                    }
+
+                    if (ImGui.MenuItem("Apply emote on Chocobo"))
+                    {
+                        if (contextMenuEmote.HasValue)
+                            ApplyEmoteOnBuddy(contextMenuEmote.Value);
+                    }
+                }
             }
         }
 
@@ -324,6 +373,60 @@ public class EmoteWindow : Window, IDisposable
             Configuration.Instance.FavoriteEmotes.Add(emoteId);
 
         Configuration.Instance.Save(); // Needed until I update NoireLib to auto-save list changes
+    }
+
+    private void ApplyEmoteOnMinion(Emote emote)
+    {
+        if (NoireService.ObjectTable.LocalPlayer is not IPlayerCharacter player)
+            return;
+
+        var addr = Helpers.CommonHelper.GetCompanionAddress(player);
+        if (addr == 0)
+        {
+            NoireLogger.PrintToChat("No minion summoned.");
+            return;
+        }
+
+        if (NoireService.ObjectTable.FirstOrDefault(o => o.Address == addr) is not ICharacter minion)
+            return;
+
+        EmotePlayer.PlayEmote(minion, emote);
+    }
+
+    private void ApplyEmoteOnPet(Emote emote)
+    {
+        if (NoireService.ObjectTable.LocalPlayer is not IPlayerCharacter player)
+            return;
+
+        var addr = Helpers.CommonHelper.GetPetAddress(player);
+        if (addr == 0)
+        {
+            NoireLogger.PrintToChat("No pet summoned.");
+            return;
+        }
+
+        if (NoireService.ObjectTable.FirstOrDefault(o => o.Address == addr) is not ICharacter pet)
+            return;
+
+        EmotePlayer.PlayEmote(pet, emote);
+    }
+
+    private void ApplyEmoteOnBuddy(Emote emote)
+    {
+        if (NoireService.ObjectTable.LocalPlayer is not IPlayerCharacter player)
+            return;
+
+        var addr = Helpers.CommonHelper.GetBuddyAddress(player);
+        if (addr == 0)
+        {
+            NoireLogger.PrintToChat("No chocobo summoned.");
+            return;
+        }
+
+        if (NoireService.ObjectTable.FirstOrDefault(o => o.Address == addr) is not ICharacter buddy)
+            return;
+
+        EmotePlayer.PlayEmote(buddy, emote);
     }
 
     public void Dispose() { }
