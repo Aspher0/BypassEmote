@@ -27,7 +27,7 @@ In the configuration window, you will be able to disable the plugin for yourself
 Currently, BypassEmote is 99.99% safe with only one extremely minor theorical issue that might not even be a realistic one anyway, and I am still trying to fix it. If you want to read more, head to [issue #7](https://github.com/Aspher0/BypassEmote/issues/7).<br/>
 TL;DR: It is relatively safe, has been tested extensively, reviewed by some competent developer (and deemed safe), and does not directly send anything to the servers.
 
-**Q**: I am using <sync plugin> and I installed BypassEmote, but I cannot see my friend's emote, is this a bug?<br/>
+**Q**: I installed BypassEmote and (some sync plugin), but I cannot see my friend's emote, is this a bug?<br/>
 **A**: BypassEmote does not work on its own, developpers need to integrate this plugin's IPC methods in their codebase to allow relaying emote messages.<br/>
 Try asking the developers of the sync plugin you use to integrate BypassEmote, but please respect them if they refuse.
 
