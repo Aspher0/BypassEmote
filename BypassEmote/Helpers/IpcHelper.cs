@@ -3,7 +3,7 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Helpers;
-using System.Threading.Tasks;
+using NoireLib.Helpers.ObjectExtensions;
 
 namespace BypassEmote.Helpers;
 
@@ -24,7 +24,7 @@ public static class IpcHelper
         if (cacheData == null)
             return;
 
-        NotifyStateChange(liveData, cacheData, true, true);
+        NotifyStateChange(liveData, cacheData, true);
     }
 
     public static void NotifyEmoteStop(ICharacter character)
@@ -36,7 +36,7 @@ public static class IpcHelper
 
         var liveData = BuildLiveIpcData(character, ExecutedAction.StoppedEmote, 0).Serialize();
         var cacheData = BuildCacheableIpcData()?.Serialize();
-        NotifyStateChange(liveData, cacheData, character.Address == local.Address, true);
+        NotifyStateChange(liveData, cacheData, character.Address == local.Address);
     }
 
     public static void NotifyEmoteStart(ICharacter character, Emote emote)
@@ -48,7 +48,7 @@ public static class IpcHelper
 
         var liveData = BuildLiveIpcData(character, ExecutedAction.StartedEmote, emote.RowId).Serialize();
         var cacheData = BuildCacheableIpcData()?.Serialize();
-        NotifyStateChange(liveData, cacheData, character.Address == local.Address, true);
+        NotifyStateChange(liveData, cacheData, character.Address == local.Address);
     }
 
     public static void NotifyLocalStateDisposed(bool isLocalPlayer)
@@ -56,18 +56,20 @@ public static class IpcHelper
         NotifyStateChange(new IpcData().Serialize(), null, isLocalPlayer, false);
     }
 
-    private static async Task NotifyDelayedStateChangeAsync(string liveData, string? cacheData, bool isLocalPlayer)
-    {
-        await Task.Delay(500);
-        IpcProvider.RaiseStateChange(liveData, cacheData, isLocalPlayer);
-    }
-
-    private static void NotifyStateChange(string liveData, string? cacheData, bool isLocalPlayer, bool sendDelayed)
+    private static void NotifyStateChange(string liveData, string? cacheData, bool isLocalPlayer, bool sendDelayed = true)
     {
         IpcProvider.RaiseStateChangeImmediate(liveData, cacheData, isLocalPlayer);
 
+        if (cacheData == null) // This is a stop event, we send it immediately and then again with a delay
+            IpcProvider.RaiseStateChange(liveData, cacheData, isLocalPlayer);
+
         if (sendDelayed)
-            _ = NotifyDelayedStateChangeAsync(liveData, cacheData, isLocalPlayer);
+        {
+            DelayerHelper.Start("DelayedStateChange", 500.Milliseconds(), () =>
+            {
+                IpcProvider.RaiseStateChange(liveData, cacheData, isLocalPlayer);
+            });
+        }
     }
 
     private static IpcData? BuildCacheableIpcData()
