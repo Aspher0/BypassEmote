@@ -1,5 +1,4 @@
 using BypassEmote.Helpers;
-using BypassEmote.IPC;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.SubKinds;
@@ -10,8 +9,9 @@ using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Helpers;
+using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Numerics;
 
 namespace BypassEmote;
 
@@ -22,14 +22,16 @@ internal static unsafe class EmotePlayer
     // List of characters using a looped emote
     public static List<TrackedCharacter> TrackedCharacters = new List<TrackedCharacter>();
 
-    public static void PlayEmote(ICharacter? chara, Emote emote, IpcData? receivedIpcData = null)
+    public static void PlayEmote(ICharacter? chara, Emote emote, CharacterState? receivedIpcData = null)
     {
         if (chara == null)
             return;
 
+        // Really necessary? Gposing is fine I guess, but for now i'll keep it like this
         if (NoireService.ClientState.IsGPosing)
             return;
 
+        // If it is the local player, check for conditions that block emote playing
         if (NoireService.ObjectTable.LocalPlayer != null && chara.Address == NoireService.ObjectTable.LocalPlayer.Address)
         {
             if (NoireService.ObjectTable.LocalPlayer.IsCasting ||
@@ -41,7 +43,12 @@ internal static unsafe class EmotePlayer
                 ConditionFlag.WatchingCutscene,
                 ConditionFlag.WatchingCutscene78,
                 ConditionFlag.OccupiedInEvent,
-                ConditionFlag.OccupiedInQuestEvent))
+                ConditionFlag.OccupiedInQuestEvent,
+                ConditionFlag.Crafting,
+                ConditionFlag.ExecutingCraftingAction,
+                ConditionFlag.PreparingToCraft,
+                ConditionFlag.Gathering,
+                ConditionFlag.ExecutingGatheringAction))
                 return;
         }
 
@@ -71,10 +78,12 @@ internal static unsafe class EmotePlayer
             }
         }
 
+        // If the emote we want to play is not an expression, we stop any existing looped emote first
         var emoteCategory = EmoteHelper.GetEmoteCategory(emote);
         if (emoteCategory != NoireLib.Enums.EmoteCategory.Expressions)
             StopLoop(chara, false);
 
+        // If the emote is not an expression, make the character face the target
         if (NoireService.ObjectTable.LocalPlayer != null &&
             chara.Address == NoireService.ObjectTable.LocalPlayer.Address &&
             emoteCategory != NoireLib.Enums.EmoteCategory.Expressions)
@@ -84,7 +93,7 @@ internal static unsafe class EmotePlayer
         {
             case EmotePlayType.Looped:
                 {
-                    PlayEmote(Service.Player, chara, emote);
+                    PlayEmote(Service.EmotePlayer, chara, emote);
                     var trackedCharacter = CommonHelper.AddOrUpdateCharacterInTrackedList(chara.Address, emote, receivedIpcData);
 
                     if (trackedCharacter == null) break;
@@ -119,48 +128,55 @@ internal static unsafe class EmotePlayer
                 }
         }
 
+        // Notify IPC only if this is not coming from IPC itself
+        //if (receivedIpcData == null)
         IpcHelper.NotifyEmoteStart(chara, emote);
     }
 
-    public static void OnReceiveIPCData(ICharacter chara, IpcData ipcData)
+    public static void ProcessIpcData(IpcData receivedIpcData)
     {
-        if (chara == null)
-            return;
 
-#if DEBUG
-        if (ipcData.ActionType == ActionType.Unknown)
-            NoireLogger.LogWarning("Received IPC Data with Unknown ActionType.");
-#endif
-
-        if (ipcData.ActionType == ActionType.ConfigUpdate)
-        {
-            // Update every object owned by the player
-            var trackedCharacters = TrackedCharacters.Where(tc =>
-            {
-                return tc.ReceivedIpcData?.IsCharacterOrBelongsToIt(ipcData.CharacterAddress) ?? false;
-            });
-
-            foreach (var trackedCharacter in trackedCharacters)
-            {
-                trackedCharacter.ReceivedIpcData?.UpdateConfig(ipcData);
-            }
-            return;
-        }
-
-        if (ipcData.ActionType == ActionType.StopEmote)
-        {
-            StopLoop(chara, true);
-            return;
-        }
-
-        var emoteId = ipcData.EmoteId;
-        var emote = EmoteHelper.GetEmoteById(emoteId);
-
-        if (emote == null)
-            return;
-
-        PlayEmote(chara, emote.Value, ipcData);
     }
+
+    //    public static void ProcessCharacterState(ICharacter chara, CharacterState characterState)
+    //    {
+    //        if (chara == null)
+    //            return;
+
+    //#if DEBUG
+    //                if (ipcData.ActionType == ActionType.Unknown)
+    //                    NoireLogger.LogWarning("Received IPC Data with Unknown ActionType.");
+    //#endif
+
+    //        if (characterState.CurrentState == CurrentState.ConfigUpdate)
+    //        {
+    //            // Update every object owned by the player
+    //            var trackedCharacters = TrackedCharacters.Where(tc =>
+    //            {
+    //                return tc.ReceivedIpcData?.IsCharacterOrBelongsToIt(characterState.CharacterAddress) ?? false;
+    //            });
+
+    //            foreach (var trackedCharacter in trackedCharacters)
+    //            {
+    //                trackedCharacter.ReceivedIpcData?.UpdateConfig(characterState);
+    //            }
+    //            return;
+    //        }
+
+    //        if (characterState.CurrentState == CurrentState.Stopped)
+    //        {
+    //            StopLoop(chara, true);
+    //            return;
+    //        }
+
+    //        var emoteId = characterState.EmoteId;
+    //        var emote = EmoteHelper.GetEmoteById(emoteId);
+
+    //        if (emote == null)
+    //            return;
+
+    //        PlayEmote(chara, emote.Value, characterState);
+    //    }
 
     public static void PlayEmote(ActionTimelinePlayer player, ICharacter actor, Emote emote, bool blendIntro = true)
     {
@@ -219,7 +235,7 @@ internal static unsafe class EmotePlayer
             return;
         }
 
-        Service.Player.ExperimentalBlend(chara, null, timelineId);
+        Service.EmotePlayer.ExperimentalBlend(chara, null, timelineId);
     }
 
     public static void Stop(ActionTimelinePlayer player, ICharacter character, bool ShouldNotifyIpc, bool force = false)
@@ -241,7 +257,7 @@ internal static unsafe class EmotePlayer
         if (shouldRemoveFromList)
             trackedCharacter.ScheduledForRemoval = true;
 
-        Stop(Service.Player, chara, CommonHelper.IsLocalObject(chara) && shouldRemoveFromList);
+        Stop(Service.EmotePlayer, chara, CharacterHelper.IsLocalObject(chara) && shouldRemoveFromList);
 
         if (shouldRemoveFromList)
         {
@@ -274,7 +290,7 @@ internal static unsafe class EmotePlayer
                 return;
             }
 
-            var isLocalPlayerOwned = CommonHelper.IsLocalObject(character);
+            var isLocalPlayerOwned = CharacterHelper.IsLocalObject(character);
             var isOtherPlayerOwned = trackedCharacter.ReceivedIpcData?.IsOwnedObject ?? false;
             var isNpc = character is INpc || character is IBattleNpc;
 
@@ -293,7 +309,7 @@ internal static unsafe class EmotePlayer
 
             // Position tracking
             var pos = character.Position;
-            var deltaPosDistance = MathHelper.Distance(pos, trackedCharacter.LastPlayerPosition);
+            var deltaPosDistance = Vector3.Distance(pos, trackedCharacter.LastPosition);
 
             bool positionChanged = false;
             if (useMarginOfError)
@@ -304,7 +320,7 @@ internal static unsafe class EmotePlayer
             else
             {
                 // Local player, true NPCs, and owned objects: no margin of error
-                positionChanged = pos != trackedCharacter.LastPlayerPosition;
+                positionChanged = pos != trackedCharacter.LastPosition;
             }
 
             if (positionChanged)
@@ -312,7 +328,7 @@ internal static unsafe class EmotePlayer
                 bool shouldStop = true;
 
                 if (shouldUseConfigForStop)
-                    shouldStop = Configuration.Instance.StopOwnedObjectEmoteOnMove;
+                    shouldStop = Configuration.StopOwnedObjectEmoteOnMove;
                 else if (shouldUseIpcConfigForStop)
                     shouldStop = trackedCharacter.ReceivedIpcData?.StopOwnedObjectEmoteOnMove ?? false;
 
@@ -326,8 +342,8 @@ internal static unsafe class EmotePlayer
             // Rotation tracking
             var rot = character.Rotation;
             var normalizedCurrentRotation = MathHelper.NormalizeAngle(MathHelper.ToDegrees(rot));
-            var normalizedLastObservedRotation = MathHelper.NormalizeAngle(MathHelper.ToDegrees(trackedCharacter.LastPlayerRotation));
-            var difference = MathHelper.Abs(MathHelper.DeltaAngle(normalizedCurrentRotation, normalizedLastObservedRotation));
+            var normalizedLastObservedRotation = MathHelper.NormalizeAngle(MathHelper.ToDegrees(trackedCharacter.LastRotation));
+            var difference = Math.Abs(MathHelper.DeltaAngle(normalizedCurrentRotation, normalizedLastObservedRotation));
 
             bool rotationChanged = false;
             if (useMarginOfError)
@@ -338,7 +354,7 @@ internal static unsafe class EmotePlayer
             else
             {
                 // Local player, true NPCs, and owned objects: no margin of error
-                rotationChanged = rot != trackedCharacter.LastPlayerRotation;
+                rotationChanged = rot != trackedCharacter.LastRotation;
             }
 
             if (rotationChanged)
@@ -352,7 +368,7 @@ internal static unsafe class EmotePlayer
                         bool shouldStop = true;
 
                         if (shouldUseConfigForStop)
-                            shouldStop = Configuration.Instance.StopOwnedObjectEmoteOnMove;
+                            shouldStop = Configuration.StopOwnedObjectEmoteOnMove;
                         else if (shouldUseIpcConfigForStop)
                             shouldStop = trackedCharacter.ReceivedIpcData?.StopOwnedObjectEmoteOnMove ?? false;
 
@@ -416,9 +432,9 @@ internal static unsafe class EmotePlayer
                 var emote = EmoteHelper.GetEmoteById(characterToSync.TrackedCharacter.PlayingEmoteId.Value);
                 if (emote.HasValue)
                 {
-                    //PlayEmote(Service.Player, characterToSync.Character, emote.Value); // Causes slight desync on looped emotes with intro
+                    //PlayEmote(Service.EmotePlayer, characterToSync.Character, emote.Value); // Causes slight desync on looped emotes with intro
                     ushort loop = (ushort)emote.Value.ActionTimeline[0].RowId;
-                    Service.Player.ExperimentalBlend(characterToSync.Character, emote, loop); // Seems to work better for loop anims with an intro, otherwise there will be a slight desync
+                    Service.EmotePlayer.ExperimentalBlend(characterToSync.Character, emote, loop); // Seems to work better for loop anims with an intro, otherwise there will be a slight desync
                     continue;
                 }
             }
@@ -454,11 +470,11 @@ internal static unsafe class EmotePlayer
             if (character != null)
             {
                 trackedCharacter.ScheduledForRemoval = true;
-                Stop(Service.Player, character, CommonHelper.IsLocalObject(character), true);
+                Stop(Service.EmotePlayer, character, CharacterHelper.IsLocalObject(character), true);
             }
         }
 
-        Service.Player.Dispose();
+        Service.EmotePlayer.Dispose();
         NoireService.Framework.Update -= OnFrameworkUpdate;
         UpdateHooked = false;
     }

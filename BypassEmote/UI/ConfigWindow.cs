@@ -31,35 +31,35 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
-        var pluginEnabled = Configuration.Instance.PluginEnabled;
+        var pluginEnabled = Configuration.PluginEnabled;
         if (ImGui.Checkbox("Enable Bypassing Emote Commands", ref pluginEnabled))
-            Configuration.Instance.PluginEnabled = pluginEnabled;
+            Configuration.PluginEnabled = pluginEnabled;
 
-        var autoFaceTarget = Configuration.Instance.AutoFaceTarget;
+        var autoFaceTarget = Configuration.AutoFaceTarget;
         if (ImGui.Checkbox("Automatically Face Target On Emote", ref autoFaceTarget))
-            Configuration.Instance.AutoFaceTarget = autoFaceTarget;
+            Configuration.AutoFaceTarget = autoFaceTarget;
 
-        var showUpdateNotification = Configuration.Instance.ShowUpdateNotification;
+        var showUpdateNotification = Configuration.ShowUpdateNotification;
         if (ImGui.Checkbox("Show Update Notifications", ref showUpdateNotification))
         {
-            Configuration.Instance.ShowUpdateNotification = showUpdateNotification;
+            Configuration.ShowUpdateNotification = showUpdateNotification;
             var updateTracker = NoireLibMain.GetModule<NoireUpdateTracker>();
-            updateTracker?.SetShouldShowNotificationOnUpdate(Configuration.Instance.ShowUpdateNotification);
-            updateTracker?.SetShouldPrintMessageInChatOnUpdate(Configuration.Instance.ShowUpdateNotification);
+            updateTracker?.SetShouldShowNotificationOnUpdate(Configuration.ShowUpdateNotification);
+            updateTracker?.SetShouldPrintMessageInChatOnUpdate(Configuration.ShowUpdateNotification);
         }
 
-        var showChangelogOnUpdate = Configuration.Instance.ShowChangelogOnUpdate;
+        var showChangelogOnUpdate = Configuration.ShowChangelogOnUpdate;
         if (ImGui.Checkbox("Show Changelog on Updates", ref showChangelogOnUpdate))
         {
-            Configuration.Instance.ShowChangelogOnUpdate = showChangelogOnUpdate;
+            Configuration.ShowChangelogOnUpdate = showChangelogOnUpdate;
             var changelogManager = NoireLibMain.GetModule<NoireChangelogManager>();
-            changelogManager?.SetAutomaticallyShowChangelog(Configuration.Instance.ShowChangelogOnUpdate);
+            changelogManager?.SetAutomaticallyShowChangelog(Configuration.ShowChangelogOnUpdate);
         }
 
-        var stopCompanionEmoteOnCompanionMove = Configuration.Instance.StopOwnedObjectEmoteOnMove;
+        var stopCompanionEmoteOnCompanionMove = Configuration.StopOwnedObjectEmoteOnMove;
         if (ImGui.Checkbox("Stop Companion/Pet Emote on Move", ref stopCompanionEmoteOnCompanionMove))
         {
-            Configuration.Instance.StopOwnedObjectEmoteOnMove = stopCompanionEmoteOnCompanionMove;
+            Configuration.StopOwnedObjectEmoteOnMove = stopCompanionEmoteOnCompanionMove;
             IpcHelper.NotifyConfigChanged();
         }
     }

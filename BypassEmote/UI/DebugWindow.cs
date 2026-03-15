@@ -1,10 +1,10 @@
-using BypassEmote.IPC;
 using BypassEmote.Models;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Lumina.Excel.Sheets;
+using Newtonsoft.Json;
 using NoireLib;
 using NoireLib.Helpers;
 using System;
@@ -12,8 +12,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace BypassEmote.UI;
 
@@ -37,19 +35,19 @@ public class DebugWindow : Window, IDisposable
             MaximumSize = new Vector2(float.MinValue, float.MaxValue),
         };
 
-        Service.Ipc.OnReady += Logready;
-        Service.Ipc.OnStateChange += LogStateChanged;
-        Service.Ipc.OnOwnedObjectStateChange += LogOwnedObjectStateChanged;
-        Service.Ipc.OnEmoteStateStart += LogEmoteStateStart;
-        Service.Ipc.OnOwnedObjectEmoteStateStart += LogOwnedObjectEmoteStateStart;
-        Service.Ipc.OnEmoteStateStop += LogEmoteStateStop;
-        Service.Ipc.OnOwnedObjectEmoteStateStop += LogOwnedObjectEmoteStateStop;
-        Service.Ipc.OnStateChangeImmediate += LogStateChangedImmediate;
-        Service.Ipc.OnOwnedObjectStateChangeImmediate += LogOwnedObjectStateChangedImmediate;
-        Service.Ipc.OnEmoteStateStartImmediate += LogEmoteStateStartImmediate;
-        Service.Ipc.OnOwnedObjectEmoteStateStartImmediate += LogOwnedObjectEmoteStateStartImmediate;
-        Service.Ipc.OnEmoteStateStopImmediate += LogEmoteStateStopImmediate;
-        Service.Ipc.OnOwnedObjectEmoteStateStopImmediate += LogOwnedObjectEmoteStateStopImmediate;
+        IpcProvider.OnReady += Logready;
+        IpcProvider.OnStateChange += LogStateChanged;
+        IpcProvider.OnOwnedObjectStateChange += LogOwnedObjectStateChanged;
+        IpcProvider.OnEmoteStateStart += LogEmoteStateStart;
+        IpcProvider.OnOwnedObjectEmoteStateStart += LogOwnedObjectEmoteStateStart;
+        IpcProvider.OnEmoteStateStop += LogEmoteStateStop;
+        IpcProvider.OnOwnedObjectEmoteStateStop += LogOwnedObjectEmoteStateStop;
+        IpcProvider.OnStateChangeImmediate += LogStateChangedImmediate;
+        IpcProvider.OnOwnedObjectStateChangeImmediate += LogOwnedObjectStateChangedImmediate;
+        IpcProvider.OnEmoteStateStartImmediate += LogEmoteStateStartImmediate;
+        IpcProvider.OnOwnedObjectEmoteStateStartImmediate += LogOwnedObjectEmoteStateStartImmediate;
+        IpcProvider.OnEmoteStateStopImmediate += LogEmoteStateStopImmediate;
+        IpcProvider.OnOwnedObjectEmoteStateStopImmediate += LogOwnedObjectEmoteStateStopImmediate;
     }
 
     public override void Draw()
@@ -96,7 +94,7 @@ public class DebugWindow : Window, IDisposable
 
             ImGui.Text($"Position 1: X: {pos1.X}, Y: {pos1.Y}, Z: {pos1.Z}");
             ImGui.Text($"Position 2: X: {pos2.X}, Y: {pos2.Y}, Z: {pos2.Z}");
-            ImGui.Text($"Distance: {MathHelper.Distance(pos1, pos2)}");
+            ImGui.Text($"Distance: {Vector3.Distance(pos1, pos2)}");
 
             ImGui.Separator();
 
@@ -115,7 +113,7 @@ public class DebugWindow : Window, IDisposable
             var normalizedCurrent = MathHelper.NormalizeAngle(MathHelper.ToDegrees(player.Rotation));
             var normalized1 = MathHelper.NormalizeAngle(MathHelper.ToDegrees(rot1));
             var normalized2 = MathHelper.NormalizeAngle(MathHelper.ToDegrees(rot2));
-            var difference = MathHelper.Abs(MathHelper.DeltaAngle(normalized1, normalized2));
+            var difference = Math.Abs(MathHelper.DeltaAngle(normalized1, normalized2));
 
             ImGui.Text("Current Rotation: " + normalizedCurrent);
             ImGui.Text($"Rotation 1: {normalized1}");
@@ -161,8 +159,8 @@ public class DebugWindow : Window, IDisposable
 
     private unsafe void DrawIpcTestsTab()
     {
-        ImGui.Text($"IPC Version: {Service.Ipc.ApiVersion().ToString()}");
-        ImGui.Text($"IPC Is Ready: {Service.Ipc.IsReady()}");
+        ImGui.Text($"IPC Version: {IpcProvider.ApiVersion().ToString()}");
+        ImGui.Text($"IPC Is Ready: {IpcProvider.IsReady()}");
 
         ImGui.Separator();
 
@@ -233,12 +231,12 @@ public class DebugWindow : Window, IDisposable
 
         var localPlayer = NoireService.ObjectTable.LocalPlayer;
         var target = NoireService.TargetManager.Target;
-        var actionType = selectedEmoteId == 0 ? ActionType.StopEmote : ActionType.PlayEmote;
+        var actionType = selectedEmoteId == 0 ? CurrentState.StopEmote : CurrentState.PlayEmote;
 
         if (ImGui.Button("Set local player state") && localPlayer != null)
         {
             var native = CharacterHelper.GetCharacterAddress(localPlayer);
-            Service.Ipc.SetState(new IpcData(actionType, localPlayer.BaseId, localPlayer.ObjectIndex, native->ContentId, selectedEmoteId).Serialize());
+            IpcProvider.SetState(new CharacterState(actionType, localPlayer.BaseId, localPlayer.ObjectIndex, native->ContentId, selectedEmoteId).Serialize());
         }
 
         ImGui.SameLine();
@@ -248,16 +246,16 @@ public class DebugWindow : Window, IDisposable
             if (target is not ICharacter castTarget)
                 return;
             var native = CharacterHelper.GetCharacterAddress(castTarget);
-            Service.Ipc.SetState(new IpcData(actionType, target.BaseId, target.ObjectIndex, native->ContentId, selectedEmoteId).Serialize());
+            IpcProvider.SetState(new CharacterState(actionType, target.BaseId, target.ObjectIndex, native->ContentId, selectedEmoteId).Serialize());
         }
 
         if (ImGui.Button("Clear local player state") && localPlayer != null)
-            Service.Ipc.ClearStateForCharacter(localPlayer.Address);
+            IpcProvider.ClearStateForCharacter(localPlayer.Address);
 
         ImGui.SameLine();
 
         if (ImGui.Button("Clear target state") && target != null)
-            Service.Ipc.ClearStateForCharacter(target.Address);
+            IpcProvider.ClearStateForCharacter(target.Address);
 
         ImGui.Separator();
         ImGui.Text("Current Local Player IPC Data (Looping only):");
@@ -271,7 +269,7 @@ public class DebugWindow : Window, IDisposable
             {
                 if (localPlayer != null)
                 {
-                    var ipcData = Service.Ipc.GetStateForCharacter(localPlayer.Address);
+                    var ipcData = IpcProvider.GetStateForCharacter(localPlayer.Address);
 
                     if (!string.IsNullOrEmpty(ipcData))
                     {
@@ -304,7 +302,7 @@ public class DebugWindow : Window, IDisposable
             {
                 if (NoireService.TargetManager.Target is ICharacter targettedChar)
                 {
-                    var ipcData = Service.Ipc.GetStateForCharacter(targettedChar.Address);
+                    var ipcData = IpcProvider.GetStateForCharacter(targettedChar.Address);
 
                     if (!string.IsNullOrEmpty(ipcData))
                     {
@@ -314,7 +312,7 @@ public class DebugWindow : Window, IDisposable
                             var formattedJson = JsonSerializer.Serialize(jsonDocument, new JsonSerializerOptions
                             {
                                 WriteIndented = true,
-                                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never,
+                                DefaultIgnoreCondition = JsonIgnoreCondition.Never,
                                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                             });
                             ImGui.TextUnformatted(formattedJson);
@@ -400,29 +398,29 @@ public class DebugWindow : Window, IDisposable
 
     public void Dispose()
     {
-        Service.Ipc.OnReady -= Logready;
-        Service.Ipc.OnStateChange -= LogStateChanged;
-        Service.Ipc.OnOwnedObjectStateChange -= LogOwnedObjectStateChanged;
-        Service.Ipc.OnEmoteStateStart -= LogEmoteStateStart;
-        Service.Ipc.OnOwnedObjectEmoteStateStart -= LogOwnedObjectEmoteStateStart;
-        Service.Ipc.OnEmoteStateStop -= LogEmoteStateStop;
-        Service.Ipc.OnOwnedObjectEmoteStateStop -= LogOwnedObjectEmoteStateStop;
-        Service.Ipc.OnStateChangeImmediate -= LogStateChangedImmediate;
-        Service.Ipc.OnOwnedObjectStateChangeImmediate -= LogOwnedObjectStateChangedImmediate;
-        Service.Ipc.OnEmoteStateStartImmediate -= LogEmoteStateStartImmediate;
-        Service.Ipc.OnOwnedObjectEmoteStateStartImmediate -= LogOwnedObjectEmoteStateStartImmediate;
-        Service.Ipc.OnEmoteStateStopImmediate -= LogEmoteStateStopImmediate;
-        Service.Ipc.OnOwnedObjectEmoteStateStopImmediate -= LogOwnedObjectEmoteStateStopImmediate;
+        IpcProvider.OnReady -= Logready;
+        IpcProvider.OnStateChange -= LogStateChanged;
+        IpcProvider.OnOwnedObjectStateChange -= LogOwnedObjectStateChanged;
+        IpcProvider.OnEmoteStateStart -= LogEmoteStateStart;
+        IpcProvider.OnOwnedObjectEmoteStateStart -= LogOwnedObjectEmoteStateStart;
+        IpcProvider.OnEmoteStateStop -= LogEmoteStateStop;
+        IpcProvider.OnOwnedObjectEmoteStateStop -= LogOwnedObjectEmoteStateStop;
+        IpcProvider.OnStateChangeImmediate -= LogStateChangedImmediate;
+        IpcProvider.OnOwnedObjectStateChangeImmediate -= LogOwnedObjectStateChangedImmediate;
+        IpcProvider.OnEmoteStateStartImmediate -= LogEmoteStateStartImmediate;
+        IpcProvider.OnOwnedObjectEmoteStateStartImmediate -= LogOwnedObjectEmoteStateStartImmediate;
+        IpcProvider.OnEmoteStateStopImmediate -= LogEmoteStateStopImmediate;
+        IpcProvider.OnOwnedObjectEmoteStateStopImmediate -= LogOwnedObjectEmoteStateStopImmediate;
     }
 }
 
 public class IntPtrJsonConverter : JsonConverter<nint>
 {
-    public override nint Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override nint ReadJson(JsonReader reader, Type objectType, nint existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
-        if (reader.TokenType == JsonTokenType.String)
+        if (reader.TokenType == JsonToken.String)
         {
-            var nintString = reader.GetString();
+            var nintString = reader.ReadAsString();
             if (nintString != null && nint.TryParse(nintString, System.Globalization.NumberStyles.HexNumber, null, out var result))
                 return result;
         }
@@ -430,6 +428,6 @@ public class IntPtrJsonConverter : JsonConverter<nint>
         throw new JsonException($"Unable to convert value to nint");
     }
 
-    public override void Write(Utf8JsonWriter writer, nint value, JsonSerializerOptions options)
-        => writer.WriteStringValue(value.ToString());
+    public override void WriteJson(JsonWriter writer, nint value, JsonSerializer serializer)
+        => writer.WriteValue(value.ToString());
 }
