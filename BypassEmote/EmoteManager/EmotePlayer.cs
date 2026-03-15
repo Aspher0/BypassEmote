@@ -11,6 +11,7 @@ using NoireLib;
 using NoireLib.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace BypassEmote;
@@ -22,7 +23,7 @@ internal static unsafe class EmotePlayer
     // List of characters using a looped emote
     public static List<TrackedCharacter> TrackedCharacters = new List<TrackedCharacter>();
 
-    public static void PlayEmote(ICharacter? chara, Emote emote, CharacterState? receivedIpcData = null)
+    public static void PlayEmote(ICharacter? chara, Emote emote, IpcData? receivedIpcData = null)
     {
         if (chara == null)
             return;
@@ -128,14 +129,24 @@ internal static unsafe class EmotePlayer
                 }
         }
 
-        // Notify IPC only if this is not coming from IPC itself
-        //if (receivedIpcData == null)
-        IpcHelper.NotifyEmoteStart(chara, emote);
+        if (receivedIpcData == null)
+            IpcHelper.NotifyEmoteStart(chara, emote);
     }
 
-    public static void ProcessIpcData(IpcData receivedIpcData)
+    public static void ProcessCharacterState(ICharacter chara, CharacterState characterState, IpcData? receivedIpcData = null)
     {
+        if (characterState.CurrentState == CurrentState.Stopped && characterState.EmoteId == 0)
+        {
+            StopLoop(chara, true);
+            return;
+        }
 
+        var emote = EmoteHelper.GetEmoteById(characterState.EmoteId);
+
+        if (emote == null)
+            return;
+
+        PlayEmote(chara, emote.Value, receivedIpcData);
     }
 
     //    public static void ProcessCharacterState(ICharacter chara, CharacterState characterState)
@@ -238,11 +249,8 @@ internal static unsafe class EmotePlayer
         Service.EmotePlayer.ExperimentalBlend(chara, null, timelineId);
     }
 
-    public static void Stop(ActionTimelinePlayer player, ICharacter character, bool ShouldNotifyIpc, bool force = false)
+    public static void Stop(ActionTimelinePlayer player, ICharacter character, bool force = false)
     {
-        if (ShouldNotifyIpc)
-            IpcHelper.NotifyEmoteStop(character);
-
         player.Stop(character, force);
     }
 
@@ -257,7 +265,9 @@ internal static unsafe class EmotePlayer
         if (shouldRemoveFromList)
             trackedCharacter.ScheduledForRemoval = true;
 
-        Stop(Service.EmotePlayer, chara, CharacterHelper.IsLocalObject(chara) && shouldRemoveFromList);
+        var shouldNotifyIpc = CharacterHelper.IsLocalObject(chara) && shouldRemoveFromList;
+
+        Stop(Service.EmotePlayer, chara);
 
         if (shouldRemoveFromList)
         {
@@ -269,6 +279,9 @@ internal static unsafe class EmotePlayer
                 UpdateHooked = false;
             }
         }
+
+        if (shouldNotifyIpc)
+            IpcHelper.NotifyEmoteStop(chara);
     }
 
     private static void OnFrameworkUpdate(IFramework framework)
@@ -291,7 +304,7 @@ internal static unsafe class EmotePlayer
             }
 
             var isLocalPlayerOwned = CharacterHelper.IsLocalObject(character);
-            var isOtherPlayerOwned = trackedCharacter.ReceivedIpcData?.IsOwnedObject ?? false;
+            var isOtherPlayerOwned = !isLocalPlayerOwned && CommonHelper.GetOwningPlayerAddress(character.Address) != nint.Zero;
             var isNpc = character is INpc || character is IBattleNpc;
 
             // Determine the character type and ownership
@@ -330,7 +343,7 @@ internal static unsafe class EmotePlayer
                 if (shouldUseConfigForStop)
                     shouldStop = Configuration.StopOwnedObjectEmoteOnMove;
                 else if (shouldUseIpcConfigForStop)
-                    shouldStop = trackedCharacter.ReceivedIpcData?.StopOwnedObjectEmoteOnMove ?? false;
+                    shouldStop = trackedCharacter.ReceivedIpcData?.Configuration.StopOwnedObjectEmoteOnMove ?? false;
 
                 if (shouldStop)
                 {
@@ -370,7 +383,7 @@ internal static unsafe class EmotePlayer
                         if (shouldUseConfigForStop)
                             shouldStop = Configuration.StopOwnedObjectEmoteOnMove;
                         else if (shouldUseIpcConfigForStop)
-                            shouldStop = trackedCharacter.ReceivedIpcData?.StopOwnedObjectEmoteOnMove ?? false;
+                            shouldStop = trackedCharacter.ReceivedIpcData?.Configuration.StopOwnedObjectEmoteOnMove ?? false;
 
                         if (shouldStop)
                         {
@@ -463,19 +476,38 @@ internal static unsafe class EmotePlayer
 
     public static void Dispose()
     {
-        foreach (var trackedCharacter in TrackedCharacters)
+        var trackedCharacters = TrackedCharacters.ToList();
+        var shouldSendDisposeFallback = false;
+        var localPlayerWasLooping = false;
+
+        foreach (var trackedCharacter in trackedCharacters)
         {
             var character = CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
 
             if (character != null)
             {
-                trackedCharacter.ScheduledForRemoval = true;
-                Stop(Service.EmotePlayer, character, CharacterHelper.IsLocalObject(character), true);
+                StopLoop(character, true);
+                continue;
             }
+
+            if (trackedCharacter.IsLocalObject)
+            {
+                shouldSendDisposeFallback = true;
+                localPlayerWasLooping |= trackedCharacter.CID.HasValue;
+            }
+
+            CommonHelper.RemoveCharacterFromTrackedListByUniqueID(trackedCharacter.UniqueId);
+        }
+
+        if (shouldSendDisposeFallback)
+            IpcHelper.NotifyLocalStateDisposed(localPlayerWasLooping);
+
+        if (TrackedCharacters.Count == 0 && UpdateHooked)
+        {
+            NoireService.Framework.Update -= OnFrameworkUpdate;
+            UpdateHooked = false;
         }
 
         Service.EmotePlayer.Dispose();
-        NoireService.Framework.Update -= OnFrameworkUpdate;
-        UpdateHooked = false;
     }
 }

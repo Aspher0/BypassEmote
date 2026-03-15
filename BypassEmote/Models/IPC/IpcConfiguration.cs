@@ -33,4 +33,9 @@ public class IpcConfiguration
     {
         return JsonConvert.SerializeObject(this);
     }
+
+    public IpcConfiguration Clone()
+    {
+        return new IpcConfiguration(StopOwnedObjectEmoteOnMove);
+    }
 }

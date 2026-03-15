@@ -34,6 +34,22 @@ public static class IpcProvider
         OnReady?.Invoke();
     }
 
+    internal static void RaiseStateChange(string liveData, string? cacheData, bool isLocalPlayer)
+    {
+        if (_disposed)
+            return;
+
+        OnStateChange?.Invoke(liveData, cacheData, isLocalPlayer);
+    }
+
+    internal static void RaiseStateChangeImmediate(string liveData, string? cacheData, bool isLocalPlayer)
+    {
+        if (_disposed)
+            return;
+
+        OnStateChangeImmediate?.Invoke(liveData, cacheData, isLocalPlayer);
+    }
+
 
 
     /// <summary>
@@ -162,14 +178,11 @@ public static class IpcProvider
     /// <summary>
     /// An event that fires when the state of the local player changes (i.e.: when bypassing or stopping emotes, or when the configuration changes).<br/>
     /// Contains:<br/>
-    /// - The type of action <see cref="IpcActionType"/> that triggered the state change.<br/>
-    /// - The recommended cache action <see cref="CacheAction"/> to perform.<br/>
-    ///   0 Meaning you should add or update your cache with the new data.<br/>
-    ///   1 Meaning you can safely delete cached data as there is no local character bypassing emotes anymore.<br/>
-    /// - A boolean indicating whether the triggering character is the local player itself. A value of false meaning it is triggered by an owned entity (companion, buddy or pet).<br/>
-    /// - The serialized data <see cref="IpcData"/> representing the new state.<br/><br/>
+    /// - The serialized live <see cref="IpcData"/> that should be relayed immediately to clients already in range.<br/>
+    /// - The serialized cacheable <see cref="IpcData"/> snapshot, or null if cached data can be safely removed.<br/>
+    /// - A boolean indicating whether the triggering character is the local player itself. A value of false means it is triggered by an owned entity (companion, buddy or pet).<br/><br/>
     /// 
-    /// Will trigger when starting and stopping emotes, but also on configuration changes.<br/>
+    /// Will trigger when starting and stopping emotes, but also on configuration changes.
     /// </summary>
     /// <remarks>
     /// For technical reasons, this will be fired 500ms after an emote starts playing, and fired twice on emote stop with 500ms delay in between (once immediately, once after 500ms delay).<br/>
@@ -177,7 +190,7 @@ public static class IpcProvider
     /// For immediate reaction to state changes, use <see cref="OnStateChangeImmediate"/> instead.
     /// </remarks>
     [NoireIpc("OnStateChangeV1")]
-    public static event Action<int, int, bool, string>? OnStateChange;
+    public static event Action<string, string?, bool>? OnStateChange;
 
     /// <summary>
     /// Same as <see cref="OnStateChange"/>, except it fires only once and immediately when the state changes, instead of:<br/>
@@ -188,5 +201,5 @@ public static class IpcProvider
     /// If your intention is to sync multiple clients together, this is *NOT* recommended and you should use <see cref="OnStateChange"/> instead.
     /// </remarks>
     [NoireIpc("OnStateChangeImmediateV1")]
-    public static event Action<int, int, bool, string>? OnStateChangeImmediate;
+    public static event Action<string, string?, bool>? OnStateChangeImmediate;
 }

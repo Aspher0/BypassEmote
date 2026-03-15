@@ -18,11 +18,19 @@ public class CharacterState
     [JsonIgnore]
     public nint CharacterAddress => CommonHelper.GetCharacterFromBaseIdOrCid(BaseId, Cid)?.Address ?? nint.Zero;
 
-
+    [JsonIgnore]
     public bool IsPlayerCharacter => CommonHelper.IsPlayerCharacter(CharacterAddress);
+
+    [JsonIgnore]
     public nint OwningPlayerAddress => CommonHelper.GetOwningPlayerAddress(CharacterAddress); // If nint.Zero, it means it's not owned by any player, but it can still be a player or a npc
+
+    [JsonIgnore]
     public bool IsOwnedObject => OwningPlayerAddress != nint.Zero; // Is it owned by any player? (i.e. is it a companion/pet/etc.)
+
+    [JsonIgnore]
     public bool IsLocallyOwnedObject => CharacterHelper.IsCharacterOwnedByLocalPlayer(CharacterAddress); // Is it owned by the local player? (i.e. is it the local player's companion/pet/etc.)
+
+    [JsonIgnore]
     public string? EmoteName
     {
         get
@@ -33,8 +41,15 @@ public class CharacterState
             return string.IsNullOrWhiteSpace(name) ? null : name;
         }
     }
+
+    [JsonIgnore]
     public bool IsLooping => IsLoopedEmote();
+
+    [JsonIgnore]
     public bool IsStopped => EmoteId == 0;
+
+    [JsonIgnore]
+    public bool IsCacheable => CurrentState == CurrentState.PlayingEmote && EmoteId != 0 && IsLooping;
 
     public bool IsLoopedEmote()
     {
@@ -47,7 +62,24 @@ public class CharacterState
         return CharacterAddress == characterAddress || OwningPlayerAddress == characterAddress;
     }
 
-    public void ApplyState(bool shouldThrow = false)
+    public CharacterState Clone()
+    {
+        return new CharacterState(ExecutedAction, CurrentState, BaseId, Cid, EmoteId);
+    }
+
+    public CharacterState ToStoppedState(ExecutedAction executedAction = ExecutedAction.None)
+    {
+        return new CharacterState(executedAction, CurrentState.Stopped, BaseId, Cid, 0);
+    }
+
+    public CharacterState ToCacheableState()
+    {
+        return IsCacheable
+            ? new CharacterState(ExecutedAction.None, CurrentState.PlayingEmote, BaseId, Cid, EmoteId)
+            : ToStoppedState();
+    }
+
+    public void ApplyState(bool shouldThrow = false, IpcData? ipcData = null)
     {
         if (CharacterAddress == nint.Zero)
             return;
@@ -66,7 +98,7 @@ public class CharacterState
                     if (trackedCharacter == null)
                     {
                         // Character is not tracked yet, start emoting
-                        EmotePlayer.ProcessCharacterState(castChar, this);
+                        EmotePlayer.ProcessCharacterState(castChar, this, ipcData);
                         break;
                     }
 
@@ -76,7 +108,7 @@ public class CharacterState
                     if (ExecutedAction == ExecutedAction.StartedEmote)
                     {
                         // Restart the emote
-                        EmotePlayer.ProcessCharacterState(castChar, this);
+                        EmotePlayer.ProcessCharacterState(castChar, this, ipcData);
                         break;
                     }
                     else if (ExecutedAction == ExecutedAction.StoppedEmote)
@@ -97,7 +129,7 @@ public class CharacterState
                     if (trackedCharacter != null)
                     {
                         // Character is tracked, stop emoting
-                        EmotePlayer.ProcessCharacterState(castChar, this);
+                        EmotePlayer.ProcessCharacterState(castChar, this, ipcData);
                         break;
                     }
 
@@ -116,7 +148,7 @@ public class CharacterState
                         }
 
                         // Otherwise, it's just that the character started an emote that is not looping, we play the emote
-                        EmotePlayer.ProcessCharacterState(castChar, this);
+                        EmotePlayer.ProcessCharacterState(castChar, this, ipcData);
                         break;
                     }
 
@@ -134,9 +166,6 @@ public class CharacterState
                 }
         }
     }
-
-
-
 
     [JsonConstructor]
     public CharacterState(ExecutedAction executedAction, CurrentState currentState, uint baseId, ulong cid, uint emoteId)

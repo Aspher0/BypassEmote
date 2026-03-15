@@ -59,7 +59,7 @@ public static class CommonHelper
             return null;
     }
 
-    public static unsafe TrackedCharacter? AddOrUpdateCharacterInTrackedList(nint charaAddress, Emote emote, CharacterState? receivedIpcData = null)
+    public static unsafe TrackedCharacter? AddOrUpdateCharacterInTrackedList(nint charaAddress, Emote emote, IpcData? receivedIpcData = null)
     {
         if (charaAddress == nint.Zero) return null;
 
@@ -109,6 +109,11 @@ public static class CommonHelper
             EmotePlayer.TrackedCharacters.Add(newTracked);
             return newTracked;
         }
+    }
+
+    public static bool HasAnyLocalLoopedEmote()
+    {
+        return EmotePlayer.TrackedCharacters.Any(tc => tc.IsLocalObject);
     }
 
     public static ICharacter? TryGetCharacterFromBaseIdAndObjectIndex(uint baseId, ushort objectIndex)
@@ -222,8 +227,7 @@ public static class CommonHelper
 
     public static float GetRotationToTarget(ICharacter from, IGameObject to)
     {
-        return MathHelper.DeltaAngle(from.Rotation, to.Rotation); // TODO Check if correct
-        //return ECommons.MathHelpers.MathHelper.GetAngleBetweenPoints(new(from.Position.Z, from.Position.X), new(to.Position.Z, to.Position.X));
+        return MathF.Atan2(to.Position.X - from.Position.X, to.Position.Z - from.Position.Z);
     }
 
     public static bool IsCharacterInBypassedLoop(ICharacter chara)
@@ -314,5 +318,16 @@ public static class CommonHelper
         characterState.CurrentState = characterState.EmoteId != 0 ? CurrentState.PlayingEmote : CurrentState.Stopped;
 
         return characterState;
+    }
+
+    public static unsafe CharacterState CreateCharacterState(nint characterAddress, ExecutedAction executedAction, CurrentState currentState, uint emoteId)
+    {
+        var castChar = CharacterHelper.GetCharacterFromAddress(characterAddress);
+
+        if (castChar == null)
+            return new CharacterState(executedAction, currentState, 0, 0, emoteId);
+
+        var native = CharacterHelper.GetCharacterAddress(castChar);
+        return new CharacterState(executedAction, currentState, castChar.BaseId, native->ContentId, emoteId);
     }
 }

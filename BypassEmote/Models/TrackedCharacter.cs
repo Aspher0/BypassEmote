@@ -22,7 +22,7 @@ public class TrackedCharacter
     public float LastRotation;
     public bool IsWeaponDrawn;
     public uint? PlayingEmoteId = null;
-    public CharacterState? ReceivedIpcData = null; // Received from IPC *only* (AKA: Another player)
+    public IpcData? ReceivedIpcData = null; // Received from IPC *only* (AKA: Another player)
     public bool ScheduledForRemoval = false;
 
 
@@ -35,7 +35,7 @@ public class TrackedCharacter
         float lastPlayerRot,
         bool isWeaponDrawn,
         uint playingEmoteId,
-        CharacterState? ipcData = null)
+        IpcData? ipcData = null)
     {
         IsLocalObject = isLocalObject;
         CID = cid;
