@@ -12,6 +12,9 @@ using NoireLib.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Numerics;
 
 namespace BypassEmote.UI;
@@ -27,9 +30,17 @@ public class DebugWindow : Window, IDisposable
     private uint selectedEmoteId = 0;
     private string emoteSearchText = string.Empty;
     private List<Emote>? cachedEmoteList = null;
+    private readonly string localNetworkIp = GetPreferredLocalNetworkIp();
+    private string peer1Host;
+    private string peer2Host;
+    private int peer1Port = 53740;
+    private int peer2Port = 53740;
 
     public DebugWindow() : base("Bypass Emote Debug###BypassEmote")
     {
+        peer1Host = localNetworkIp;
+        peer2Host = localNetworkIp;
+
         SizeConstraints = new WindowSizeConstraints
         {
             MinimumSize = new Vector2(300, 200),
@@ -85,35 +96,114 @@ public class DebugWindow : Window, IDisposable
         Service.NetworkRelay.UnregisterSelf();
     }
 
+    private void RegisterRelayPeer(string peerId, string host, int port, string displayName)
+    {
+        var endPoint = CreatePeerEndPoint(host, port);
+        if (endPoint == null)
+        {
+            NoireLogger.PrintToChat($"Invalid peer IP address: {host}");
+            return;
+        }
+
+        Service.NetworkRelay.RegisterPeer(peerId, endPoint, displayName);
+    }
+
+    private static IPEndPoint? CreatePeerEndPoint(string host, int port)
+    {
+        var ipText = string.IsNullOrWhiteSpace(host) ? GetPreferredLocalNetworkIp() : host.Trim();
+        return IPAddress.TryParse(ipText, out var address) ? new IPEndPoint(address, port) : null;
+    }
+
+    private static string GetPreferredLocalNetworkIp()
+    {
+        try
+        {
+            var address = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(adapter => adapter.OperationalStatus == OperationalStatus.Up)
+                .Where(adapter => adapter.NetworkInterfaceType is not NetworkInterfaceType.Loopback and not NetworkInterfaceType.Tunnel)
+                .SelectMany(adapter => adapter.GetIPProperties().UnicastAddresses)
+                .Select(unicast => unicast.Address)
+                .FirstOrDefault(address => address.AddressFamily == AddressFamily.InterNetwork &&
+                                           !IPAddress.IsLoopback(address) &&
+                                           IsPrivateIpv4(address));
+
+            if (address != null)
+                return address.ToString();
+        }
+        catch
+        {
+        }
+
+        return IPAddress.Loopback.ToString();
+    }
+
+    private static bool IsPrivateIpv4(IPAddress address)
+    {
+        var bytes = address.GetAddressBytes();
+        return bytes[0] == 10 ||
+               (bytes[0] == 172 && bytes[1] is >= 16 and <= 31) ||
+               (bytes[0] == 192 && bytes[1] == 168);
+    }
+
     private void DrawNetworkRelayTab()
     {
         if (ImGui.Button("Register self as peer 1"))
-            SetRelay("Peer-1", "Peer 1", 53740);
+            SetRelay("Peer-1", "Peer 1", peer1Port);
 
         ImGui.SameLine();
 
         if (ImGui.Button("Register self as peer 2"))
-            SetRelay("Peer-2", "Peer 2", 53741);
+            SetRelay("Peer-2", "Peer 2", peer2Port);
 
         ImGui.SameLine();
 
         if (ImGui.Button("Unregister self"))
             UnregisterRelaySelf();
 
+        ImGui.TextColoredWrapped(ColorHelper.HexToVector4("#FF0000"), "Only use the below if your game instances are on the same PC and peers don't automatically get detected.\nIf using different PCs, don't touch these and only 'register self'.\nPorts needs to be different if on the same PC and has too be the same port if on different PCs.");
 
+        ImGui.SetNextItemWidth(100);
+        ImGui.InputTextWithHint("##Peer1Host", "Peer 1 LAN IP or hostname", ref peer1Host, 256);
+
+        if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
+            peer1Host = localNetworkIp;
+
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("Right click to reset");
+
+        ImGui.SameLine();
+
+        ImGui.SetNextItemWidth(100);
+        ImGui.InputInt("##Peer1Port", ref peer1Port, 256);
+
+        ImGui.SameLine();
 
         if (ImGui.Button("Register peer 1"))
-            Service.NetworkRelay.RegisterPeer("Peer-1", "127.0.0.1", 53740, "Peer 1");
+            RegisterRelayPeer("Peer-1", peer1Host, peer1Port, "Peer 1");
+
+        ImGui.SameLine();
+
+        if (ImGui.Button("Unregister peer 1"))
+            Service.NetworkRelay.UnregisterPeer("Peer-1");
+
+        ImGui.SetNextItemWidth(100);
+        ImGui.InputTextWithHint("##Peer2Host", "Peer 2 LAN IP or hostname", ref peer2Host, 256);
+
+        if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
+            peer2Host = localNetworkIp;
+
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("Right click to reset");
+
+        ImGui.SameLine();
+
+        ImGui.SetNextItemWidth(100);
+        ImGui.InputInt("##Peer2Port", ref peer2Port, 256);
 
         ImGui.SameLine();
 
         if (ImGui.Button("Register peer 2"))
-            Service.NetworkRelay.RegisterPeer("Peer-2", "127.0.0.1", 53741, "Peer 2");
-
-
-
-        if (ImGui.Button("Unregister peer 1"))
-            Service.NetworkRelay.UnregisterPeer("Peer-1");
+            RegisterRelayPeer("Peer-2", peer2Host, peer2Port, "Peer 2");
 
         ImGui.SameLine();
 
@@ -133,7 +223,7 @@ public class DebugWindow : Window, IDisposable
             }
         }
     }
-    
+
 #endif
 
     private void DrawPositionRotationTab()
