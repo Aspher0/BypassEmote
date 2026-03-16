@@ -79,21 +79,21 @@ public class EmoteWindow : Window, IDisposable
         availWidth = ImGui.GetContentRegionAvail().X;
         ImGui.SetCursorPosX((availWidth - totalWidth) * 0.5f);
 
-        bool showAllEmotes = Configuration.Instance.ShowAllEmotes;
+        bool showAllEmotes = Configuration.ShowAllEmotes;
         if (ImGui.Checkbox("Show all emotes", ref showAllEmotes))
-            Configuration.Instance.ShowAllEmotes = showAllEmotes;
+            Configuration.ShowAllEmotes = showAllEmotes;
 
         ImGui.SameLine();
 
-        bool showInvalidEmotes = Configuration.Instance.ShowInvalidEmotes;
+        bool showInvalidEmotes = Configuration.ShowInvalidEmotes;
         if (ImGui.Checkbox("Show Invalid Emotes", ref showInvalidEmotes))
-            Configuration.Instance.ShowInvalidEmotes = showInvalidEmotes;
+            Configuration.ShowInvalidEmotes = showInvalidEmotes;
 
         ImGui.SameLine();
 
-        bool showEmoteIds = Configuration.Instance.ShowEmoteIds;
+        bool showEmoteIds = Configuration.ShowEmoteIds;
         if (ImGui.Checkbox("Show IDs", ref showEmoteIds))
-            Configuration.Instance.ShowEmoteIds = showEmoteIds;
+            Configuration.ShowEmoteIds = showEmoteIds;
 
         ImGui.Separator();
 
@@ -145,7 +145,7 @@ public class EmoteWindow : Window, IDisposable
 
         var displayedEmotes = new List<(Emote, NoireLib.Enums.EmoteCategory)>(Service.LockedEmotes);
 
-        if (Configuration.Instance.ShowAllEmotes || currentTab == LockedTab.Favorites)
+        if (Configuration.ShowAllEmotes || currentTab == LockedTab.Favorites)
         {
             var emoteSheet = ExcelSheetHelper.GetSheet<Emote>();
 
@@ -154,13 +154,13 @@ public class EmoteWindow : Window, IDisposable
                 : new List<(Emote, NoireLib.Enums.EmoteCategory)>();
         }
 
-        if (!Configuration.Instance.ShowInvalidEmotes && currentTab != LockedTab.Favorites)
+        if (!Configuration.ShowInvalidEmotes && currentTab != LockedTab.Favorites)
             displayedEmotes.RemoveAll(e => !Helpers.CommonHelper.IsEmoteDisplayable(e.Item1));
 
         displayedEmotes = displayedEmotes.OrderByDescending(e => e.Item1.RowId).ToList();
 
         // Check if we're in favorites tab and if there are any favorites
-        if (currentTab == LockedTab.Favorites && Configuration.Instance.FavoriteEmotes.Count == 0)
+        if (currentTab == LockedTab.Favorites && Configuration.FavoriteEmotes.Count == 0)
         {
             // Center the "No favorited emote" message
             var textSize = ImGui.CalcTextSize("No favorited emote");
@@ -179,7 +179,7 @@ public class EmoteWindow : Window, IDisposable
                     continue;
 
                 // Filter based on selected tab
-                if (currentTab == LockedTab.Favorites && !Configuration.Instance.FavoriteEmotes.Contains(emote.Item1.RowId))
+                if (currentTab == LockedTab.Favorites && !Configuration.FavoriteEmotes.Contains(emote.Item1.RowId))
                     continue;
                 if (currentTab == LockedTab.General && emote.Item2 != NoireLib.Enums.EmoteCategory.General)
                     continue;
@@ -190,7 +190,7 @@ public class EmoteWindow : Window, IDisposable
                 if (currentTab == LockedTab.Other && emote.Item2 != NoireLib.Enums.EmoteCategory.Unknown)
                     continue;
 
-                var displayedName = Configuration.Instance.ShowEmoteIds ? $"[{emote.Item1.RowId}] " : "";
+                var displayedName = Configuration.ShowEmoteIds ? $"[{emote.Item1.RowId}] " : "";
                 displayedName += Helpers.CommonHelper.GetEmoteName(emote.Item1);
 
                 // Build commands string (all associated, comma separated)
@@ -217,7 +217,7 @@ public class EmoteWindow : Window, IDisposable
 
                 // Draw favorite star on the very left
                 var starSize = 20f;
-                var isFavorite = Configuration.Instance.FavoriteEmotes.Contains(emote.Item1.RowId);
+                var isFavorite = Configuration.FavoriteEmotes.Contains(emote.Item1.RowId);
                 var starColor = isFavorite ? new Vector4(1f, 0.9f, 0f, 1f) : new Vector4(0.35f, 0.35f, 0.35f, 1f); // Yellow if favorite, gray if not
                 var starIcon = FontAwesomeIcon.Star;
 
@@ -367,12 +367,12 @@ public class EmoteWindow : Window, IDisposable
 
     private void ToggleFavorite(uint emoteId)
     {
-        if (Configuration.Instance.FavoriteEmotes.Contains(emoteId))
-            Configuration.Instance.FavoriteEmotes.Remove(emoteId);
+        if (Configuration.FavoriteEmotes.Contains(emoteId))
+            Configuration.FavoriteEmotes.Remove(emoteId);
         else
-            Configuration.Instance.FavoriteEmotes.Add(emoteId);
+            Configuration.FavoriteEmotes.Add(emoteId);
 
-        Configuration.Instance.Save(); // Needed until I update NoireLib to auto-save list changes
+        Configuration.Save(); // Needed until I update NoireLib to auto-save list changes
     }
 
     private void ApplyEmoteOnMinion(Emote emote)
@@ -380,7 +380,7 @@ public class EmoteWindow : Window, IDisposable
         if (NoireService.ObjectTable.LocalPlayer is not IPlayerCharacter player)
             return;
 
-        var addr = Helpers.CommonHelper.GetCompanionAddress(player);
+        var addr = CharacterHelper.GetCompanionAddress(player);
         if (addr == 0)
         {
             NoireLogger.PrintToChat("No minion summoned.");
@@ -398,7 +398,7 @@ public class EmoteWindow : Window, IDisposable
         if (NoireService.ObjectTable.LocalPlayer is not IPlayerCharacter player)
             return;
 
-        var addr = Helpers.CommonHelper.GetPetAddress(player);
+        var addr = CharacterHelper.GetPetAddress(player);
         if (addr == 0)
         {
             NoireLogger.PrintToChat("No pet summoned.");
@@ -416,7 +416,7 @@ public class EmoteWindow : Window, IDisposable
         if (NoireService.ObjectTable.LocalPlayer is not IPlayerCharacter player)
             return;
 
-        var addr = Helpers.CommonHelper.GetBuddyAddress(player);
+        var addr = CharacterHelper.GetBuddyAddress(player);
         if (addr == 0)
         {
             NoireLogger.PrintToChat("No chocobo summoned.");

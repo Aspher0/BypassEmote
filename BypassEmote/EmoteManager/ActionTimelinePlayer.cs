@@ -3,7 +3,6 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Memory;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using Lumina.Excel.Sheets;
-using NoireLib;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -19,12 +18,11 @@ namespace BypassEmote;
 /// </summary>
 public sealed class ActionTimelinePlayer : IDisposable
 {
-    // Per-character state tracking
-    private readonly Dictionary<nint, CharacterState> states = new();
+    private readonly Dictionary<nint, CharacterState> characterStates = new();
 
     public void Dispose()
     {
-        states.Clear();
+        characterStates.Clear();
     }
 
     /// <summary>
@@ -40,16 +38,7 @@ public sealed class ActionTimelinePlayer : IDisposable
         if (trackedCharacter is null && st.OriginalBase is null)
             st.OriginalBase = new OriginalBase(native->Mode, native->ModeParam, native->Timeline.BaseOverride);
 
-        var emoteMode = emote.EmoteMode;
-        var emoteModeId = emoteMode.RowId;
-
         native->Timeline.BaseOverride = actionTimeline;
-
-        if (character.Address == NoireService.ObjectTable.LocalPlayer?.Address)
-        {
-            var emoteSpec = CommonHelper.TryGetEmoteSpecification(emote);
-            Service.SimpleHeelsIpcCaller.RegisterEmoteOverride(character.ObjectIndex, emote.EmoteMode.RowId, emoteSpec?.Cpose ?? 0);
-        }
 
         if (interrupt)
             ExperimentalBlend(character, emote, actionTimeline);
@@ -77,12 +66,6 @@ public sealed class ActionTimelinePlayer : IDisposable
         animParams->Unk42 = 0;
         native->Timeline.TimelineSequencer.PlayTimeline(actionTimeline, animParams);
         MemoryHelper.Free((nint)animParams);
-
-        if (character.Address == NoireService.ObjectTable.LocalPlayer?.Address && emote != null)
-        {
-            var emoteSpec = CommonHelper.TryGetEmoteSpecification(emote.Value);
-            Service.SimpleHeelsIpcCaller.RegisterEmoteOverride(character.ObjectIndex, emote.Value.EmoteMode.RowId, emoteSpec?.Cpose ?? 0);
-        }
     }
 
     /// <summary>
@@ -90,7 +73,7 @@ public sealed class ActionTimelinePlayer : IDisposable
     /// </summary>
     public unsafe void ResetBase(ICharacter character)
     {
-        if (!states.TryGetValue(character.Address, out var state) || state.OriginalBase is null)
+        if (!characterStates.TryGetValue(character.Address, out var state) || state.OriginalBase is null)
             return;
 
         var native = GetNative(character);
@@ -101,9 +84,6 @@ public sealed class ActionTimelinePlayer : IDisposable
         state.OriginalBase = null;
 
         ExperimentalBlend(character, null, 3);
-
-        if (character.Address == NoireService.ObjectTable.LocalPlayer?.Address)
-            Service.SimpleHeelsIpcCaller.ClearEmoteOverride(character.ObjectIndex);
     }
 
     public void Stop(ICharacter character, bool force)
@@ -111,93 +91,20 @@ public sealed class ActionTimelinePlayer : IDisposable
         var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(character.Address);
 
         if (HasBaseOverride(character) && (force || (trackedCharacter != null && trackedCharacter.ScheduledForRemoval)))
-        {
             ResetBase(character);
-            //ResetOverallSpeed(character);
-        }
     }
 
     public bool HasBaseOverride(ICharacter character)
-    {
-        return states.TryGetValue(character.Address, out var st) && st.OriginalBase is not null;
-    }
-
-    // --- speed controls ---
-
-    //public unsafe float GetOverallSpeed(ICharacter character)
-    //{
-    //    var native = GetNative(character);
-    //    return native->Timeline.OverallSpeed;
-    //}
-
-    //public unsafe void SetOverallSpeed(ICharacter character, float speed)
-    //{
-    //    var native = GetNative(character);
-    //    GetOrCreateState(character).OverallSpeedOverride = speed;
-    //    native->Timeline.OverallSpeed = speed;
-    //}
-
-    //public void ResetOverallSpeed(ICharacter character)
-    //{
-    //    if (!states.TryGetValue(character.Address, out var state))
-    //        return;
-
-    //    state.OverallSpeedOverride = null;
-    //}
-
-    //public unsafe float GetSlotSpeed(ICharacter character, int slotIndex)
-    //{
-    //    var st = GetOrCreateState(character);
-    //    if (st.SlotSpeedOverrides.TryGetValue(slotIndex, out var sp))
-    //        return sp;
-
-    //    var native = GetNative(character);
-    //    return native->Timeline.TimelineSequencer.TimelineSpeeds[slotIndex];
-    //}
-
-    //public unsafe void SetSlotSpeed(ICharacter character, int slotIndex, float speed)
-    //{
-    //    var st = GetOrCreateState(character);
-    //    st.SlotSpeedOverrides[slotIndex] = speed;
-    //    var native = GetNative(character);
-    //    native->Timeline.TimelineSequencer.SetSlotSpeed((uint)slotIndex, speed);
-    //    st.SlotsDirty = true;
-    //}
-
-    //public void ResetSlotSpeed(ICharacter character, int slotIndex)
-    //{
-    //    var st = GetOrCreateState(character);
-    //    st.SlotSpeedOverrides.Remove(slotIndex);
-    //    st.SlotsDirty = true;
-    //}
-
-    //public void ResetPerSlotSpeeds(ICharacter character)
-    //{
-    //    if (states.TryGetValue(character.Address, out var st))
-    //    {
-    //        st.SlotSpeedOverrides.Clear();
-    //        st.SlotsDirty = false;
-    //    }
-    //}
-
-    //public bool CheckAndResetDirtySlots(ICharacter character)
-    //{
-    //    if (states.TryGetValue(character.Address, out var st) && st.SlotsDirty)
-    //    {
-    //        st.SlotsDirty = false;
-    //        return true;
-    //    }
-    //    return false;
-    //}
+        => characterStates.TryGetValue(character.Address, out var st) && st.OriginalBase is not null;
 
     // --- Helpers ---
 
     private CharacterState GetOrCreateState(ICharacter character)
     {
-        if (!states.TryGetValue(character.Address, out var s))
+        if (!characterStates.TryGetValue(character.Address, out var s))
         {
             s = new CharacterState();
-            states[character.Address] = s;
+            characterStates[character.Address] = s;
         }
         return s;
     }
@@ -218,7 +125,7 @@ public sealed class ActionTimelinePlayer : IDisposable
 }
 
 [StructLayout(LayoutKind.Explicit, Size = 0x60)]
-public unsafe struct ActionTimelineAnimParams
+public struct ActionTimelineAnimParams
 {
     [FieldOffset(0x00)] public nint vtblAddr;
     [FieldOffset(0x10)] public float Unk0;

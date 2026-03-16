@@ -1,5 +1,4 @@
 using BypassEmote.Data;
-using BypassEmote.IPC;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
@@ -7,7 +6,6 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Utility;
-using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
@@ -31,7 +29,7 @@ public static class CommonHelper
     public static ICharacter? GetCharacterFromBaseIdAndObjectIndexOrCid(uint? baseId, ushort? objectIndex, ulong? cid)
     {
         if (cid != null)
-            return CharacterHelper.TryGetCharacterFromCID(cid.Value);
+            return CharacterHelper.GetCharacterFromCID(cid.Value);
         else if (baseId != null && objectIndex != null)
             return TryGetCharacterFromBaseIdAndObjectIndex(baseId.Value, objectIndex.Value);
 
@@ -41,7 +39,7 @@ public static class CommonHelper
     public static ICharacter? GetCharacterFromBaseIdOrCid(uint baseId, ulong cid)
     {
         if (cid != 0)
-            return CharacterHelper.TryGetCharacterFromCID(cid);
+            return CharacterHelper.GetCharacterFromCID(cid);
         else if (baseId != 0)
             return TryGetCharacterFromBaseId(baseId);
 
@@ -50,7 +48,7 @@ public static class CommonHelper
 
     public static TrackedCharacter? TryGetTrackedCharacterFromAddress(nint charaAddress)
     {
-        var castChar = CharacterHelper.TryGetCharacterFromAddress(charaAddress);
+        var castChar = CharacterHelper.GetCharacterFromAddress(charaAddress);
         if (castChar == null) return null;
 
         if (castChar is INpc || castChar is IBattleNpc)
@@ -65,7 +63,7 @@ public static class CommonHelper
     {
         if (charaAddress == nint.Zero) return null;
 
-        var castChar = CharacterHelper.TryGetCharacterFromAddress(charaAddress);
+        var castChar = CharacterHelper.GetCharacterFromAddress(charaAddress);
 
         if (castChar == null) return null;
 
@@ -73,7 +71,7 @@ public static class CommonHelper
 
         if (existing != null)
         {
-            existing.IsLocalObject = IsLocalObject(castChar);
+            existing.IsLocalObject = CharacterHelper.IsLocalObject(castChar);
 
             if (castChar is INpc || castChar is IBattleNpc)
                 existing.BaseId = castChar.BaseId;
@@ -84,8 +82,8 @@ public static class CommonHelper
                 existing.CID = CID.Value;
             }
 
-            existing.LastPlayerPosition = castChar.Position;
-            existing.LastPlayerRotation = castChar.Rotation;
+            existing.LastPosition = castChar.Position;
+            existing.LastRotation = castChar.Rotation;
             existing.UpdatePlayingEmoteId(emote);
 
             if (receivedIpcData != null)
@@ -98,7 +96,7 @@ public static class CommonHelper
             if (castChar is not INpc && castChar is not IBattleNpc && castChar is not IPlayerCharacter) return null;
 
             var newTracked = new TrackedCharacter(
-                IsLocalObject(castChar),
+                CharacterHelper.IsLocalObject(castChar),
                 (castChar is IPlayerCharacter ? CharacterHelper.GetCIDFromPlayerCharacterAddress(charaAddress) : null),
                 (castChar is INpc || castChar is IBattleNpc ? castChar.BaseId : null),
                 (castChar is INpc || castChar is IBattleNpc ? castChar.ObjectIndex : null),
@@ -111,6 +109,11 @@ public static class CommonHelper
             EmotePlayer.TrackedCharacters.Add(newTracked);
             return newTracked;
         }
+    }
+
+    public static bool HasAnyLocalLoopedEmote()
+    {
+        return EmotePlayer.TrackedCharacters.Any(tc => tc.IsLocalObject);
     }
 
     public static ICharacter? TryGetCharacterFromBaseIdAndObjectIndex(uint baseId, ushort objectIndex)
@@ -224,56 +227,7 @@ public static class CommonHelper
 
     public static float GetRotationToTarget(ICharacter from, IGameObject to)
     {
-        return ECommons.MathHelpers.MathHelper.GetAngleBetweenPoints(new(from.Position.Z, from.Position.X), new(to.Position.Z, to.Position.X));
-    }
-
-    public unsafe static nint GetCompanionAddress(ICharacter ownerCharacter)
-    {
-        var native = CharacterHelper.GetCharacterAddress(ownerCharacter);
-        return (nint)native->CompanionData.CompanionObject;
-    }
-
-    public unsafe static nint GetPetAddress(ICharacter ownerCharacter)
-    {
-        var native = CharacterHelper.GetCharacterAddress(ownerCharacter);
-        var manager = CharacterManager.Instance();
-        return (nint)manager->LookupPetByOwnerObject((BattleChara*)native);
-    }
-
-    public unsafe static nint GetBuddyAddress(ICharacter ownerCharacter)
-    {
-        var native = CharacterHelper.GetCharacterAddress(ownerCharacter);
-        var manager = CharacterManager.Instance();
-        return (nint)manager->LookupBuddyByOwnerObject((BattleChara*)native);
-    }
-
-    /// <summary>
-    /// Determines whether the given object address belongs to the local player but *ISN'T* the local player.
-    /// </summary>
-    public unsafe static bool IsObjectOwnedByLocalPlayer(nint objectAddress)
-    {
-        var local = NoireService.ObjectTable.LocalPlayer;
-        if (local == null)
-            return false;
-        return objectAddress == GetCompanionAddress(local) || objectAddress == GetPetAddress(local) || objectAddress == GetBuddyAddress(local);
-    }
-
-    public static bool IsLocalObject(ICharacter chara)
-    {
-        var localPlayer = NoireService.ObjectTable.LocalPlayer;
-
-        if (localPlayer == null)
-            return false;
-
-        var playerAddress = localPlayer.Address;
-        var companionAddress = GetCompanionAddress(localPlayer);
-        var petAddress = GetPetAddress(localPlayer);
-        var buddyAddress = GetBuddyAddress(localPlayer);
-
-        return playerAddress == chara.Address ||
-               companionAddress == chara.Address ||
-               petAddress == chara.Address ||
-               buddyAddress == chara.Address;
+        return MathF.Atan2(to.Position.X - from.Position.X, to.Position.Z - from.Position.Z);
     }
 
     public static bool IsCharacterInBypassedLoop(ICharacter chara)
@@ -304,8 +258,11 @@ public static class CommonHelper
 
     public static unsafe nint GetOwningPlayerAddress(nint characterAddress)
     {
-        var castChar = CharacterHelper.TryGetCharacterFromAddress(characterAddress);
-        if (castChar == null) return nint.Zero;
+        var castChar = CharacterHelper.GetCharacterFromAddress(characterAddress);
+
+        if (castChar == null)
+            return nint.Zero;
+
         uint ownerEntityId;
 
         if (castChar.ObjectKind == ObjectKind.Companion)
@@ -329,10 +286,49 @@ public static class CommonHelper
         return foundOwner.Address;
     }
 
-    internal static bool IsPlayerCharacter(nint characterAddress)
+    public static bool IsPlayerCharacter(nint characterAddress)
     {
-        var castChar = CharacterHelper.TryGetCharacterFromAddress(characterAddress);
+        var castChar = CharacterHelper.GetCharacterFromAddress(characterAddress);
         if (castChar == null) return false;
         return castChar is IPlayerCharacter;
+    }
+
+    public static unsafe CharacterState GetCharacterState(nint characterAddress)
+    {
+        var castChar = CharacterHelper.GetCharacterFromAddress(characterAddress);
+
+        var characterState = new CharacterState();
+
+        if (castChar == null)
+            return characterState;
+
+        var native = CharacterHelper.GetCharacterAddress(castChar);
+
+        var baseId = castChar.BaseId;
+        var cid = castChar is IPlayerCharacter ? native->ContentId : 0UL;
+
+        characterState = new CharacterState(ExecutedAction.None, CurrentState.Stopped, baseId, cid, 0);
+
+        var trackedCharacter = TryGetTrackedCharacterFromAddress(characterAddress);
+
+        if (trackedCharacter == null)
+            return characterState;
+
+        characterState.EmoteId = trackedCharacter.PlayingEmoteId ?? 0;
+        characterState.CurrentState = characterState.EmoteId != 0 ? CurrentState.PlayingEmote : CurrentState.Stopped;
+
+        return characterState;
+    }
+
+    public static unsafe CharacterState CreateCharacterState(nint characterAddress, ExecutedAction executedAction, CurrentState currentState, uint emoteId)
+    {
+        var castChar = CharacterHelper.GetCharacterFromAddress(characterAddress);
+
+        if (castChar == null)
+            return new CharacterState(executedAction, currentState, 0, 0, emoteId);
+
+        var native = CharacterHelper.GetCharacterAddress(castChar);
+        var cid = castChar is IPlayerCharacter ? native->ContentId : 0UL;
+        return new CharacterState(executedAction, currentState, castChar.BaseId, cid, emoteId);
     }
 }

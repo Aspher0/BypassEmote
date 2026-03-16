@@ -13,15 +13,14 @@ using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Utility;
-using ECommons;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.Shell;
 using NoireLib;
 using NoireLib.Changelog;
-using NoireLib.Enums;
 using NoireLib.Helpers;
+using NoireLib.Helpers.ObjectExtensions;
 using NoireLib.UpdateTracker;
 using System;
 using System.Collections.Generic;
@@ -59,7 +58,6 @@ public sealed class Plugin : IDalamudPlugin
     public unsafe Plugin()
     {
         NoireLibMain.Initialize(PluginInterface, this);
-        ECommonsMain.Init(PluginInterface, this);
 
         Service.InitializeService(this);
 
@@ -103,9 +101,9 @@ public sealed class Plugin : IDalamudPlugin
         // Listen for Condition Changes, to cancel emotes when casting and interacting with objects/NPCs
         NoireService.Condition.ConditionChange += OnConditionChanged;
 
-        Service.Ipc.NotifyReady();
+        IpcProvider.NotifyReady();
 
-        var changelogManager = new NoireChangelogManager("ChangelogModule", true, true, Configuration.Instance.ShowChangelogOnUpdate);
+        var changelogManager = new NoireChangelogManager("ChangelogModule", true, true, Configuration.ShowChangelogOnUpdate);
         NoireLibMain.AddModule(changelogManager)?
             .SetTitleBarButtons(
             [
@@ -135,12 +133,17 @@ public sealed class Plugin : IDalamudPlugin
     // Track condition change and cancel emotes if the player starts casting, mounting, or interacting with an object/NPC
     private void OnConditionChanged(ConditionFlag flag, bool value)
     {
-        if (flag.EqualsAny(
+        if (flag.In(
             ConditionFlag.Casting,
             ConditionFlag.Casting87,
             ConditionFlag.OccupiedInEvent,
             ConditionFlag.OccupiedInQuestEvent,
-            ConditionFlag.Mounted))
+            ConditionFlag.Mounted,
+            ConditionFlag.Crafting,
+            ConditionFlag.ExecutingCraftingAction,
+            ConditionFlag.PreparingToCraft,
+            ConditionFlag.Gathering,
+            ConditionFlag.ExecutingGatheringAction))
         {
             if (value && NoireService.ObjectTable.LocalPlayer != null)
                 EmotePlayer.StopLoop(NoireService.ObjectTable.LocalPlayer, true);
@@ -255,7 +258,7 @@ public sealed class Plugin : IDalamudPlugin
         }
 
         // If minion (Companion) or pet (subkind == 2)
-        if ((target.ObjectKind == ObjectKind.Companion || target.SubKind == 2 || target.SubKind == 3) && !CommonHelper.IsLocalObject(target))
+        if ((target.ObjectKind == ObjectKind.Companion || target.SubKind == 2 || target.SubKind == 3) && !CharacterHelper.IsLocalObject(target))
         {
             NoireLogger.PrintToChat("You can only target your own minion, pet, chocobo.");
             return;
@@ -269,7 +272,7 @@ public sealed class Plugin : IDalamudPlugin
         if (NoireService.ObjectTable.LocalPlayer is not IPlayerCharacter player)
             return;
 
-        var addr = CommonHelper.GetCompanionAddress(player);
+        var addr = CharacterHelper.GetCompanionAddress(player);
         if (addr == 0)
         {
             NoireLogger.PrintToChat("No minion summoned.");
@@ -287,7 +290,7 @@ public sealed class Plugin : IDalamudPlugin
         if (NoireService.ObjectTable.LocalPlayer is not IPlayerCharacter player)
             return;
 
-        var addr = CommonHelper.GetPetAddress(player);
+        var addr = CharacterHelper.GetPetAddress(player);
         if (addr == 0)
         {
             NoireLogger.PrintToChat("No pet summoned.");
@@ -305,7 +308,7 @@ public sealed class Plugin : IDalamudPlugin
         if (NoireService.ObjectTable.LocalPlayer is not IPlayerCharacter player)
             return;
 
-        var addr = CommonHelper.GetBuddyAddress(player);
+        var addr = CharacterHelper.GetBuddyAddress(player);
         if (addr == 0)
         {
             NoireLogger.PrintToChat("No chocobo summoned.");
@@ -356,7 +359,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         ExecuteCommandInnerHook.Original(commandModule, rawMessage, uiModule);
 
-        if (!Configuration.Instance.PluginEnabled)
+        if (!Configuration.PluginEnabled)
             return;
 
         var seMsg = SeString.Parse(CommonHelper.GetUtf8Span(rawMessage));
@@ -405,7 +408,7 @@ public sealed class Plugin : IDalamudPlugin
             if (emote.HasValue)
             {
                 var emoteCategory = EmoteHelper.GetEmoteCategory(emote.Value);
-                if (emoteCategory != EmoteCategory.Expressions)
+                if (emoteCategory != NoireLib.Enums.EmoteCategory.Expressions)
                     EmotePlayer.StopLoop(chara, true);
             }
         }
@@ -416,11 +419,11 @@ public sealed class Plugin : IDalamudPlugin
     // Hooking this function to detect when an emote is played by any character (including the local player)
     // This is necessary if a player is playing a bypassed looping emote and then tries to play
     // a base/obtained game emote. In that case, we need to stop the bypassed looping emote first
-    public unsafe void OnEmoteDetour(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2)
+    public void OnEmoteDetour(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2)
     {
         try
         {
-            var character = CharacterHelper.TryGetCharacterFromAddress((nint)instigatorAddr);
+            var character = CharacterHelper.GetCharacterFromAddress((nint)instigatorAddr);
 
             if (character != null)
             {
@@ -431,7 +434,7 @@ public sealed class Plugin : IDalamudPlugin
 
                 var emote = EmoteHelper.GetEmoteById(emoteId);
 
-                if (!emote.HasValue || EmoteHelper.GetEmoteCategory(emote.Value) != EmoteCategory.Expressions)
+                if (!emote.HasValue || EmoteHelper.GetEmoteCategory(emote.Value) != NoireLib.Enums.EmoteCategory.Expressions)
                     EmotePlayer.StopLoop(character, true);
 
                 if (emote != null)
@@ -470,7 +473,6 @@ public sealed class Plugin : IDalamudPlugin
 
         NoireService.Condition.ConditionChange -= OnConditionChanged;
 
-        ECommonsMain.Dispose();
         NoireLibMain.Dispose();
 
         foreach (var CommandName in commandNames)
