@@ -46,7 +46,7 @@ public class Service
         });
 
 #if DEBUG
-        NetworkRelay = NoireLibMain.AddModule(new NoireNetworkRelay("NetworkRelay", port: 53740, enableReliableTransport: false, exceptionHandling: NoireLib.Enums.ExceptionBehavior.Suppress));
+        NetworkRelay = NoireLibMain.AddModule(new NoireNetworkRelay("NetworkRelay", port: 53740, enableReliableTransport: false));
         IpcProvider.EnsureListeningRelay();
 #endif
     }

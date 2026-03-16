@@ -14,7 +14,7 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NoireLib" Version="1.7.1.1" />
+    <PackageReference Include="NoireLib" Version="1.7.2" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Update="DalamudPackager" Version="14.0.2" />

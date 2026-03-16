@@ -16,9 +16,9 @@
       },
       "NoireLib": {
         "type": "Direct",
-        "requested": "[1.7.1.1, )",
-        "resolved": "1.7.1.1",
-        "contentHash": "tSWD5u0N9zuYNgI9J+mYaXKovKos+p9ROsfGB8stA7aOzKz6hTFXgP2R3kZo+GapWFgg7DebCH92XPo/JaF3CA==",
+        "requested": "[1.7.2, )",
+        "resolved": "1.7.2",
+        "contentHash": "WagnZnrYqfRcsGLBVT1FdtxC5uTiFbQHreJlApS1G9MUEd8VqERiCsTm38K99eQ00SLYfzTIfzpF/Puu9Vijyg==",
         "dependencies": {
           "Castle.Core": "5.2.1",
           "Newtonsoft.Json": "13.0.4",
