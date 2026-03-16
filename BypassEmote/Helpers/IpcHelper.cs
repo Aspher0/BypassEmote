@@ -24,7 +24,7 @@ public static class IpcHelper
         if (cacheData == null)
             return;
 
-        NotifyStateChange(liveData, cacheData, true);
+        NotifyStateChange(liveData, cacheData, true, cacheData == null);
     }
 
     public static void NotifyEmoteStop(ICharacter character)
@@ -36,7 +36,7 @@ public static class IpcHelper
 
         var liveData = BuildLiveIpcData(character, ExecutedAction.StoppedEmote, 0).Serialize();
         var cacheData = BuildCacheableIpcData()?.Serialize();
-        NotifyStateChange(liveData, cacheData, character.Address == local.Address);
+        NotifyStateChange(liveData, cacheData, character.Address == local.Address, true);
     }
 
     public static void NotifyEmoteStart(ICharacter character, Emote emote)
@@ -48,7 +48,7 @@ public static class IpcHelper
 
         var liveData = BuildLiveIpcData(character, ExecutedAction.StartedEmote, emote.RowId).Serialize();
         var cacheData = BuildCacheableIpcData()?.Serialize();
-        NotifyStateChange(liveData, cacheData, character.Address == local.Address);
+        NotifyStateChange(liveData, cacheData, character.Address == local.Address, false);
     }
 
     public static void NotifyLocalStateDisposed(bool isLocalPlayer)
@@ -60,8 +60,7 @@ public static class IpcHelper
     {
         IpcProvider.RaiseStateChangeImmediate(liveData, cacheData, isLocalPlayer);
 
-        if (cacheData == null) // This is a stop event, we send it immediately and then again with a delay
-            IpcProvider.RaiseStateChange(liveData, cacheData, isLocalPlayer);
+        IpcProvider.RaiseStateChange(liveData, cacheData, isLocalPlayer);
 
         if (sendDelayed)
         {

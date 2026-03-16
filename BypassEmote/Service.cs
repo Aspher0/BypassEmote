@@ -4,6 +4,7 @@ using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
 using NoireLib;
 using NoireLib.Helpers;
+using NoireLib.NetworkRelay;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -25,6 +26,10 @@ public class Service
     private static readonly HttpClient Http = new HttpClient() { Timeout = TimeSpan.FromSeconds(10) };
     private static readonly JsonSerializerSettings JsonOptions = new JsonSerializerSettings { };
 
+#if DEBUG
+    public static NoireNetworkRelay NetworkRelay { get; set; }
+#endif
+
     public static void InitializeService(Plugin plugin)
     {
         Plugin = plugin;
@@ -39,6 +44,11 @@ public class Service
             if (NoireService.ClientState.IsLoggedIn && NoireService.ObjectTable.LocalPlayer != null)
                 RefreshLockedEmotes();
         });
+
+#if DEBUG
+        NetworkRelay = NoireLibMain.AddModule(new NoireNetworkRelay("NetworkRelay", port: 53740, enableReliableTransport: false, exceptionHandling: NoireLib.Enums.ExceptionBehavior.Suppress));
+        IpcProvider.EnsureListeningRelay();
+#endif
     }
 
     public static void RefreshLockedEmotes()

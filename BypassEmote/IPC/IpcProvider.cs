@@ -1,5 +1,6 @@
 using BypassEmote.Helpers;
 using BypassEmote.Models;
+using Dalamud.Game.ClientState.Objects.SubKinds;
 using NoireLib;
 using NoireLib.Helpers;
 using NoireLib.IPC;
@@ -34,12 +35,20 @@ public static class IpcProvider
         OnReady?.Invoke();
     }
 
-    internal static void RaiseStateChange(string liveData, string? cacheData, bool isLocalPlayer)
+    internal static unsafe void RaiseStateChange(string liveData, string? cacheData, bool isLocalPlayer)
     {
         if (_disposed)
             return;
 
         OnStateChange?.Invoke(liveData, cacheData, isLocalPlayer);
+
+#if DEBUG
+        if (NoireService.ObjectTable.LocalPlayer != null)
+        {
+            var native = CharacterHelper.GetCharacterAddress(NoireService.ObjectTable.LocalPlayer);
+            Service.NetworkRelay.SendToAllPeers<(ulong, string, string?, bool)>((native->ContentId, liveData, cacheData, isLocalPlayer));
+        }
+#endif
     }
 
     internal static void RaiseStateChangeImmediate(string liveData, string? cacheData, bool isLocalPlayer)
@@ -50,6 +59,26 @@ public static class IpcProvider
         OnStateChangeImmediate?.Invoke(liveData, cacheData, isLocalPlayer);
     }
 
+#if DEBUG
+    public static void EnsureListeningRelay()
+    {
+        if (Service.NetworkRelay == null)
+            return;
+
+        Service.NetworkRelay.On<(ulong, string, string?, bool)>("Listen IPC Events", (data) =>
+        {
+            NoireService.Framework.RunOnFrameworkThread(() =>
+            {
+                NoireLogger.LogDebug($"Received IPC event, should cache: {data.Item3 != null}, data: {data}");
+                var character = CharacterHelper.GetCharacterFromCID(data.Item1);
+                if (character != null)
+                {
+                    SetState(data.Item2, true);
+                }
+            });
+        });
+    }
+#endif
 
 
     /// <summary>
@@ -117,7 +146,7 @@ public static class IpcProvider
             var native = CharacterHelper.GetCharacterAddress(castChar);
 
             characterState.BaseId = castChar.BaseId;
-            characterState.Cid = native->ContentId;
+            characterState.Cid = castChar is IPlayerCharacter ? native->ContentId : 0UL;
         }
 
         NoireService.Framework.RunOnFrameworkThread(() =>
@@ -179,7 +208,7 @@ public static class IpcProvider
     /// An event that fires when the state of the local player changes (i.e.: when bypassing or stopping emotes, or when the configuration changes).<br/>
     /// Contains:<br/>
     /// - The serialized live <see cref="IpcData"/> that should be relayed immediately to clients already in range.<br/>
-    /// - The serialized cacheable <see cref="IpcData"/> snapshot, or null if cached data can be safely removed.<br/>
+    /// - The serialized cacheable <see cref="IpcData"/> snapshot, or null if cached data needs to be safely removed from the cache.<br/>
     /// - A boolean indicating whether the triggering character is the local player itself. A value of false means it is triggered by an owned entity (companion, buddy or pet).<br/><br/>
     /// 
     /// Will trigger when starting and stopping emotes, but also on configuration changes.

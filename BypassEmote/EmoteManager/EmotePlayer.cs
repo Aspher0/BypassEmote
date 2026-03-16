@@ -9,6 +9,7 @@ using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Helpers;
+using NoireLib.Helpers.ObjectExtensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,34 @@ internal static unsafe class EmotePlayer
         if (chara == null)
             return;
 
+        if (emote.RowId.In(85u, 146u, 178u, 267u)) // If throw/dote/splash/all saints charm
+        {
+            // We check if we have a target for these emotes since they require a target, if we don't have a target we return the no-target versions
+            if (chara.TargetObject == null)
+            {
+                Emote? newEmote = null;
+
+                switch (emote.RowId)
+                {
+                    case 85u: // Throw
+                        newEmote = ExcelSheetHelper.GetRow<Emote>(87); // Throw No Target
+                        break;
+                    case 146u: // Dote
+                        newEmote = ExcelSheetHelper.GetRow<Emote>(147); // Dote No Target
+                        break;
+                    case 178u: // Splash
+                        newEmote = ExcelSheetHelper.GetRow<Emote>(179); // Splash No Target
+                        break;
+                    case 267u: // All Saints Charm
+                        newEmote = ExcelSheetHelper.GetRow<Emote>(268); // All Saints Charm No Target
+                        break;
+                }
+
+                if (newEmote.HasValue)
+                    emote = newEmote.Value;
+            }
+        }
+
         // Really necessary? Gposing is fine I guess, but for now i'll keep it like this
         if (NoireService.ClientState.IsGPosing)
             return;
@@ -40,6 +69,8 @@ internal static unsafe class EmotePlayer
                 return;
 
             if (NoireService.Condition.Any(
+                ConditionFlag.Casting,
+                ConditionFlag.Casting87,
                 ConditionFlag.OccupiedInCutSceneEvent,
                 ConditionFlag.WatchingCutscene,
                 ConditionFlag.WatchingCutscene78,

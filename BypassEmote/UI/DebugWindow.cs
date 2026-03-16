@@ -62,8 +62,79 @@ public class DebugWindow : Window, IDisposable
                 if (tab)
                     DrawTrackedCharactersTab();
             }
+
+#if DEBUG
+            using (var tab = ImRaii.TabItem("Network Relay"))
+            {
+                if (tab)
+                    DrawNetworkRelayTab();
+            }
+#endif
         }
     }
+
+#if DEBUG
+    private void SetRelay(string peerId, string displayName, int port)
+    {
+        Service.NetworkRelay.SetPort(port)
+            .RegisterSelf(peerId, displayName, true);
+    }
+
+    private void UnregisterRelaySelf()
+    {
+        Service.NetworkRelay.UnregisterSelf();
+    }
+
+    private void DrawNetworkRelayTab()
+    {
+        if (ImGui.Button("Register self as peer 1"))
+            SetRelay("Peer-1", "Peer 1", 53740);
+
+        ImGui.SameLine();
+
+        if (ImGui.Button("Register self as peer 2"))
+            SetRelay("Peer-2", "Peer 2", 53741);
+
+        ImGui.SameLine();
+
+        if (ImGui.Button("Unregister self"))
+            UnregisterRelaySelf();
+
+
+
+        if (ImGui.Button("Register peer 1"))
+            Service.NetworkRelay.RegisterPeer("Peer-1", "127.0.0.1", 53740, "Peer 1");
+
+        ImGui.SameLine();
+
+        if (ImGui.Button("Register peer 2"))
+            Service.NetworkRelay.RegisterPeer("Peer-2", "127.0.0.1", 53741, "Peer 2");
+
+
+
+        if (ImGui.Button("Unregister peer 1"))
+            Service.NetworkRelay.UnregisterPeer("Peer-1");
+
+        ImGui.SameLine();
+
+        if (ImGui.Button("Unregister peer 2"))
+            Service.NetworkRelay.UnregisterPeer("Peer-2");
+
+        ImGui.Text("Network Peers:");
+        using (var child = ImRaii.Child("##NetworkPeers", new Vector2(-1, 200), true))
+        {
+            if (child)
+            {
+                var peers = Service.NetworkRelay.GetPeers();
+                foreach (var peer in peers)
+                {
+                    ImGui.Text($"{(peer.PeerId == Service.NetworkRelay.InstanceId ? "You - " : "")}{peer.DisplayName} ({peer.PeerId}) Port: {peer.EndPoint}, Last Seen: {peer.LastSeenUtc.ToLocalTime()}");
+                }
+            }
+        }
+    }
+    
+#endif
 
     private void DrawPositionRotationTab()
     {

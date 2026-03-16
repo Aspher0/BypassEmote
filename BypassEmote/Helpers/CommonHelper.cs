@@ -305,7 +305,7 @@ public static class CommonHelper
         var native = CharacterHelper.GetCharacterAddress(castChar);
 
         var baseId = castChar.BaseId;
-        var cid = native->ContentId;
+        var cid = castChar is IPlayerCharacter ? native->ContentId : 0UL;
 
         characterState = new CharacterState(ExecutedAction.None, CurrentState.Stopped, baseId, cid, 0);
 
@@ -328,6 +328,7 @@ public static class CommonHelper
             return new CharacterState(executedAction, currentState, 0, 0, emoteId);
 
         var native = CharacterHelper.GetCharacterAddress(castChar);
-        return new CharacterState(executedAction, currentState, castChar.BaseId, native->ContentId, emoteId);
+        var cid = castChar is IPlayerCharacter ? native->ContentId : 0UL;
+        return new CharacterState(executedAction, currentState, castChar.BaseId, cid, emoteId);
     }
 }

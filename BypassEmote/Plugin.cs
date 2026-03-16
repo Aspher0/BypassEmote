@@ -19,7 +19,6 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.Shell;
 using NoireLib;
 using NoireLib.Changelog;
-using NoireLib.Enums;
 using NoireLib.Helpers;
 using NoireLib.Helpers.ObjectExtensions;
 using NoireLib.UpdateTracker;
@@ -139,7 +138,12 @@ public sealed class Plugin : IDalamudPlugin
             ConditionFlag.Casting87,
             ConditionFlag.OccupiedInEvent,
             ConditionFlag.OccupiedInQuestEvent,
-            ConditionFlag.Mounted))
+            ConditionFlag.Mounted,
+            ConditionFlag.Crafting,
+            ConditionFlag.ExecutingCraftingAction,
+            ConditionFlag.PreparingToCraft,
+            ConditionFlag.Gathering,
+            ConditionFlag.ExecutingGatheringAction))
         {
             if (value && NoireService.ObjectTable.LocalPlayer != null)
                 EmotePlayer.StopLoop(NoireService.ObjectTable.LocalPlayer, true);
@@ -404,7 +408,7 @@ public sealed class Plugin : IDalamudPlugin
             if (emote.HasValue)
             {
                 var emoteCategory = EmoteHelper.GetEmoteCategory(emote.Value);
-                if (emoteCategory != EmoteCategory.Expressions)
+                if (emoteCategory != NoireLib.Enums.EmoteCategory.Expressions)
                     EmotePlayer.StopLoop(chara, true);
             }
         }
@@ -430,7 +434,7 @@ public sealed class Plugin : IDalamudPlugin
 
                 var emote = EmoteHelper.GetEmoteById(emoteId);
 
-                if (!emote.HasValue || EmoteHelper.GetEmoteCategory(emote.Value) != EmoteCategory.Expressions)
+                if (!emote.HasValue || EmoteHelper.GetEmoteCategory(emote.Value) != NoireLib.Enums.EmoteCategory.Expressions)
                     EmotePlayer.StopLoop(character, true);
 
                 if (emote != null)
