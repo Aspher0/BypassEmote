@@ -12,7 +12,7 @@ namespace BypassEmote;
 public static class IpcProvider
 {
     public static int MajorVersion => 4;
-    public static int MinorVersion => 0;
+    public static int MinorVersion => 1;
 
     private static bool _isReady { get; set; } = false;
     private static bool _disposed { get; set; } = false;
@@ -57,6 +57,22 @@ public static class IpcProvider
             return;
 
         OnStateChangeImmediate?.Invoke(liveData, cacheData, isLocalPlayer);
+    }
+
+    internal static void RaiseLocalPlayerStateChange(string liveData, string? cacheData)
+    {
+        if (_disposed)
+            return;
+
+        OnLocalPlayerStateChange?.Invoke(liveData, cacheData);
+    }
+
+    internal static void RaiseLocalPlayerStateChangeImmediate(string liveData, string? cacheData)
+    {
+        if (_disposed)
+            return;
+
+        OnLocalPlayerStateChangeImmediate?.Invoke(liveData, cacheData);
     }
 
 #if DEBUG
@@ -231,4 +247,23 @@ public static class IpcProvider
     /// </remarks>
     [NoireIpc("OnStateChangeImmediateV1")]
     public static event Action<string, string?, bool>? OnStateChangeImmediate;
+
+    /// <summary>
+    /// Same as <see cref="OnStateChange"/>, except the serialized <see cref="IpcData"/> only accounts for the local player.<br/>
+    /// The companion, pet and buddy states are always forced to their default stopped values, and cached data is only kept if the local player has cacheable state.<br/>
+    /// </summary>
+    /// <remarks>
+    /// This follows the same delayed behavior as <see cref="OnStateChange"/>.
+    /// </remarks>
+    [NoireIpc("OnLocalPlayerStateChangeV1")]
+    public static event Action<string, string?>? OnLocalPlayerStateChange;
+
+    /// <summary>
+    /// Same as <see cref="OnLocalPlayerStateChange"/>, except it fires only once and immediately when the state changes.
+    /// </summary>
+    /// <remarks>
+    /// This follows the same immediate behavior as <see cref="OnStateChangeImmediate"/>, while still serializing only the local player's state.
+    /// </remarks>
+    [NoireIpc("OnLocalPlayerStateChangeImmediateV1")]
+    public static event Action<string, string?>? OnLocalPlayerStateChangeImmediate;
 }
