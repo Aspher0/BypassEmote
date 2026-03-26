@@ -30,16 +30,21 @@ public class DebugWindow : Window, IDisposable
     private uint selectedEmoteId = 0;
     private string emoteSearchText = string.Empty;
     private List<Emote>? cachedEmoteList = null;
+
+#if DEBUG
     private readonly string localNetworkIp = GetPreferredLocalNetworkIp();
     private string peer1Host;
     private string peer2Host;
     private int peer1Port = 53740;
     private int peer2Port = 53740;
+#endif
 
     public DebugWindow() : base("Bypass Emote Debug###BypassEmote")
     {
+#if DEBUG
         peer1Host = localNetworkIp;
         peer2Host = localNetworkIp;
+#endif
 
         SizeConstraints = new WindowSizeConstraints
         {
