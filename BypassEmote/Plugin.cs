@@ -7,7 +7,6 @@ using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Hooking;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
@@ -21,6 +20,7 @@ using NoireLib;
 using NoireLib.Changelog;
 using NoireLib.Helpers;
 using NoireLib.Helpers.ObjectExtensions;
+using NoireLib.Hooking;
 using NoireLib.UpdateTracker;
 using System;
 using System.Collections.Generic;
@@ -33,14 +33,8 @@ public sealed class Plugin : IDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
 
-    public delegate void OnEmoteFuncDelegate(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2);
-    private readonly Hook<OnEmoteFuncDelegate> onEmoteHook = null!;
-
-    private Hook<ShellCommandModule.Delegates.ExecuteCommandInner> ExecuteCommandInnerHook { get; init; }
-    private Hook<EmoteManager.Delegates.ExecuteEmote> ExecuteEmoteHook { get; init; }
-
     private readonly List<Tuple<string, string>> commandNames = [
-        new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config." +
+    new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config." +
             "Use with argument <emote_name> to bypass any emote (including unlocked ones) on yourself: /bypassemote <emote_command>."),
         new Tuple<string, string>("/be", "Alias of /bypassemote."),
         new Tuple<string, string>("/bet", "Applies any emote to a targetted NPC. Usage: /bet <emote_command> or /bet stop. Only works on NPCs and owned minions/pets."),
@@ -49,11 +43,16 @@ public sealed class Plugin : IDalamudPlugin
         new Tuple<string, string>("/bec", "Applies any emote to your own chocobo if summoned, without needing to target it. Usage: /bec <emote_command> or /bec stop."),
     ];
 
-    public readonly WindowSystem WindowSystem = new("BypassEmote");
+    public delegate void OnEmoteFuncDelegate(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2);
+    private HookWrapper<OnEmoteFuncDelegate>? OnEmoteHook;
+    private HookWrapper<ShellCommandModule.Delegates.ExecuteCommandInner> ExecuteCommandInnerHook;
+    private HookWrapper<EmoteManager.Delegates.ExecuteEmote> ExecuteEmoteHook;
 
     private EmoteWindow MainWindow { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
     private DebugWindow DebugWindow { get; init; }
+
+    public readonly WindowSystem WindowSystem = new("BypassEmote");
 
     public unsafe Plugin()
     {
@@ -75,23 +74,13 @@ public sealed class Plugin : IDalamudPlugin
         SetupUI();
         SetupCommands();
 
-        ExecuteCommandInnerHook = NoireService.GameInteropProvider.HookFromAddress<ShellCommandModule.Delegates.ExecuteCommandInner>(
-            ShellCommandModule.MemberFunctionPointers.ExecuteCommandInner,
-            DetourExecuteCommand
-        );
-        ExecuteCommandInnerHook.Enable();
-
-        ExecuteEmoteHook = NoireService.GameInteropProvider.HookFromAddress<EmoteManager.Delegates.ExecuteEmote>(
-            EmoteManager.MemberFunctionPointers.ExecuteEmote,
-            DetourExecuteEmote
-        );
-        ExecuteEmoteHook.Enable();
+        ExecuteCommandInnerHook = new(DetourExecuteCommand, true);
+        ExecuteEmoteHook = new(DetourExecuteEmote, true);
 
         try
         {
             // From https://github.com/RokasKil/EmoteLog/blob/master/EmoteLog/Hooks/EmoteReaderHook.cs#L11
-            onEmoteHook = NoireService.GameInteropProvider.HookFromSignature<OnEmoteFuncDelegate>("E8 ?? ?? ?? ?? 48 8D 8B ?? ?? ?? ?? 4C 89 74 24", OnEmoteDetour);
-            onEmoteHook.Enable();
+            OnEmoteHook = new("E8 ?? ?? ?? ?? 48 8D 8B ?? ?? ?? ?? 4C 89 74 24", OnEmoteDetour, true);
         }
         catch (Exception ex)
         {
@@ -413,6 +402,7 @@ public sealed class Plugin : IDalamudPlugin
             }
         }
 
+        // Call the original at the end so that the game executes the new emote after we stop the bypassed looping emote, if any
         return ExecuteEmoteHook.Original(emoteManager, emoteId, playEmoteOption);
     }
 
@@ -443,7 +433,7 @@ public sealed class Plugin : IDalamudPlugin
         }
         finally
         {
-            onEmoteHook.Original(unk, instigatorAddr, emoteId, targetId, unk2);
+            OnEmoteHook?.Original(unk, instigatorAddr, emoteId, targetId, unk2);
         }
     }
 
@@ -462,22 +452,11 @@ public sealed class Plugin : IDalamudPlugin
 
         Service.Dispose();
 
-        ExecuteCommandInnerHook?.Disable();
-        ExecuteCommandInnerHook?.Dispose();
-
-        ExecuteEmoteHook?.Disable();
-        ExecuteEmoteHook?.Dispose();
-
-        onEmoteHook?.Disable();
-        onEmoteHook?.Dispose();
-
         NoireService.Condition.ConditionChange -= OnConditionChanged;
 
-        NoireLibMain.Dispose();
-
         foreach (var CommandName in commandNames)
-        {
             NoireService.CommandManager.RemoveHandler(CommandName.Item1);
-        }
+
+        NoireLibMain.Dispose();
     }
 }
