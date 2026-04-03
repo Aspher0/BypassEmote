@@ -15,7 +15,9 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Component.Shell;
+using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Changelog;
 using NoireLib.Helpers;
@@ -47,6 +49,7 @@ public sealed class Plugin : IDalamudPlugin
     private HookWrapper<OnEmoteFuncDelegate>? OnEmoteHook;
     private HookWrapper<ShellCommandModule.Delegates.ExecuteCommandInner> ExecuteCommandInnerHook;
     private HookWrapper<EmoteManager.Delegates.ExecuteEmote> ExecuteEmoteHook;
+    private HookWrapper<RaptureHotbarModule.Delegates.ExecuteSlot> ExecuteHotbarSlotHook;
 
     private EmoteWindow MainWindow { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
@@ -76,6 +79,7 @@ public sealed class Plugin : IDalamudPlugin
 
         ExecuteCommandInnerHook = new(DetourExecuteCommand, true);
         ExecuteEmoteHook = new(DetourExecuteEmote, true);
+        ExecuteHotbarSlotHook = new(DetourExecuteHotbarSlot, true);
 
         try
         {
@@ -223,6 +227,12 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
+        if (arg == "changelog")
+        {
+            OpenChangelog();
+            return;
+        }
+
 #if DEBUG
         if (arg == "d" || arg == "debug")
         {
@@ -342,6 +352,39 @@ public sealed class Plugin : IDalamudPlugin
         EmotePlayer.PlayEmote(character, emote.Value);
     }
 
+    private void HandleEmote(Emote emote)
+    {
+        var chara = NoireService.ObjectTable.LocalPlayer;
+
+        if (chara == null)
+            return;
+
+        var isEmoteUnlocked = EmoteHelper.IsEmoteUnlocked(emote.RowId);
+
+        if (isEmoteUnlocked)
+            return;
+
+        EmotePlayer.PlayEmote(chara, emote);
+    }
+
+    private unsafe byte DetourExecuteHotbarSlot(RaptureHotbarModule* thisPtr, RaptureHotbarModule.HotbarSlot* hotbarSlot)
+    {
+        var ret = ExecuteHotbarSlotHook.Original(thisPtr, hotbarSlot);
+
+        if (hotbarSlot->CommandType != RaptureHotbarModule.HotbarSlotType.Emote)
+            return ret;
+
+        var emoteId = hotbarSlot->CommandId;
+        var emote = EmoteHelper.GetEmoteById(emoteId);
+
+        if (emote == null)
+            return ret;
+
+        HandleEmote(emote.Value);
+
+        return ret;
+    }
+
     // Detour the execute command function so we can check if the player is trying to execute an emote command
     // If they are, we check if they have the emote unlocked, if not unlocked we try to bypass it, if already unlocked, we let the game handle it
     private unsafe void DetourExecuteCommand(ShellCommandModule* commandModule, Utf8String* rawMessage, UIModule* uiModule)
@@ -366,18 +409,7 @@ public sealed class Plugin : IDalamudPlugin
         if (!foundEmote.HasValue)
             return;
 
-        var chara = NoireService.ObjectTable.LocalPlayer;
-
-        // Just a safety check, should never be null here
-        if (chara == null)
-            return;
-
-        var isEmoteUnlocked = EmoteHelper.IsEmoteUnlocked(foundEmote.Value.RowId);
-
-        if (isEmoteUnlocked)
-            return;
-
-        EmotePlayer.PlayEmote(chara, foundEmote.Value);
+        HandleEmote(foundEmote.Value);
     }
 
     // Detour the execute emote function to stop any currently playing bypassed looping emotes before executing a new base/obtained game emote
