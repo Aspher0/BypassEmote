@@ -36,7 +36,7 @@ public class DebugWindow : Window, IDisposable
     private string peer1Host;
     private string peer2Host;
     private int peer1Port = 53740;
-    private int peer2Port = 53740;
+    private int peer2Port = 53741;
 #endif
 
     public DebugWindow() : base("Bypass Emote Debug###BypassEmote")
@@ -44,6 +44,17 @@ public class DebugWindow : Window, IDisposable
 #if DEBUG
         peer1Host = localNetworkIp;
         peer2Host = localNetworkIp;
+
+        if (Configuration.AutoRegister == 1)
+        {
+            SetRelay("Peer-1", "Peer 1", peer1Port);
+            RegisterRelayPeer("Peer-2", peer2Host, peer2Port, "Peer 2");
+        }
+        else if (Configuration.AutoRegister == 2)
+        {
+            SetRelay("Peer-2", "Peer 2", peer2Port);
+            RegisterRelayPeer("Peer-1", peer1Host, peer1Port, "Peer 1");
+        }
 #endif
 
         SizeConstraints = new WindowSizeConstraints
@@ -152,6 +163,14 @@ public class DebugWindow : Window, IDisposable
 
     private void DrawNetworkRelayTab()
     {
+        var autoRegisterSelf = Configuration.AutoRegister;
+        if (ImGui.InputInt("##AutoRegisterSelf", ref autoRegisterSelf, 1, 1))
+        {
+            if (autoRegisterSelf < 0 || autoRegisterSelf > 2)
+                autoRegisterSelf = 0;
+            Configuration.AutoRegister = autoRegisterSelf;
+        }
+
         if (ImGui.Button("Register self as peer 1"))
             SetRelay("Peer-1", "Peer 1", peer1Port);
 
@@ -165,7 +184,7 @@ public class DebugWindow : Window, IDisposable
         if (ImGui.Button("Unregister self"))
             UnregisterRelaySelf();
 
-        ImGui.TextColoredWrapped(ColorHelper.HexToVector4("#FF0000"), "Only use the below if your game instances are on the same PC and peers don't automatically get detected.\nIf using different PCs, don't touch these and only 'register self'.\nPorts needs to be different if on the same PC and has too be the same port if on different PCs.");
+        ImGui.TextColoredWrapped(ColorHelper.HexToVector4("#FF0000"), "Only use the below if your game instances are on the same PC and peers don't automatically get detected.\nIf using different PCs, don't touch these and only 'register self'.\nPorts needs to be different if on the same PC and has to be the same port if on different PCs.");
 
         ImGui.SetNextItemWidth(100);
         ImGui.InputTextWithHint("##Peer1Host", "Peer 1 LAN IP or hostname", ref peer1Host, 256);

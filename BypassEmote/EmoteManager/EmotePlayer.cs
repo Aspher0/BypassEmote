@@ -193,7 +193,7 @@ internal static unsafe class EmotePlayer
             loop = (ushort)emote.ActionTimeline[specifications.SpecificLoopActionTimelineSlot.Value].RowId;
 
         if (blendIntro && intro != 0)
-            player.ExperimentalBlend(actor, emote, intro, 1);
+            player.ExperimentalBlend(actor, intro, 1);
 
         if (loop != 0)
         {
@@ -227,7 +227,7 @@ internal static unsafe class EmotePlayer
                         ushort upperBody = (ushort)e.ActionTimeline[4].RowId;
                         if (upperBody != 0)
                         {
-                            native->Timeline.TimelineSequencer.PlayTimeline(upperBody);
+                            Service.EmotePlayer.ExperimentalBlend(chara, upperBody, characterState: characterState);
                             return;
                         }
                         break;
@@ -237,7 +237,7 @@ internal static unsafe class EmotePlayer
             return;
         }
 
-        Service.EmotePlayer.ExperimentalBlend(chara, null, timelineId, characterState: characterState);
+        Service.EmotePlayer.ExperimentalBlend(chara, timelineId, characterState: characterState);
     }
 
     public static void Stop(ActionTimelinePlayer player, ICharacter character, bool force = false)
@@ -438,7 +438,7 @@ internal static unsafe class EmotePlayer
                 {
                     //PlayEmote(Service.EmotePlayer, characterToSync.Character, emote.Value); // Causes slight desync on looped emotes with intro
                     ushort loop = (ushort)emote.Value.ActionTimeline[0].RowId;
-                    Service.EmotePlayer.ExperimentalBlend(characterToSync.Character, emote, loop); // Seems to work better for loop anims with an intro, otherwise there will be a slight desync
+                    Service.EmotePlayer.ExperimentalBlend(characterToSync.Character, loop); // Seems to work better for loop anims with an intro, otherwise there will be a slight desync
                     continue;
                 }
             }

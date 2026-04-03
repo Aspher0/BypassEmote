@@ -43,10 +43,10 @@ public sealed class ActionTimelinePlayer : IDisposable
         native->Timeline.BaseOverride = actionTimeline;
 
         if (interrupt)
-            ExperimentalBlend(character, emote, actionTimeline);
+            ExperimentalBlend(character, actionTimeline);
     }
 
-    public unsafe void ExperimentalBlend(ICharacter character, Emote? emote, ushort actionTimeline, int prio = -1, Models.CharacterState? characterState = null)
+    public unsafe void ExperimentalBlend(ICharacter character, ushort actionTimeline, int prio = -1, Models.CharacterState? characterState = null)
     {
         var native = GetNative(character);
 
@@ -93,7 +93,7 @@ public sealed class ActionTimelinePlayer : IDisposable
 
         state.OriginalBase = null;
 
-        ExperimentalBlend(character, null, 3);
+        ExperimentalBlend(character, 3);
     }
 
     public void Stop(ICharacter character, bool force)

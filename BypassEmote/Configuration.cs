@@ -35,4 +35,9 @@ public class ConfigurationInstance : NoireConfigBase
 
     [AutoSave]
     public bool StopOwnedObjectEmoteOnMove { get; set; } = false;
+
+#if DEBUG
+    [AutoSave]
+    public int AutoRegister { get; set; } = 0;
+#endif
 }
