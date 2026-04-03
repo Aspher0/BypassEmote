@@ -236,10 +236,24 @@ public static class CommonHelper
         return foundCharacter != null;
     }
 
+    public static IGameObject? GetTarget()
+    {
+        if (NoireService.ObjectTable.LocalPlayer is not ICharacter)
+            return null;
+
+        if (NoireService.TargetManager.SoftTarget is IGameObject softTargetObject)
+            return softTargetObject;
+
+        if (NoireService.TargetManager.Target is IGameObject targetObject)
+            return targetObject;
+
+        return null;
+    }
+
     public unsafe static void FaceTarget()
     {
         if (NoireService.ObjectTable.LocalPlayer is not ICharacter localCharacter ||
-            NoireService.TargetManager.Target is not IGameObject targetObject)
+            GetTarget() is not IGameObject targetObject)
             return;
 
         if (localCharacter.Address == targetObject.Address)
