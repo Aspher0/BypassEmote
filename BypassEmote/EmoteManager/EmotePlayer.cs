@@ -32,7 +32,7 @@ internal static unsafe class EmotePlayer
         if (emote.RowId.In(85u, 146u, 178u, 267u)) // If throw/dote/splash/all saints charm
         {
             // We check if we have a target for these emotes since they require a target, if we don't have a target we return the no-target versions
-            if (chara.TargetObject == null)
+            if ((characterState == null && chara.TargetObject == null) || (characterState != null && characterState.TargetObject == null))
             {
                 Emote? newEmote = null;
 
