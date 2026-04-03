@@ -249,7 +249,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private void HandleTargetCommand(string? arg)
     {
-        if (CommonHelper.GetTarget() is not ICharacter target ||
+        if (CommonHelper.GetLocalTarget() is not ICharacter target ||
             target is not INpc && target is not IBattleNpc)
         {
             NoireLogger.PrintToChat("No NPC targeted.");

@@ -1,4 +1,5 @@
 using BypassEmote.Helpers;
+using Dalamud.Game.ClientState.Objects.Types;
 using Newtonsoft.Json;
 using NoireLib.Helpers;
 using System;
@@ -12,11 +13,14 @@ public class CharacterState
     public CurrentState CurrentState { get; set; }
     public uint BaseId { get; set; }
     public ulong Cid { get; set; }
+    public uint TargetBaseId { get; set; } // Currently used for one shot emotes
+    public ushort TargetObjectIndex { get; set; } // Currently used for one shot emotes
+    public ulong TargetCid { get; set; } // Currently used for one shot emotes
     public uint EmoteId { get; set; }
 
 
     [JsonIgnore]
-    public nint CharacterAddress => CommonHelper.GetCharacterFromBaseIdOrCid(BaseId, Cid)?.Address ?? nint.Zero;
+    public nint CharacterAddress => CommonHelper.GetObjectFromBaseIdOrCid(BaseId, Cid)?.Address ?? nint.Zero;
 
     [JsonIgnore]
     public bool IsPlayerCharacter => CommonHelper.IsPlayerCharacter(CharacterAddress);
@@ -51,6 +55,12 @@ public class CharacterState
     [JsonIgnore]
     public bool IsCacheable => CurrentState == CurrentState.PlayingEmote && EmoteId != 0 && IsLooping;
 
+    [JsonIgnore]
+    public IGameObject? TargetObject
+        => CommonHelper.GetObjectFromBaseIdAndObjectIndexOrCid(TargetBaseId == 0 ? null : TargetBaseId,
+            TargetObjectIndex == 0 ? null : TargetObjectIndex,
+            TargetCid == 0 ? null : TargetCid);
+
     public bool IsLoopedEmote()
     {
         var emote = EmoteHelper.GetEmoteById(EmoteId);
@@ -64,18 +74,18 @@ public class CharacterState
 
     public CharacterState Clone()
     {
-        return new CharacterState(ExecutedAction, CurrentState, BaseId, Cid, EmoteId);
+        return new CharacterState(ExecutedAction, CurrentState, BaseId, Cid, EmoteId, TargetBaseId, TargetObjectIndex, TargetCid);
     }
 
     public CharacterState ToStoppedState(ExecutedAction executedAction = ExecutedAction.None)
     {
-        return new CharacterState(executedAction, CurrentState.Stopped, BaseId, Cid, 0);
+        return new CharacterState(executedAction, CurrentState.Stopped, BaseId, Cid, 0, 0, 0, 0);
     }
 
     public CharacterState ToCacheableState()
     {
         return IsCacheable
-            ? new CharacterState(ExecutedAction.None, CurrentState.PlayingEmote, BaseId, Cid, EmoteId)
+            ? new CharacterState(ExecutedAction.None, CurrentState.PlayingEmote, BaseId, Cid, EmoteId, 0, 0, 0)
             : ToStoppedState();
     }
 
@@ -168,13 +178,16 @@ public class CharacterState
     }
 
     [JsonConstructor]
-    public CharacterState(ExecutedAction executedAction, CurrentState currentState, uint baseId, ulong cid, uint emoteId)
+    public CharacterState(ExecutedAction executedAction, CurrentState currentState, uint baseId, ulong cid, uint emoteId, uint targetBaseId, ushort targetObjectIndex, ulong targetCid)
     {
         ExecutedAction = executedAction;
         CurrentState = currentState;
         BaseId = baseId;
         Cid = cid;
         EmoteId = emoteId;
+        TargetBaseId = targetBaseId;
+        TargetObjectIndex = targetObjectIndex;
+        TargetCid = targetCid;
     }
 
     public CharacterState(string json)
@@ -189,6 +202,9 @@ public class CharacterState
         BaseId = data.BaseId;
         Cid = data.Cid;
         EmoteId = data.EmoteId;
+        TargetBaseId = data.TargetBaseId;
+        TargetObjectIndex = data.TargetObjectIndex;
+        TargetCid = data.TargetCid;
     }
 
     public CharacterState()
@@ -198,6 +214,9 @@ public class CharacterState
         BaseId = 0;
         Cid = 0;
         EmoteId = 0;
+        TargetBaseId = 0;
+        TargetObjectIndex = 0;
+        TargetCid = 0;
     }
 
     public string Serialize()

@@ -387,7 +387,7 @@ public class DebugWindow : Window, IDisposable
         ImGui.SameLine();
 
         var localPlayer = NoireService.ObjectTable.LocalPlayer;
-        var target = CommonHelper.GetTarget();
+        var target = CommonHelper.GetLocalTarget();
         var executedAction = selectedEmoteId == 0 ? ExecutedAction.StoppedEmote : ExecutedAction.StartedEmote;
         var currentState = CurrentState.Stopped;
 
@@ -458,7 +458,7 @@ public class DebugWindow : Window, IDisposable
         {
             if (child)
             {
-                if (CommonHelper.GetTarget() is ICharacter targettedChar)
+                if (CommonHelper.GetLocalTarget() is ICharacter targettedChar)
                 {
                     var ipcData = IpcProvider.GetStateForCharacter(targettedChar.Address);
 

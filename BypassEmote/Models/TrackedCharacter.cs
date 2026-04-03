@@ -60,7 +60,14 @@ public class TrackedCharacter
         if (CID != null)
             character = CharacterHelper.GetCharacterFromCID(CID.Value);
         else if (BaseId != null && ObjectIndex != null)
-            character = Helpers.CommonHelper.TryGetCharacterFromBaseIdAndObjectIndex(BaseId.Value, ObjectIndex.Value);
+        {
+            var gameObject = Helpers.CommonHelper.GetObjectFromBaseIdAndObjectIndex(BaseId.Value, ObjectIndex.Value);
+
+            if (gameObject is ICharacter chara)
+                character = chara;
+            else
+                return;
+        }
         else
             return;
 

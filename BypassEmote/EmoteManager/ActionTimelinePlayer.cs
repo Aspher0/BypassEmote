@@ -1,8 +1,10 @@
 using BypassEmote.Helpers;
+using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Memory;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using Lumina.Excel.Sheets;
+using NoireLib;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -44,9 +46,17 @@ public sealed class ActionTimelinePlayer : IDisposable
             ExperimentalBlend(character, emote, actionTimeline);
     }
 
-    public unsafe void ExperimentalBlend(ICharacter character, Emote? emote, ushort actionTimeline, int prio = -1)
+    public unsafe void ExperimentalBlend(ICharacter character, Emote? emote, ushort actionTimeline, int prio = -1, Models.CharacterState? characterState = null)
     {
         var native = GetNative(character);
+
+        ulong charTargetId = 0xE0000000;
+
+        if (characterState != null)
+            charTargetId = characterState.TargetObject?.GameObjectId ?? 0xE0000000;
+        else
+            charTargetId = CommonHelper.GetPlayerTarget(character);
+
         var animParams = (ActionTimelineAnimParams*)MemoryHelper.Allocate(0x60);
         Unsafe.InitBlockUnaligned(animParams, 0, 0x60);
         animParams->Unk0 = 0.0f;
@@ -58,7 +68,7 @@ public sealed class ActionTimelinePlayer : IDisposable
         animParams->StartTS = 0.0f;
         animParams->Unk1C = -1.0f;
         animParams->Unk20 = 0;
-        animParams->TargetObjId = character.TargetObjectId;
+        animParams->TargetObjId = charTargetId;
         animParams->Unk30 = 0;
         animParams->Priority = (uint)prio;
         animParams->Unk38 = -1;

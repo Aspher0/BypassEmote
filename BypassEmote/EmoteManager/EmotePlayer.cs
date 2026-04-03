@@ -24,7 +24,7 @@ internal static unsafe class EmotePlayer
     // List of characters using a looped emote
     public static List<TrackedCharacter> TrackedCharacters = new List<TrackedCharacter>();
 
-    public static void PlayEmote(ICharacter? chara, Emote emote, IpcData? receivedIpcData = null)
+    public static void PlayEmote(ICharacter? chara, Emote emote, CharacterState? characterState = null, IpcData? receivedIpcData = null)
     {
         if (chara == null)
             return;
@@ -155,7 +155,7 @@ internal static unsafe class EmotePlayer
                     if (emoteCategory != NoireLib.Enums.EmoteCategory.Expressions)
                         StopLoop(chara, true); // I know this is redundant but this will ensure any looping emote will be completely stopped and removed from tracked list
 
-                    PlayOneShotEmote(chara, timelineId);
+                    PlayOneShotEmote(chara, timelineId, characterState);
                     break;
                 }
         }
@@ -177,48 +177,8 @@ internal static unsafe class EmotePlayer
         if (emote == null)
             return;
 
-        PlayEmote(chara, emote.Value, receivedIpcData);
+        PlayEmote(chara, emote.Value, characterState, receivedIpcData);
     }
-
-    //    public static void ProcessCharacterState(ICharacter chara, CharacterState characterState)
-    //    {
-    //        if (chara == null)
-    //            return;
-
-    //#if DEBUG
-    //                if (ipcData.ActionType == ActionType.Unknown)
-    //                    NoireLogger.LogWarning("Received IPC Data with Unknown ActionType.");
-    //#endif
-
-    //        if (characterState.CurrentState == CurrentState.ConfigUpdate)
-    //        {
-    //            // Update every object owned by the player
-    //            var trackedCharacters = TrackedCharacters.Where(tc =>
-    //            {
-    //                return tc.ReceivedIpcData?.IsCharacterOrBelongsToIt(characterState.CharacterAddress) ?? false;
-    //            });
-
-    //            foreach (var trackedCharacter in trackedCharacters)
-    //            {
-    //                trackedCharacter.ReceivedIpcData?.UpdateConfig(characterState);
-    //            }
-    //            return;
-    //        }
-
-    //        if (characterState.CurrentState == CurrentState.Stopped)
-    //        {
-    //            StopLoop(chara, true);
-    //            return;
-    //        }
-
-    //        var emoteId = characterState.EmoteId;
-    //        var emote = EmoteHelper.GetEmoteById(emoteId);
-
-    //        if (emote == null)
-    //            return;
-
-    //        PlayEmote(chara, emote.Value, characterState);
-    //    }
 
     public static void PlayEmote(ActionTimelinePlayer player, ICharacter actor, Emote emote, bool blendIntro = true)
     {
@@ -242,7 +202,7 @@ internal static unsafe class EmotePlayer
         }
     }
 
-    public static void PlayOneShotEmote(ICharacter? chara, ushort timelineId)
+    public static void PlayOneShotEmote(ICharacter? chara, ushort timelineId, CharacterState? characterState = null)
     {
         if (chara == null) return;
 
@@ -277,7 +237,7 @@ internal static unsafe class EmotePlayer
             return;
         }
 
-        Service.EmotePlayer.ExperimentalBlend(chara, null, timelineId);
+        Service.EmotePlayer.ExperimentalBlend(chara, null, timelineId, characterState: characterState);
     }
 
     public static void Stop(ActionTimelinePlayer player, ICharacter character, bool force = false)
@@ -326,7 +286,7 @@ internal static unsafe class EmotePlayer
 
         foreach (var trackedCharacter in TrackedCharacters)
         {
-            var character = CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
+            var character = CommonHelper.GetCharacterFromTrackedCharacter(trackedCharacter);
 
             if (character == null || !CharacterHelper.IsCharacterInObjectTable(character))
             {
@@ -460,7 +420,7 @@ internal static unsafe class EmotePlayer
         {
             foreach (var trackedCharacter in TrackedCharacters)
             {
-                var character = CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
+                var character = CommonHelper.GetCharacterFromTrackedCharacter(trackedCharacter);
                 if (character == null) continue;
                 charactersToSync.Add((character, true, trackedCharacter));
             }
@@ -513,7 +473,7 @@ internal static unsafe class EmotePlayer
 
         foreach (var trackedCharacter in trackedCharacters)
         {
-            var character = CommonHelper.TryGetCharacterFromTrackedCharacter(trackedCharacter);
+            var character = CommonHelper.GetCharacterFromTrackedCharacter(trackedCharacter);
 
             if (character != null)
             {

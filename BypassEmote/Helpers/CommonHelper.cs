@@ -6,6 +6,7 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Utility;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
@@ -19,29 +20,34 @@ namespace BypassEmote.Helpers;
 
 public static class CommonHelper
 {
-    public static ICharacter? TryGetCharacterFromTrackedCharacter(TrackedCharacter? trackedCharacter)
+    public static ICharacter? GetCharacterFromTrackedCharacter(TrackedCharacter? trackedCharacter)
     {
         if (trackedCharacter == null) return null;
 
-        return GetCharacterFromBaseIdAndObjectIndexOrCid(trackedCharacter.BaseId, trackedCharacter.ObjectIndex, trackedCharacter.CID);
+        var gameObject = GetObjectFromBaseIdAndObjectIndexOrCid(trackedCharacter.BaseId, trackedCharacter.ObjectIndex, trackedCharacter.CID);
+
+        if (gameObject is ICharacter character)
+            return character;
+        else
+            return null;
     }
 
-    public static ICharacter? GetCharacterFromBaseIdAndObjectIndexOrCid(uint? baseId, ushort? objectIndex, ulong? cid)
+    public static IGameObject? GetObjectFromBaseIdAndObjectIndexOrCid(uint? baseId, ushort? objectIndex, ulong? cid)
     {
         if (cid != null)
             return CharacterHelper.GetCharacterFromCID(cid.Value);
         else if (baseId != null && objectIndex != null)
-            return TryGetCharacterFromBaseIdAndObjectIndex(baseId.Value, objectIndex.Value);
+            return GetObjectFromBaseIdAndObjectIndex(baseId.Value, objectIndex.Value);
 
         return null;
     }
 
-    public static ICharacter? GetCharacterFromBaseIdOrCid(uint baseId, ulong cid)
+    public static IGameObject? GetObjectFromBaseIdOrCid(uint baseId, ulong cid)
     {
         if (cid != 0)
             return CharacterHelper.GetCharacterFromCID(cid);
         else if (baseId != 0)
-            return TryGetCharacterFromBaseId(baseId);
+            return GetObjectFromBaseId(baseId);
 
         return null;
     }
@@ -116,18 +122,14 @@ public static class CommonHelper
         return EmotePlayer.TrackedCharacters.Any(tc => tc.IsLocalObject);
     }
 
-    public static ICharacter? TryGetCharacterFromBaseIdAndObjectIndex(uint baseId, ushort objectIndex)
+    public static IGameObject? GetObjectFromBaseIdAndObjectIndex(uint baseId, ushort objectIndex)
     {
-        return (from o in NoireService.ObjectTable
-                where o is ICharacter
-                select o as ICharacter).FirstOrDefault(p => p != null && p.BaseId == baseId && p.ObjectIndex == objectIndex);
+        return NoireService.ObjectTable.FirstOrDefault(p => p != null && p.BaseId == baseId && p.ObjectIndex == objectIndex);
     }
 
-    public static ICharacter? TryGetCharacterFromBaseId(uint baseId)
+    public static IGameObject? GetObjectFromBaseId(uint baseId)
     {
-        return (from o in NoireService.ObjectTable
-                where o is ICharacter
-                select o as ICharacter).FirstOrDefault(p => p != null && p.BaseId == baseId);
+        return NoireService.ObjectTable.FirstOrDefault(p => p != null && p.BaseId == baseId);
     }
 
     public static void RemoveCharacterFromTrackedListByUniqueID(string uniqueId)
@@ -236,7 +238,7 @@ public static class CommonHelper
         return foundCharacter != null;
     }
 
-    public static IGameObject? GetTarget()
+    public static IGameObject? GetLocalTarget()
     {
         if (NoireService.ObjectTable.LocalPlayer is not ICharacter)
             return null;
@@ -250,10 +252,38 @@ public static class CommonHelper
         return null;
     }
 
+    public static unsafe ulong GetPlayerTarget(ICharacter chara)
+    {
+        ulong noTargetId = 0xE0000000;
+
+        if (chara == null)
+            return noTargetId;
+
+        var native = CharacterHelper.GetCharacterAddress(chara);
+
+        var finalTargetId = noTargetId;
+        var softTargetId = native->GetSoftTargetId().Id;
+        var targetId = native->GetTargetId().Id;
+
+        if (softTargetId != finalTargetId)
+            finalTargetId = softTargetId;
+        else if (targetId != finalTargetId)
+            finalTargetId = targetId;
+
+        return finalTargetId;
+    }
+
+    public static IGameObject? GetObjectFromObjectId(ulong gameObjectId)
+    {
+        if (gameObjectId == 0xE0000000)
+            return null;
+        return NoireService.ObjectTable.FirstOrDefault(o => o != null && o.GameObjectId == gameObjectId);
+    }
+
     public unsafe static void FaceTarget()
     {
         if (NoireService.ObjectTable.LocalPlayer is not ICharacter localCharacter ||
-            GetTarget() is not IGameObject targetObject)
+            GetLocalTarget() is not IGameObject targetObject)
             return;
 
         if (localCharacter.Address == targetObject.Address)
@@ -321,7 +351,7 @@ public static class CommonHelper
         var baseId = castChar.BaseId;
         var cid = castChar is IPlayerCharacter ? native->ContentId : 0UL;
 
-        characterState = new CharacterState(ExecutedAction.None, CurrentState.Stopped, baseId, cid, 0);
+        characterState = new CharacterState(ExecutedAction.None, CurrentState.Stopped, baseId, cid, 0, 0, 0, 0);
 
         var trackedCharacter = TryGetTrackedCharacterFromAddress(characterAddress);
 
@@ -339,10 +369,20 @@ public static class CommonHelper
         var castChar = CharacterHelper.GetCharacterFromAddress(characterAddress);
 
         if (castChar == null)
-            return new CharacterState(executedAction, currentState, 0, 0, emoteId);
+            return new CharacterState(executedAction, currentState, 0, 0, emoteId, 0, 0, 0);
 
         var native = CharacterHelper.GetCharacterAddress(castChar);
+
+        var charTargetId = GetPlayerTarget(castChar);
+        var targetObject = GetObjectFromObjectId(charTargetId);
+        var targetCid = 0UL;
+        if (targetObject is IPlayerCharacter)
+        {
+            var targetNative = CharacterHelper.GetCharacterAddress((IPlayerCharacter)targetObject);
+            targetCid = targetNative->ContentId;
+        }
+
         var cid = castChar is IPlayerCharacter ? native->ContentId : 0UL;
-        return new CharacterState(executedAction, currentState, castChar.BaseId, cid, emoteId);
+        return new CharacterState(executedAction, currentState, castChar.BaseId, cid, emoteId, targetObject?.BaseId ?? 0, targetObject?.ObjectIndex ?? 0, targetCid);
     }
 }
