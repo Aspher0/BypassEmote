@@ -394,6 +394,12 @@ public static class CommonHelper
         Framework.Instance()->GetUIModule()->GetRaptureHotbarModule()->SetAndSaveSlot((uint)hotbar, (uint)slot, HotbarSlotType.Emote, emoteId, false, false);
     }
 
+    public static unsafe HotbarSlot* GetHotbarSlot(int hotbar, int slot)
+    {
+        if (hotbar is < 0 or > 17 || (hotbar < 10 ? slot is < 0 or > 11 : slot is < 0 or > 15)) return null;
+        return Framework.Instance()->GetUIModule()->GetRaptureHotbarModule()->GetSlotById((uint)hotbar, (uint)slot);
+    }
+
     public static bool IsEmoteAssignableToHotbar(Emote emote)
     {
         var category = EmoteHelper.GetEmoteCategory(emote);

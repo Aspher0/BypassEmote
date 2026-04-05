@@ -6,6 +6,7 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Helpers;
@@ -394,6 +395,17 @@ public class EmoteWindow : Window, IDisposable
                     ImGui.Combo("Slot", ref assignModalHotbarSlot, "1\02\03\04\05\06\07\08\09\010\011\012\013\014\015\016");
 
                     ImGui.Separator();
+
+                    unsafe
+                    {
+                        var slot = CommonHelper.GetHotbarSlot(assignModalHotbar, assignModalHotbarSlot);
+                        if (slot != null && !slot->IsEmpty)
+                            ImGui.TextColoredWrapped(ColorHelper.HexToVector4("#ff0000"), $"Currently assigned: {slot->PopUpHelp}");
+                        else
+                            ImGui.Text("This slot is empty. You can safely assign an emote.");
+
+                        ImGui.Separator();
+                    }
 
                     if (ImGui.Button("Assign"))
                     {

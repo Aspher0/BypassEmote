@@ -9,7 +9,7 @@ public class V1_7_x_x : BaseChangelogVersion
     public override List<ChangelogVersion> GetVersions() => new()
     {
         CreateV1_7_2_0(),
-        CreateV1_7_3_0(),
+        CreateV1_7_3_1(),
     };
 
     private static ChangelogVersion CreateV1_7_2_0()
@@ -35,10 +35,10 @@ public class V1_7_x_x : BaseChangelogVersion
             }
         };
 
-    private static ChangelogVersion CreateV1_7_3_0()
+    private static ChangelogVersion CreateV1_7_3_1()
         => new ChangelogVersion
         {
-            Version = new(1, 7, 3, 0),
+            Version = new(1, 7, 3, 1),
             Date = "05-04-2026",
             Title = "Hotbar integration enhancement",
             TitleColor = Blue,
@@ -46,7 +46,7 @@ public class V1_7_x_x : BaseChangelogVersion
             Entries = new List<ChangelogEntry>
             {
                 Header("New Features", Orange, 0, FontAwesomeIcon.Book),
-                EntryBullet("Added the possibility to assign emotes to hotbar slots.", Orange, 1),
+                EntryBullet("Added the possibility to assign emotes to hotbar slots.\nSimply go to the main UI and right click an emote. If the emote is assignable, an option will appear.", Orange, 1),
                 EntryBullet("Added a new config option for enabling/disabling bypassing emotes on emote hotbar slot click.", White, 1),
             }
         };
