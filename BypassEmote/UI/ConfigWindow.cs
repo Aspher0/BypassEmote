@@ -1,6 +1,7 @@
 using BypassEmote.Helpers;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Windowing;
 using NoireLib;
 using NoireLib.Changelog;
@@ -16,7 +17,7 @@ public class ConfigWindow : Window, IDisposable
     {
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(350, 170),
+            MinimumSize = new Vector2(350, 200),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
@@ -35,9 +36,32 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.Checkbox("Enable Bypassing Emote Commands", ref pluginEnabled))
             Configuration.PluginEnabled = pluginEnabled;
 
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker("This only affects vanilla emote commands such as /beesknees, /tea, etc.\nYou will still be able to use the main UI or the /be command to bypass emotes.");
+
+        var bypassOnHotbarSlotTriggered = Configuration.BypassOnHotbarSlotTriggered;
+        if (ImGui.Checkbox("Enable Bypassing Emotes on Locked Hotbar Slot", ref bypassOnHotbarSlotTriggered))
+        {
+            Configuration.BypassOnHotbarSlotTriggered = bypassOnHotbarSlotTriggered;
+            Service.ExecuteHotbarSlotHook.SetEnabled(bypassOnHotbarSlotTriggered);
+        }
+
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker("This will allow you to bypass locked emotes when pressing a locked emote hotbar slots.\nYou will be able to assign emotes to hotbar slots in the main UI by right clicking an emote.");
+
         var autoFaceTarget = Configuration.AutoFaceTarget;
         if (ImGui.Checkbox("Automatically Face Target On Emote", ref autoFaceTarget))
             Configuration.AutoFaceTarget = autoFaceTarget;
+
+        var stopCompanionEmoteOnCompanionMove = Configuration.StopOwnedObjectEmoteOnMove;
+        if (ImGui.Checkbox("Stop Companion/Pet/Chocobo Emote on Move", ref stopCompanionEmoteOnCompanionMove))
+        {
+            Configuration.StopOwnedObjectEmoteOnMove = stopCompanionEmoteOnCompanionMove;
+            IpcHelper.NotifyConfigChanged();
+        }
+
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker("Will stop your pet/companion/chocobo looped emote when they move.");
 
         var showUpdateNotification = Configuration.ShowUpdateNotification;
         if (ImGui.Checkbox("Show Update Notifications", ref showUpdateNotification))
@@ -54,13 +78,6 @@ public class ConfigWindow : Window, IDisposable
             Configuration.ShowChangelogOnUpdate = showChangelogOnUpdate;
             var changelogManager = NoireLibMain.GetModule<NoireChangelogManager>();
             changelogManager?.SetAutomaticallyShowChangelog(Configuration.ShowChangelogOnUpdate);
-        }
-
-        var stopCompanionEmoteOnCompanionMove = Configuration.StopOwnedObjectEmoteOnMove;
-        if (ImGui.Checkbox("Stop Companion/Pet Emote on Move", ref stopCompanionEmoteOnCompanionMove))
-        {
-            Configuration.StopOwnedObjectEmoteOnMove = stopCompanionEmoteOnCompanionMove;
-            IpcHelper.NotifyConfigChanged();
         }
     }
 

@@ -36,6 +36,9 @@ public class ConfigurationInstance : NoireConfigBase
     [AutoSave]
     public bool StopOwnedObjectEmoteOnMove { get; set; } = false;
 
+    [AutoSave]
+    public bool BypassOnHotbarSlotTriggered { get; set; } = true;
+
 #if DEBUG
     [AutoSave]
     public int AutoRegister { get; set; } = 0;

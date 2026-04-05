@@ -9,6 +9,7 @@ public class V1_7_x_x : BaseChangelogVersion
     public override List<ChangelogVersion> GetVersions() => new()
     {
         CreateV1_7_2_0(),
+        CreateV1_7_3_0(),
     };
 
     private static ChangelogVersion CreateV1_7_2_0()
@@ -31,6 +32,22 @@ public class V1_7_x_x : BaseChangelogVersion
                 Header("Technical Changes", Blue, 0, FontAwesomeIcon.Wrench),
                 EntryBullet("Reworked the IPC Data being sent to consumers.", White, 1),
                 EntryBullet("Various technical enhancements.", White, 1),
+            }
+        };
+
+    private static ChangelogVersion CreateV1_7_3_0()
+        => new ChangelogVersion
+        {
+            Version = new(1, 7, 3, 0),
+            Date = "05-04-2026",
+            Title = "Hotbar integration enhancement",
+            TitleColor = Blue,
+            Description = "Allows to add emotes to hotbars.",
+            Entries = new List<ChangelogEntry>
+            {
+                Header("New Features", Orange, 0, FontAwesomeIcon.Book),
+                EntryBullet("Added the possibility to assign emotes to hotbar slots.", Orange, 1),
+                EntryBullet("Added a new config option for enabling/disabling bypassing emotes on emote hotbar slot click.", White, 1),
             }
         };
 }

@@ -9,10 +9,6 @@ namespace BypassEmote;
 
 public class TrackedCharacter
 {
-    // TODO : Change this class to handle:
-    // 1) EmotePlayer Characters + Owned Objects (Companions, Pets, Buddies, etc.) where owned objects and the player are contained in a single data structure just like IpcData
-    // 2) NPCs (Mannequins, etc.) where each NPC is its own TrackedCharacter
-
     public string UniqueId = Guid.NewGuid().ToString();
     public bool IsLocalObject;
     public ulong? CID;
@@ -24,7 +20,6 @@ public class TrackedCharacter
     public uint? PlayingEmoteId = null;
     public IpcData? ReceivedIpcData = null; // Received from IPC *only* (AKA: Another player)
     public bool ScheduledForRemoval = false;
-
 
     public TrackedCharacter(
         bool isLocalObject,

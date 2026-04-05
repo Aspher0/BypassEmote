@@ -12,6 +12,7 @@ public class EmoteSpecification
     public int? SpecificOneShotActionTimelineSlot { get; }
     public int? SpecificLoopActionTimelineSlot { get; }
     public byte Cpose { get; } = 0;
+    public bool IsAssignableToHotbar { get; } = true;
 
     public EmoteSpecification(
         uint id,
@@ -20,7 +21,8 @@ public class EmoteSpecification
         uint? icon = null,
         int? specificOneShotActionTimelineSlot = null,
         int? specificLoopActionTimelineSlot = null,
-        byte cpose = 0)
+        byte cpose = 0,
+        bool isAssignableToHotbar = true)
     {
         SingleId = id;
         PlayType = playType;
@@ -29,6 +31,7 @@ public class EmoteSpecification
         SpecificOneShotActionTimelineSlot = specificOneShotActionTimelineSlot;
         SpecificLoopActionTimelineSlot = specificLoopActionTimelineSlot;
         Cpose = cpose;
+        IsAssignableToHotbar = isAssignableToHotbar;
     }
 
     public EmoteSpecification(
@@ -39,7 +42,8 @@ public class EmoteSpecification
         uint? icon = null,
         int? specificOneShotActionTimelineSlot = null,
         int? specificLoopActionTimelineSlot = null,
-        byte cpose = 0)
+        byte cpose = 0,
+        bool isAssignableToHotbar = true)
     {
         RangeStart = startId;
         RangeEnd = endId;
@@ -49,6 +53,7 @@ public class EmoteSpecification
         SpecificOneShotActionTimelineSlot = specificOneShotActionTimelineSlot;
         SpecificLoopActionTimelineSlot = specificLoopActionTimelineSlot;
         Cpose = cpose;
+        IsAssignableToHotbar = isAssignableToHotbar;
     }
 
     public bool Matches(uint rowId)

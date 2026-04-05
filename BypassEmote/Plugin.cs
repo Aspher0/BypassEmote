@@ -6,28 +6,19 @@ using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Command;
-using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Utility;
-using FFXIVClientStructs.FFXIV.Client.Game.Control;
-using FFXIVClientStructs.FFXIV.Client.System.String;
-using FFXIVClientStructs.FFXIV.Client.UI;
-using FFXIVClientStructs.FFXIV.Client.UI.Misc;
-using FFXIVClientStructs.FFXIV.Component.Shell;
-using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Changelog;
 using NoireLib.Helpers;
 using NoireLib.Helpers.ObjectExtensions;
-using NoireLib.Hooking;
 using NoireLib.UpdateTracker;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static FFXIVClientStructs.FFXIV.Client.Game.Control.EmoteController;
 
 namespace BypassEmote;
 
@@ -44,12 +35,6 @@ public sealed class Plugin : IDalamudPlugin
         new Tuple<string, string>("/bep", "Applies any emote to your own pet (carbuncle/eos) if summoned, without needing to target it. Usage: /bep <emote_command> or /bep stop."),
         new Tuple<string, string>("/bec", "Applies any emote to your own chocobo if summoned, without needing to target it. Usage: /bec <emote_command> or /bec stop."),
     ];
-
-    public delegate void OnEmoteFuncDelegate(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2);
-    private HookWrapper<OnEmoteFuncDelegate>? OnEmoteHook;
-    private HookWrapper<ShellCommandModule.Delegates.ExecuteCommandInner> ExecuteCommandInnerHook;
-    private HookWrapper<EmoteManager.Delegates.ExecuteEmote> ExecuteEmoteHook;
-    private HookWrapper<RaptureHotbarModule.Delegates.ExecuteSlot> ExecuteHotbarSlotHook;
 
     private EmoteWindow MainWindow { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
@@ -76,20 +61,6 @@ public sealed class Plugin : IDalamudPlugin
 
         SetupUI();
         SetupCommands();
-
-        ExecuteCommandInnerHook = new(DetourExecuteCommand, true);
-        ExecuteEmoteHook = new(DetourExecuteEmote, true);
-        ExecuteHotbarSlotHook = new(DetourExecuteHotbarSlot, true);
-
-        try
-        {
-            // From https://github.com/RokasKil/EmoteLog/blob/master/EmoteLog/Hooks/EmoteReaderHook.cs#L11
-            OnEmoteHook = new("E8 ?? ?? ?? ?? 48 8D 8B ?? ?? ?? ?? 4C 89 74 24", OnEmoteDetour, true);
-        }
-        catch (Exception ex)
-        {
-            NoireLogger.LogError(this, ex, "OnEmote Hook error");
-        }
 
         // Listen for Condition Changes, to cancel emotes when casting and interacting with objects/NPCs
         NoireService.Condition.ConditionChange += OnConditionChanged;
@@ -350,123 +321,6 @@ public sealed class Plugin : IDalamudPlugin
         }
 
         EmotePlayer.PlayEmote(character, emote.Value);
-    }
-
-    private void HandleEmote(Emote emote)
-    {
-        var chara = NoireService.ObjectTable.LocalPlayer;
-
-        if (chara == null)
-            return;
-
-        var isEmoteUnlocked = EmoteHelper.IsEmoteUnlocked(emote.RowId);
-
-        if (isEmoteUnlocked)
-            return;
-
-        EmotePlayer.PlayEmote(chara, emote);
-    }
-
-    private unsafe byte DetourExecuteHotbarSlot(RaptureHotbarModule* thisPtr, RaptureHotbarModule.HotbarSlot* hotbarSlot)
-    {
-        var ret = ExecuteHotbarSlotHook.Original(thisPtr, hotbarSlot);
-
-        if (hotbarSlot->CommandType != RaptureHotbarModule.HotbarSlotType.Emote)
-            return ret;
-
-        var emoteId = hotbarSlot->CommandId;
-        var emote = EmoteHelper.GetEmoteById(emoteId);
-
-        if (emote == null)
-            return ret;
-
-        HandleEmote(emote.Value);
-
-        return ret;
-    }
-
-    // Detour the execute command function so we can check if the player is trying to execute an emote command
-    // If they are, we check if they have the emote unlocked, if not unlocked we try to bypass it, if already unlocked, we let the game handle it
-    private unsafe void DetourExecuteCommand(ShellCommandModule* commandModule, Utf8String* rawMessage, UIModule* uiModule)
-    {
-        ExecuteCommandInnerHook.Original(commandModule, rawMessage, uiModule);
-
-        if (!Configuration.PluginEnabled)
-            return;
-
-        var seMsg = SeString.Parse(CommonHelper.GetUtf8Span(rawMessage));
-        var message = CommonHelper.Utf8StringToPlainText(seMsg);
-
-        if (string.IsNullOrEmpty(message) || !message.StartsWith('/'))
-            return;
-
-        if (NoireService.ObjectTable.LocalPlayer == null)
-            return;
-
-        var command = message.Split(' ')[0];
-        var foundEmote = EmoteHelper.GetEmoteByCommand(command.TrimStart('/'));
-
-        if (!foundEmote.HasValue)
-            return;
-
-        HandleEmote(foundEmote.Value);
-    }
-
-    // Detour the execute emote function to stop any currently playing bypassed looping emotes before executing a new base/obtained game emote
-    // Necessary since emote bypassing will prevent the player from executing any base/obtained emote otherwise
-    private unsafe bool DetourExecuteEmote(EmoteManager* emoteManager, ushort emoteId, PlayEmoteOption* playEmoteOption)
-    {
-        var chara = NoireService.ObjectTable.LocalPlayer;
-
-        if (chara == null)
-            return ExecuteEmoteHook.Original(emoteManager, emoteId, playEmoteOption);
-
-        var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(chara.Address);
-
-        if (trackedCharacter != null)
-        {
-            var emote = EmoteHelper.GetEmoteById(emoteId);
-            if (emote.HasValue)
-            {
-                var emoteCategory = EmoteHelper.GetEmoteCategory(emote.Value);
-                if (emoteCategory != NoireLib.Enums.EmoteCategory.Expressions)
-                    EmotePlayer.StopLoop(chara, true);
-            }
-        }
-
-        // Call the original at the end so that the game executes the new emote after we stop the bypassed looping emote, if any
-        return ExecuteEmoteHook.Original(emoteManager, emoteId, playEmoteOption);
-    }
-
-    // Hooking this function to detect when an emote is played by any character (including the local player)
-    // This is necessary if a player is playing a bypassed looping emote and then tries to play
-    // a base/obtained game emote. In that case, we need to stop the bypassed looping emote first
-    public void OnEmoteDetour(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2)
-    {
-        try
-        {
-            var character = CharacterHelper.GetCharacterFromAddress((nint)instigatorAddr);
-
-            if (character != null)
-            {
-                var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(character.Address);
-
-                if (trackedCharacter == null)
-                    return;
-
-                var emote = EmoteHelper.GetEmoteById(emoteId);
-
-                if (!emote.HasValue || EmoteHelper.GetEmoteCategory(emote.Value) != NoireLib.Enums.EmoteCategory.Expressions)
-                    EmotePlayer.StopLoop(character, true);
-
-                if (emote != null)
-                    EmotePlayer.PlayEmote(character, emote.Value);
-            }
-        }
-        finally
-        {
-            OnEmoteHook?.Original(unk, instigatorAddr, emoteId, targetId, unk2);
-        }
     }
 
     public void Dispose()

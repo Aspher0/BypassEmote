@@ -6,7 +6,7 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Utility;
-using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
@@ -15,6 +15,7 @@ using NoireLib.Helpers;
 using System;
 using System.Linq;
 using System.Text;
+using static FFXIVClientStructs.FFXIV.Client.UI.Misc.RaptureHotbarModule;
 
 namespace BypassEmote.Helpers;
 
@@ -384,5 +385,28 @@ public static class CommonHelper
 
         var cid = castChar is IPlayerCharacter ? native->ContentId : 0UL;
         return new CharacterState(executedAction, currentState, castChar.BaseId, cid, emoteId, targetObject?.BaseId ?? 0, targetObject?.ObjectIndex ?? 0, targetCid);
+    }
+
+    // From ReActionEx: https://github.com/Taurenkey/ReActionEX/blob/master/ReAction/Game.cs
+    public static unsafe void AssignEmoteToHotbarSlot(int hotbar, int slot, uint emoteId)
+    {
+        if (hotbar is < 0 or > 17 || (hotbar < 10 ? slot is < 0 or > 11 : slot is < 0 or > 15)) return;
+        Framework.Instance()->GetUIModule()->GetRaptureHotbarModule()->SetAndSaveSlot((uint)hotbar, (uint)slot, HotbarSlotType.Emote, emoteId, false, false);
+    }
+
+    public static bool IsEmoteAssignableToHotbar(Emote emote)
+    {
+        var category = EmoteHelper.GetEmoteCategory(emote);
+        if (category == NoireLib.Enums.EmoteCategory.Unknown)
+            return false;
+
+        if (!IsEmoteDisplayable(emote))
+            return false;
+
+        var specification = TryGetEmoteSpecification(emote);
+        if (specification == null)
+            return true;
+
+        return specification.IsAssignableToHotbar;
     }
 }

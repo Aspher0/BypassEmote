@@ -1,3 +1,4 @@
+using BypassEmote.Helpers;
 using BypassEmote.Models;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Objects.SubKinds;
@@ -21,6 +22,10 @@ public class EmoteWindow : Window, IDisposable
     private LockedTab currentTab = LockedTab.All;
     private string searchText = string.Empty;
     private Emote? contextMenuEmote = null;
+
+    private Emote? assignModalEmote = null;
+    private int assignModalHotbar = 0;
+    private int assignModalHotbarSlot = 0;
 
     public EmoteWindow() : base("Bypass Emote - Locked Emotes##BypassEmoteMain", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
@@ -155,7 +160,7 @@ public class EmoteWindow : Window, IDisposable
         }
 
         if (!Configuration.ShowInvalidEmotes && currentTab != LockedTab.Favorites)
-            displayedEmotes.RemoveAll(e => !Helpers.CommonHelper.IsEmoteDisplayable(e.Item1));
+            displayedEmotes.RemoveAll(e => !CommonHelper.IsEmoteDisplayable(e.Item1));
 
         displayedEmotes = displayedEmotes.OrderByDescending(e => e.Item1.RowId).ToList();
 
@@ -175,7 +180,7 @@ public class EmoteWindow : Window, IDisposable
         {
             foreach (var emote in displayedEmotes)
             {
-                if (Helpers.CommonHelper.GetEmotePlayType(emote.Item1) == EmotePlayType.DoNotPlay)
+                if (CommonHelper.GetEmotePlayType(emote.Item1) == EmotePlayType.DoNotPlay)
                     continue;
 
                 // Filter based on selected tab
@@ -191,7 +196,7 @@ public class EmoteWindow : Window, IDisposable
                     continue;
 
                 var displayedName = Configuration.ShowEmoteIds ? $"[{emote.Item1.RowId}] " : "";
-                displayedName += Helpers.CommonHelper.GetEmoteName(emote.Item1);
+                displayedName += CommonHelper.GetEmoteName(emote.Item1);
 
                 // Build commands string (all associated, comma separated)
                 var commands = new List<string>(4);
@@ -356,6 +361,17 @@ public class EmoteWindow : Window, IDisposable
                         if (contextMenuEmote.HasValue)
                             ApplyEmoteOnBuddy(contextMenuEmote.Value);
                     }
+
+                    if (contextMenuEmote.HasValue && CommonHelper.IsEmoteAssignableToHotbar(contextMenuEmote.Value))
+                    {
+                        ImGui.Separator();
+
+                        if (ImGui.MenuItem("Assign emote to Hotbar..."))
+                        {
+                            assignModalEmote = contextMenuEmote.Value;
+                            ImGui.CloseCurrentPopup();
+                        }
+                    }
                 }
             }
         }
@@ -363,6 +379,37 @@ public class EmoteWindow : Window, IDisposable
         ImGui.EndChild();
         ImGui.PopStyleColor();
         ImGui.PopStyleVar();
+
+        if (assignModalEmote.HasValue)
+        {
+            var emoteName = CommonHelper.GetEmoteName(assignModalEmote.Value);
+
+            ImGui.OpenPopup($"Assign {emoteName} to hotbar...##assign_emote_to_hotbar");
+
+            using (var modal = ImRaii.PopupModal($"Assign {emoteName} to hotbar...##assign_emote_to_hotbar", ImGuiWindowFlags.AlwaysAutoResize)) // add flags if you want
+            {
+                if (modal)
+                {
+                    ImGui.Combo("Hotbar", ref assignModalHotbar, "1\02\03\04\05\06\07\08\09\010\0XHB 1\0XHB 2\0XHB 3\0XHB 4\0XHB 5\0XHB 6\0XHB 7\0XHB 8");
+                    ImGui.Combo("Slot", ref assignModalHotbarSlot, "1\02\03\04\05\06\07\08\09\010\011\012\013\014\015\016");
+
+                    ImGui.Separator();
+
+                    if (ImGui.Button("Assign"))
+                    {
+                        CommonHelper.AssignEmoteToHotbarSlot(assignModalHotbar, assignModalHotbarSlot, assignModalEmote.Value.RowId);
+                        ImGui.CloseCurrentPopup();
+                        assignModalEmote = null;
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Button("Cancel"))
+                    {
+                        ImGui.CloseCurrentPopup();
+                        assignModalEmote = null;
+                    }
+                }
+            }
+        }
     }
 
     private void ToggleFavorite(uint emoteId)

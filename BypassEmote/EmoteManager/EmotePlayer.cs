@@ -125,7 +125,7 @@ internal static unsafe class EmotePlayer
         {
             case EmotePlayType.Looped:
                 {
-                    PlayEmote(Service.EmotePlayer, chara, emote);
+                    PlayEmote(Service.ActionTimelinePlayer, chara, emote);
                     var trackedCharacter = CommonHelper.AddOrUpdateCharacterInTrackedList(chara.Address, emote, receivedIpcData);
 
                     if (trackedCharacter == null) break;
@@ -227,7 +227,7 @@ internal static unsafe class EmotePlayer
                         ushort upperBody = (ushort)e.ActionTimeline[4].RowId;
                         if (upperBody != 0)
                         {
-                            Service.EmotePlayer.ExperimentalBlend(chara, upperBody, characterState: characterState);
+                            Service.ActionTimelinePlayer.ExperimentalBlend(chara, upperBody, characterState: characterState);
                             return;
                         }
                         break;
@@ -237,7 +237,7 @@ internal static unsafe class EmotePlayer
             return;
         }
 
-        Service.EmotePlayer.ExperimentalBlend(chara, timelineId, characterState: characterState);
+        Service.ActionTimelinePlayer.ExperimentalBlend(chara, timelineId, characterState: characterState);
     }
 
     public static void Stop(ActionTimelinePlayer player, ICharacter character, bool force = false)
@@ -258,7 +258,7 @@ internal static unsafe class EmotePlayer
 
         var shouldNotifyIpc = CharacterHelper.IsLocalObject(chara) && shouldRemoveFromList;
 
-        Stop(Service.EmotePlayer, chara);
+        Stop(Service.ActionTimelinePlayer, chara);
 
         if (shouldRemoveFromList)
         {
@@ -436,9 +436,9 @@ internal static unsafe class EmotePlayer
                 var emote = EmoteHelper.GetEmoteById(characterToSync.TrackedCharacter.PlayingEmoteId.Value);
                 if (emote.HasValue)
                 {
-                    //PlayEmote(Service.EmotePlayer, characterToSync.Character, emote.Value); // Causes slight desync on looped emotes with intro
+                    //PlayEmote(Service.ActionTimelinePlayer, characterToSync.Character, emote.Value); // Causes slight desync on looped emotes with intro
                     ushort loop = (ushort)emote.Value.ActionTimeline[0].RowId;
-                    Service.EmotePlayer.ExperimentalBlend(characterToSync.Character, loop); // Seems to work better for loop anims with an intro, otherwise there will be a slight desync
+                    Service.ActionTimelinePlayer.ExperimentalBlend(characterToSync.Character, loop); // Seems to work better for loop anims with an intro, otherwise there will be a slight desync
                     continue;
                 }
             }
@@ -499,6 +499,6 @@ internal static unsafe class EmotePlayer
             UpdateHooked = false;
         }
 
-        Service.EmotePlayer.Dispose();
+        Service.ActionTimelinePlayer.Dispose();
     }
 }
