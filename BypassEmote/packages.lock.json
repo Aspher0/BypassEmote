@@ -4,9 +4,9 @@
     "net10.0-windows7.0": {
       "DalamudPackager": {
         "type": "Direct",
-        "requested": "[14.0.2, )",
-        "resolved": "14.0.2",
-        "contentHash": "dQJeq+8eyHzra4Cg5eZ/3LAeS3/UpvvLriYJGSncMK9LqJ7Q4B6jwcOsxo3PfxVd15xj+IzVFxkPqIBmPQu8/w=="
+        "requested": "[15.0.0, )",
+        "resolved": "15.0.0",
+        "contentHash": "411vwC8/X8Z/sQ2TI6v3SvOn66xFPeOjFn3Zn+h0d3Ox2t1kFm66AhDvmx/qcMwVrR+Hidxj0dadpQ2dgyXMBQ=="
       },
       "DotNet.ReproducibleBuilds": {
         "type": "Direct",
@@ -16,13 +16,13 @@
       },
       "NoireLib": {
         "type": "Direct",
-        "requested": "[1.8.0, )",
-        "resolved": "1.8.0",
-        "contentHash": "QZKEdYoVaSbTvfHmLWicV9x9Uaj4ogYod2hdvYung998Iu1YnGw375RSydHByv550ONknuy9q7QLfJ5gX+xOkg==",
+        "requested": "[1.8.0.3, )",
+        "resolved": "1.8.0.3",
+        "contentHash": "ISm38lwDNff3qWlHAebA3Ha33Ix0WibSsPgWq8DwDPbkdnh+SJJbFsyaOSAqTGy04s6KNm5n1gTiF5rJBipRxQ==",
         "dependencies": {
           "Castle.Core": "5.2.1",
           "Newtonsoft.Json": "13.0.4",
-          "System.Data.SQLite": "2.0.2"
+          "System.Data.SQLite": "2.0.3"
         }
       },
       "Castle.Core": {
@@ -40,8 +40,8 @@
       },
       "System.Data.SQLite": {
         "type": "Transitive",
-        "resolved": "2.0.2",
-        "contentHash": "yAwxkraZf1PazyLg1sqMAlh4KEtaa2L8zieLicd9oWBybrb3SoPph+WVIyUTFWwtTVhNX/jNsDew6tbB8bw2xQ=="
+        "resolved": "2.0.3",
+        "contentHash": "5I9dVqmHp1v0dhco21btIRkUE47zHSy4t6bRLwIO6nGZ1mxGIL1f1yp1zWI/AAZFfdUz7n6RrH1hyi/6EhlIeQ=="
       },
       "System.Diagnostics.EventLog": {
         "type": "Transitive",

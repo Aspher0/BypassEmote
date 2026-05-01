@@ -27,8 +27,11 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
 
     private readonly List<Tuple<string, string>> commandNames = [
-    new Tuple<string, string>("/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config." +
-            "Use with argument <emote_name> to bypass any emote (including unlocked ones) on yourself: /bypassemote <emote_command>."),
+    new Tuple<string, string>(
+        "/bypassemote", "Opens Bypass Emote Configuration. Use with argument 'c' or 'config' to open the config menu: /bypassemote c|config." +
+        "\nUse with argument <emote_name> to bypass any emote (including unlocked ones) on yourself: /bypassemote <emote_command>." +
+        "\nUse with argument 'changelog' to open the changelog window: /bypassemote changelog." +
+        "\nUse with argument 'sync' to sync only players that are bypassing an emote, or 'syncall' to sync everyone playing an emote: /bypassemote sync|syncall."),
         new Tuple<string, string>("/be", "Alias of /bypassemote."),
         new Tuple<string, string>("/bet", "Applies any emote to a targetted NPC. Usage: /bet <emote_command> or /bet stop. Only works on NPCs and owned minions/pets."),
         new Tuple<string, string>("/bem", "Applies any emote to your own minion if summoned, without needing to target it. Usage: /bem <emote_command> or /bem stop."),
