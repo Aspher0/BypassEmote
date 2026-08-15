@@ -19,6 +19,7 @@
         "CanUnloadAsync": false,
         "LoadPriority": 0,
         "Punchline": "Lets you play any emote, without restriction.",
+        "IconUrl": "https://raw.githubusercontent.com/Aspher0/BypassEmote/main/Data/BypassEmote_LOGO.png",
         "DownloadLinkInstall": "https://github.com/Aspher0/BypassEmote/releases/download/v1.7.4.0/latest.zip",
         "DownloadLinkTesting": "https://github.com/Aspher0/BypassEmote/releases/download/v1.7.4.0/latest.zip",
         "DownloadLinkUpdate": "https://github.com/Aspher0/BypassEmote/releases/download/v1.7.4.0/latest.zip",
