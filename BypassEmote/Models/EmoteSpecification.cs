@@ -1,4 +1,4 @@
-namespace BypassEmote.Models;
+﻿namespace BypassEmote.Models;
 
 public class EmoteSpecification
 {
@@ -11,7 +11,6 @@ public class EmoteSpecification
     public uint? Icon { get; }
     public int? SpecificOneShotActionTimelineSlot { get; }
     public int? SpecificLoopActionTimelineSlot { get; }
-    public byte Cpose { get; } = 0;
     public bool IsAssignableToHotbar { get; } = true;
 
     public EmoteSpecification(
@@ -21,7 +20,6 @@ public class EmoteSpecification
         uint? icon = null,
         int? specificOneShotActionTimelineSlot = null,
         int? specificLoopActionTimelineSlot = null,
-        byte cpose = 0,
         bool isAssignableToHotbar = true)
     {
         SingleId = id;
@@ -30,7 +28,6 @@ public class EmoteSpecification
         Icon = icon;
         SpecificOneShotActionTimelineSlot = specificOneShotActionTimelineSlot;
         SpecificLoopActionTimelineSlot = specificLoopActionTimelineSlot;
-        Cpose = cpose;
         IsAssignableToHotbar = isAssignableToHotbar;
     }
 
@@ -42,7 +39,6 @@ public class EmoteSpecification
         uint? icon = null,
         int? specificOneShotActionTimelineSlot = null,
         int? specificLoopActionTimelineSlot = null,
-        byte cpose = 0,
         bool isAssignableToHotbar = true)
     {
         RangeStart = startId;
@@ -52,7 +48,6 @@ public class EmoteSpecification
         Icon = icon;
         SpecificOneShotActionTimelineSlot = specificOneShotActionTimelineSlot;
         SpecificLoopActionTimelineSlot = specificLoopActionTimelineSlot;
-        Cpose = cpose;
         IsAssignableToHotbar = isAssignableToHotbar;
     }
 

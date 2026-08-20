@@ -4,12 +4,10 @@ using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin.Services;
-using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using Lumina.Excel.Sheets;
 using NoireLib;
+using NoireLib.Animations.Helpers;
 using NoireLib.Helpers;
-using NoireLib.Helpers.ObjectExtensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,68 +19,31 @@ internal static unsafe class EmotePlayer
 {
     private static bool UpdateHooked;
 
-    // List of characters using a looped emote
     public static List<TrackedCharacter> TrackedCharacters = new List<TrackedCharacter>();
+
+    private const string DirectPlayRefusalKind = "directplay.refused";
 
     public static void PlayEmote(ICharacter? chara, Emote emote, CharacterState? characterState = null, IpcData? receivedIpcData = null)
     {
         if (chara == null)
             return;
 
-        if (emote.RowId.In(85u, 146u, 178u, 267u)) // If throw/dote/splash/all saints charm
-        {
-            // We check if we have a target for these emotes since they require a target, if we don't have a target we return the no-target versions
-            if ((characterState == null && chara.TargetObject == null) || (characterState != null && characterState.TargetObject == null))
-            {
-                Emote? newEmote = null;
+        // Throw/dote/splash/all saints charm and the photograph ones have a second row for the animation
+        // played with no target, or one picked by the target's height
+        var resolvedRowId = CommonHelper.ResolveTargetedEmote(chara, emote.RowId, characterState);
 
-                switch (emote.RowId)
-                {
-                    case 85u: // Throw
-                        newEmote = ExcelSheetHelper.GetRow<Emote>(87); // Throw No Target
-                        break;
-                    case 146u: // Dote
-                        newEmote = ExcelSheetHelper.GetRow<Emote>(147); // Dote No Target
-                        break;
-                    case 178u: // Splash
-                        newEmote = ExcelSheetHelper.GetRow<Emote>(179); // Splash No Target
-                        break;
-                    case 267u: // All Saints Charm
-                        newEmote = ExcelSheetHelper.GetRow<Emote>(268); // All Saints Charm No Target
-                        break;
-                }
-
-                if (newEmote.HasValue)
-                    emote = newEmote.Value;
-            }
-        }
+        if (resolvedRowId != emote.RowId && ExcelSheetHelper.GetRow<Emote>(resolvedRowId) is { } resolvedEmote)
+            emote = resolvedEmote;
 
         // Really necessary? Gposing is fine I guess, but for now i'll keep it like this
         if (NoireService.ClientState.IsGPosing)
             return;
 
         // If it is the local player, check for conditions that block emote playing
-        if (NoireService.ObjectTable.LocalPlayer != null && chara.Address == NoireService.ObjectTable.LocalPlayer.Address)
-        {
-            if (NoireService.ObjectTable.LocalPlayer.IsCasting ||
-                NoireService.ObjectTable.LocalPlayer.IsDead)
-                return;
-
-            if (NoireService.Condition.Any(
-                ConditionFlag.Casting,
-                ConditionFlag.Casting87,
-                ConditionFlag.OccupiedInCutSceneEvent,
-                ConditionFlag.WatchingCutscene,
-                ConditionFlag.WatchingCutscene78,
-                ConditionFlag.OccupiedInEvent,
-                ConditionFlag.OccupiedInQuestEvent,
-                ConditionFlag.Crafting,
-                ConditionFlag.ExecutingCraftingAction,
-                ConditionFlag.PreparingToCraft,
-                ConditionFlag.Gathering,
-                ConditionFlag.ExecutingGatheringAction))
-                return;
-        }
+        if (NoireService.ObjectTable.LocalPlayer != null
+            && chara.Address == NoireService.ObjectTable.LocalPlayer.Address
+            && CharacterHelper.IsLocalPlayerOccupied())
+            return;
 
         var native = CharacterHelper.GetCharacterAddress(chara);
 
@@ -91,21 +52,31 @@ internal static unsafe class EmotePlayer
         if (emotePlayType == EmotePlayType.DoNotPlay)
             return;
 
-        if (chara is not INpc && chara is not IBattleNpc && !CommonHelper.IsCharacterInBypassedLoop(chara) && (native->Mode != CharacterModes.Normal || CharacterHelper.IsCharacterSleeping(chara)))
-        {
-            if (CharacterHelper.IsCharacterSleeping(chara) || (native->Mode != CharacterModes.EmoteLoop && native->Mode != CharacterModes.InPositionLoop && native->Mode != CharacterModes.Mounted && native->Mode != CharacterModes.RidingPillion))
-            {
-                // Block: Not in allowed modes
-                if (NoireService.ObjectTable.LocalPlayer != null && chara.Address == NoireService.ObjectTable.LocalPlayer.Address)
-                    NoireLogger.PrintToChat("You cannot bypass this emote right now.");
-                return;
-            }
+        var isLocalPlayer = NoireService.ObjectTable.LocalPlayer is { } localPlayer
+            && chara.Address == localPlayer.Address;
 
-            if (emotePlayType != EmotePlayType.OneShot)
+        if (DirectPlayPlanner.RefusedByMode(
+                chara is INpc or IBattleNpc,
+                CommonHelper.IsCharacterInBypassedLoop(chara),
+                CharacterHelper.IsCharacterSleeping(chara),
+                native->Mode,
+                emotePlayType,
+                isLocalPlayer && NoireService.Condition[ConditionFlag.Fishing]))
+        {
+            if (isLocalPlayer)
+                FeedbackHelper.Error("You cannot bypass this emote right now.");
+            return;
+        }
+
+        DirectPlayPlan? plan = null;
+
+        if (isLocalPlayer)
+        {
+            plan = DirectPlayPlanner.TryPlanFor(chara, emote, emotePlayType, out var state);
+
+            if (plan == null)
             {
-                // Block: In EmoteLoop/InPositionLoop but not OneShot
-                if (NoireService.ObjectTable.LocalPlayer != null && chara.Address == NoireService.ObjectTable.LocalPlayer.Address)
-                    NoireLogger.PrintToChat("You cannot bypass this emote right now.");
+                FeedbackHelper.Error(DirectPlayPlanner.RefusalMessageFor(emote, state), DirectPlayRefusalKind);
                 return;
             }
         }
@@ -116,7 +87,8 @@ internal static unsafe class EmotePlayer
             StopLoop(chara, false);
 
         // If the emote is not an expression, make the character face the target
-        if (NoireService.ObjectTable.LocalPlayer != null &&
+        if (Configuration.AutoFaceTargetDirectPlay &&
+            NoireService.ObjectTable.LocalPlayer != null &&
             chara.Address == NoireService.ObjectTable.LocalPlayer.Address &&
             emoteCategory != NoireLib.Enums.EmoteCategory.Expressions)
             CommonHelper.FaceTarget();
@@ -125,7 +97,11 @@ internal static unsafe class EmotePlayer
         {
             case EmotePlayType.Looped:
                 {
-                    PlayEmote(Service.ActionTimelinePlayer, chara, emote);
+                    if (plan != null)
+                        PlayPlannedLoop(chara, emote, plan);
+                    else
+                        PlayEmote(Service.ActionTimelinePlayer, chara, emote);
+
                     var trackedCharacter = CommonHelper.AddOrUpdateCharacterInTrackedList(chara.Address, emote, receivedIpcData);
 
                     if (trackedCharacter == null) break;
@@ -149,13 +125,20 @@ internal static unsafe class EmotePlayer
                     if (specifications != null && specifications.SpecificOneShotActionTimelineSlot.HasValue) // Some emotes have the one-shot timeline in slot 4 (i.e. waterflip)
                         timelineId = (ushort)emote.ActionTimeline[specifications.SpecificOneShotActionTimelineSlot.Value].RowId;
 
+                    if (plan != null)
+                        timelineId = plan.TimelineId;
+
                     if (timelineId == 0)
                         return;
 
                     if (emoteCategory != NoireLib.Enums.EmoteCategory.Expressions)
                         StopLoop(chara, true); // I know this is redundant but this will ensure any looping emote will be completely stopped and removed from tracked list
 
-                    PlayOneShotEmote(chara, timelineId, characterState);
+                    if (plan != null)
+                        Service.ActionTimelinePlayer.Blend(chara, timelineId, characterState: characterState);
+                    else
+                        PlayOneShotEmote(chara, timelineId, characterState);
+
                     break;
                 }
         }
@@ -180,6 +163,15 @@ internal static unsafe class EmotePlayer
         PlayEmote(chara, emote.Value, characterState, receivedIpcData);
     }
 
+    private static void PlayPlannedLoop(ICharacter chara, Emote emote, DirectPlayPlan plan)
+    {
+        if (plan.IntroTimelineId != 0)
+            Service.ActionTimelinePlayer.Blend(chara, plan.IntroTimelineId, 1);
+
+        if (plan.TimelineId != 0)
+            Service.ActionTimelinePlayer.Play(chara, emote, plan.TimelineId, false);
+    }
+
     public static void PlayEmote(ActionTimelinePlayer player, ICharacter actor, Emote emote, bool blendIntro = true)
     {
         if (actor == null || emote.RowId == 0) return;
@@ -193,7 +185,7 @@ internal static unsafe class EmotePlayer
             loop = (ushort)emote.ActionTimeline[specifications.SpecificLoopActionTimelineSlot.Value].RowId;
 
         if (blendIntro && intro != 0)
-            player.ExperimentalBlend(actor, intro, 1);
+            player.Blend(actor, intro, 1);
 
         if (loop != 0)
         {
@@ -227,7 +219,7 @@ internal static unsafe class EmotePlayer
                         ushort upperBody = (ushort)e.ActionTimeline[4].RowId;
                         if (upperBody != 0)
                         {
-                            Service.ActionTimelinePlayer.ExperimentalBlend(chara, upperBody, characterState: characterState);
+                            Service.ActionTimelinePlayer.Blend(chara, upperBody, characterState: characterState);
                             return;
                         }
                         break;
@@ -237,7 +229,7 @@ internal static unsafe class EmotePlayer
             return;
         }
 
-        Service.ActionTimelinePlayer.ExperimentalBlend(chara, timelineId, characterState: characterState);
+        Service.ActionTimelinePlayer.Blend(chara, timelineId, characterState: characterState);
     }
 
     public static void Stop(ActionTimelinePlayer player, ICharacter character, bool force = false)
@@ -295,7 +287,7 @@ internal static unsafe class EmotePlayer
             }
 
             var isLocalPlayerOwned = CharacterHelper.IsLocalObject(character);
-            var isOtherPlayerOwned = !isLocalPlayerOwned && CommonHelper.GetOwningPlayerAddress(character.Address) != nint.Zero;
+            var isOtherPlayerOwned = !isLocalPlayerOwned && CharacterHelper.GetOwningPlayerAddress(character.Address) != nint.Zero;
             var isNpc = character is INpc || character is IBattleNpc;
 
             // Determine the character type and ownership
@@ -438,30 +430,12 @@ internal static unsafe class EmotePlayer
                 {
                     //PlayEmote(Service.ActionTimelinePlayer, characterToSync.Character, emote.Value); // Causes slight desync on looped emotes with intro
                     ushort loop = (ushort)emote.Value.ActionTimeline[0].RowId;
-                    Service.ActionTimelinePlayer.ExperimentalBlend(characterToSync.Character, loop); // Seems to work better for loop anims with an intro, otherwise there will be a slight desync
+                    Service.ActionTimelinePlayer.Blend(characterToSync.Character, loop); // Seems to work better for loop anims with an intro, otherwise there will be a slight desync
                     continue;
                 }
             }
 
-            var charaAddress = CharacterHelper.GetCharacterAddress(characterToSync.Character);
-            if (charaAddress->DrawObject == null) continue;
-            if (charaAddress->DrawObject->GetObjectType() != ObjectType.CharacterBase) continue;
-            if (((CharacterBase*)charaAddress->DrawObject)->GetModelType() != CharacterBase.ModelType.Human) continue;
-            var human = (Human*)charaAddress->DrawObject;
-            var skeleton = human->Skeleton;
-            if (skeleton == null) continue;
-            for (var i = 0; i < skeleton->PartialSkeletonCount && i < 1; ++i)
-            {
-                var partialSkeleton = &skeleton->PartialSkeletons[i];
-                var animatedSkeleton = partialSkeleton->GetHavokAnimatedSkeleton(0);
-                if (animatedSkeleton == null) continue;
-                for (var animControl = 0; animControl < animatedSkeleton->AnimationControls.Length && animControl < 1; ++animControl)
-                {
-                    var control = animatedSkeleton->AnimationControls[animControl].Value;
-                    if (control == null) continue;
-                    control->hkaAnimationControl.LocalTime = 0;
-                }
-            }
+            SkeletonAnimationHelper.ResetAnimationTime(characterToSync.Character);
         }
     }
 

@@ -20,13 +20,13 @@ public class CharacterState
 
 
     [JsonIgnore]
-    public nint CharacterAddress => CommonHelper.GetObjectFromBaseIdOrCid(BaseId, Cid)?.Address ?? nint.Zero;
+    public nint CharacterAddress => GameObjectHelper.FindByIdentity(BaseId == 0 ? null : BaseId, null, Cid == 0 ? null : Cid)?.Address ?? nint.Zero;
 
     [JsonIgnore]
     public bool IsPlayerCharacter => CommonHelper.IsPlayerCharacter(CharacterAddress);
 
     [JsonIgnore]
-    public nint OwningPlayerAddress => CommonHelper.GetOwningPlayerAddress(CharacterAddress); // If nint.Zero, it means it's not owned by any player, but it can still be a player or a npc
+    public nint OwningPlayerAddress => CharacterHelper.GetOwningPlayerAddress(CharacterAddress); // If nint.Zero, it means it's not owned by any player, but it can still be a player or a npc
 
     [JsonIgnore]
     public bool IsOwnedObject => OwningPlayerAddress != nint.Zero; // Is it owned by any player? (i.e. is it a companion/pet/etc.)
@@ -57,7 +57,7 @@ public class CharacterState
 
     [JsonIgnore]
     public IGameObject? TargetObject
-        => CommonHelper.GetObjectFromBaseIdAndObjectIndexOrCid(TargetBaseId == 0 ? null : TargetBaseId,
+        => GameObjectHelper.FindByIdentity(TargetBaseId == 0 ? null : TargetBaseId,
             TargetObjectIndex == 0 ? null : TargetObjectIndex,
             TargetCid == 0 ? null : TargetCid);
 

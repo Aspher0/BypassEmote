@@ -1,7 +1,12 @@
+#if DEBUG
+using BypassEmote.EmoteSwap;
 using BypassEmote.Helpers;
+using BypassEmote.IPC;
 using BypassEmote.Models;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Lumina.Excel.Sheets;
@@ -12,9 +17,6 @@ using NoireLib.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using System.Numerics;
 
 namespace BypassEmote.UI;
@@ -31,39 +33,15 @@ public class DebugWindow : Window, IDisposable
     private string emoteSearchText = string.Empty;
     private List<Emote>? cachedEmoteList = null;
 
-#if DEBUG
-    private readonly string localNetworkIp = GetPreferredLocalNetworkIp();
-    private string peer1Host;
-    private string peer2Host;
-    private int peer1Port = 53740;
-    private int peer2Port = 53741;
-#endif
-
     public DebugWindow() : base("Bypass Emote Debug###BypassEmote")
     {
-#if DEBUG
-        peer1Host = localNetworkIp;
-        peer2Host = localNetworkIp;
-
-        if (Configuration.AutoRegister == 1)
-        {
-            SetRelay("Peer-1", "Peer 1", peer1Port);
-            RegisterRelayPeer("Peer-2", peer2Host, peer2Port, "Peer 2");
-        }
-        else if (Configuration.AutoRegister == 2)
-        {
-            SetRelay("Peer-2", "Peer 2", peer2Port);
-            RegisterRelayPeer("Peer-1", peer1Host, peer1Port, "Peer 1");
-        }
-#endif
-
         SizeConstraints = new WindowSizeConstraints
         {
             MinimumSize = new Vector2(300, 200),
             MaximumSize = new Vector2(float.MinValue, float.MaxValue),
         };
 
-        IpcProvider.OnReady += Logready;
+        IpcProvider.OnReady += LogReady;
         IpcProvider.OnStateChange += LogStateChanged;
         IpcProvider.OnStateChangeImmediate += LogStateChangedImmediate;
     }
@@ -97,158 +75,126 @@ public class DebugWindow : Window, IDisposable
                     DrawNetworkRelayTab();
             }
 #endif
-        }
-    }
 
-#if DEBUG
-    private void SetRelay(string peerId, string displayName, int port)
-    {
-        Service.NetworkRelay.SetPort(port)
-            .RegisterSelf(peerId, displayName, true);
-    }
-
-    private void UnregisterRelaySelf()
-    {
-        Service.NetworkRelay.UnregisterSelf();
-    }
-
-    private void RegisterRelayPeer(string peerId, string host, int port, string displayName)
-    {
-        var endPoint = CreatePeerEndPoint(host, port);
-        if (endPoint == null)
-        {
-            NoireLogger.PrintToChat($"Invalid peer IP address: {host}");
-            return;
-        }
-
-        Service.NetworkRelay.RegisterPeer(peerId, endPoint, displayName);
-    }
-
-    private static IPEndPoint? CreatePeerEndPoint(string host, int port)
-    {
-        var ipText = string.IsNullOrWhiteSpace(host) ? GetPreferredLocalNetworkIp() : host.Trim();
-        return IPAddress.TryParse(ipText, out var address) ? new IPEndPoint(address, port) : null;
-    }
-
-    private static string GetPreferredLocalNetworkIp()
-    {
-        try
-        {
-            var address = NetworkInterface.GetAllNetworkInterfaces()
-                .Where(adapter => adapter.OperationalStatus == OperationalStatus.Up)
-                .Where(adapter => adapter.NetworkInterfaceType is not NetworkInterfaceType.Loopback and not NetworkInterfaceType.Tunnel)
-                .SelectMany(adapter => adapter.GetIPProperties().UnicastAddresses)
-                .Select(unicast => unicast.Address)
-                .FirstOrDefault(address => address.AddressFamily == AddressFamily.InterNetwork &&
-                                           !IPAddress.IsLoopback(address) &&
-                                           IsPrivateIpv4(address));
-
-            if (address != null)
-                return address.ToString();
-        }
-        catch
-        {
-        }
-
-        return IPAddress.Loopback.ToString();
-    }
-
-    private static bool IsPrivateIpv4(IPAddress address)
-    {
-        var bytes = address.GetAddressBytes();
-        return bytes[0] == 10 ||
-               (bytes[0] == 172 && bytes[1] is >= 16 and <= 31) ||
-               (bytes[0] == 192 && bytes[1] == 168);
-    }
-
-    private void DrawNetworkRelayTab()
-    {
-        var autoRegisterSelf = Configuration.AutoRegister;
-        if (ImGui.InputInt("##AutoRegisterSelf", ref autoRegisterSelf, 1, 1))
-        {
-            if (autoRegisterSelf < 0 || autoRegisterSelf > 2)
-                autoRegisterSelf = 0;
-            Configuration.AutoRegister = autoRegisterSelf;
-        }
-
-        if (ImGui.Button("Register self as peer 1"))
-            SetRelay("Peer-1", "Peer 1", peer1Port);
-
-        ImGui.SameLine();
-
-        if (ImGui.Button("Register self as peer 2"))
-            SetRelay("Peer-2", "Peer 2", peer2Port);
-
-        ImGui.SameLine();
-
-        if (ImGui.Button("Unregister self"))
-            UnregisterRelaySelf();
-
-        ImGui.TextColoredWrapped(ColorHelper.HexToVector4("#FF0000"), "Only use the below if your game instances are on the same PC and peers don't automatically get detected.\nIf using different PCs, don't touch these and only 'register self'.\nPorts needs to be different if on the same PC and has to be the same port if on different PCs.");
-
-        ImGui.SetNextItemWidth(100);
-        ImGui.InputTextWithHint("##Peer1Host", "Peer 1 LAN IP or hostname", ref peer1Host, 256);
-
-        if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
-            peer1Host = localNetworkIp;
-
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Right click to reset");
-
-        ImGui.SameLine();
-
-        ImGui.SetNextItemWidth(100);
-        ImGui.InputInt("##Peer1Port", ref peer1Port, 256);
-
-        ImGui.SameLine();
-
-        if (ImGui.Button("Register peer 1"))
-            RegisterRelayPeer("Peer-1", peer1Host, peer1Port, "Peer 1");
-
-        ImGui.SameLine();
-
-        if (ImGui.Button("Unregister peer 1"))
-            Service.NetworkRelay.UnregisterPeer("Peer-1");
-
-        ImGui.SetNextItemWidth(100);
-        ImGui.InputTextWithHint("##Peer2Host", "Peer 2 LAN IP or hostname", ref peer2Host, 256);
-
-        if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
-            peer2Host = localNetworkIp;
-
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Right click to reset");
-
-        ImGui.SameLine();
-
-        ImGui.SetNextItemWidth(100);
-        ImGui.InputInt("##Peer2Port", ref peer2Port, 256);
-
-        ImGui.SameLine();
-
-        if (ImGui.Button("Register peer 2"))
-            RegisterRelayPeer("Peer-2", peer2Host, peer2Port, "Peer 2");
-
-        ImGui.SameLine();
-
-        if (ImGui.Button("Unregister peer 2"))
-            Service.NetworkRelay.UnregisterPeer("Peer-2");
-
-        ImGui.Text("Network Peers:");
-        using (var child = ImRaii.Child("##NetworkPeers", new Vector2(-1, 200), true))
-        {
-            if (child)
+            using (var tab = ImRaii.TabItem("Swap Layers"))
             {
-                var peers = Service.NetworkRelay.GetPeers();
-                foreach (var peer in peers)
-                {
-                    ImGui.Text($"{(peer.PeerId == Service.NetworkRelay.InstanceId ? "You - " : "")}{peer.DisplayName} ({peer.PeerId}) Port: {peer.EndPoint}, Last Seen: {peer.LastSeenUtc.ToLocalTime()}");
-                }
+                if (tab)
+                    DrawSwapLayers();
+            }
+
+            using (var tab = ImRaii.TabItem("Emote Pool"))
+            {
+                if (tab)
+                    EmotePoolTab.Draw();
             }
         }
     }
 
+#if DEBUG
+    private void DrawNetworkRelayTab()
+    {
+        var relay = Service.Networker;
+
+        if (relay == null)
+        {
+            ImGui.Text("Network relay is not initialized.");
+            return;
+        }
+
+        ImGui.Text($"Network: {relay.NetworkName}");
+        ImGui.Text($"State: {relay.State}{(relay.IsHub ? " (hub)" : string.Empty)}");
+        ImGui.Text($"Self: {relay.SelfId}");
+
+        var isActive = relay.IsActive;
+        if (ImGui.Checkbox("Active", ref isActive))
+            relay.SetActive(isActive);
+
+        ImGui.SameLine();
+
+        var enableLan = relay.Options.EnableLan;
+        if (ImGui.Checkbox("LAN discovery", ref enableLan))
+        {
+            relay.Options.EnableLan = enableLan;
+
+            // Option changes only apply on activation
+            if (relay.IsActive)
+                relay.SetActive(false).SetActive(true);
+        }
+
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("Instances on the same PC find each other with no configuration.\nLAN discovery reaches other PCs, and may need a Windows Firewall inbound allow.");
+
+        var localPlayer = NoireService.ObjectTable.LocalPlayer;
+        if (localPlayer != null)
+            relay.Self.Set("character", localPlayer.Name.TextValue);
+
+        ImGui.Text("Peers:");
+        using (var child = ImRaii.Child("##NetworkPeers", new Vector2(-1, -1), true))
+        {
+            if (child)
+            {
+                ImGui.Text($"You - {relay.Self} [{(relay.IsHub ? "hub" : "client")}]");
+
+                foreach (var peer in relay.OtherPeers)
+                    ImGui.Text($"{peer} [{(peer.IsSameMachine ? "same PC" : "LAN")}]");
+            }
+        }
+    }
 #endif
+
+    private static void DrawSwapLayers()
+    {
+        LayerSwitch("Unique pack names##SwapLayer", SwapLayers.UniquePackNames,
+            value => SwapLayers.UniquePackNames = value);
+
+        ImGui.TextUnformatted("Substitution doors");
+
+        LayerSwitch("Loader door##SwapLayer", SwapLayers.DoorLoader,
+            value => SwapLayers.DoorLoader = value);
+
+        LayerSwitch("Bind door##SwapLayer", SwapLayers.DoorBind,
+            value => SwapLayers.DoorBind = value);
+
+        ImGui.SameLine();
+        LayerSwitch("Request door##SwapLayer", SwapLayers.DoorRequest,
+            value => SwapLayers.DoorRequest = value);
+
+        ImGui.SameLine();
+        LayerSwitch("Match enforcement##SwapLayer", SwapLayers.MatchEnforcement,
+            value => SwapLayers.MatchEnforcement = value);
+
+        ImGui.Spacing();
+
+        LayerSwitch("Prewarm packs##SwapLayer", SwapLayers.PrewarmPacks,
+            value => SwapLayers.PrewarmPacks = value);
+
+        LayerSwitch("Force fresh file loads##SwapLayer", SwapLayers.NoCacheFlip,
+            value => SwapLayers.NoCacheFlip = value);
+
+        LayerSwitch("Binding pack correction##SwapLayer", SwapLayers.BindingPackCorrection,
+            value => SwapLayers.BindingPackCorrection = value);
+
+        LayerSwitch("Mapping pack correction##SwapLayer", SwapLayers.MappingPackCorrection,
+            value => SwapLayers.MappingPackCorrection = value);
+
+        ImGui.Spacing();
+
+        LayerSwitch("Always compose paths##SwapLayer", SwapLayers.AlwaysComposePaths,
+            value => SwapLayers.AlwaysComposePaths = value);
+
+        LayerSwitch("Republish the vanilla path##SwapLayer", SwapLayers.PublishVanillaPath,
+            value => SwapLayers.PublishVanillaPath = value);
+    }
+
+    private static void LayerSwitch(string label, bool current, Action<bool> write)
+    {
+        var value = current;
+        if (!ImGui.Checkbox(label, ref value))
+            return;
+
+        write(value);
+        Service.ResidencyProbe?.ApplyLayerSwitches();
+    }
 
     private void DrawPositionRotationTab()
     {
@@ -298,6 +244,18 @@ public class DebugWindow : Window, IDisposable
 
             ImGui.Separator();
 
+            var groundMaterial = CharacterHelper.GetGroundMaterial(player);
+            var throwResolvesTo = CommonHelper.ResolveTargetedEmote(player, 85);
+
+            ImGui.Text($"Ground material: {(byte)groundMaterial} ({groundMaterial})");
+            ImGui.Text($"Standing in water: {CharacterHelper.IsStandingInWater(player)}"
+                + $" (with fallback: {CharacterHelper.IsStandingInWater(player, includeFallback: true)})");
+            ImGui.Text($"/throw resolves to row: {throwResolvesTo}"
+                + (throwResolvesTo == 85 ? " (throw)" : " (snowball)"));
+            ImGui.Text($"/splash allowed here: {EmoteHelper.MeetsEnvironmentFor(player, 178)}");
+
+            ImGui.Separator();
+
             ImGui.Text($"Player Address: {player.Address:X}");
             if (ImGui.IsItemHovered())
             {
@@ -321,8 +279,8 @@ public class DebugWindow : Window, IDisposable
             if (emoteSheet != null)
             {
                 cachedEmoteList = emoteSheet
-                    .Where(e => Helpers.CommonHelper.GetEmotePlayType(e) != EmotePlayType.DoNotPlay)
-                    .Where(e => Helpers.CommonHelper.IsEmoteDisplayable(e))
+                    .Where(e => CommonHelper.GetEmotePlayType(e) != EmotePlayType.DoNotPlay)
+                    .Where(e => CommonHelper.IsEmoteDisplayable(e))
                     .OrderByDescending(e => e.RowId)
                     .ToList();
             }
@@ -333,7 +291,7 @@ public class DebugWindow : Window, IDisposable
         }
     }
 
-    private unsafe void DrawIpcTestsTab()
+    private void DrawIpcTestsTab()
     {
         ImGui.Text($"IPC Version: {IpcProvider.ApiVersion().ToString()}");
         ImGui.Text($"IPC Is Ready: {IpcProvider.IsReady()}");
@@ -526,7 +484,7 @@ public class DebugWindow : Window, IDisposable
         var emote = cachedEmoteList?.FirstOrDefault(e => e.RowId == emoteId);
         if (emote == null) return $"Unknown ({emoteId})";
 
-        return Helpers.CommonHelper.GetEmoteName(emote.Value);
+        return CommonHelper.GetEmoteName(emote.Value);
     }
 
     private static string FormatJson(string json)
@@ -534,17 +492,18 @@ public class DebugWindow : Window, IDisposable
         return JToken.Parse(json).ToString(Formatting.Indented);
     }
 
-    private void Logready()
-        => NoireLogger.LogDebug(this, $"BypassEmote IPC is Ready");
+    private void LogReady()
+        => NoireLogger.LogDebug(this, "BypassEmote IPC is ready");
     private void LogStateChanged(string liveData, string? cacheData, bool isLocalPlayer)
         => NoireLogger.LogDebug(this, $"BypassEmote IPC sent state changed message. IsLocalPlayer: {isLocalPlayer}, LiveData: {liveData}, CacheData: {cacheData ?? "<null>"}");
     private void LogStateChangedImmediate(string liveData, string? cacheData, bool isLocalPlayer)
-        => NoireLogger.LogDebug(this, $"BypassEmote IPC sent IMMEDIATE state changed message. IsLocalPlayer: {isLocalPlayer}, LiveData: {liveData}, CacheData: {cacheData ?? "<null>"}");
+        => NoireLogger.LogDebug(this, $"BypassEmote IPC sent immediate state changed message. IsLocalPlayer: {isLocalPlayer}, LiveData: {liveData}, CacheData: {cacheData ?? "<null>"}");
 
     public void Dispose()
     {
-        IpcProvider.OnReady -= Logready;
+        IpcProvider.OnReady -= LogReady;
         IpcProvider.OnStateChange -= LogStateChanged;
         IpcProvider.OnStateChangeImmediate -= LogStateChangedImmediate;
     }
 }
+#endif

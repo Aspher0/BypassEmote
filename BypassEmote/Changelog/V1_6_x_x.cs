@@ -80,7 +80,7 @@ public class V1_6_x_x : BaseChangelogVersion
         => new ChangelogVersion
         {
             Version = new(1, 6, 6, 0),
-            Date = "04-01-2025",
+            Date = "04-01-2026",
             Title = "Minions, Pets, Chocobos & Battle NPCs support",
             TitleColor = Blue,
             Description = "Added support for Minions, Pets, Chocobos & Battle NPCs. Revised IPC.",

@@ -1,3 +1,4 @@
+using BypassEmote.IPC;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using Lumina.Excel.Sheets;

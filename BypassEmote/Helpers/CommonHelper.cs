@@ -1,56 +1,30 @@
 using BypassEmote.Data;
 using BypassEmote.Models;
-using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Utility;
+using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
-using FFXIVClientStructs.FFXIV.Client.System.String;
 using Lumina.Excel.Sheets;
-using Lumina.Text.ReadOnly;
 using NoireLib;
 using NoireLib.Helpers;
-using System;
 using System.Linq;
-using System.Text;
 using static FFXIVClientStructs.FFXIV.Client.UI.Misc.RaptureHotbarModule;
 
 namespace BypassEmote.Helpers;
 
 public static class CommonHelper
 {
+    public const ulong NoTargetId = EmoteHelper.NoEmoteTargetId;
+
     public static ICharacter? GetCharacterFromTrackedCharacter(TrackedCharacter? trackedCharacter)
     {
         if (trackedCharacter == null) return null;
 
-        var gameObject = GetObjectFromBaseIdAndObjectIndexOrCid(trackedCharacter.BaseId, trackedCharacter.ObjectIndex, trackedCharacter.CID);
+        var gameObject = GameObjectHelper.FindByIdentity(
+            trackedCharacter.BaseId, trackedCharacter.ObjectIndex, trackedCharacter.CID);
 
-        if (gameObject is ICharacter character)
-            return character;
-        else
-            return null;
-    }
-
-    public static IGameObject? GetObjectFromBaseIdAndObjectIndexOrCid(uint? baseId, ushort? objectIndex, ulong? cid)
-    {
-        if (cid != null)
-            return CharacterHelper.GetCharacterFromCID(cid.Value);
-        else if (baseId != null && objectIndex != null)
-            return GetObjectFromBaseIdAndObjectIndex(baseId.Value, objectIndex.Value);
-
-        return null;
-    }
-
-    public static IGameObject? GetObjectFromBaseIdOrCid(uint baseId, ulong cid)
-    {
-        if (cid != 0)
-            return CharacterHelper.GetCharacterFromCID(cid);
-        else if (baseId != 0)
-            return GetObjectFromBaseId(baseId);
-
-        return null;
+        return gameObject as ICharacter;
     }
 
     public static TrackedCharacter? TryGetTrackedCharacterFromAddress(nint charaAddress)
@@ -121,16 +95,6 @@ public static class CommonHelper
     public static bool HasAnyLocalLoopedEmote()
     {
         return EmotePlayer.TrackedCharacters.Any(tc => tc.IsLocalObject);
-    }
-
-    public static IGameObject? GetObjectFromBaseIdAndObjectIndex(uint baseId, ushort objectIndex)
-    {
-        return NoireService.ObjectTable.FirstOrDefault(p => p != null && p.BaseId == baseId && p.ObjectIndex == objectIndex);
-    }
-
-    public static IGameObject? GetObjectFromBaseId(uint baseId)
-    {
-        return NoireService.ObjectTable.FirstOrDefault(p => p != null && p.BaseId == baseId);
     }
 
     public static void RemoveCharacterFromTrackedListByUniqueID(string uniqueId)
@@ -208,80 +172,31 @@ public static class CommonHelper
         return null;
     }
 
-    public static unsafe ReadOnlySpan<byte> GetUtf8Span(Utf8String* s) => s == null ? ReadOnlySpan<byte>.Empty : new ReadOnlySpan<byte>(s->StringPtr, (int)s->Length);
-
-    public static string Utf8StringToPlainText(SeString se)
-    {
-        var sb = new StringBuilder();
-        foreach (var p in se.Payloads)
-        {
-            switch (p)
-            {
-                case TextPayload t:
-                    sb.Append(t.Text);
-                    break;
-                case AutoTranslatePayload a:
-                    sb.Append(NoireService.SeStringEvaluator.Evaluate(new ReadOnlySeString(a.Encode()), default, NoireService.ClientState.ClientLanguage).ToString());
-                    break;
-            }
-        }
-        return sb.ToString();
-    }
-
-    public static float GetRotationToTarget(ICharacter from, IGameObject to)
-    {
-        return MathF.Atan2(to.Position.X - from.Position.X, to.Position.Z - from.Position.Z);
-    }
-
     public static bool IsCharacterInBypassedLoop(ICharacter chara)
     {
         var foundCharacter = TryGetTrackedCharacterFromAddress(chara.Address);
         return foundCharacter != null;
     }
 
-    public static IGameObject? GetLocalTarget()
-    {
-        if (NoireService.ObjectTable.LocalPlayer is not ICharacter)
-            return null;
+    public static IGameObject? GetLocalTarget() => GameObjectHelper.GetLocalTarget();
 
-        if (NoireService.TargetManager.SoftTarget is IGameObject softTargetObject)
-            return softTargetObject;
+    public static ulong GetPlayerTarget(ICharacter chara) => GameObjectHelper.GetTargetId(chara);
 
-        if (NoireService.TargetManager.Target is IGameObject targetObject)
-            return targetObject;
+    public static ulong TargetIdFor(ICharacter chara, CharacterState? characterState = null)
+        => characterState != null
+            ? characterState.TargetObject?.GameObjectId ?? NoTargetId
+            : GetPlayerTarget(chara);
 
-        return null;
-    }
+    public static EmoteController.PlayEmoteOption EmoteOptionFor(ulong targetId)
+        => EmoteHelper.EmoteOptionFor(targetId);
 
-    public static unsafe ulong GetPlayerTarget(ICharacter chara)
-    {
-        ulong noTargetId = 0xE0000000;
+    public static EmoteController.PlayEmoteOption LocalPlayerEmoteOption()
+        => EmoteOptionFor(NoireService.ObjectTable.LocalPlayer is { } player ? GetPlayerTarget(player) : NoTargetId);
 
-        if (chara == null)
-            return noTargetId;
+    public static uint ResolveTargetedEmote(ICharacter chara, uint emoteRowId, CharacterState? characterState = null)
+        => EmoteHelper.ResolveTargetedEmote(chara, emoteRowId, TargetIdFor(chara, characterState));
 
-        var native = CharacterHelper.GetCharacterAddress(chara);
-
-        var finalTargetId = noTargetId;
-        var softTargetId = native->GetSoftTargetId().Id;
-        var targetId = native->GetTargetId().Id;
-
-        if (softTargetId != finalTargetId)
-            finalTargetId = softTargetId;
-        else if (targetId != finalTargetId)
-            finalTargetId = targetId;
-
-        return finalTargetId;
-    }
-
-    public static IGameObject? GetObjectFromObjectId(ulong gameObjectId)
-    {
-        if (gameObjectId == 0xE0000000)
-            return null;
-        return NoireService.ObjectTable.FirstOrDefault(o => o != null && o.GameObjectId == gameObjectId);
-    }
-
-    public unsafe static void FaceTarget()
+    public static void FaceTarget()
     {
         if (NoireService.ObjectTable.LocalPlayer is not ICharacter localCharacter ||
             GetLocalTarget() is not IGameObject targetObject)
@@ -290,45 +205,7 @@ public static class CommonHelper
         if (localCharacter.Address == targetObject.Address)
             return;
 
-        if (CharacterHelper.IsCharacterChairSitting(localCharacter) ||
-            CharacterHelper.IsCharacterGroundSitting(localCharacter) ||
-            CharacterHelper.IsCharacterSleeping(localCharacter))
-            return;
-
-        var rotToTarget = GetRotationToTarget(localCharacter, targetObject);
-
-        var character = CharacterHelper.GetCharacterAddress(localCharacter);
-        character->SetRotation(rotToTarget);
-    }
-
-    public static unsafe nint GetOwningPlayerAddress(nint characterAddress)
-    {
-        var castChar = CharacterHelper.GetCharacterFromAddress(characterAddress);
-
-        if (castChar == null)
-            return nint.Zero;
-
-        uint ownerEntityId;
-
-        if (castChar.ObjectKind == ObjectKind.Companion)
-        {
-            // Minion
-            var native = CharacterHelper.GetCharacterAddress(castChar);
-            ownerEntityId = native->CompanionOwnerId;
-        }
-        else if (castChar.SubKind == 2 || castChar.SubKind == 3)
-        {
-            // Pet or buddy
-            ownerEntityId = castChar.OwnerId;
-        }
-        else
-        {
-            return nint.Zero;
-        }
-
-        var foundOwner = NoireService.ObjectTable.PlayerObjects.FirstOrDefault(p => p.EntityId == ownerEntityId);
-        if (foundOwner == null) return nint.Zero;
-        return foundOwner.Address;
+        CharacterHelper.RotateCharacterSafe(GameObjectHelper.Bearing(localCharacter, targetObject));
     }
 
     public static bool IsPlayerCharacter(nint characterAddress)
@@ -375,7 +252,7 @@ public static class CommonHelper
         var native = CharacterHelper.GetCharacterAddress(castChar);
 
         var charTargetId = GetPlayerTarget(castChar);
-        var targetObject = GetObjectFromObjectId(charTargetId);
+        var targetObject = GameObjectHelper.FindByGameObjectId(charTargetId);
         var targetCid = 0UL;
         if (targetObject is IPlayerCharacter)
         {

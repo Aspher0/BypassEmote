@@ -18,12 +18,13 @@ public class IpcData
     public CharacterState BuddyData { get; set; }
 
 
-    public void ApplyAll(bool applyOwnedObjects)
+    public void ApplyAll(bool applyOwnedObjects, bool includePlayer = true)
     {
         if (PlayerData.CharacterAddress == nint.Zero || !PlayerData.IsPlayerCharacter)
             return;
 
-        PlayerData.ApplyState(true, this);
+        if (includePlayer)
+            PlayerData.ApplyState(true, this);
 
         if (!applyOwnedObjects)
             return;

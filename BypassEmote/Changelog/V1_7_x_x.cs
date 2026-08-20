@@ -46,7 +46,7 @@ public class V1_7_x_x : BaseChangelogVersion
             Entries = new List<ChangelogEntry>
             {
                 Header("New Features", Orange, 0, FontAwesomeIcon.Book),
-                EntryBullet("Added the possibility to assign emotes to hotbar slots.\nSimply go to the main UI and right click an emote. If the emote is assignable, an option will appear.", Orange, 1),
+                EntryBullet("Added the possibility to assign emotes to hotbar slots.\nRight click an emote in the main UI, and an option will appear if the emote is assignable.", Orange, 1),
                 EntryBullet("Added a new config option for enabling/disabling bypassing emotes on emote hotbar slot click.", White, 1),
             }
         };
