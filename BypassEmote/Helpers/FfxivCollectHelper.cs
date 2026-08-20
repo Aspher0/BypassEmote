@@ -5,6 +5,8 @@ using NoireLib;
 using NoireLib.Helpers;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -68,6 +70,8 @@ public sealed class FfxivCollectResponse<T>
 internal static class FfxivCollectHelper
 {
     private const string BaseUrl = "https://ffxivcollect.com/api";
+    private const string CacheFolderName = "FfxivCollectCache";
+    private const string LogPrefix = "[FfxivCollect] ";
 
     private static readonly TimeSpan CacheLifetime = TimeSpan.FromDays(1);
 
@@ -84,10 +88,92 @@ internal static class FfxivCollectHelper
     {
         var url = $"{BaseUrl}/emotes?language={LocaleParam()}";
 
-        var response = await RemoteJsonHelper
-            .GetCachedJsonAsync<FfxivCollectResponse<FfxivCollectEntry>>(url, CacheLifetime, token)
-            .ConfigureAwait(false);
+        var response = await GetCachedAsync<FfxivCollectResponse<FfxivCollectEntry>>(url, token).ConfigureAwait(false);
 
         return response?.Results ?? [];
+    }
+
+    // Serves the copy on disk while it is younger than the lifetime, and falls back to a stale copy when the site
+    // cannot be reached, so a start without network still has a catalog.
+    private static async Task<T?> GetCachedAsync<T>(string url, CancellationToken token) where T : class
+    {
+        var cachePath = CachePathFor(url);
+
+        if (cachePath != null && IsFresh(cachePath) && ReadCache<T>(cachePath) is { } fresh)
+            return fresh;
+
+        var json = await HttpHelper.GetStringAsync(url, token).ConfigureAwait(false);
+
+        if (json == null)
+            return cachePath == null ? null : ReadCache<T>(cachePath);
+
+        var parsed = Deserialize<T>(json, url);
+
+        if (parsed != null && cachePath != null)
+            WriteCache(cachePath, json);
+
+        return parsed;
+    }
+
+    private static string? CachePathFor(string url)
+    {
+        var configDirectory = FileHelper.GetPluginConfigDirectory();
+
+        if (configDirectory.IsNullOrWhitespace())
+            return null;
+
+        // Named after the URL's hash so a query string cannot produce an unusable file name.
+        var tag = EncryptionHelper.ShortTag(url, 16);
+
+        return Path.Combine(configDirectory, CacheFolderName, $"{tag}.json");
+    }
+
+    private static bool IsFresh(string path)
+    {
+        try
+        {
+            return File.Exists(path) && DateTime.UtcNow - File.GetLastWriteTimeUtc(path) < CacheLifetime;
+        }
+        catch
+        {
+            // A copy whose timestamp cannot be read cannot be shown to be fresh.
+            return false;
+        }
+    }
+
+    private static T? ReadCache<T>(string path) where T : class
+    {
+        try
+        {
+            return File.Exists(path) ? Deserialize<T>(File.ReadAllText(path), path) : null;
+        }
+        catch (Exception ex)
+        {
+            NoireLogger.LogWarning($"Could not read the cached response at '{path}': {ex.Message}", LogPrefix);
+            return null;
+        }
+    }
+
+    private static void WriteCache(string path, string json)
+    {
+        var directory = Path.GetDirectoryName(path);
+
+        if (!directory.IsNullOrWhitespace() && !FileHelper.EnsureDirectoryExists(directory))
+            return;
+
+        FileHelper.ReplaceFileAtomically(path, Encoding.UTF8.GetBytes(json));
+    }
+
+    private static T? Deserialize<T>(string json, string source) where T : class
+    {
+        try
+        {
+            return JsonConvert.DeserializeObject<T>(json);
+        }
+        catch (Exception ex)
+        {
+            NoireLogger.LogError(ex, $"The response from '{source}' was not readable as {typeof(T).Name}.", LogPrefix);
+            return null;
+        }
     }
 }

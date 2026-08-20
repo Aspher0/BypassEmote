@@ -1081,8 +1081,29 @@ public sealed unsafe class SchedulerResidencyProbe
 
     // Armed, inside the window and under the cap. True takes one slot.
     private bool TakeLogSlot(ref long windowStamp, ref int count, int cap)
-        => BurstWindow.TryTake(_substituteArmedTick, Environment.TickCount64,
-            ref windowStamp, ref count, cap, DiagnosticWindowMs);
+    {
+        var armedTick = _substituteArmedTick;
+
+        if (armedTick == 0)
+            return false;
+
+        if (armedTick != windowStamp)
+        {
+            windowStamp = armedTick;
+            count = 0;
+        }
+
+        if (count >= cap)
+            return false;
+
+        var elapsed = Environment.TickCount64 - armedTick;
+
+        if (elapsed < 0 || elapsed > DiagnosticWindowMs)
+            return false;
+
+        count++;
+        return true;
+    }
 
 #if DEBUG
     private const int AnimationBindingDumpSize = BindingView.HeadSize;

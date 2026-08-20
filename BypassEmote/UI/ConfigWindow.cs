@@ -363,7 +363,7 @@ public class ConfigWindow : Window, IDisposable
                     + "\nStrict allows eye following differences but keeps emotes head and body turn behaviors."
                     + "\nLenient allows any turn behavior."
                     + "\n\nThe plugin will still always try to find the best match first, regardless of the selected rule."
-                    + "\nRecommended: Lenient."))
+                    + "\n\nRecommended: Lenient."))
                 {
                     Configuration.TurnMatching = TurnMatchingOrder[turnMatching];
                 }
@@ -373,7 +373,7 @@ public class ConfigWindow : Window, IDisposable
                     "Strict never puts an emote on one that makes sound."
                     + "\nLenient ignores sound entirely."
                     + "\n\nThis is to prevent vanilla people from seeing you play fume, for example."
-                    + "\nRecommended: Strict."))
+                    + "\n\nRecommended: Strict."))
                 {
                     Configuration.SoundMatching = (SoundMatchRule)soundMatching;
                 }
@@ -438,7 +438,8 @@ public class ConfigWindow : Window, IDisposable
                 var swapModFlavor = (int)Configuration.SwapModFlavor;
                 if (ComboRow(PenumbraModName, "##BypassEmoteModFlavor", ref swapModFlavor, SwapModFlavorOptions,
                     "Visible mod shows up in your Penumbra mod list so you can see and manage it."
-                    + "\nHidden temporary mod makes the mod invisible."))
+                    + "\nHidden temporary mod makes the mod invisible."
+                    + "\n\nRecommended: Visible."))
                 {
                     Configuration.SwapModFlavor = (SwapModFlavor)swapModFlavor;
                 }
@@ -446,7 +447,8 @@ public class ConfigWindow : Window, IDisposable
                 var swapLifetime = (int)Configuration.SwapLifetime;
                 if (ComboRow(LifetimeName, "##BypassEmoteLifetime", ref swapLifetime, SwapLifetimeOptions,
                     "Turn the swap off puts your real emote back once the animation ends."
-                    + "\nKeep it until next swap leaves the mod enabled until you try to play the real emote next time."))
+                    + "\nKeep it until next swap leaves the mod enabled until you try to play the real emote next time."
+                    + "\n\nRecommended: Keep it until next swap."))
                 {
                     Configuration.SwapLifetime = (SwapLifetime)swapLifetime;
                 }

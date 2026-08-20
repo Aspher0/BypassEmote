@@ -64,7 +64,7 @@ public class ConfigurationInstance : NoireConfigBase
     public SwapModFlavor SwapModFlavor { get; set; } = SwapModFlavor.RealMod;
 
     [AutoSave]
-    public SwapLifetime SwapLifetime { get; set; } = SwapLifetime.Ephemeral;
+    public SwapLifetime SwapLifetime { get; set; } = SwapLifetime.Lingering;
 
     [AutoSave]
     public LoopMatchRule LoopMatching { get; set; } = LoopMatchRule.Strict;

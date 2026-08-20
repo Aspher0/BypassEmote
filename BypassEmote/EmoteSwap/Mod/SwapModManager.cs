@@ -1,3 +1,4 @@
+using BypassEmote.Helpers;
 using BypassEmote.IPC;
 using BypassEmote.Models;
 using Newtonsoft.Json;
@@ -623,7 +624,7 @@ public sealed class SwapModManager
         if (string.IsNullOrEmpty(resolvedDiskPath))
             return false;
 
-        var normalizedPath = PathHelper.NormalizeSlashes(resolvedDiskPath);
+        var normalizedPath = NormalizeSlashes(resolvedDiskPath);
 
         if (ModDirectoryFromDiskPath(resolvedDiskPath, modRoot) is { } modDirectory
             && (modDirectory.StartsWith(SwapModIdentity.DirectoryPrefix, StringComparison.OrdinalIgnoreCase)
@@ -637,7 +638,7 @@ public sealed class SwapModManager
     }
 
     internal static string? ModDirectoryFromDiskPath(string resolvedDiskPath, string? modRoot)
-        => PathHelper.FirstSegmentUnder(modRoot, resolvedDiskPath);
+        => FirstSegmentUnder(modRoot, resolvedDiskPath);
 
     internal static string RedirectedPathValue(string fileName, SwapModFlavor flavor)
         => flavor == SwapModFlavor.RealMod ? $"{SwapsSubfolderName}/{fileName}" : fileName;
@@ -947,7 +948,41 @@ public sealed class SwapModManager
     private static void DeleteUnreferencedSwapFiles(string storageDirectory, IEnumerable<string> referencedPaths)
         => Store.RemoveUnreferenced(storageDirectory, referencedPaths);
 
-    private static string OwnPrefix(string directory, string subfolder) => PathHelper.NormalizeSlashes(Path.Combine(directory, subfolder)) + "/";
+    private static string OwnPrefix(string directory, string subfolder) => NormalizeSlashes(Path.Combine(directory, subfolder)) + "/";
 
+    /// <summary>Turns every backslash into a forward slash.</summary>
+    /// <param name="path">The path to normalize.</param>
+    /// <returns>The path with forward slashes, or an empty string when <paramref name="path"/> is null.</returns>
+    private static string NormalizeSlashes(string? path)
+        => path == null ? string.Empty : path.Replace('\\', '/');
 
+    /// <summary>The first path segment below a root, ignoring slash style and case.</summary>
+    /// <param name="root">The directory the path should be under.</param>
+    /// <param name="path">The path to take apart.</param>
+    /// <returns>The first segment below the root, or null when the path is not under it or is the root itself.</returns>
+    private static string? FirstSegmentUnder(string? root, string? path)
+    {
+        if (string.IsNullOrEmpty(root) || string.IsNullOrEmpty(path))
+            return null;
+
+        var normalizedRoot = NormalizeSlashes(root).TrimEnd('/');
+        var normalizedPath = NormalizeSlashes(path);
+
+        if (normalizedRoot.Length == 0 || normalizedPath.Length <= normalizedRoot.Length)
+            return null;
+
+        if (!normalizedPath.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        // Must be a segment boundary: "mods2/x" is not under "mods".
+        if (normalizedPath[normalizedRoot.Length] != '/')
+            return null;
+
+        var start = normalizedRoot.Length + 1;
+        var end = normalizedPath.IndexOf('/', start);
+
+        var segment = end < 0 ? normalizedPath[start..] : normalizedPath[start..end];
+
+        return segment.Length == 0 ? null : segment;
+    }
 }
