@@ -195,9 +195,6 @@ public partial class Service
 
             if (character != null)
             {
-                if (character.Address == NoireService.ObjectTable.LocalPlayer?.Address)
-                    EndWatcher?.NotifyLocalEmote(emoteId);
-
                 var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(character.Address);
 
                 if (trackedCharacter == null)

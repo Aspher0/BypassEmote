@@ -28,7 +28,6 @@ public partial class Service
 #if DEBUG
     public static ClientTriggerMonitor? TriggerMonitor;
 #endif
-    public static IdleReposeHold? ReposeHold;
     public static SwapOrchestrator? Orchestrator;
 
     private static string? _sweptFor;
@@ -52,7 +51,6 @@ public partial class Service
 #if DEBUG
         TriggerMonitor = new ClientTriggerMonitor();
 #endif
-        ReposeHold = new IdleReposeHold();
         Orchestrator = new SwapOrchestrator(Penumbra, Catalog, SwapMods, EndWatcher, ResidencyProbe);
 
         BodyWatcher = new SkeletonWatcher(SwapMods);
@@ -109,12 +107,7 @@ public partial class Service
 
         BodyWatcher?.Dispose();
         Orchestrator?.Dispose();
-        ResidencyProbe?.Dispose();
-#if DEBUG
-        TriggerMonitor?.Dispose();
-#endif
 
-        ReposeHold?.Dispose();
         EndWatcher?.Disarm();
 
         if (Penumbra != null)
