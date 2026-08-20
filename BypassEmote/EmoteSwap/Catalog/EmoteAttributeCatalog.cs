@@ -15,77 +15,45 @@ using System.Threading.Tasks;
 
 namespace BypassEmote.EmoteSwap;
 
-// One ActionTimeline slot. SlotColumn is the resolved row's own Slot field, 0-3. SlotIndex is where the slot sits
-// in the emote's array, 0-6.
 internal sealed record RawSlotData(int SlotIndex, uint TimelineRowId, string Key, int LoadType, int SlotColumn, bool Pause);
 
-// One emote's sheet and TMB data as plain values, so BuildAttributes runs without the game.
 internal sealed record RawEmoteData(
     uint RowId, string Command, uint CategoryRowId, uint EmoteModeRowId, bool EmoteModeCamera, bool DrawsWeapon,
     bool DoNotPlay, IReadOnlyList<RawSlotData> Slots, IReadOnlyList<TmbEntryInfo> EmbeddedTmbEntries,
     bool IntroPapExists = false, IReadOnlyDictionary<string, string>? ActionTmbFaceLibraries = null,
     IReadOnlyDictionary<string, string>? EmbeddedFaceLibraries = null);
 
-// Disk-cached swap attributes, one row per playable Emote sheet row. The published reference is swapped
-// atomically, so a reader gets either nothing or a finished snapshot.
 public sealed class EmoteAttributeCatalog
 {
     private const string LogPrefix = "[EmoteAttributeCatalog] ";
     private const string CacheFileName = "emote_catalog.json";
 
-    // Bump when a built row changes shape or meaning, so existing caches are rebuilt.
     internal const int RulesVersion = 1;
 
     private const int ActionTimelineSlotCount = ActionTimelineSlots.SlotCount;
     private const string VanillaPapPathFormat = "chara/human/c0101/animation/a0001/bt_common/{0}.pap";
 
-    // Skeleton-independent, unlike the pap path above: one file per key for everyone.
     private const string ActionTmbPathFormat = "chara/action/{0}.tmb";
-
     private const string FacialPosePrefix = "facial/pose/";
-
-    // A fresh build's ~300 sqpack reads contend with the game's own streaming IO, so the worker sleeps every
-    // few emotes to spread them out.
     private const int BuildPacingBatchSize = 8;
     private const int BuildPacingSleepMs = 5;
-
-    // Only General and Special are real emotes. Expressions are facial, and anything else is a row
-    // the emote window itself does not list.
     private const uint GeneralCategoryRowId = 1;
     private const uint SpecialCategoryRowId = 2;
     private const uint ChangePoseRowId = 90;
-
-    // Pose rows the slot-key rule cannot catch: 90 has zero populated slots, 243/244/253 are the unnamed
-    // umbrella rows.
     private static readonly HashSet<uint> PoseFamilyRowIds = new() { ChangePoseRowId, 218, 219, 243, 244, 253 };
-
-    // ActionTimeline.LoadType (Normal=0, PerJob=1, Facial=2). Only PerJob excludes: nearly every ordinary
-    // populated slot reports 2, which is "Facial" in name only.
     private const int LoadTypePerJob = 1;
-
-    // Only 1 (/groundsit) and 2 (/lounge) are posture locks. Every other nonzero EmoteMode belongs to one
-    // ordinary emote, so excluding on nonzero alone would drop most loop emotes.
     private static readonly HashSet<uint> PostureLockEmoteModes = new() { 1, 2 };
-
-    // Sound cues and the face library. The offsets these strings live at are the wire format's, and belong to
-    // the scanner rather than here.
     private static readonly HashSet<string> ScannedMagics = new(StringComparer.Ordinal) { "C053", "C063", "TMPP" };
-
     private static readonly PublishedData EmptyPublished = new(Array.Empty<EmoteAttributes>(), new Dictionary<uint, EmoteAttributes>());
-
     private int _buildState; // 0 = not started, 1 = started
     private PublishedData _published = EmptyPublished;
 
     public bool Ready => !ReferenceEquals(Volatile.Read(ref _published), EmptyPublished);
-
-    // Every built row, in Emote sheet order. Empty until Ready.
     public IReadOnlyList<EmoteAttributes> All => Volatile.Read(ref _published).All;
 
-    // Null when the catalog is not built yet or the RowId has no named emote.
     public EmoteAttributes? Get(uint emoteRowId)
         => Volatile.Read(ref _published).ByRowId.TryGetValue(emoteRowId, out var attributes) ? attributes : null;
 
-    // Idempotent, including while a build is still in flight, and safe from any thread.
     public void StartBuild()
     {
         if (Interlocked.CompareExchange(ref _buildState, 1, 0) != 0)
@@ -107,8 +75,6 @@ public sealed class EmoteAttributeCatalog
         }
     }
 
-    // Must complete before the background build touches a sheet: Lumina's sheet cache is not safe to
-    // populate from two racing threads.
     private static void WarmSheets()
     {
         try
@@ -136,7 +102,6 @@ public sealed class EmoteAttributeCatalog
 
         var rows = BuildFromGameData();
 
-        // The Emote sheet always has rows on success, so zero means the build failed. Leave Ready false.
         if (rows.Count == 0)
         {
             NoireLogger.LogWarning("Emote catalog build produced no rows, will retry next start.", LogPrefix);
@@ -165,13 +130,10 @@ public sealed class EmoteAttributeCatalog
         foreach (var slot in populatedSlots)
             postures |= CatalogRules.PostureForSlot(slot.SlotIndex);
 
-        // Slot 1 is the intro ("_start") channel.
         var introSlot = populatedSlots.FirstOrDefault(s => s.SlotIndex == 1);
         var hasIntro = introSlot != null;
         var introRelativePapPath = introSlot != null ? UsablePapPathFor(introSlot) : null;
 
-        // A populated slot 1 says nothing about a pap backing it: /sweat and the /conduct class get their
-        // windup from a standalone action TMB with no pap on any skeleton.
         var intro = introSlot == null
             ? IntroKind.None
             : introRelativePapPath != null && raw.IntroPapExists ? IntroKind.Pap : IntroKind.TmbOnly;
@@ -191,8 +153,6 @@ public sealed class EmoteAttributeCatalog
         return new EmoteAttributes(raw.RowId, command, loopKind, sound, turn, postures, hasIntro, introRelativePapPath, eligibleTarget, variants, raw.EmoteModeCamera, intro, isPoseFamily, faceLibraries, animationTimelineIds);
     }
 
-    // Usable pap path to the face library a key declares. The standalone action tmb first, then the name embedded
-    // in the pap. Null leaves the injection off.
     private static IReadOnlyDictionary<string, string>? BuildFaceLibraries(List<RawSlotData> populatedSlots,
         IReadOnlyDictionary<string, string>? actionTmbFaceLibraries,
         IReadOnlyDictionary<string, string>? embeddedFaceLibraries)
@@ -221,8 +181,6 @@ public sealed class EmoteAttributeCatalog
     private static bool IsPoseFamily(uint rowId, List<RawSlotData> populatedSlots)
         => PoseFamilyRowIds.Contains(rowId) || populatedSlots.Any(s => IsPoseFamilyKey(s.Key));
 
-    // Whether an ActionTimeline key belongs to a cpose cycle. The stance base paps (emote/sit, emote/jmn,
-    // emote/bed_liedown_*) are mode emotes, not cycle members, and must not match.
     internal static bool IsPoseFamilyKey(string key)
         => key.StartsWith("emote/pose", StringComparison.Ordinal)
         || key.StartsWith("emote/s_pose", StringComparison.Ordinal)
@@ -231,8 +189,6 @@ public sealed class EmoteAttributeCatalog
         || (key.StartsWith("ornament_sp/", StringComparison.Ordinal) && key.Contains("onm_pose", StringComparison.Ordinal))
         || key == "resident/idle";
 
-    // The rows of every slot backed by a shared bt_common pap, in slot order. Per-job and facial-pose slots are
-    // left out: neither is this emote's body animation.
     internal static List<ushort> AnimationTimelineIdsFor(List<RawSlotData> populatedSlots)
     {
         var ids = new List<ushort>(populatedSlots.Count);
@@ -269,8 +225,6 @@ public sealed class EmoteAttributeCatalog
         return variants;
     }
 
-    // Null when the key is not a shared bt_common animation. PerJob keys live elsewhere, and facial-pose keys are
-    // not emote animations at all.
     private static string? UsablePapPathFor(RawSlotData slot)
     {
         if (slot.LoadType == LoadTypePerJob)
@@ -282,8 +236,6 @@ public sealed class EmoteAttributeCatalog
         return "bt_common/" + slot.Key + ".pap";
     }
 
-    // The exclusion clauses behind EmoteAttributes.EligibleTarget. An empty command excludes, because the success
-    // line prints that command verbatim.
     private static bool IsExcluded(RawEmoteData raw, List<RawSlotData> populatedSlots, bool isPoseFamily)
         => PostureLockEmoteModes.Contains(raw.EmoteModeRowId)
         || raw.CategoryRowId is not (GeneralCategoryRowId or SpecialCategoryRowId)
@@ -310,8 +262,6 @@ public sealed class EmoteAttributeCatalog
 
         foreach (var emote in sheet)
         {
-            // A nameless row is junk unless it carries an animation: the no-target and by-height variants
-            // of /splash and the photographs are nameless, and a swap has to be able to look them up.
             if (string.IsNullOrEmpty(emote.Name.ExtractText()) && !emote.ActionTimeline.Any(t => t.RowId != 0))
                 continue;
 
@@ -325,7 +275,6 @@ public sealed class EmoteAttributeCatalog
                 NoireLogger.LogError(ex, $"Failed to process emote {emote.RowId}; skipped.", LogPrefix);
             }
 
-            // See BuildPacingBatchSize. Already inside Task.Run, so sleeping the worker is fine.
             if (++processed % BuildPacingBatchSize == 0)
                 Thread.Sleep(BuildPacingSleepMs);
         }
@@ -342,7 +291,6 @@ public sealed class EmoteAttributeCatalog
         var slots = ReadSlots(emote);
         var (embeddedTmbEntries, embeddedFaceLibraries) = ReadEmbeddedTmbEntries(emote.RowId, slots);
 
-        // Row 0 exists and carries Camera=True, so resolving alone would flag every emote with no EmoteMode.
         var emoteModeCamera = emote.EmoteMode.RowId != 0 && (emote.EmoteMode.ValueNullable?.Camera ?? false);
 
         return new RawEmoteData(
@@ -353,8 +301,6 @@ public sealed class EmoteAttributeCatalog
             EmbeddedFaceLibraries: embeddedFaceLibraries);
     }
 
-    // Probing c0101 alone is enough: every start pap with any coverage includes it. A failed probe reads as no
-    // pap.
     private static bool IntroPapExistsFor(List<RawSlotData> slots)
     {
         var introSlot = slots.FirstOrDefault(s => s.SlotIndex == 1 && s.TimelineRowId != 0);
@@ -389,7 +335,6 @@ public sealed class EmoteAttributeCatalog
             var resolved = slotRef.ValueNullable;
             if (resolved is not { } timeline)
             {
-                // A nonzero RowId that fails to resolve still counts as populated, just with neutral fields.
                 slots.Add(new RawSlotData(i, slotRef.RowId, string.Empty, 0, 0, false));
                 continue;
             }
@@ -400,8 +345,6 @@ public sealed class EmoteAttributeCatalog
         return slots;
     }
 
-    // Every populated slot, not slot 0 alone: a posture-variant slot carries its own copy of the same sound cue.
-    // Missing paps are the normal case for per-job and facial keys.
     private static (List<TmbEntryInfo> Entries, Dictionary<string, string> FaceLibraries) ReadEmbeddedTmbEntries(uint emoteRowId, List<RawSlotData> slots)
     {
         var results = new List<TmbEntryInfo>();
@@ -445,7 +388,6 @@ public sealed class EmoteAttributeCatalog
         return (results, faceLibraries);
     }
 
-    // A missing tmb is the common case: no face library for that key.
     private static Dictionary<string, string> ReadActionTmbFaceLibraries(uint emoteRowId, List<RawSlotData> slots)
     {
         var results = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -478,8 +420,6 @@ public sealed class EmoteAttributeCatalog
         return results;
     }
 
-    // Built on first use rather than in a field initializer: the config directory only exists once the plugin
-    // is up, and the pure builders in this class are exercised without one.
     private static VersionedJsonCache<List<EmoteAttributes>>? _cache;
 
     private static VersionedJsonCache<List<EmoteAttributes>> Cache

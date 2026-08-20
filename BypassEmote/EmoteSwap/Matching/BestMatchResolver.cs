@@ -39,8 +39,6 @@ public static class BestMatchResolver
     // Needs the shared-pap machinery, so it goes last of the intro cases.
     private const int PapIntroOnPaplessSourceTierPenalty = -25_000;
 
-    // The pool arrives filtered to unlocked + EligibleTarget + RowId != source, and source.LoopKind is Looped
-    // or OneShot, never DoNotPlay.
     public static MatchResult Resolve(
         EmoteAttributes source,
         IReadOnlyList<EmoteAttributes> pool,
@@ -107,7 +105,6 @@ public static class BestMatchResolver
         return LastWordToTheMod(ranked);
     }
 
-    // Moves the mod refusals to the end, keeping the order of everything else.
     private static IReadOnlyList<NearMiss> LastWordToTheMod(List<NearMiss> ranked)
     {
         var ordered = new List<NearMiss>(ranked.Count);
@@ -141,7 +138,6 @@ public static class BestMatchResolver
         return left.Miss.Candidate.RowId.CompareTo(right.Miss.Candidate.RowId);
     }
 
-    // Whether a refusal came from the player's settings rather than from a real filter.
     private static bool IsConfigured(string blockedBy)
         => blockedBy is BlockedByRules or BlockedByModdedTarget;
 
@@ -191,7 +187,7 @@ public static class BestMatchResolver
         return (first, tier);
     }
 
-    // Sits above the soft scores (+/-1200) and below the smallest tier step (25k), so a tier is never crossed.
+    // Sits above the soft scores (+/-1200) and below the smallest tier step (25k)
     internal const int SameTierScoreBand = 10_000;
 
     private static string? FirstFailingFilter(EmoteAttributes source, EmoteAttributes candidate, MatchConfig config)

@@ -63,7 +63,7 @@ public sealed class IdleReposeHold : IDisposable
         }
         catch
         {
-            // An unreadable flag must never break the game's own updater.
+            // no-op
         }
 
         return _hook!.Original(state);

@@ -40,7 +40,7 @@ public sealed class ClientTriggerMonitor
         }
         catch
         {
-            // Logging must never break the passthrough.
+            // no-op
         }
     }
 

@@ -14,8 +14,7 @@ namespace BypassEmote.EmoteSwap;
 
 // Hooks the animation load path so a swapped emote serves its own content, and answers whether the scheduler cache
 // still holds a timeline key. The loader dedupes by ActionTimeline key, so the doors below hand it a unique name
-// per content. Every computed address goes through the VirtualQuery guard: AccessViolation is not catchable
-// in.NET.
+// per content.
 public sealed unsafe class SchedulerResidencyProbe
 {
     private const string LogPrefix = "[SchedulerResidencyProbe] ";

@@ -51,7 +51,6 @@ internal enum MapperAction
 // Address arithmetic for the retarget maps a skeleton keeps, and the walk that reads one. A skeleton keeps two
 // ordered maps from a pack's skeleton key to the retarget an animation off that pack is sampled through. The game
 // takes the key off the first pack in the set declaring the name, which is not always the pack that is playing.
-// Only the arithmetic is here; the reads stay behind the caller's guard.
 internal static class MapperTreeLayout
 {
     // The skeleton a pack was authored for.
