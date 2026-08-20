@@ -1,7 +1,8 @@
 using NoireLib;
-using NoireLib.Feedback;
 using NoireLib.Helpers;
 using NoireLib.HistoryLogger;
+using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
@@ -13,7 +14,7 @@ public static class FeedbackHelper
 {
     public const string ChatTag = "[BypassEmote] ";
 
-    private static readonly NoireFeedback Channel = new(ChatTag, "BypassEmote", "BypassEmote.Feedback");
+    private static readonly Feedback Channel = new(ChatTag, "BypassEmote", "BypassEmote.Feedback");
 
     private static readonly Vector3 ErrorColor = ColorHelper.HexToVector3("#E81313");
     private static readonly Vector3 InfoColor = ColorHelper.HexToVector3("#E6E6E6");
