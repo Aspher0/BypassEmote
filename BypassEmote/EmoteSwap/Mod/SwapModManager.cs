@@ -1,4 +1,4 @@
-using BypassEmote.Helpers;
+﻿using BypassEmote.Helpers;
 using BypassEmote.IPC;
 using BypassEmote.Models;
 using Newtonsoft.Json;
@@ -190,8 +190,40 @@ public sealed class SwapModManager
 
     public bool SelectExisting(SwapOptionEntry entry)
     {
-        if (_identity.Names == null)
+        if (_identity.Names is not { } names)
             return false;
+
+        var collection = CollectionForSelection();
+
+        using (_ownMutations.Enter())
+        {
+            var enableEc = _gateway.SetModEnabled(collection, names.Directory, true);
+
+            if (!IsSuccess(enableEc))
+            {
+                NoireLogger.LogError(
+                    $"Penumbra would not enable '{names.Directory}' in collection {collection} (ec={enableEc}).", LogPrefix);
+
+                return false;
+            }
+
+            var selectEc = _gateway.SelectOption(collection, names.Directory, entry.GroupName, entry.OptionName);
+
+            if (!IsSuccess(selectEc))
+            {
+                var version = _gateway.ReportedApiVersion();
+
+                NoireLogger.LogError(
+                    $"Penumbra refused '{entry.OptionName}' in '{entry.GroupName}' (ec={selectEc}, "
+                    + $"mod '{names.Directory}', collection {collection}, Penumbra api "
+                    + $"{(version is { } v ? $"{v.Breaking}.{v.Feature}" : "unknown")}). "
+                    + $"Penumbra holds: {PenumbraOptionsLine(entry.GroupName, entry.OptionName)}", LogPrefix);
+
+                return false;
+            }
+        }
+
+        _pressedKey = entry.ContentKey;
 
         foreach (var sibling in Registry.Entries
             .Where(other => other.SelectedByUs && other.GroupName == entry.GroupName && other.ContentKey != entry.ContentKey)
@@ -203,101 +235,69 @@ public sealed class SwapModManager
         UpdateEntry(entry with { SelectedByUs = true, LastUsedStamp = NextStamp() });
 
         if (Configuration.SwapBehavior == SwapBehavior.OneAtATime)
-        {
-            foreach (var other in Registry.Entries
-                .Where(other => other.SelectedByUs && other.GroupName != entry.GroupName).ToList())
-            {
-                UpdateEntry(other with { SelectedByUs = false });
-            }
-        }
-
-        _pressedKey = entry.ContentKey;
-
-        if (!PushSelections())
-        {
-            UpdateEntry(entry with { SelectedByUs = false });
-            _pressedKey = null;
-
-            return false;
-        }
+            DeselectAllExcept(entry.GroupName);
 
         PushRedirectScope();
+        ReconcilePriority();
 
         return true;
     }
 
     public void DeselectEntry(SwapOptionEntry entry)
     {
+        if (_identity.Names is not { } names)
+            return;
+
+        using (_ownMutations.Enter())
+            _gateway.TrySelectOption(Registry.CollectionId, names.Directory, entry.GroupName, OptionNaming.NoneOptionName);
+
         if (_pressedKey == entry.ContentKey)
             _pressedKey = null;
 
         UpdateEntry(entry with { SelectedByUs = false });
 
-        PushSelections();
+        DisableModIfNothingSelected();
         PushRedirectScope();
     }
 
     public void DeselectAll()
+    {
+        foreach (var entry in Registry.Entries.Where(entry => entry.SelectedByUs).ToList())
+            DeselectEntry(entry);
+    }
+
+    private void DeselectAllExcept(string groupName)
+    {
+        foreach (var entry in Registry.Entries.Where(entry => entry.SelectedByUs && entry.GroupName != groupName).ToList())
+            DeselectEntry(entry);
+    }
+
+    private void DeselectAllUnder(SwapModNames names)
     {
         var selected = Registry.Entries.Where(entry => entry.SelectedByUs).ToList();
 
         if (selected.Count == 0)
             return;
 
-        foreach (var entry in selected)
-            UpdateEntry(entry with { SelectedByUs = false });
-
-        _pressedKey = null;
-
-        PushSelections();
-        PushRedirectScope();
-    }
-
-    private bool PushSelections()
-    {
-        if (_identity.Names is not { } names)
-            return false;
-
-        var collection = CollectionForSelection();
-        var armed = Registry.Entries.Where(entry => entry.SelectedByUs).ToList();
-
         using (_ownMutations.Enter())
         {
-            if (armed.Count == 0)
-                return _gateway.RemoveTemporarySettings(collection, names.Directory);
+            foreach (var entry in selected)
+            {
+                _gateway.TrySelectOption(Registry.CollectionId, names.Directory, entry.GroupName,
+                    OptionNaming.NoneOptionName);
+            }
 
-            var selections = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
-
-            foreach (var entry in Registry.Entries)
-                selections[entry.GroupName] = [OptionNaming.NoneOptionName];
-
-            foreach (var entry in armed)
-                selections[entry.GroupName] = [entry.OptionName];
-
-            var ec = _gateway.SetTemporarySettings(collection, names.Directory, enabled: true,
-                Registry.AppliedPriority, selections);
-
-            if (IsSuccess(ec))
-                return true;
-
-            var version = _gateway.ReportedApiVersion();
-
-            NoireLogger.LogError(
-                $"Penumbra refused the settings of '{names.Directory}' in collection {collection} (ec={ec}, "
-                + $"Penumbra api {(version is { } v ? $"{v.Breaking}.{v.Feature}" : "unknown")}). "
-                + $"Penumbra holds: {PenumbraOptionsLine(armed[0].GroupName, armed[0].OptionName)}", LogPrefix);
-
-            return false;
+            _gateway.TrySetModEnabled(Registry.CollectionId, names.Directory, false);
         }
     }
 
-    private void DeselectAllUnder(SwapModNames names)
+    private void DisableModIfNothingSelected()
     {
-        if (!Registry.Entries.Any(entry => entry.SelectedByUs))
+        if (_identity.Names is not { } names || Registry.Entries.Any(entry => entry.SelectedByUs))
             return;
 
         using (_ownMutations.Enter())
-            _gateway.RemoveTemporarySettings(Registry.CollectionId, names.Directory);
+            _gateway.TrySetModEnabled(Registry.CollectionId, names.Directory, false);
     }
 
     public bool AddAndSelect(SwapOptionEntry entry, IReadOnlyDictionary<string, byte[]> filesToWrite, string drawnRace)
@@ -383,16 +383,38 @@ public sealed class SwapModManager
         NoireLogger.LogDebug($"{plan.Dropped.Count} kept swap(s) the settings would no longer make were dropped: "
             + string.Join(", ", plan.Dropped.Select(entry => $"'{entry.OptionName}' in '{entry.GroupName}'")), LogPrefix);
 
+        DeselectDropped(plan.Dropped);
         DropOptionsFromDisk(plan.Dropped);
 
         SweepUnreferencedFiles();
         ReassertSelections();
+        DisableModIfNothingSelected();
         PushRedirectScope();
 
         if (_gateway.RefreshOwnPanel())
             NoireLogger.LogDebug("The mod's panel was on screen, so its option list was refreshed.", LogPrefix);
 
         return plan.Dropped.Count;
+    }
+
+    private void DeselectDropped(IReadOnlyList<SwapOptionEntry> dropped)
+    {
+        if (_identity.Names is not { } names)
+            return;
+
+        var armed = dropped.Where(entry => entry.SelectedByUs).ToList();
+
+        if (armed.Count == 0)
+            return;
+
+        using (_ownMutations.Enter())
+        {
+            foreach (var entry in armed)
+            {
+                _gateway.TrySelectOption(Registry.CollectionId, names.Directory, entry.GroupName,
+                    OptionNaming.NoneOptionName);
+            }
+        }
     }
 
     private void DropOptionsFromDisk(IReadOnlyList<SwapOptionEntry> dropped)
@@ -416,7 +438,6 @@ public sealed class SwapModManager
         {
             foreach (var groupName in touched)
             {
-                // A group left with nothing but its empty option is a row of the mod panel that serves no swap.
                 if (ModGroupFile.IsEmpty(groups[groupName].Group))
                     RemoveRivalGroupFiles(modDirectory, groupName, keptFileName: string.Empty);
                 else
@@ -730,8 +751,10 @@ public sealed class SwapModManager
             pair => (IReadOnlyList<string>)pair.Value.Group.Options.Select(option => option.Name).ToList(),
             StringComparer.Ordinal);
 
-        var plan = RegistryDecisions.Reconcile(Registry, optionsOnDisk,
-            new Dictionary<string, string>(StringComparer.Ordinal));
+        var selectedOnDisk = _gateway.GetSelectedOptions(Registry.CollectionId, names.Directory)
+            ?? new Dictionary<string, string>(StringComparer.Ordinal);
+
+        var plan = RegistryDecisions.Reconcile(Registry, optionsOnDisk, selectedOnDisk);
 
         Registry = Registry with { Entries = plan.Entries };
         PersistRegistry();
@@ -771,7 +794,22 @@ public sealed class SwapModManager
         ReassertSelections();
     }
 
-    private void ReassertSelections() => PushSelections();
+    private void ReassertSelections()
+    {
+        if (_identity.Names is not { } names)
+            return;
+
+        var armed = Registry.Entries.Where(entry => entry.SelectedByUs).ToList();
+
+        if (armed.Count == 0)
+            return;
+
+        using (_ownMutations.Enter())
+        {
+            foreach (var entry in armed)
+                _gateway.TrySelectOption(Registry.CollectionId, names.Directory, entry.GroupName, entry.OptionName);
+        }
+    }
 
     private bool EnsureEmptyDefaultMap()
     {
@@ -849,9 +887,12 @@ public sealed class SwapModManager
                 return;
             }
 
-            Registry = Registry with { AppliedPriority = target };
+            bool moved;
 
-            if (!PushSelections())
+            using (_ownMutations.Enter())
+                moved = _gateway.TrySetModPriority(Registry.CollectionId, names.Directory, target);
+
+            if (!moved)
             {
                 NoireLogger.LogError(
                     $"Failed to rank '{names.Directory}' at {target} in collection {Registry.CollectionId}.", LogPrefix);

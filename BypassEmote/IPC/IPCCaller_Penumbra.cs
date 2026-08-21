@@ -1,4 +1,4 @@
-using BypassEmote.EmoteSwap;
+﻿using BypassEmote.EmoteSwap;
 using BypassEmote.Models;
 using Dalamud.Plugin;
 using NoireLib;
@@ -17,7 +17,6 @@ public sealed class IPCCaller_Penumbra : IDisposable
     private const string LogOnceScope = "BypassEmote.Penumbra.";
     private const int RequiredBreakingVersion = 5;
     private const int LocalPlayerObjectIndex = 0;
-    private const string TemporarySettingsSource = "BypassEmote";
 
     private static readonly TimeSpan ReprobeInterval = TimeSpan.FromSeconds(1);
 
@@ -36,8 +35,6 @@ public sealed class IPCCaller_Penumbra : IDisposable
     private readonly TrySetMod _trySetMod;
     private readonly TrySetModPriority _trySetModPriority;
     private readonly TrySetModSettings _trySetModSettings;
-    private readonly SetTemporaryModSettings _setTemporaryModSettings;
-    private readonly RemoveTemporaryModSettings _removeTemporaryModSettings;
     private readonly GetCurrentModSettings _getCurrentModSettings;
     private readonly GetAvailableModSettings _getAvailableModSettings;
     private readonly AddMod _addMod;
@@ -89,8 +86,6 @@ public sealed class IPCCaller_Penumbra : IDisposable
         _trySetMod = new TrySetMod(pluginInterface);
         _trySetModPriority = new TrySetModPriority(pluginInterface);
         _trySetModSettings = new TrySetModSettings(pluginInterface);
-        _setTemporaryModSettings = new SetTemporaryModSettings(pluginInterface);
-        _removeTemporaryModSettings = new RemoveTemporaryModSettings(pluginInterface);
         _getCurrentModSettings = new GetCurrentModSettings(pluginInterface);
         _getAvailableModSettings = new GetAvailableModSettings(pluginInterface);
         _addMod = new AddMod(pluginInterface);
@@ -367,35 +362,6 @@ public sealed class IPCCaller_Penumbra : IDisposable
         {
             LogFailureOnce(nameof(SelectOption), ex);
             return PenumbraApiEc.UnknownError;
-        }
-    }
-
-    public PenumbraApiEc SetTemporarySettings(Guid collectionId, string modDirectory, bool enabled, int priority,
-        IReadOnlyDictionary<string, IReadOnlyList<string>> selections)
-    {
-        try
-        {
-            return _setTemporaryModSettings.Invoke(collectionId, modDirectory, inherit: false, enabled, priority,
-                selections, TemporarySettingsSource);
-        }
-        catch (Exception ex)
-        {
-            LogFailureOnce(nameof(SetTemporarySettings), ex);
-            return PenumbraApiEc.UnknownError;
-        }
-    }
-
-    public bool RemoveTemporarySettings(Guid collectionId, string modDirectory)
-    {
-        try
-        {
-            var ec = _removeTemporaryModSettings.Invoke(collectionId, modDirectory);
-            return ec is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged;
-        }
-        catch (Exception ex)
-        {
-            LogFailureOnce(nameof(RemoveTemporarySettings), ex);
-            return false;
         }
     }
 

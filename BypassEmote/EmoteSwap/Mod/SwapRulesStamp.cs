@@ -1,12 +1,10 @@
-using BypassEmote.Models;
+﻿using BypassEmote.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace BypassEmote.EmoteSwap;
 
-// The settings that decide which target a source is given. An option stamped with anything else was chosen under
-// rules that have changed since, so the next swap judges it again before it stays in the mod.
 internal static class SwapRulesStamp
 {
     internal static string Current()
