@@ -116,6 +116,8 @@ public partial class Service
         if (SwapIdentity != null)
             SwapIdentity.Changed -= OnSwapIdentityChanged;
 
+        SwapMods?.ShutDown();
+
         Penumbra?.Dispose();
         SwapIdentity?.Dispose();
     }

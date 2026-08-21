@@ -818,15 +818,32 @@ public sealed class SwapModManager
 
     private void EmptyGroupFiles()
     {
+        foreach (var onDisk in ReadGroups().Values)
+        {
+            if (!ModGroupFile.IsEmpty(onDisk.Group))
+                WriteGroup(ModGroupFile.NewGroup(onDisk.Group.Name), onDisk.Index, onDisk.Files);
+        }
+    }
+
+    public void ShutDown()
+    {
         if (ModDirectory is not { } modDirectory || !Directory.Exists(modDirectory))
             return;
 
-        foreach (var onDisk in ReadGroups().Values)
+        try
         {
-            if (ModGroupFile.IsEmpty(onDisk.Group))
-                continue;
+            foreach (var onDisk in ReadGroups().Values)
+            {
+                if (!ModGroupFile.IsEmpty(onDisk.Group))
+                    continue;
 
-            WriteGroup(ModGroupFile.NewGroup(onDisk.Group.Name), onDisk.Index, onDisk.Files);
+                foreach (var path in onDisk.Files)
+                    File.Delete(path);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            NoireLogger.LogDebug($"Could not erase the emptied groups ({ex.Message}).", LogPrefix);
         }
     }
 

@@ -1433,8 +1433,35 @@ public sealed unsafe class SchedulerResidencyProbe
             return candidate;
         }
 
-        note = $"not correctable, first match is [{chosenSource}] and nothing resident holds [{pressed}]";
+        note = $"not correctable, first match is [{chosenSource}] and nothing resident holds [{pressed}]. "
+            + DescribeResidentPacks(text, chosen);
+
         return chosen;
+    }
+
+    private string DescribeResidentPacks(string text, nint chosen)
+    {
+        var seen = SeenPacksSnapshot();
+
+        if (seen.Length == 0)
+            return "No pack was seen this press";
+
+        var described = new List<string>(seen.Length);
+
+        foreach (var candidate in seen)
+        {
+            if (candidate == 0)
+                continue;
+
+            var index = IndexOfPackNamePerEntry(candidate, text);
+            var source = index < 0 ? "name absent" : SourceOfPackContent(candidate, text) ?? "unnamed content";
+            var havok = index >= 0 && PackHavokAnimationAt(candidate, index) != 0;
+
+            described.Add($"0x{candidate:X}{(candidate == chosen ? "*" : string.Empty)}=[{source}]"
+                + (havok ? string.Empty : " no-havok"));
+        }
+
+        return $"Seen this press: {string.Join(", ", described)}";
     }
 
     // The pack sets the binding scan has walked, other characters' included. Packs live in one until the game
