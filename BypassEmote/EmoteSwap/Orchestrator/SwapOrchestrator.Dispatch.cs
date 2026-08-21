@@ -1,4 +1,4 @@
-using BypassEmote.Helpers;
+﻿using BypassEmote.Helpers;
 using BypassEmote.Models;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ public sealed partial class SwapOrchestrator
 {
     internal readonly record struct DispatchRank(EmotePlayType LoopKind, TurnClass Turn, SoundClass Sound);
 
-    private sealed record DispatchAssignment(uint Target, DispatchRank Rank, long LastUseStamp);
+    private sealed record DispatchAssignment(uint Target, DispatchRank Rank, long LastUseStamp, string? RulesStamp);
 
     private readonly Dictionary<uint, DispatchAssignment> _dispatchFor = new();
 
@@ -43,32 +43,33 @@ public sealed partial class SwapOrchestrator
             return first;
 
         var rank = RankOf(source);
+        var stamp = SwapRulesStamp.Current();
 
-        if (_dispatchFor.TryGetValue(source.RowId, out var existing))
+        if (_dispatchFor.TryGetValue(source.RowId, out var existing) && existing.RulesStamp == stamp)
         {
             foreach (var candidate in tier)
             {
                 if (candidate.RowId != existing.Target)
                     continue;
 
-                Remember(source.RowId, candidate.RowId, rank);
+                Remember(source.RowId, candidate.RowId, rank, stamp);
                 return first with { Target = candidate };
             }
-
-            _dispatchFor.Remove(source.RowId);
         }
+
+        _dispatchFor.Remove(source.RowId);
 
         var heldInRank = TargetsHeldInRank(rank, source.RowId);
 
         var picked = PickDispatchTarget(tier,
-            targetRowId => heldInRank.TryGetValue(targetRowId, out var stamp) ? stamp : null,
+            targetRowId => heldInRank.TryGetValue(targetRowId, out var lastUse) ? lastUse : null,
             budget,
             heldInRank.Keys.ToHashSet());
 
         if (picked == null)
             return first;
 
-        Remember(source.RowId, picked.RowId, rank);
+        Remember(source.RowId, picked.RowId, rank, stamp);
 
         if (picked.RowId != first.Target.RowId)
         {
@@ -96,9 +97,9 @@ public sealed partial class SwapOrchestrator
         return held;
     }
 
-    private void Remember(uint sourceRowId, uint targetRowId, DispatchRank rank)
+    private void Remember(uint sourceRowId, uint targetRowId, DispatchRank rank, string stamp)
     {
-        _dispatchFor[sourceRowId] = new DispatchAssignment(targetRowId, rank, ++_dispatchClock);
+        _dispatchFor[sourceRowId] = new DispatchAssignment(targetRowId, rank, ++_dispatchClock, stamp);
         SaveDispatch();
     }
 
@@ -113,7 +114,8 @@ public sealed partial class SwapOrchestrator
 
     private void SaveDispatch()
         => _swapMods.SaveDispatch(_dispatchFor
-            .Select(entry => new DispatchRecord(entry.Key, entry.Value.Target, entry.Value.LastUseStamp))
+            .Select(entry => new DispatchRecord(entry.Key, entry.Value.Target, entry.Value.LastUseStamp,
+                entry.Value.RulesStamp))
             .ToList());
 
     private void LoadDispatchOnce()
@@ -128,7 +130,8 @@ public sealed partial class SwapOrchestrator
             if (_catalog.Get(record.SourceEmote) is not { } source)
                 continue;
 
-            _dispatchFor[record.SourceEmote] = new DispatchAssignment(record.TargetEmote, RankOf(source), record.LastUseStamp);
+            _dispatchFor[record.SourceEmote] =
+                new DispatchAssignment(record.TargetEmote, RankOf(source), record.LastUseStamp, record.RulesStamp);
             _dispatchClock = Math.Max(_dispatchClock, record.LastUseStamp);
         }
     }

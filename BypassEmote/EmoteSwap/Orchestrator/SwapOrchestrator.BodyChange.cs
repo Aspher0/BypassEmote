@@ -1,4 +1,4 @@
-using BypassEmote.Models;
+﻿using BypassEmote.Models;
 using NoireLib;
 using System;
 using System.Diagnostics;
@@ -75,7 +75,8 @@ public sealed partial class SwapOrchestrator
         const bool publishInternalNames = true;
 
         StartBackgroundBuild(new SwapBuildRequest(source, target, _generations.TakeOwnership(), raceInputs,
-            skeleton, kept.ContentKey, _swapMods.BeginPrepare(), ComposeUniqueNamesFor(target, out _),
+            skeleton, kept.ContentKey, kept.SourceKey ?? SourceKeyFor(source, raceInputs),
+            _swapMods.BeginPrepare(), ComposeUniqueNamesFor(target, out _),
             publishInternalNames, ModServingAnimation(source, skeleton),
             new SwapTimings(Stopwatch.StartNew(), AtMatch: 0, AtPair: 0, AtRetarget: 0, AtPrepare: 0, AtApply: 0),
             ExecuteAfterApply: false));

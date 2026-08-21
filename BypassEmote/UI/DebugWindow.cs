@@ -1,4 +1,4 @@
-#if DEBUG
+﻿#if DEBUG
 using BypassEmote.EmoteSwap;
 using BypassEmote.Helpers;
 using BypassEmote.IPC;
@@ -129,7 +129,10 @@ public class DebugWindow : Window, IDisposable
 
         // Run after the table, so the registry never changes under the rows being drawn.
         if (clearing)
+        {
             manager.ForgetAll();
+            Service.Orchestrator?.ResetDispatchMemory();
+        }
     }
 
     private static void DrawKeptSwapsTable(SwapModManager manager, IReadOnlyList<SwapOptionEntry> entries)

@@ -1,4 +1,4 @@
-﻿using BypassEmote.Helpers;
+using BypassEmote.Helpers;
 using BypassEmote.IPC;
 using BypassEmote.Models;
 using Newtonsoft.Json;
@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace BypassEmote.EmoteSwap;
 
@@ -311,27 +312,36 @@ public sealed class SwapModManager
             return false;
         }
 
+        using var batch = BeginRegistryBatch();
+
+        var clock = Stopwatch.StartNew();
+
         if (Registry.Skeleton != race && !RewriteForSkeleton(SkeletonRewritePlanner.For(Registry, race), race))
             return false;
 
         var folder = PrepareGeneratedModFolder(modDirectory, GeneratedModName);
 
-        if (folder == GeneratedModFolder.Unusable || !WriteSwapFiles(modDirectory, filesToWrite))
+        if (folder == GeneratedModFolder.Unusable || !WriteSwapFiles(modDirectory, entry, filesToWrite))
             return false;
 
-        var groups = ReadGroups();
+        var atFiles = clock.ElapsedMilliseconds;
 
-        var group = groups.TryGetValue(entry.GroupName, out var existing)
-            ? existing.Group
+        var groups = ReadGroups();
+        var known = groups.TryGetValue(entry.GroupName, out var existing) ? existing : ReusableSlot(groups);
+
+        var group = known is { } slot && slot.Group.Name == entry.GroupName
+            ? slot.Group
             : ModGroupFile.NewGroup(entry.GroupName);
 
         var isNewOption = !group.Options.Any(option => option.Name == entry.OptionName);
+        var freedFiles = false;
 
         if (isNewOption
             && RegistryDecisions.EvictionCandidate(Registry, entry.GroupName, Configuration.MaxKeptSwapsPerTarget) is { } evicted)
         {
             group = ModGroupFile.Remove(group, evicted.OptionName);
             RemoveEntry(evicted);
+            freedFiles = true;
 
             NoireLogger.LogDebug($"'{evicted.OptionName}' was dropped from '{entry.GroupName}' to stay under the cap.", LogPrefix);
         }
@@ -340,20 +350,36 @@ public sealed class SwapModManager
             ? ModGroupFile.Add(group, new ModGroupOption(entry.OptionName, entry.FilesByRace[race]))
             : ModGroupFile.WithFiles(group, entry.OptionName, entry.FilesByRace[race]);
 
+        var atGroups = clock.ElapsedMilliseconds;
+        long atWrite;
+
         using (_ownMutations.Enter())
         {
-            if (!WriteGroup(group, IndexFor(groups, entry.GroupName))
-                || !EnsurePenumbraReadsTheMod(folder == GeneratedModFolder.Created))
-            {
+            if (!WriteGroup(group, known?.Index ?? IndexFor(groups, entry.GroupName), known?.Files))
                 return false;
-            }
+
+            atWrite = clock.ElapsedMilliseconds;
+
+            if (!EnsurePenumbraReadsTheMod(folder == GeneratedModFolder.Created))
+                return false;
         }
 
+        var atReload = clock.ElapsedMilliseconds;
+
         UpdateEntry(entry);
-        ReassertSelections();
-        SweepUnreferencedFiles();
+
+        if (freedFiles)
+            SweepUnreferencedFiles();
+
+        FlushRegistry();
+
+        var atRegistry = clock.ElapsedMilliseconds;
 
         var selected = SelectExisting(entry);
+
+        NoireLogger.LogDebug($"Apply steps: files {atFiles}ms, groups {atGroups - atFiles}ms, "
+            + $"group write {atWrite - atGroups}ms, penumbra reload {atReload - atWrite}ms, "
+            + $"registry {atRegistry - atReload}ms, select {clock.ElapsedMilliseconds - atRegistry}ms.", LogPrefix);
 
         if (selected && _gateway.RefreshOwnPanel())
             NoireLogger.LogDebug("The mod's panel was on screen, so its option list was refreshed.", LogPrefix);
@@ -361,17 +387,16 @@ public sealed class SwapModManager
         return selected;
     }
 
-    private const int MaxJudgementsPerSwap = 8;
-
-    internal int ApplyRulesPlan(string stamp, Func<SwapOptionEntry, RegistryDecisions.RulesVerdict> judge)
+    internal int ApplyRulesPlan(string stamp, string sourceKey, uint sourceEmote, uint keptTarget)
     {
-        var plan = RegistryDecisions.JudgeAgainstRules(Registry, stamp, _pressedKey, judge,
-            Configuration.MaxKeptSwapsPerTarget, MaxJudgementsPerSwap);
+        var plan = RegistryDecisions.PlanForSwap(Registry, stamp, sourceKey, sourceEmote, keptTarget, _pressedKey,
+            Configuration.MaxKeptSwapsPerTarget);
 
-        var restamped = plan.Entries.Count(entry => entry.RulesStamp == stamp)
-            != Registry.Entries.Count(entry => entry.RulesStamp == stamp);
+        var rewritten = plan.Dropped.Count > 0
+            || plan.Entries.Count != Registry.Entries.Count
+            || plan.Entries.Where((entry, index) => !ReferenceEquals(entry, Registry.Entries[index])).Any();
 
-        if (plan.Dropped.Count == 0 && !restamped)
+        if (!rewritten)
             return 0;
 
         Registry = Registry with { Entries = plan.Entries };
@@ -437,12 +462,7 @@ public sealed class SwapModManager
         using (_ownMutations.Enter())
         {
             foreach (var groupName in touched)
-            {
-                if (ModGroupFile.IsEmpty(groups[groupName].Group))
-                    RemoveRivalGroupFiles(modDirectory, groupName, keptFileName: string.Empty);
-                else
-                    WriteGroup(groups[groupName].Group, groups[groupName].Index);
-            }
+                WriteGroup(groups[groupName].Group, groups[groupName].Index, groups[groupName].Files);
 
             EnsurePenumbraReadsTheMod(isFirstCreation: false);
         }
@@ -493,14 +513,32 @@ public sealed class SwapModManager
             : entry.FilesByRace.Keys.FirstOrDefault();
     }
 
-    private static bool WriteSwapFiles(string modDirectory, IReadOnlyDictionary<string, byte[]> filesToWrite)
+    private static bool WriteSwapFiles(string modDirectory, SwapOptionEntry entry,
+        IReadOnlyDictionary<string, byte[]> filesToWrite)
     {
-        foreach (var (gamePath, bytes) in filesToWrite)
-        {
-            var relativePath = RedirectedPathValue(DeriveFileName(bytes, FileExtensionFor(gamePath)));
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            if (!Store.WriteAt(Path.Combine(modDirectory, relativePath), bytes))
-                return false;
+        foreach (var files in entry.FilesByRace.Values)
+        {
+            foreach (var (gamePath, relativePath) in files)
+            {
+                if (!seen.Add(relativePath))
+                    continue;
+
+                var fullPath = Path.Combine(modDirectory, relativePath);
+
+                if (File.Exists(fullPath))
+                    continue;
+
+                if (!filesToWrite.TryGetValue(gamePath, out var bytes))
+                {
+                    NoireLogger.LogError($"'{relativePath}' is missing and this swap does not carry it.", LogPrefix);
+                    return false;
+                }
+
+                if (!Store.WriteAt(fullPath, bytes))
+                    return false;
+            }
         }
 
         return true;
@@ -533,7 +571,7 @@ public sealed class SwapModManager
         }
     }
 
-    private sealed record GroupOnDisk(ModGroup Group, int Index);
+    private sealed record GroupOnDisk(ModGroup Group, int Index, IReadOnlyList<string> Files);
 
     private Dictionary<string, GroupOnDisk> ReadGroups()
     {
@@ -542,6 +580,8 @@ public sealed class SwapModManager
         if (ModDirectory is not { } modDirectory || !Directory.Exists(modDirectory))
             return groups;
 
+        var filesByGroup = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+
         foreach (var path in Directory.EnumerateFiles(modDirectory, ModGroupFile.FileNamePrefix + "*.json"))
         {
             try
@@ -549,8 +589,13 @@ public sealed class SwapModManager
                 if (ModGroupFile.Deserialize(File.ReadAllText(path)) is not { } group)
                     continue;
 
+                if (!filesByGroup.TryGetValue(group.Name, out var paths))
+                    filesByGroup[group.Name] = paths = [];
+
+                paths.Add(path);
+
                 if (!groups.TryGetValue(group.Name, out var seen) || group.Options.Count > seen.Group.Options.Count)
-                    groups[group.Name] = new GroupOnDisk(group, IndexInFileName(path));
+                    groups[group.Name] = new GroupOnDisk(group, IndexInFileName(path), paths);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -561,7 +606,13 @@ public sealed class SwapModManager
         return groups;
     }
 
-    private bool WriteGroup(ModGroup group, int index)
+    private static GroupOnDisk? ReusableSlot(Dictionary<string, GroupOnDisk> groups)
+        => groups.Values
+            .Where(onDisk => ModGroupFile.IsEmpty(onDisk.Group))
+            .OrderBy(onDisk => onDisk.Index)
+            .FirstOrDefault();
+
+    private bool WriteGroup(ModGroup group, int index, IReadOnlyList<string>? knownFiles = null)
     {
         if (ModDirectory is not { } modDirectory)
             return false;
@@ -570,7 +621,12 @@ public sealed class SwapModManager
 
         try
         {
-            RemoveRivalGroupFiles(modDirectory, group.Name, fileName);
+            if (knownFiles == null)
+                RemoveRivalGroupFiles(modDirectory, group.Name, fileName);
+            else
+                RemoveKnownGroupFiles(knownFiles, group.Name, fileName);
+
+            RemoveOtherFilesAtIndex(modDirectory, index, fileName);
 
             AtomicFile.WriteAllText(Path.Combine(modDirectory, fileName), ModGroupFile.Serialize(group));
 
@@ -580,6 +636,44 @@ public sealed class SwapModManager
         {
             NoireLogger.LogError(ex, $"Failed to write the group file for '{group.Name}'.", LogPrefix);
             return false;
+        }
+    }
+
+    private static void RemoveOtherFilesAtIndex(string modDirectory, int index, string keptFileName)
+    {
+        foreach (var path in Directory.GetFiles(modDirectory, $"{ModGroupFile.FileNamePrefix}{index:D3}_*.json"))
+        {
+            if (string.Equals(Path.GetFileName(path), keptFileName, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            try
+            {
+                File.Delete(path);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                NoireLogger.LogDebug($"Could not remove '{path}' ({ex.Message}).", LogPrefix);
+            }
+        }
+    }
+
+    private static void RemoveKnownGroupFiles(IReadOnlyList<string> paths, string groupName, string keptFileName)
+    {
+        foreach (var path in paths)
+        {
+            if (string.Equals(Path.GetFileName(path), keptFileName, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            try
+            {
+                File.Delete(path);
+
+                NoireLogger.LogDebug($"Removed '{Path.GetFileName(path)}', a second file for group '{groupName}'.", LogPrefix);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                NoireLogger.LogDebug($"Could not remove '{path}' ({ex.Message}).", LogPrefix);
+            }
         }
     }
 
@@ -669,7 +763,7 @@ public sealed class SwapModManager
         {
             foreach (var onDisk in groups.Values)
             {
-                if (!WriteGroup(onDisk.Group, onDisk.Index))
+                if (!WriteGroup(onDisk.Group, onDisk.Index, onDisk.Files))
                     return false;
             }
 
@@ -707,7 +801,7 @@ public sealed class SwapModManager
 
         var hadModFolder = ModDirectory is { } modDirectory && Directory.Exists(modDirectory);
 
-        DeleteGroupFiles();
+        EmptyGroupFiles();
 
         SweepUnreferencedFiles();
 
@@ -722,21 +816,17 @@ public sealed class SwapModManager
         PushRedirectScope();
     }
 
-    private void DeleteGroupFiles()
+    private void EmptyGroupFiles()
     {
         if (ModDirectory is not { } modDirectory || !Directory.Exists(modDirectory))
             return;
 
-        foreach (var path in Directory.GetFiles(modDirectory, ModGroupFile.FileNamePrefix + "*.json"))
+        foreach (var onDisk in ReadGroups().Values)
         {
-            try
-            {
-                File.Delete(path);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                NoireLogger.LogDebug($"Could not delete the group file '{path}' ({ex.Message}).", LogPrefix);
-            }
+            if (ModGroupFile.IsEmpty(onDisk.Group))
+                continue;
+
+            WriteGroup(ModGroupFile.NewGroup(onDisk.Group.Name), onDisk.Index, onDisk.Files);
         }
     }
 
@@ -780,7 +870,7 @@ public sealed class SwapModManager
         using (_ownMutations.Enter())
         {
             foreach (var onDisk in groups.Values)
-                WriteGroup(onDisk.Group, onDisk.Index);
+                WriteGroup(onDisk.Group, onDisk.Index, onDisk.Files);
         }
 
         ReloadAndReassert();
@@ -794,12 +884,14 @@ public sealed class SwapModManager
         ReassertSelections();
     }
 
-    private void ReassertSelections()
+    private void ReassertSelections(string? onlyGroupName = null)
     {
         if (_identity.Names is not { } names)
             return;
 
-        var armed = Registry.Entries.Where(entry => entry.SelectedByUs).ToList();
+        var armed = Registry.Entries
+            .Where(entry => entry.SelectedByUs && (onlyGroupName == null || entry.GroupName == onlyGroupName))
+            .ToList();
 
         if (armed.Count == 0)
             return;
@@ -833,6 +925,8 @@ public sealed class SwapModManager
 
     public void HandleExternalChange()
     {
+        ForgetModStates();
+
         if (_ownMutations.IsInside)
             return;
 
@@ -856,6 +950,8 @@ public sealed class SwapModManager
 
     public void HandleCompetingModChange(Guid collectionId)
     {
+        ForgetModStates();
+
         if (_ownMutations.IsInside || collectionId != Registry.CollectionId)
             return;
 
@@ -913,6 +1009,22 @@ public sealed class SwapModManager
             .Distinct(StringComparer.Ordinal)
             .ToList();
 
+    private IReadOnlyDictionary<string, ModState>? _modStates;
+    private Guid _modStatesCollection;
+
+    private IReadOnlyDictionary<string, ModState>? ModStates()
+    {
+        if (_modStates != null && _modStatesCollection == Registry.CollectionId)
+            return _modStates;
+
+        _modStates = _gateway.GetAllModStates(Registry.CollectionId);
+        _modStatesCollection = Registry.CollectionId;
+
+        return _modStates;
+    }
+
+    private void ForgetModStates() => _modStates = null;
+
     private IReadOnlyList<string> CompetingMods(IReadOnlyList<string> servedPaths, out int priority)
     {
         var modRoot = _gateway.GetModRootDirectory();
@@ -920,9 +1032,13 @@ public sealed class SwapModManager
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var unattributable = false;
 
-        foreach (var gamePath in servedPaths)
+        var resolvedPaths = _gateway.ResolvePlayerPaths(servedPaths);
+
+        for (var index = 0; index < servedPaths.Count; index++)
         {
-            var resolved = _gateway.ResolvePlayerPath(gamePath);
+            var gamePath = servedPaths[index];
+            var resolved = resolvedPaths is { } batch ? batch[index] : _gateway.ResolvePlayerPath(gamePath);
+
             if (resolved == gamePath || IsOwnPathCore(resolved, modRoot, _configDirectory))
                 continue;
 
@@ -945,7 +1061,7 @@ public sealed class SwapModManager
             return winners;
         }
 
-        var states = _gateway.GetAllModStates(Registry.CollectionId);
+        var states = ModStates();
 
         return RankAgainst(winners, recorded, unattributable,
             directory => states != null && states.TryGetValue(directory, out var state) ? state : null, out priority);
@@ -1038,21 +1154,49 @@ public sealed class SwapModManager
 
     private bool EnsurePenumbraReadsTheMod(bool isFirstCreation)
     {
-        if (isFirstCreation ? _gateway.AddMod(ModDirectoryName) : _gateway.ReloadMod(ModDirectoryName))
-            return true;
+        if (isFirstCreation)
+        {
+            if (_gateway.AddMod(ModDirectoryName))
+                return true;
 
-        NoireLogger.LogWarning(
-            $"Penumbra would not {(isFirstCreation ? "register" : "reload")} '{ModDirectoryName}'; "
-            + "trying the other call.", LogPrefix);
+            NoireLogger.LogWarning(
+                $"Penumbra would not register '{ModDirectoryName}'; trying the other call.", LogPrefix);
 
-        if (isFirstCreation ? _gateway.ReloadMod(ModDirectoryName) : _gateway.AddMod(ModDirectoryName))
-            return true;
+            if (Reloaded())
+                return true;
+        }
+        else
+        {
+            if (Reloaded())
+                return true;
+
+            NoireLogger.LogWarning(
+                $"Penumbra would not reload '{ModDirectoryName}'; trying the other call.", LogPrefix);
+
+            if (_gateway.AddMod(ModDirectoryName))
+                return true;
+        }
 
         NoireLogger.LogError(
             $"Penumbra would neither register nor reload '{ModDirectoryName}'; this swap cannot be applied.",
             LogPrefix);
 
         return false;
+
+        bool Reloaded()
+        {
+            var read = _gateway.ReloadMod(ModDirectoryName);
+
+            if (read != ModReadResult.ReadThenThrew)
+                return read == ModReadResult.Read;
+
+            NoireLogger.LogError(
+                $"Penumbra threw while telling its collections that '{ModDirectoryName}' had changed. It read the "
+                + "mod, so the swap goes on, but its own settings bookkeeping for that reload did not finish, and "
+                + "it will throw the same way on every reload until Penumbra is restarted.", LogPrefix);
+
+            return true;
+        }
     }
 
     internal static bool IsOwnPathCore(string resolvedDiskPath, string? modRoot, string configDirectory)
@@ -1209,19 +1353,82 @@ public sealed class SwapModManager
         }
     }
 
+    private const string RegistryWriteOperationName = "BypassEmote.SwapRegistryWrite";
+
+    private readonly object _registryWriteLock = new();
+
+    private long _registryWriteTicket;
+
+    private int _registryBatchDepth;
+    private bool _registryDirty;
+
+    private IDisposable BeginRegistryBatch() => new RegistryBatch(this);
+
+    private sealed class RegistryBatch : IDisposable
+    {
+        private readonly SwapModManager _owner;
+
+        internal RegistryBatch(SwapModManager owner)
+        {
+            _owner = owner;
+            _owner._registryBatchDepth++;
+        }
+
+        public void Dispose()
+        {
+            if (--_owner._registryBatchDepth > 0 || !_owner._registryDirty)
+                return;
+
+            _owner._registryDirty = false;
+            _owner.WriteRegistry();
+        }
+    }
+
+    private void FlushRegistry()
+    {
+        if (!_registryDirty)
+            return;
+
+        _registryDirty = false;
+        WriteRegistry();
+    }
+
     private void PersistRegistry()
+    {
+        if (_registryBatchDepth > 0)
+        {
+            _registryDirty = true;
+            return;
+        }
+
+        WriteRegistry();
+    }
+
+    private void WriteRegistry()
     {
         if (RegistryPath is not { } path)
             return;
 
-        try
+        var snapshot = Registry;
+        var ticket = Interlocked.Increment(ref _registryWriteTicket);
+
+        AsyncHelper.RunInBackgroundAsync(() =>
         {
-            FileHelper.WriteJsonToFile(path, Registry, atomic: true, IndentedJson);
-        }
-        catch (Exception ex)
-        {
-            NoireLogger.LogError(ex, $"Failed to persist the swap registry to '{path}'.", LogPrefix);
-        }
+            lock (_registryWriteLock)
+            {
+                if (Interlocked.Read(ref _registryWriteTicket) != ticket)
+                    return;
+
+                try
+                {
+                    FileHelper.WriteJsonToFile(path, snapshot, atomic: true, IndentedJson);
+                }
+                catch (Exception ex)
+                {
+                    NoireLogger.LogError(ex, $"Failed to persist the swap registry to '{path}'.", LogPrefix);
+                }
+            }
+        }, RegistryWriteOperationName);
     }
 
     private Guid CollectionForSelection()

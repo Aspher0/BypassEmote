@@ -1,4 +1,4 @@
-using BypassEmote.EmoteSwap;
+﻿using BypassEmote.EmoteSwap;
 using BypassEmote.Helpers;
 using BypassEmote.Models;
 using Dalamud.Bindings.ImGui;
@@ -422,10 +422,6 @@ public class ConfigWindow : Window, IDisposable
                     + "redrawing all the time, otherwise highly recommended to leave it on \"Only when necessary\" and not \"Off\".",
                     CachedDispatchAlarm()))
                 {
-                    // Start the spread fresh, so no two sources keep a target they were handed under the old setting.
-                    if ((CachedDispatchMode)cachedDispatch != CachedDispatchMode.Off)
-                        Service.Orchestrator?.ResetDispatchMemory();
-
                     Configuration.CachedDispatch = (CachedDispatchMode)cachedDispatch;
                 }
 

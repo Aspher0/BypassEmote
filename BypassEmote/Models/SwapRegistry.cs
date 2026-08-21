@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace BypassEmote.Models;
@@ -23,10 +23,12 @@ public sealed record SwapOptionEntry(
     bool SelectedByUs = false,
     long LastUsedStamp = 0,
     // The settings this target was chosen under. Anything else means the rules moved, so the next swap judges it.
-    string? RulesStamp = null);
+    string? RulesStamp = null,
+    string? SourceKey = null);
 
 /// <summary> The target emote one source was handed, kept so it stays the same across restarts. </summary>
-public sealed record DispatchRecord(uint SourceEmote, uint TargetEmote, long LastUseStamp);
+public sealed record DispatchRecord(uint SourceEmote, uint TargetEmote, long LastUseStamp,
+    string? RulesStamp = null);
 
 /// <summary> Everything the group files cannot say about the options they hold. </summary>
 public sealed record SwapRegistry(

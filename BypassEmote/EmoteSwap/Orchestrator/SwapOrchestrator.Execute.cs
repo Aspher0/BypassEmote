@@ -11,7 +11,8 @@ namespace BypassEmote.EmoteSwap;
 
 public sealed partial class SwapOrchestrator
 {
-    private sealed record SwapTimings(Stopwatch Clock, long AtMatch, long AtPair, long AtRetarget, long AtPrepare, long AtApply);
+    private sealed record SwapTimings(Stopwatch Clock, long AtMatch, long AtPair, long AtRetarget, long AtPrepare,
+        long AtApply, long AtFrame = 0, long AtEntry = 0);
 
     private bool TryReuseAndExecute(SwapOptionEntry kept, EmoteAttributes source, EmoteAttributes target,
         SwapTimings timings)
@@ -98,7 +99,11 @@ public sealed partial class SwapOrchestrator
         NoireLogger.LogDebug(
             $"Swap timings: match {timings.AtMatch}ms, pair {timings.AtPair - timings.AtMatch}ms, " +
             $"retarget {timings.AtRetarget - timings.AtPair}ms, prepare {timings.AtPrepare - timings.AtRetarget}ms, " +
-            $"apply {timings.AtApply - timings.AtPrepare}ms, gate {elapsedAtTail - timings.AtApply}ms, " +
+            $"apply {timings.AtApply - timings.AtPrepare}ms"
+            + (timings.AtFrame > 0
+                ? $" (frame wait {timings.AtFrame - timings.AtPrepare}ms, naming {timings.AtEntry - timings.AtFrame}ms)"
+                : string.Empty)
+            + $", gate {elapsedAtTail - timings.AtApply}ms, " +
             $"execute {elapsedAtExecute - elapsedAtTail}ms, total {elapsedAtExecute}ms.", LogPrefix);
 
         FeedbackHelper.DebugLine(

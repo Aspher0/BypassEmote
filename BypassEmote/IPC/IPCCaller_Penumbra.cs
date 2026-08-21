@@ -1,4 +1,4 @@
-﻿using BypassEmote.EmoteSwap;
+using BypassEmote.EmoteSwap;
 using BypassEmote.Models;
 using Dalamud.Plugin;
 using NoireLib;
@@ -10,6 +10,14 @@ using System;
 using System.Collections.Generic;
 
 namespace BypassEmote.IPC;
+
+public enum ModReadResult
+{
+    Read,
+    ReadThenThrew,
+    NotHeld,
+    Refused,
+}
 
 public sealed class IPCCaller_Penumbra : IDisposable
 {
@@ -440,16 +448,21 @@ public sealed class IPCCaller_Penumbra : IDisposable
         }
     }
 
-    public bool ReloadMod(string modDirectory)
+    public ModReadResult ReloadMod(string modDirectory)
     {
         try
         {
-            return _reloadMod.Invoke(modDirectory, string.Empty) == PenumbraApiEc.Success;
+            return _reloadMod.Invoke(modDirectory, string.Empty) switch
+            {
+                PenumbraApiEc.Success => ModReadResult.Read,
+                PenumbraApiEc.ModMissing => ModReadResult.NotHeld,
+                _ => ModReadResult.Refused,
+            };
         }
         catch (Exception ex)
         {
             LogFailureOnce(nameof(ReloadMod), ex);
-            return false;
+            return ModReadResult.ReadThenThrew;
         }
     }
 

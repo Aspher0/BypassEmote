@@ -1,4 +1,4 @@
-using BypassEmote.Helpers;
+﻿using BypassEmote.Helpers;
 using BypassEmote.IPC;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -91,8 +91,6 @@ public sealed partial class SwapOrchestrator : IDisposable
         var loopsFirst = source.LoopKind == EmotePlayType.Looped
             && matchConfig.Loop == LoopMatchRule.AllowLoopOnOneShot;
 
-        DropSwapsTheRulesNoLongerMake(pool, matchConfig, posture, fallbackOrder);
-
         var choice = ChooseTarget(source, pool,
             loopsFirst ? matchConfig with { Loop = LoopMatchRule.Strict } : matchConfig, posture, fallbackOrder);
 
@@ -151,6 +149,10 @@ public sealed partial class SwapOrchestrator : IDisposable
 
         FeedbackHelper.DebugLine((composeUniqueNames ? ">   composed name" : ">   vanilla path") + $" | {reading}");
 
+        var sourceKey = SourceKeyFor(source, raceInputs);
+
+        DropSwapsTheRulesNoLongerMake(source, sourceKey, target.RowId);
+
         var contentKey = ContentKeyFor(source, target, raceInputs);
 
         if (_swapMods.FindReusable(contentKey) is { } kept
@@ -164,7 +166,7 @@ public sealed partial class SwapOrchestrator : IDisposable
         const bool publishInternalNames = true;
 
         StartBackgroundBuild(new SwapBuildRequest(source, target, _generations.TakeOwnership(), raceInputs,
-            skeleton, contentKey, _swapMods.BeginPrepare(), composeUniqueNames, publishInternalNames,
+            skeleton, contentKey, sourceKey, _swapMods.BeginPrepare(), composeUniqueNames, publishInternalNames,
             ModServingAnimation(source, skeleton),
             new SwapTimings(swapClock, elapsedAtMatch, elapsedAtPair, AtRetarget: 0, AtPrepare: 0, AtApply: 0)));
     }

@@ -1,4 +1,4 @@
-﻿using BypassEmote.Models;
+using BypassEmote.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,57 +66,39 @@ internal static class RegistryDecisions
         return new ReconcilePlan(kept, orphans);
     }
 
-    /// <summary> What the rules in force say about an option that was chosen under older ones. </summary>
-    internal enum RulesVerdict
-    {
-        /// <summary> Nothing at hand can judge it, so it waits for a swap that can. </summary>
-        Unknown,
-
-        /// <summary> The rules would still hand this source this target. </summary>
-        Keep,
-
-        /// <summary> They would not, so the option has to go. </summary>
-        Drop,
-    }
-
     internal sealed record RulesPlan(IReadOnlyList<SwapOptionEntry> Entries, IReadOnlyList<SwapOptionEntry> Dropped);
 
-    internal static RulesPlan JudgeAgainstRules(SwapRegistry registry, string stamp, string? pressedKey,
-        Func<SwapOptionEntry, RulesVerdict> judge, int keptCap, int maxJudgements)
+    internal static RulesPlan PlanForSwap(SwapRegistry registry, string stamp, string sourceKey, uint sourceEmote,
+        uint keptTarget, string? pressedKey, int keptCap)
     {
         var kept = new List<SwapOptionEntry>(registry.Entries.Count);
         var dropped = new List<SwapOptionEntry>();
-        var judged = 0;
 
         foreach (var entry in registry.Entries)
         {
-            if (entry.RulesStamp == stamp || entry.ContentKey == pressedKey || judged >= maxJudgements)
+            if (!Concerns(entry, stamp, sourceKey, sourceEmote) || entry.ContentKey == pressedKey)
             {
                 kept.Add(entry);
                 continue;
             }
 
-            switch (judge(entry))
-            {
-                case RulesVerdict.Drop:
-                    judged++;
-                    dropped.Add(entry);
-                    break;
-
-                case RulesVerdict.Keep:
-                    judged++;
-                    kept.Add(entry with { RulesStamp = stamp });
-                    break;
-
-                default:
-                    kept.Add(entry);
-                    break;
-            }
+            if (entry.TargetEmote == keptTarget)
+                kept.Add(entry with { RulesStamp = stamp, SourceKey = sourceKey });
+            else
+                dropped.Add(entry);
         }
 
         TrimToCap(kept, dropped, pressedKey, keptCap);
 
         return new RulesPlan(kept, dropped);
+    }
+
+    private static bool Concerns(SwapOptionEntry entry, string stamp, string sourceKey, uint sourceEmote)
+    {
+        if (entry.SourceKey == null)
+            return entry.SourceEmote == sourceEmote;
+
+        return entry.SourceKey == sourceKey && entry.RulesStamp != stamp;
     }
 
     private static void TrimToCap(List<SwapOptionEntry> kept, List<SwapOptionEntry> dropped, string? pressedKey, int cap)

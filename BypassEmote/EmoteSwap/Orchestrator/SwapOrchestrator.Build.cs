@@ -1,4 +1,4 @@
-using BypassEmote.Helpers;
+﻿using BypassEmote.Helpers;
 using BypassEmote.Models;
 using NoireLib;
 using NoireLib.Helpers;
@@ -42,7 +42,7 @@ public sealed partial class SwapOrchestrator
         => command.StartsWith('/') ? command : $"/{command}";
 
     private sealed record SwapBuildRequest(EmoteAttributes Source, EmoteAttributes Target, int Generation,
-        IReadOnlyList<RaceBuildInput> Races, string Skeleton, string ContentKey,
+        IReadOnlyList<RaceBuildInput> Races, string Skeleton, string ContentKey, string SourceKey,
         SwapModManager.SwapFilePlan Plan, bool ComposeUniqueNames, bool PublishInternalNames, string? SourceModName,
         SwapTimings Timings, bool ExecuteAfterApply = true);
 
@@ -178,6 +178,8 @@ public sealed partial class SwapOrchestrator
 
     private void FinishSwapCore(SwapBuildRequest request, SwapBuildOutcome? outcome)
     {
+        var atFrame = request.Timings.Clock.ElapsedMilliseconds;
+
         var verdict = ClassifyBackgroundReturn(
             disposed: _disposed,
             generationCurrent: _generations.IsCurrent(request.Generation),
@@ -200,7 +202,10 @@ public sealed partial class SwapOrchestrator
             return;
         }
 
-        if (!_swapMods.AddAndSelect(EntryFor(request, built), built.Files, request.Skeleton))
+        var newEntry = EntryFor(request, built);
+        var atEntry = request.Timings.Clock.ElapsedMilliseconds;
+
+        if (!_swapMods.AddAndSelect(newEntry, built.Files, request.Skeleton))
         {
             _generations.Relinquish(request.Generation);
             ReportFailure(request, GenericFailureMessage);
@@ -212,6 +217,8 @@ public sealed partial class SwapOrchestrator
             AtRetarget = built.ElapsedAtRetarget,
             AtPrepare = built.ElapsedAtPrepare,
             AtApply = request.Timings.Clock.ElapsedMilliseconds,
+            AtFrame = atFrame,
+            AtEntry = atEntry,
         };
 
         if (!request.ExecuteAfterApply)
@@ -247,7 +254,8 @@ public sealed partial class SwapOrchestrator
             ClampedIntro: built.ClampedIntro,
             UniqueNames: built.UniqueNamesApplied,
             InternalUniqueNames: built.InternalUniqueNamesApplied,
-            RulesStamp: SwapRulesStamp.Current());
+            RulesStamp: SwapRulesStamp.Current(),
+            SourceKey: request.SourceKey);
     }
 
     private void RefuseBackgroundReturn(SwapBuildRequest request, BackgroundVerdict verdict)

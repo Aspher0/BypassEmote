@@ -27,7 +27,26 @@ internal static class SwapContentKey
                 .Append(':').Append(race.PathSignature);
         }
 
-        return Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(material.ToString())))
-            .ToLowerInvariant()[..KeyLength];
+        return Digest(material);
     }
+
+    internal static string ForSource(int rulesVersion, uint sourceEmote, IReadOnlyList<RaceSourceInput> races)
+    {
+        var material = new StringBuilder();
+
+        material.Append("v").Append(rulesVersion).Append("|src=").Append(sourceEmote);
+
+        foreach (var race in races.OrderBy(race => race.Race, StringComparer.Ordinal))
+        {
+            material.Append('|').Append(race.Race)
+                .Append(':').Append(race.ResolvedSourcePath)
+                .Append(':').Append(race.StampTicks);
+        }
+
+        return Digest(material);
+    }
+
+    private static string Digest(StringBuilder material)
+        => Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(material.ToString())))
+            .ToLowerInvariant()[..KeyLength];
 }

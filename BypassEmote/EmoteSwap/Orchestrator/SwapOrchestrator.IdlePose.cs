@@ -196,8 +196,15 @@ public sealed partial class SwapOrchestrator
                 "the player's Penumbra collection is unavailable.");
         }
 
+        var raceInput = new RaceSourceInput(skeleton, resolvedSourcePath, stampTicks,
+            string.Join(";", files.Keys.Order(StringComparer.Ordinal)));
+
         var contentKey = SwapContentKey.For(EmoteAttributeCatalog.RulesVersion, IdlePoseTargetEmote, source.RowId,
-            [new RaceSourceInput(skeleton, resolvedSourcePath, stampTicks, string.Join(";", files.Keys.Order(StringComparer.Ordinal)))]);
+            [raceInput]);
+
+        var sourceKey = SwapContentKey.ForSource(EmoteAttributeCatalog.RulesVersion, source.RowId, [raceInput]);
+
+        _swapMods.ApplyRulesPlan(SwapRulesStamp.Current(), sourceKey, source.RowId, IdlePoseTargetEmote);
 
         var entry = _swapMods.FindReusable(contentKey);
 
@@ -205,7 +212,7 @@ public sealed partial class SwapOrchestrator
 
         if (!reused)
         {
-            entry = IdlePoseEntryFor(contentKey, source, skeleton, files);
+            entry = IdlePoseEntryFor(contentKey, sourceKey, source, skeleton, files);
 
             if (!_swapMods.AddAndSelect(entry, files, skeleton))
             {
@@ -245,7 +252,7 @@ public sealed partial class SwapOrchestrator
         return true;
     }
 
-    private SwapOptionEntry IdlePoseEntryFor(string contentKey, EmoteAttributes source, string skeleton,
+    private SwapOptionEntry IdlePoseEntryFor(string contentKey, string sourceKey, EmoteAttributes source, string skeleton,
         IReadOnlyDictionary<string, byte[]> files)
     {
         var redirectedPaths = new Dictionary<string, string>(files.Count, StringComparer.Ordinal);
@@ -266,7 +273,8 @@ public sealed partial class SwapOrchestrator
         return new SwapOptionEntry(contentKey, groupName,
             OptionNaming.OptionNameFor(source.Command, null, _swapMods.TakenOptionNames(groupName)),
             source.RowId, IdlePoseTargetEmote, IsIdlePoseSwap: true, filesByRace,
-            RulesStamp: SwapRulesStamp.Current());
+            RulesStamp: SwapRulesStamp.Current(),
+            SourceKey: sourceKey);
     }
 
     private static byte[]? BuildIdlePosePap(string sourceRequestedPath, string resolvedSourcePath,
