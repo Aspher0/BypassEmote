@@ -24,10 +24,11 @@ public static class BestMatchResolver
     private const int TurnBodyNone = 0;          // turn pair {Body,None}
     private const int SoundVoiceline = 0;        // candidate.Sound == Voiceline
     private const int TurnUnknownPenalty = -50;  // turn: either side Unknown (worst rank)
-    private const int LenientSilentSourceSfxPenalty = -200;       // lenient sound, silent source, Sfx candidate
-    private const int LenientSilentSourceVoicelinePenalty = -400; // lenient sound, silent source, Voiceline candidate
 
     // Deliberately large negative scores to keep the tiering separate from the soft scores above.
+
+    // What a target carries is what vanilla players hear. Strict refuses a sounding one outright
+    private const int SoundingTargetTierPenalty = -10_000;
 
     private const int CancelsOnRotateTierPenalty = -100_000;
 
@@ -234,12 +235,12 @@ public static class BestMatchResolver
     }
 
     private static bool PassesSoundFilter(EmoteAttributes source, EmoteAttributes candidate, SoundMatchRule rule)
-    {
-        if (rule == SoundMatchRule.Strict && source.Sound == SoundClass.Silent)
-            return candidate.Sound == SoundClass.Silent;
-
-        return true;
-    }
+        => rule switch
+        {
+            SoundMatchRule.Strict => candidate.Sound == SoundClass.Silent,
+            SoundMatchRule.Lenient => source.Sound != SoundClass.Silent || candidate.Sound == SoundClass.Silent,
+            _ => true,
+        };
 
     private static bool PassesTurnFilter(EmoteAttributes source, EmoteAttributes candidate, TurnMatchRule rule)
     {
@@ -268,7 +269,7 @@ public static class BestMatchResolver
             score += SameKindWhenLenient;
 
         score += ScoreTurn(source.Turn, candidate.Turn);
-        score += ScoreSound(config.Sound, source.Sound, candidate.Sound);
+        score += ScoreSound(config.Sound, candidate.Sound);
         score += ScorePosture(source.Postures, candidate.Postures);
         score += ScoreIntro(HasPapIntro(source), HasPapIntro(candidate));
 
@@ -307,7 +308,7 @@ public static class BestMatchResolver
         };
     }
 
-    private static int ScoreSound(SoundMatchRule rule, SoundClass sourceSound, SoundClass candidateSound)
+    private static int ScoreSound(SoundMatchRule rule, SoundClass candidateSound)
     {
         var score = candidateSound switch
         {
@@ -317,15 +318,8 @@ public static class BestMatchResolver
             _ => 0,
         };
 
-        if (rule == SoundMatchRule.Lenient && sourceSound == SoundClass.Silent)
-        {
-            score += candidateSound switch
-            {
-                SoundClass.Sfx => LenientSilentSourceSfxPenalty,
-                SoundClass.Voiceline => LenientSilentSourceVoicelinePenalty,
-                _ => 0,
-            };
-        }
+        if (rule != SoundMatchRule.Strict && candidateSound != SoundClass.Silent)
+            score += SoundingTargetTierPenalty;
 
         return score;
     }

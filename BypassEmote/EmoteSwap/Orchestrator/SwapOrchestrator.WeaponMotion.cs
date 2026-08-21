@@ -122,6 +122,24 @@ public sealed partial class SwapOrchestrator
         return EmoteAttributeCatalog.ReferenceMotionFolder;
     }
 
+    private static bool? WeaponHoldFor(EmoteAttributes source, ICharacter localPlayer)
+    {
+        if (!SwapLayers.WeaponInHand || !source.HasWeaponMotionVariants())
+            return null;
+
+        try
+        {
+            return CharacterHelper.HasOffHandWeapon(localPlayer);
+        }
+        catch (Exception ex)
+        {
+            NoireLogger.LogError(ex, "Could not read the player's off hand; the weapons are left where they are.",
+                LogPrefix);
+
+            return null;
+        }
+    }
+
     private static string? ReadWeaponMotionFolder(ICharacter localPlayer)
     {
         try

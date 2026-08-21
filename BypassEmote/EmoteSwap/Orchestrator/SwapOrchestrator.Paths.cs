@@ -18,7 +18,7 @@ public sealed partial class SwapOrchestrator
     // One source pap -> target pap redirect. RequiredNamesPath names the vanilla pap the animation names
     // must come from.
     internal readonly record struct VariantPair(string SourceRequestedPath, string TargetRequestedPath,
-        string? RequiredNamesPath = null, string? SourceFaceLibrary = null);
+        string? RequiredNamesPath = null, string? SourceFaceLibrary = null, bool WeaponMotion = false);
 
     internal static string? SelectRequestedPath(string relativePapPath, IReadOnlyList<string> fallbackSkeletons,
         Func<string, bool> modProvides, Func<string, bool> vanillaExists)
@@ -46,7 +46,9 @@ public sealed partial class SwapOrchestrator
             if (SelectRequestedPath(targetVariant.RelativePapPath, fallbackOrder, modProvides, vanillaExists) is not { } targetPath)
                 continue;
 
-            pairs.Add(new VariantPair(sourcePath, targetPath, SourceFaceLibrary: source.FaceLibraryFor(sourceVariant.RelativePapPath)));
+            pairs.Add(new VariantPair(sourcePath, targetPath,
+                SourceFaceLibrary: source.FaceLibraryFor(sourceVariant.RelativePapPath),
+                WeaponMotion: sourceVariant.WeaponMotion));
         }
 
         // Alone, an intro pair is a half-swap: the target's intro redirected while its loop plays raw.
@@ -59,12 +61,14 @@ public sealed partial class SwapOrchestrator
 
         string? introSourcePath = null;
         string? introSourceFaceLibrary = null;
+        var introSourceWeaponMotion = false;
 
         if (source.IntroRelativePapPath is { } ownIntro
             && SelectRequestedPath(ownIntro, fallbackOrder, modProvides, vanillaExists) is { } ownIntroPath)
         {
             introSourcePath = ownIntroPath;
             introSourceFaceLibrary = source.FaceLibraryFor(ownIntro);
+            introSourceWeaponMotion = source.IntroIsWeaponMotion;
         }
         else if ((source.Variants.FirstOrDefault(variant => variant.Posture == PostureFlags.Standing)
                 ?? source.Variants.FirstOrDefault()) is { } lentVariant
@@ -72,13 +76,15 @@ public sealed partial class SwapOrchestrator
         {
             introSourcePath = lentPath;
             introSourceFaceLibrary = source.FaceLibraryFor(lentVariant.RelativePapPath);
+            introSourceWeaponMotion = lentVariant.WeaponMotion;
         }
 
         if (introSourcePath == null)
             return pairs;
 
         if (SelectRequestedPath(targetIntro, fallbackOrder, modProvides, vanillaExists) is { } introTargetPath)
-            pairs.Add(new VariantPair(introSourcePath, introTargetPath, introNamesPath, introSourceFaceLibrary));
+            pairs.Add(new VariantPair(introSourcePath, introTargetPath, introNamesPath, introSourceFaceLibrary,
+                introSourceWeaponMotion));
 
         return pairs;
     }

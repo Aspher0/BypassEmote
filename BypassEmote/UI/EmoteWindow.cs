@@ -381,6 +381,18 @@ public class EmoteWindow : Window, IDisposable
             {
                 if (popup)
                 {
+#if DEBUG
+                    var inEmoteSwap = Configuration.SelfBypassMode == SelfBypassMode.EmoteSwap;
+
+                    if (ImGui.MenuItem("Force swap", string.Empty, false, inEmoteSwap) && contextMenuEmote.HasValue)
+                        ForceSwap(contextMenuEmote.Value);
+
+                    if (!inEmoteSwap && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                        ImGui.SetTooltip("Only Emote Swap mode swaps.");
+
+                    ImGui.Separator();
+#endif
+
                     if (ImGui.MenuItem("Apply emote on Minion"))
                     {
                         if (contextMenuEmote.HasValue)
@@ -527,6 +539,11 @@ public class EmoteWindow : Window, IDisposable
 
         Configuration.Save();
     }
+
+#if DEBUG
+    private static void ForceSwap(Emote emote)
+        => NoireService.Framework.RunOnFrameworkThread(() => Service.Orchestrator?.TrySwap(emote));
+#endif
 
     private void ApplyEmoteOnMinion(Emote emote)
     {

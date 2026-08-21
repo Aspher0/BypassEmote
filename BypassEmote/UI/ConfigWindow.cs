@@ -1,6 +1,7 @@
-﻿using BypassEmote.EmoteSwap;
+using BypassEmote.EmoteSwap;
 using BypassEmote.Helpers;
 using BypassEmote.Models;
+using BypassEmote.Safety;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
@@ -22,10 +23,10 @@ public class ConfigWindow : Window, IDisposable
     private static readonly string[] SwapLifetimeOptions =
         ["When the emote ends", "When you play the target emote", "Never"];
 
-    private static readonly string[] SwapBehaviorOptions = ["Keep every swap", "One swap at a time"];
+    private static readonly string[] SwapBehaviorOptions = ["Multiple swaps", "One swap at a time"];
 
     private static readonly string[] LoopMatchingOptions = ["Strict", "Lenient"];
-    private static readonly string[] SoundMatchingOptions = ["Strict", "Lenient"];
+    private static readonly string[] SoundMatchingOptions = ["Strict", "Lenient", "Off"];
     private static readonly string[] TurnMatchingOptions = ["Very strict", "Strict", "Lenient"];
     private static readonly TurnMatchRule[] TurnMatchingOrder = [TurnMatchRule.VeryStrict, TurnMatchRule.Strict, TurnMatchRule.Lenient];
 
@@ -153,6 +154,8 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
+        DrawPatchApproval();
+
         if (ImGui.BeginTabBar("##BypassEmoteConfigTabs"))
         {
             if (ImGui.BeginTabItem("General settings"))
@@ -168,6 +171,55 @@ public class ConfigWindow : Window, IDisposable
             }
 
             ImGui.EndTabBar();
+        }
+    }
+
+    private static readonly Vector4 PatchWarningColor = ColorHelper.HexToVector4("#E81313");
+    private static readonly Vector4 PatchNoticeColor = ColorHelper.HexToVector4("#FF8C1A");
+
+    private static bool checkingApproval;
+
+    private static void DrawPatchApproval()
+    {
+        var gate = Service.PatchApproval;
+
+        if (gate == null || gate.Approved)
+            return;
+
+        ImGui.TextColoredWrapped(PatchWarningColor, "Bypass Emote has not been approved for this game build.");
+        ImGui.TextWrapped(gate.Reason);
+
+        ImGui.TextWrapped("Emote swaps may behave oddly until the build is approved.\nThe plugin will automatically fetch updates every 10 minutes to check if it was approved.");
+
+        if (gate.Notice is { Length: > 0 } notice)
+            ImGui.TextColoredWrapped(PatchNoticeColor, notice);
+
+        var checkedAt = gate.LastCheckedUtc is { } utc
+            ? utc.ToLocalTime().ToString("HH:mm:ss")
+            : "not yet";
+
+        ImGui.TextDisabled($"Checked at {checkedAt}.");
+
+        using (ImRaii.Disabled(checkingApproval))
+        {
+            if (ImGui.Button("Check now##BypassEmotePatchApproval"))
+                _ = CheckApprovalAsync(gate);
+        }
+
+        ImGui.Separator();
+    }
+
+    private static async Task CheckApprovalAsync(PatchApprovalGate gate)
+    {
+        checkingApproval = true;
+
+        try
+        {
+            await gate.CheckNowAsync();
+        }
+        finally
+        {
+            checkingApproval = false;
         }
     }
 
@@ -402,9 +454,10 @@ public class ConfigWindow : Window, IDisposable
                 var soundMatching = (int)Configuration.SoundMatching;
                 if (ComboRow(SoundMatchingName, "##BypassEmoteSoundMatching", ref soundMatching, SoundMatchingOptions,
                     "\"Strict\" never puts an emote on one that makes sound."
-                    + "\n\"Lenient\" ignores sound entirely."
+                    + "\n\"Lenient\" only matches emotes that make sounds together."
+                    + "\n\"Off\" will let emotes play regardless of sound."
                     + "\n\nThis is to prevent vanilla people from seeing you play fume which could annoy other vanilla players, for example."
-                    + "\n\nRecommended: \"Strict\"."))
+                    + "\n\nRecommended: \"Lenient\"."))
                 {
                     Configuration.SoundMatching = (SoundMatchRule)soundMatching;
                 }
@@ -494,9 +547,9 @@ public class ConfigWindow : Window, IDisposable
 
                 var swapBehavior = (int)Configuration.SwapBehavior;
                 if (ComboRow(BehaviorName, "##BypassEmoteSwapBehavior", ref swapBehavior, SwapBehaviorOptions,
-                    "\"Keep every swap\" lets swaps on different target emotes stay live together."
+                    "\"Multiple swaps\" lets swaps on different target emotes stay live together."
                     + "\n\"One swap at a time\" turns the previous one off as soon as a new one starts."
-                    + "\n\nRecommended: \"Keep every swap\"."))
+                    + "\n\nRecommended: \"Multiple swaps\"."))
                 {
                     Configuration.SwapBehavior = (SwapBehavior)swapBehavior;
                 }

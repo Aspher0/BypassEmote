@@ -8,7 +8,9 @@ namespace BypassEmote.EmoteSwap;
 
 public static class CatalogRules
 {
-    public static SoundClass ClassifySound(IEnumerable<TmbEntryInfo> entries)
+    private static readonly HashSet<string> VfxMagics = new(StringComparer.Ordinal) { "C012", "C173" };
+
+    public static SoundClass ClassifySound(IEnumerable<TmbEntryInfo> entries, Func<string, bool>? vfxPlaysSound = null)
     {
         var hasSfx = false;
 
@@ -17,8 +19,16 @@ public static class CatalogRules
             if (entry.Magic == "C053")
                 return SoundClass.Voiceline;
 
-            if (!hasSfx && entry.Magic == "C063" && entry.Path is { } path && path.EndsWith(".scd", StringComparison.OrdinalIgnoreCase))
+            if (hasSfx || entry.Path is not { Length: > 0 } path)
+                continue;
+
+            if (entry.Magic == "C063" && path.EndsWith(".scd", StringComparison.OrdinalIgnoreCase))
                 hasSfx = true;
+            else if (vfxPlaysSound != null && VfxMagics.Contains(entry.Magic)
+                && path.EndsWith(".avfx", StringComparison.OrdinalIgnoreCase) && vfxPlaysSound(path))
+            {
+                hasSfx = true;
+            }
         }
 
         return hasSfx ? SoundClass.Sfx : SoundClass.Silent;

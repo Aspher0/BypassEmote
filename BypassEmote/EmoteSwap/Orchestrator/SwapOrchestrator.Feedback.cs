@@ -34,7 +34,8 @@ public sealed partial class SwapOrchestrator
             lines.Add((index == 0 ? "Found /" : "Also found /")
                 + miss.Candidate.Command
                 + " but "
-                + NearMissReason(miss.BlockedBy, Configuration.LoopMatching, Configuration.TurnMatching, modName));
+                + NearMissReason(miss.BlockedBy, Configuration.LoopMatching, Configuration.TurnMatching,
+                    Configuration.SoundMatching, modName));
         }
 
         return lines;
@@ -75,7 +76,7 @@ public sealed partial class SwapOrchestrator
     }
 
     internal static string NearMissReason(string blockedBy, LoopMatchRule loopRule, TurnMatchRule turnRule,
-        string? blockingModName = null)
+        SoundMatchRule soundRule, string? blockingModName = null)
     {
         if (blockedBy == BestMatchResolver.BlockedByRules)
             return "it is on your blocked targets list.";
@@ -92,6 +93,17 @@ public sealed partial class SwapOrchestrator
 
         if (blockedBy == "Turn" && turnRule == TurnMatchRule.VeryStrict)
             return "turn matching is very strict.";
+
+        if (blockedBy == "Sound")
+        {
+            return soundRule switch
+            {
+                SoundMatchRule.Strict => "it makes a sound, and your sound rule avoids every target that does.",
+                SoundMatchRule.Lenient => "it makes a sound, and your sound rule only allows that for an emote "
+                    + "that makes one too.",
+                _ => "it makes a sound.",
+            };
+        }
 
         return $"{blockedBy.ToLowerInvariant()} matching is strict.";
     }

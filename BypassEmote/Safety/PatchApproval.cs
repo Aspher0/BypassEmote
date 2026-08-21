@@ -1,0 +1,81 @@
+using System;
+using System.Collections.Generic;
+
+namespace BypassEmote.Safety;
+
+public enum PatchApprovalStatus
+{
+    Checking,
+    Approved,
+    Blocked,
+}
+
+public sealed class ApprovedPatch
+{
+    public string? GameVersion { get; set; }
+    public string? MinimumPluginVersion { get; set; }
+    public string? Notice { get; set; }
+}
+
+public sealed class PatchApprovalDocument
+{
+    public string? Notice { get; set; }
+    public List<ApprovedPatch>? Approved { get; set; }
+}
+
+public readonly record struct PatchApprovalVerdict(PatchApprovalStatus Status, string Reason, string? Notice);
+
+public static class PatchApproval
+{
+    public static PatchApprovalVerdict Decide(PatchApprovalDocument? document, string? gameVersion,
+        Version? pluginVersion)
+    {
+        if (string.IsNullOrWhiteSpace(gameVersion))
+            return new(PatchApprovalStatus.Blocked, "The installed game build could not be read.", null);
+
+        if (document == null)
+            return new(PatchApprovalStatus.Blocked, "The approval list could not be reached.", null);
+
+        var notice = Trimmed(document.Notice);
+
+        if (Find(document, gameVersion) is not { } entry)
+        {
+            return new(PatchApprovalStatus.Blocked,
+                $"Game build {gameVersion} has not been approved yet.", notice);
+        }
+
+        notice = Trimmed(entry.Notice) ?? notice;
+
+        if (Trimmed(entry.MinimumPluginVersion) is { } minimumText)
+        {
+            if (!Version.TryParse(minimumText, out var minimum))
+            {
+                return new(PatchApprovalStatus.Blocked,
+                    $"Game build {gameVersion} names a plugin version the plugin cannot read.", notice);
+            }
+
+            if (pluginVersion == null || pluginVersion < minimum)
+            {
+                return new(PatchApprovalStatus.Blocked,
+                    $"Game build {gameVersion} needs Bypass Emote {minimum} or newer; this is "
+                    + $"{pluginVersion?.ToString() ?? "unknown"}.", notice);
+            }
+        }
+
+        return new(PatchApprovalStatus.Approved, $"Game build {gameVersion} is approved.", notice);
+    }
+
+    private static ApprovedPatch? Find(PatchApprovalDocument document, string gameVersion)
+    {
+        foreach (var entry in document.Approved ?? [])
+        {
+            if (string.Equals(Trimmed(entry.GameVersion), gameVersion, StringComparison.OrdinalIgnoreCase))
+                return entry;
+        }
+
+        return null;
+    }
+
+    private static string? Trimmed(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+}

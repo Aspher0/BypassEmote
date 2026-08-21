@@ -80,7 +80,7 @@ public class ConfigurationInstance : NoireConfigBase
     public TurnMatchRule TurnMatching { get; set; } = TurnMatchRule.Lenient;
 
     [AutoSave]
-    public SoundMatchRule SoundMatching { get; set; } = SoundMatchRule.Strict;
+    public SoundMatchRule SoundMatching { get; set; } = SoundMatchRule.Lenient;
 
     [AutoSave]
     public CachedDispatchMode CachedDispatch { get; set; } = CachedDispatchMode.On;
@@ -114,6 +114,12 @@ public class ConfigurationInstance : NoireConfigBase
 
     [AutoSave]
     public bool SwapPromptPending { get; set; } = false;
+
+    [AutoSave]
+    public string ApprovedGameVersion { get; set; } = string.Empty;
+
+    [AutoSave]
+    public string ApprovedPluginVersion { get; set; } = string.Empty;
 
     public class MigrationV1ToV2 : ConfigMigrationBase
     {

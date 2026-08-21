@@ -2,6 +2,7 @@ using BypassEmote.Helpers;
 using BypassEmote.Models;
 using Lumina.Excel.Sheets;
 using NoireLib;
+using NoireLib.Animations.AvfxFormat;
 using NoireLib.Animations.Helpers;
 using NoireLib.Animations.PapFormat.Tmb;
 using NoireLib.Helpers;
@@ -29,7 +30,7 @@ public sealed class EmoteAttributeCatalog
     private const string LogPrefix = "[EmoteAttributeCatalog] ";
     private const string CacheFileName = "emote_catalog.json";
 
-    internal const int RulesVersion = 2;
+    internal const int RulesVersion = 3;
 
     private const int ActionTimelineSlotCount = ActionTimelineSlots.SlotCount;
     private const string SharedFolder = "bt_common";
@@ -51,7 +52,10 @@ public sealed class EmoteAttributeCatalog
     private const int LoadTypePerJob = 1;
     private const int WeaponMotionIdMode = 2;
     private static readonly HashSet<uint> PostureLockEmoteModes = new() { 1, 2 };
-    private static readonly HashSet<string> ScannedMagics = new(StringComparer.Ordinal) { "C053", "C063", "TMPP" };
+    private static readonly HashSet<string> ScannedMagics =
+        new(StringComparer.Ordinal) { "C053", "C063", "C012", "C173", "TMPP" };
+
+    private static readonly Dictionary<string, bool> VfxSoundReadings = new(StringComparer.OrdinalIgnoreCase);
     private static readonly PublishedData EmptyPublished = new(Array.Empty<EmoteAttributes>(), new Dictionary<uint, EmoteAttributes>());
     private int _buildState; // 0 = not started, 1 = started
     private PublishedData _published = EmptyPublished;
@@ -104,7 +108,6 @@ public sealed class EmoteAttributeCatalog
 
         WeaponMotionTable.Warm();
 
-        // Read here rather than on the first swap, so no press ever pays for the sheet.
         WeaponMotionFolders.GroupedFolders();
 
         if (Cache.Read(RulesVersion) is { Count: > 0 } cachedRows)
@@ -130,12 +133,12 @@ public sealed class EmoteAttributeCatalog
     private void Publish(List<EmoteAttributes> rows)
         => Volatile.Write(ref _published, new PublishedData(rows, rows.ToDictionary(r => r.RowId)));
 
-    internal static EmoteAttributes BuildAttributes(RawEmoteData raw)
+    internal static EmoteAttributes BuildAttributes(RawEmoteData raw, Func<string, bool>? vfxPlaysSound = null)
     {
         var populatedSlots = raw.Slots.Where(s => s.TimelineRowId != 0).ToList();
 
         var loopKind = CatalogRules.ClassifyLoop(populatedSlots.Select(s => s.Pause));
-        var sound = CatalogRules.ClassifySound(raw.EmbeddedTmbEntries);
+        var sound = CatalogRules.ClassifySound(raw.EmbeddedTmbEntries, vfxPlaysSound);
 
         var slot0 = populatedSlots.FirstOrDefault(s => s.SlotIndex == 0);
         var turn = slot0 != null ? CatalogRules.ClassifyTurn(slot0.SlotColumn) : TurnClass.Unknown;
@@ -248,17 +251,14 @@ public sealed class EmoteAttributeCatalog
 
         var weaponMotion = IsWeaponMotionSlot(slot);
 
-        // A per-job slot the folder rule does not recognise stays unusable, as it was before.
         if (slot.LoadType == LoadTypePerJob && !weaponMotion)
             return null;
 
         return (weaponMotion ? ReferenceMotionFolder : SharedFolder) + "/" + slot.Key + ".pap";
     }
 
-    /// <summary> Whether a slot's animation is served from a per-weapon folder rather than the shared one. </summary>
     internal static bool IsWeaponMotionSlot(RawSlotData slot) => slot.ActionTimelineIdMode == WeaponMotionIdMode;
 
-    // The path the catalog reads a slot's shipped pap from, which for weapon-motion slots is the reference folder.
     private static string CatalogProbePath(RawSlotData slot)
         => EmotePathHelper.GetSkeletonPath(CatalogProbeSkeleton,
             UsablePapPathFor(slot) ?? SharedFolder + "/" + slot.Key + ".pap");
@@ -296,7 +296,7 @@ public sealed class EmoteAttributeCatalog
             try
             {
                 var raw = ReadRawEmoteData(emote);
-                rows.Add(BuildAttributes(raw));
+                rows.Add(BuildAttributes(raw, VfxPlaysSound));
             }
             catch (Exception ex)
             {
@@ -415,6 +415,31 @@ public sealed class EmoteAttributeCatalog
         }
 
         return (results, faceLibraries);
+    }
+
+    private static bool VfxPlaysSound(string vfxPath)
+    {
+        if (VfxSoundReadings.TryGetValue(vfxPath, out var known))
+            return known;
+
+        var plays = false;
+
+        try
+        {
+            if (NoireService.DataManager.FileExists(vfxPath)
+                && NoireService.DataManager.GetFile(vfxPath)?.Data is { Length: > 0 } data)
+            {
+                plays = AvfxSound.HasSound(data);
+            }
+        }
+        catch (Exception ex)
+        {
+            NoireLogger.LogDebug($"Vfx sound read skipped for '{vfxPath}': {ex.Message}", LogPrefix);
+        }
+
+        VfxSoundReadings[vfxPath] = plays;
+
+        return plays;
     }
 
     private static Dictionary<string, string> ReadActionTmbFaceLibraries(uint emoteRowId, List<RawSlotData> slots)

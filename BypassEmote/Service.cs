@@ -1,4 +1,5 @@
-﻿using BypassEmote.IPC;
+using BypassEmote.IPC;
+using BypassEmote.Safety;
 using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Helpers;
@@ -19,6 +20,8 @@ public partial class Service
     private static readonly CancellationTokenSource DisposalTokens = new();
 
     public static ActionTimelinePlayer ActionTimelinePlayer = new ActionTimelinePlayer();
+
+    public static PatchApprovalGate PatchApproval { get; private set; } = null!;
 
 #if DEBUG
     public static NoireNetworker Networker { get; set; }
@@ -44,8 +47,12 @@ public partial class Service
         IpcProvider.EnsureListeningRelay();
 #endif
 
+        PatchApproval = new PatchApprovalGate();
+
         InstallHooks();
         InitializeSwap();
+
+        PatchApproval.Start();
     }
 
     public static void RefreshLockedEmotes()
@@ -83,6 +90,8 @@ public partial class Service
     public static void Dispose()
     {
         DisposalTokens.Cancel();
+
+        PatchApproval?.Dispose();
 
         NoireService.ClientState.Login -= RefreshLockedEmotes;
         NoireService.ClientState.Logout -= OnLogout;

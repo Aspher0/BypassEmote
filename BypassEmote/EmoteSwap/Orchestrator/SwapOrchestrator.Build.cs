@@ -1,4 +1,4 @@
-﻿using BypassEmote.Helpers;
+using BypassEmote.Helpers;
 using BypassEmote.Models;
 using NoireLib;
 using NoireLib.Helpers;
@@ -44,7 +44,7 @@ public sealed partial class SwapOrchestrator
     private sealed record SwapBuildRequest(EmoteAttributes Source, EmoteAttributes Target, int Generation,
         IReadOnlyList<RaceBuildInput> Races, string Skeleton, string ContentKey, string SourceKey,
         SwapModManager.SwapFilePlan Plan, bool ComposeUniqueNames, bool PublishInternalNames, string? SourceModName,
-        SwapTimings Timings, bool ExecuteAfterApply = true);
+        SwapTimings Timings, bool ExecuteAfterApply = true, bool? HoldOffHand = null);
 
     private sealed record SwapBuildOutcome(IReadOnlyDictionary<string, byte[]> Files,
         IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> FilesByRace,
@@ -90,7 +90,7 @@ public sealed partial class SwapOrchestrator
         foreach (var race in request.Races)
         {
             var grouped = BuildGroupedFiles(race.Pairs,
-                RetargetingOncePerInput(retargeted, race.FallbackOrder, request.ComposeUniqueNames),
+                RetargetingOncePerInput(retargeted, race.FallbackOrder, request.ComposeUniqueNames, request.HoldOffHand),
                 request.PublishInternalNames);
 
             var isDrawnBody = race.Race == request.Skeleton;

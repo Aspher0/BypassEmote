@@ -50,6 +50,7 @@ public enum SoundMatchRule : int
 {
     Strict = 0,
     Lenient = 1,
+    Off = 2,
 }
 
 public enum IdlePoseFallback : int

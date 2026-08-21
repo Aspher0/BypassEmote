@@ -170,7 +170,8 @@ public sealed partial class SwapOrchestrator : IDisposable
         StartBackgroundBuild(new SwapBuildRequest(source, target, _generations.TakeOwnership(), raceInputs,
             skeleton, contentKey, sourceKey, _swapMods.BeginPrepare(), composeUniqueNames, publishInternalNames,
             ModServingAnimation(source, skeleton),
-            new SwapTimings(swapClock, elapsedAtMatch, elapsedAtPair, AtRetarget: 0, AtPrepare: 0, AtApply: 0)));
+            new SwapTimings(swapClock, elapsedAtMatch, elapsedAtPair, AtRetarget: 0, AtPrepare: 0, AtApply: 0),
+            HoldOffHand: WeaponHoldFor(source, localPlayer)));
     }
 
     private readonly record struct PipelineStart(

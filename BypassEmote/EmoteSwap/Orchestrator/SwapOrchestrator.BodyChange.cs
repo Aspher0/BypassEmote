@@ -83,6 +83,6 @@ public sealed partial class SwapOrchestrator
             _swapMods.BeginPrepare(), ComposeUniqueNamesFor(target, out _),
             publishInternalNames, ModServingAnimation(source, skeleton),
             new SwapTimings(Stopwatch.StartNew(), AtMatch: 0, AtPair: 0, AtRetarget: 0, AtPrepare: 0, AtApply: 0),
-            ExecuteAfterApply: false));
+            ExecuteAfterApply: false, HoldOffHand: WeaponHoldFor(source, localPlayer)));
     }
 }

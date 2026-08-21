@@ -1,5 +1,6 @@
 using BypassEmote.Helpers;
 using BypassEmote.Models;
+using BypassEmote.Safety;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
@@ -33,7 +34,8 @@ public partial class Service
         try
         {
             // From https://github.com/RokasKil/EmoteLog/blob/master/EmoteLog/Hooks/EmoteReaderHook.cs#L11
-            OnEmoteHook = new("E8 ?? ?? ?? ?? 48 8D 8B ?? ?? ?? ?? 4C 89 74 24", OnEmoteDetour, true);
+            OnEmoteHook = new("E8 ?? ?? ?? ?? 48 8D 8B ?? ?? ?? ?? 4C 89 74 24", OnEmoteDetour, true,
+                PatchApprovalGate.EmoteReaderHookName);
         }
         catch (Exception ex)
         {

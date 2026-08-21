@@ -298,6 +298,15 @@ public class DebugWindow : Window, IDisposable
         ImGui.SameLine();
         ImGuiComponents.HelpMarker("Sends emotes you already own through the swap instead of letting the game play them, for debugging only.");
 
+        LayerSwitch("Weapon in hand##SwapLayer", SwapLayers.WeaponInHand,
+            value => SwapLayers.WeaponInHand = value);
+
+        LayerSwitch("Weapon stow at end##SwapLayer", SwapLayers.WeaponStowAtEnd,
+            value => SwapLayers.WeaponStowAtEnd = value);
+
+        LayerSwitch("Weapon travel animation##SwapLayer", SwapLayers.WeaponTravelAnimation,
+            value => SwapLayers.WeaponTravelAnimation = value);
+
         ImGui.Spacing();
 
         LayerSwitch("Unique pack names##SwapLayer", SwapLayers.UniquePackNames,

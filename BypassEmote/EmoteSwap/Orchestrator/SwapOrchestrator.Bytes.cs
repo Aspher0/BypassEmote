@@ -1,6 +1,7 @@
 using NoireLib;
 using NoireLib.Animations.Helpers;
 using NoireLib.Animations.PapFormat;
+using NoireLib.Animations.PapFormat.Tmb;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -100,7 +101,7 @@ public sealed partial class SwapOrchestrator
     }
 
     private static byte[]? BuildRetargetedPap(VariantPair pair, string resolvedSourcePath,
-        IReadOnlyList<string>? requiredNamesOverride = null)
+        IReadOnlyList<string>? requiredNamesOverride = null, bool? holdOffHand = null)
     {
         if (ReadPap(pair.SourceRequestedPath, resolvedSourcePath) is not { } sourceBytes)
         {
@@ -138,18 +139,69 @@ public sealed partial class SwapOrchestrator
             return null;
         }
 
-        return ApplyFaceLibrary(retargeted, pair.SourceFaceLibrary, pair.TargetRequestedPath, PapFaceLibrary.Inject);
+        return ApplyWeaponHold(
+            ApplyFaceLibrary(retargeted, pair.SourceFaceLibrary, pair.TargetRequestedPath, PapFaceLibrary.Inject),
+            pair, holdOffHand);
+    }
+
+    private static byte[]? ApplyWeaponHold(byte[]? papBytes, VariantPair pair, bool? holdOffHand)
+    {
+        if (papBytes == null || holdOffHand is not { } offHand || !pair.WeaponMotion)
+            return papBytes;
+
+        try
+        {
+            var held = PapWeaponHold.Apply(papBytes, offHand, SwapLayers.WeaponStowAtEnd,
+                SwapLayers.WeaponTravelAnimation);
+
+            var statements = EntryCount(held, WeaponPositionMagic);
+
+            NoireLogger.LogDebug($"Weapons put in hand for '{pair.TargetRequestedPath}': {statements} "
+                + $"statement(s), {(offHand ? "two weapons" : "one weapon")}.", LogPrefix);
+
+            if (statements == 0)
+            {
+                NoireLogger.LogWarning($"'{pair.TargetRequestedPath}' came back with no weapon statement at all, "
+                    + "so the weapons stay wherever the game last put them.", LogPrefix);
+            }
+
+            return held;
+        }
+        catch (Exception ex)
+        {
+            NoireLogger.LogError(ex, $"Could not put the weapons in hand for '{pair.TargetRequestedPath}'; "
+                + "the swap is served without them.", LogPrefix);
+
+            return papBytes;
+        }
+    }
+
+    private const string WeaponPositionMagic = "C014";
+
+    private static int EntryCount(byte[] papBytes, string magic)
+    {
+        try
+        {
+            var wanted = new HashSet<string>(StringComparer.Ordinal) { magic };
+
+            return TmbEntryScanner.ScanPap(papBytes, wanted).Count;
+        }
+        catch
+        {
+            return -1;
+        }
     }
 
     internal static Func<IReadOnlyList<ResolvedVariantPair>, GroupOutput?> RetargetingOncePerInput(
-        Dictionary<string, GroupOutput?> built, IReadOnlyList<string> fallbackOrder, bool composeUniqueNames)
+        Dictionary<string, GroupOutput?> built, IReadOnlyList<string> fallbackOrder, bool composeUniqueNames,
+        bool? holdOffHand = null)
         => group =>
         {
             var key = GroupInputKey(group);
 
             if (!built.TryGetValue(key, out var bare))
             {
-                bare = BuildGroupOutput(group, fallbackOrder, composeUniqueNames: false);
+                bare = BuildGroupOutput(group, fallbackOrder, composeUniqueNames: false, holdOffHand);
                 built[key] = bare;
             }
 
@@ -163,14 +215,14 @@ public sealed partial class SwapOrchestrator
             + $">{member.Pair.SourceFaceLibrary}"));
 
     private static GroupOutput? BuildGroupOutput(IReadOnlyList<ResolvedVariantPair> group,
-        IReadOnlyList<string> fallbackOrder, bool composeUniqueNames)
+        IReadOnlyList<string> fallbackOrder, bool composeUniqueNames, bool? holdOffHand = null)
     {
         if (group.Count == 1)
-            return BuildRetargetedPap(group[0].Pair, group[0].ResolvedSourcePath) is { } bytes
+            return BuildRetargetedPap(group[0].Pair, group[0].ResolvedSourcePath, holdOffHand: holdOffHand) is { } bytes
                 ? WithUniqueNames(new GroupOutput(bytes, ClampedIntro: false), group, fallbackOrder, composeUniqueNames)
                 : null;
 
-        return BuildSharedGroupPap(group, fallbackOrder, composeUniqueNames);
+        return BuildSharedGroupPap(group, fallbackOrder, composeUniqueNames, holdOffHand);
     }
 
     internal static GroupOutput WithUniqueNames(GroupOutput output, IReadOnlyList<ResolvedVariantPair> group,
@@ -230,7 +282,7 @@ public sealed partial class SwapOrchestrator
     }
 
     private static GroupOutput? BuildSharedGroupPap(IReadOnlyList<ResolvedVariantPair> group,
-        IReadOnlyList<string> fallbackOrder, bool composeUniqueNames)
+        IReadOnlyList<string> fallbackOrder, bool composeUniqueNames, bool? holdOffHand = null)
     {
         var lead = group[0];
 
@@ -266,7 +318,7 @@ public sealed partial class SwapOrchestrator
             + $"{FootstepEntryCount(retargeted)} footstep entr(y/ies), {clampedNames.Count} name(s) clamped.",
             LogPrefix);
 
-        return ApplyFaceLibrary(retargeted, lead.Pair.SourceFaceLibrary, lead.Pair.TargetRequestedPath, PapFaceLibrary.Inject) is { } withFace
+        return ApplyWeaponHold(ApplyFaceLibrary(retargeted, lead.Pair.SourceFaceLibrary, lead.Pair.TargetRequestedPath, PapFaceLibrary.Inject), lead.Pair, holdOffHand) is { } withFace
             ? WithUniqueNames(new GroupOutput(withFace, ClampedIntro: clampedNames.Count != 0), group, fallbackOrder,
                 composeUniqueNames)
             : null;

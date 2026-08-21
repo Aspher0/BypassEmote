@@ -69,7 +69,7 @@ public sealed class CreateModWindow : Window, IDisposable
             return;
         }
 
-        ImGui.TextWrapped("Writes a simple penumbra mod");
+        ImGui.TextWrapped("This window allows you to create a permanent swap mod, and it stays unaffected by BypassEmote. You own it, and you manage it, like any other mod.");
 
         ImGui.Spacing();
         ImGui.Separator();
