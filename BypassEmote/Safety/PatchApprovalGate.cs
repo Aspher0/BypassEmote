@@ -177,7 +177,7 @@ public sealed class PatchApprovalGate : IDisposable
 
     private static void AnnounceApproval()
     {
-        FeedbackHelper.Info(ApprovedNowMessage);
+        FeedbackHelper.Success(ApprovedNowMessage);
 
         NoireService.NotificationManager.AddNotification(new Notification
         {

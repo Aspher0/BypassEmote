@@ -1,4 +1,4 @@
-﻿using NoireLib;
+using NoireLib;
 using NoireLib.Helpers;
 using NoireLib.HistoryLogger;
 using System;
@@ -17,6 +17,7 @@ public static class FeedbackHelper
     private static readonly Feedback Channel = new(ChatTag, "BypassEmote", "BypassEmote.Feedback");
 
     private static readonly Vector3 ErrorColor = ColorHelper.HexToVector3("#E81313");
+    private static readonly Vector3 SuccessColor = ColorHelper.HexToVector3("#4CAF50");
     private static readonly Vector3 InfoColor = ColorHelper.HexToVector3("#E6E6E6");
     private static readonly Vector3 WarningColor = ColorHelper.HexToVector3("#FF8C1A");
     private static readonly Vector3 SwapLineColor = ColorHelper.HexToVector3("#B3B3B3");
@@ -40,6 +41,9 @@ public static class FeedbackHelper
         => Channel.Say(message, WarningColor, WarningCategory, HistoryLogLevel.Warning,
             Configuration.ShowWarningMessages, Configuration.ThrottleTimeWarnings,
             kind == null ? null : ThrottleKeyFor(WarningChannel, kind), chat);
+
+    public static void Success(string message)
+        => Channel.SayAlways(message, SuccessColor, InfoCategory);
 
     public static void Info(string message)
         => Channel.SayAlways(message, InfoColor, InfoCategory);
