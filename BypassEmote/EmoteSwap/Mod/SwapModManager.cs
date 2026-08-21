@@ -16,19 +16,25 @@ namespace BypassEmote.EmoteSwap;
 public sealed class SwapModManager
 {
     public const string LegacySharedModDirectoryName = "_BypassEmoteGenerated";
-    public const string TempTag = "BypassEmoteSwap";
-    public const int CurrentManifestSchemaVersion = 1;
 
     private const string LogPrefix = "[SwapModManager] ";
-    private const string ManifestFileName = "swap_manifest.json";
-    private const string TempStorageFolderName = "swap";
+    private const string RegistryFileName = "swap_registry.json";
+    private const string StaleManifestFileName = "swap_manifest.json";
     private const string CharactersFolderName = "characters";
     private const string SwapsSubfolderName = "swaps";
     private const string SwapFileSearchPattern = "swap_*.*";
     private const string SwapFilePrefix = "swap_";
 
+    private const int SwapFileTagLength = 8;
+    private const int CurrentRegistrySchemaVersion = 1;
+    private const int MaxPriorityPasses = 4;
+
     private static readonly ContentAddressedStore Store =
         new(SwapFilePrefix, SwapFileTagLength, SwapFileSearchPattern);
+
+    private static readonly JsonSerializerSettings IndentedJson = new() { Formatting = Formatting.Indented };
+
+    private static readonly IReadOnlyDictionary<string, string> NoRedirects = new Dictionary<string, string>();
 
     private const string GeneratedModDescription =
         "Made by BypassEmote automatically. Safe to disable or delete. BypassEmote will recreate it when needed.";
@@ -43,6 +49,8 @@ public sealed class SwapModManager
 
     private readonly ReentrancyGuard _ownMutations = new();
 
+    private string? _pressedKey;
+
     public SwapModManager(IPCCaller_Penumbra gateway, SwapModIdentity identity, string configDirectory)
     {
         _gateway = gateway;
@@ -50,45 +58,73 @@ public sealed class SwapModManager
         _configDirectory = configDirectory;
 
         gateway.OwnModSettingChanged += HandleExternalChange;
-        gateway.OwnModDeleted += HandleExternalChange;
+        gateway.OwnModDeleted += HandleOwnModDeleted;
         gateway.ExternalModChanged += HandleCompetingModChange;
 
         identity.Changed += HandleIdentityChanged;
 
-        if (identity.Names != null)
-            Current = LoadManifestFromDisk();
+        Registry = LoadRegistryFromDisk();
     }
 
-    private string ModDirectoryName => _identity.Names?.Directory ?? string.Empty;
+    public SwapRegistry Registry { get; private set; }
+
+    public string ModDirectoryName => _identity.Names?.Directory ?? string.Empty;
 
     private string GeneratedModName => _identity.Names?.Display ?? "BypassEmote Generated";
 
     private string? CharacterDirectory
         => _identity.Names is { } names ? CharacterDirectoryCore(_configDirectory, names.CharacterKey) : null;
 
+    private string? ModDirectory
+        => _gateway.GetModRootDirectory() is { Length: > 0 } modRoot && _identity.Names is { } names
+            ? Path.Combine(modRoot, names.Directory)
+            : null;
+
     internal static string CharacterDirectoryCore(string configDirectory, string characterKey)
         => Path.Combine(configDirectory, CharactersFolderName, characterKey);
 
     private void HandleIdentityChanged(SwapModNames? previous)
     {
-        if (previous != null && Current != null && !TurnedOffSinceLastOn)
-            DeactivateUnder(previous);
+        if (previous != null && _identity.Names is { } names
+            && string.Equals(previous.Directory, names.Directory, StringComparison.OrdinalIgnoreCase))
+        {
+            RenameModInPlace(names.Display);
+            return;
+        }
 
-        TurnedOffSinceLastOn = true;
-        Current = LoadManifestFromDisk();
+        if (previous != null)
+            DeselectAllUnder(previous);
+
+        Registry = LoadRegistryFromDisk();
+        PushRedirectScope();
     }
 
-    public SwapManifest? Current
+    public void SaveDispatch(IReadOnlyList<DispatchRecord> dispatch)
     {
-        get => _current;
-        private set
+        Registry = Registry with { Dispatch = dispatch };
+        PersistRegistry();
+    }
+
+    private void RenameModInPlace(string display)
+    {
+        if (ModDirectory is not { } modDirectory || !Directory.Exists(modDirectory))
+            return;
+
+        try
         {
-            _current = value;
-            PushRedirectScope();
+            using (_ownMutations.Enter())
+            {
+                if (SimpleV3ModWriter.Write(modDirectory, MetaFor(display), new Dictionary<string, string>()))
+                    EnsurePenumbraReadsTheMod(isFirstCreation: false);
+            }
+
+            NoireLogger.LogDebug($"The generated mod is now named '{display}'.", LogPrefix);
+        }
+        catch (Exception ex)
+        {
+            NoireLogger.LogError(ex, $"Could not rename the generated mod to '{display}'.", LogPrefix);
         }
     }
-
-    private SwapManifest? _current;
 
     public SchedulerResidencyProbe? ResidencyProbe
     {
@@ -106,13 +142,13 @@ public sealed class SwapModManager
     {
         try
         {
-            var current = _current;
+            var selected = Registry.Entries.Where(entry => entry.SelectedByUs).ToList();
+            var paths = selected.SelectMany(ServedPathsOf).ToList();
 
-            var uniqueNames = current != null && RedirectsLive(current) ? current.UniqueNameByKey : null;
+            var pressed = _pressedKey is { } key ? selected.FirstOrDefault(entry => entry.ContentKey == key) : null;
 
-            _residencyProbe?.SetRedirectedScope(current?.TargetEmote ?? 0, current?.RedirectedPaths.Keys,
-                uniqueNames, current?.InternalNames,
-                current == null ? null : $"{current.ResolvedSourcePath}:{current.SourceStampTicks}");
+            _residencyProbe?.SetRedirectedScope(pressed?.TargetEmote ?? 0, paths,
+                pressed?.UniqueNameByKey, pressed?.InternalNames, pressed?.ContentKey);
         }
         catch (Exception ex)
         {
@@ -120,42 +156,13 @@ public sealed class SwapModManager
         }
     }
 
-    private bool RedirectsLive(SwapManifest current)
-    {
-        try
-        {
-            return !TurnedOffSinceLastOn && AnyPathRedirected(current.RedirectedPaths.Keys);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private bool AnyPathRedirected(IEnumerable<string> gamePaths)
-    {
-        var probePath = gamePaths.FirstOrDefault(UniqueNamePlanner.IsComposedPapPath)
-            ?? gamePaths.FirstOrDefault();
-
-        return probePath != null && _gateway.ResolvePlayerPath(probePath) != probePath;
-    }
+    private IEnumerable<string> ServedPathsOf(SwapOptionEntry entry)
+        => Registry.Skeleton is { } skeleton && entry.FilesByRace.TryGetValue(skeleton, out var files)
+            ? files.Keys
+            : [];
 
     public bool IsOwnPath(string resolvedDiskPath)
         => IsOwnPathCore(resolvedDiskPath, _gateway.GetModRootDirectory(), _configDirectory);
-
-    public bool CanReuse(uint sourceEmote, uint targetEmote, string resolvedSourcePath, long stampTicks,
-        Guid collectionId, string skeleton)
-    {
-        var flavor = Configuration.SwapModFlavor;
-        return CanReuseCore(Current, sourceEmote, targetEmote, resolvedSourcePath, stampTicks, collectionId,
-            skeleton, (int)flavor, FlavorStorageDirectory(flavor));
-    }
-
-    public bool TurnedOffSinceLastOn { get; private set; } = true;
-
-    private const int SwapFileTagLength = 8;
-
-    private static readonly JsonSerializerSettings IndentedJson = new() { Formatting = Formatting.Indented };
 
     public static string DeriveFileName(byte[] papBytes)
         => DeriveFileName(papBytes, ".pap");
@@ -169,196 +176,621 @@ public sealed class SwapModManager
         return dot < 0 ? ".pap" : gamePath[dot..];
     }
 
-    public bool Apply(SwapManifest manifest, IReadOnlyDictionary<string, byte[]> gamePathToPapBytes)
+    public SwapOptionEntry? FindReusable(string contentKey)
     {
-        var prepared = PrepareFiles(BeginPrepare(), gamePathToPapBytes);
-        return prepared != null && Register(manifest, prepared);
+        if (KeptWithKey(contentKey) is not { } entry)
+            return null;
+
+        return AllFilesExist(entry) ? entry : null;
     }
 
-    public SwapFilePlan BeginPrepare()
+    public SwapOptionEntry? KeptWithKey(string contentKey) => RegistryDecisions.FindByKey(Registry, contentKey);
+
+    public SwapOptionEntry? ArmedFor(uint targetEmote) => RegistryDecisions.FindArmedByTarget(Registry, targetEmote);
+
+    public bool SelectExisting(SwapOptionEntry entry)
     {
-        var flavor = Configuration.SwapModFlavor;
+        if (_identity.Names == null)
+            return false;
 
-        return new SwapFilePlan(flavor, flavor == SwapModFlavor.RealMod ? _gateway.GetModRootDirectory() : null,
-            _identity.Names);
-    }
-
-    public PreparedSwapFiles? PrepareFiles(SwapFilePlan plan, IReadOnlyDictionary<string, byte[]> gamePathToPapBytes)
-        => PrepareFilesCore(plan, _configDirectory, gamePathToPapBytes);
-
-    public bool Register(SwapManifest manifest, PreparedSwapFiles prepared)
-    {
-        var previous = Current;
-
-        bool ok;
-
-        using (_ownMutations.Enter())
+        foreach (var sibling in Registry.Entries
+            .Where(other => other.SelectedByUs && other.GroupName == entry.GroupName && other.ContentKey != entry.ContentKey)
+            .ToList())
         {
-            ok = prepared.Flavor == SwapModFlavor.RealMod
-                ? RegisterRealMod(manifest, prepared)
-                : RegisterTemporaryMod(manifest, previous, prepared);
+            UpdateEntry(sibling with { SelectedByUs = false });
         }
 
-        if (!ok)
-            return false;
+        UpdateEntry(entry with { SelectedByUs = true, LastUsedStamp = NextStamp() });
 
-        var finalManifest = manifest with
+        if (Configuration.SwapBehavior == SwapBehavior.OneAtATime)
         {
-            RedirectedPaths = prepared.RedirectedPaths,
-            FlavorUsed = (int)prepared.Flavor,
-        };
-
-        PersistManifest(finalManifest);
-
-        TurnedOffSinceLastOn = false;
-
-        Current = finalManifest;
-        DeleteUnreferencedSwapFiles(prepared.SwapFileDirectory, prepared.RedirectedPaths.Values);
-
-        if (prepared.Flavor == SwapModFlavor.RealMod
-            && Path.GetDirectoryName(prepared.SwapFileDirectory) is { Length: > 0 } appliedModDirectory)
-        {
-            DeleteUnreferencedSwapFiles(appliedModDirectory, Enumerable.Empty<string>());
-        }
-
-        return true;
-    }
-
-    public bool Reactivate()
-    {
-        if (Current is not { } current || _identity.Names == null)
-            return false;
-
-        bool live;
-
-        using (_ownMutations.Enter())
-        {
-            live = (SwapModFlavor)current.FlavorUsed == SwapModFlavor.RealMod
-                ? ReactivateRealMod(current)
-                : ReactivateTemporaryMod(current);
-        }
-
-        if (live)
-            TurnedOffSinceLastOn = false;
-
-        PushRedirectScope();
-
-        if (live)
-            ReconcilePriority();
-
-        return live;
-    }
-
-    private bool ReactivateRealMod(SwapManifest current)
-    {
-        var modRoot = _gateway.GetModRootDirectory();
-        if (string.IsNullOrEmpty(modRoot))
-        {
-            NoireLogger.LogDebug("Penumbra's mod root is unavailable; the swap is built again rather than reused.", LogPrefix);
-            return false;
-        }
-
-        var modDirectory = Path.Combine(modRoot, ModDirectoryName);
-
-        if (!AllRedirectedFilesExist(current.RedirectedPaths, modDirectory))
-        {
-            NoireLogger.LogDebug($"A pap '{ModDirectoryName}' redirects is gone; the swap is built again rather than reused.", LogPrefix);
-            Current = null;
-            return false;
-        }
-
-        if (PrepareGeneratedModFolder(modDirectory, GeneratedModName) == GeneratedModFolder.Unusable)
-        {
-            NoireLogger.LogWarning($"'{ModDirectoryName}' could not be put back under '{modRoot}'; the swap is built again.", LogPrefix);
-            Current = null;
-            return false;
-        }
-
-        if (WriteRealModJsons(modDirectory, GeneratedModName, current.RedirectedPaths) is not { } mapRewritten)
-            return false;
-
-        var holdsMod = _gateway.HoldsMod(ModDirectoryName);
-
-        if ((mapRewritten || holdsMod != true) && !EnsurePenumbraReadsTheMod(holdsMod == false))
-            return false;
-
-        var collection = current.EnabledInCollection;
-
-        if (!_gateway.TrySetModEnabled(collection, ModDirectoryName, true))
-        {
-            NoireLogger.LogWarning($"Penumbra would not re-enable '{ModDirectoryName}' in collection {collection}; the swap is built again.", LogPrefix);
-            return false;
-        }
-
-        if (!_gateway.TrySetModPriority(collection, ModDirectoryName, current.AppliedPriority))
-        {
-            NoireLogger.LogWarning($"Penumbra would not restore the priority of '{ModDirectoryName}' in collection {collection}; the swap is built again.", LogPrefix);
-            return false;
-        }
-
-        return true;
-    }
-
-    private bool ReactivateTemporaryMod(SwapManifest current)
-    {
-        var storageDirectory = CharacterDirectory is { } characterDirectory
-            ? Path.Combine(characterDirectory, TempStorageFolderName)
-            : Path.Combine(_configDirectory, TempStorageFolderName);
-
-        if (!AllRedirectedFilesExist(current.RedirectedPaths, storageDirectory))
-        {
-            NoireLogger.LogDebug("A pap the temporary swap redirects is gone; the swap is built again rather than reused.", LogPrefix);
-            Current = null;
-            return false;
-        }
-
-        var fullPaths = ToFullPaths(current.RedirectedPaths, storageDirectory);
-
-        var ec = _gateway.AddTemporaryMod(TempTag, current.EnabledInCollection, fullPaths, current.AppliedPriority);
-        if (IsSuccess(ec))
-            return true;
-
-        NoireLogger.LogWarning($"Penumbra would not re-register the temporary swap mod (ec={ec}); the swap is built again.", LogPrefix);
-        return false;
-    }
-
-    public void Deactivate()
-    {
-        if (_identity.Names is { } names)
-            DeactivateUnder(names);
-    }
-
-    private void DeactivateUnder(SwapModNames names)
-    {
-        if (Current == null)
-            return;
-
-        TurnedOffSinceLastOn = true;
-
-        var flavor = (SwapModFlavor)Current.FlavorUsed;
-
-        using (_ownMutations.Enter())
-        {
-            if (flavor == SwapModFlavor.RealMod)
-                DisableRealMod(Current.EnabledInCollection, names.Directory);
-            else
+            foreach (var other in Registry.Entries
+                .Where(other => other.SelectedByUs && other.GroupName != entry.GroupName).ToList())
             {
-                var ec = _gateway.RemoveTemporaryMod(TempTag, Current.EnabledInCollection, Current.AppliedPriority);
-                if (!IsSuccess(ec))
-                    NoireLogger.LogError($"Failed to remove the temporary swap mod (ec={ec}).", LogPrefix);
+                UpdateEntry(other with { SelectedByUs = false });
             }
         }
 
+        _pressedKey = entry.ContentKey;
+
+        if (!PushSelections())
+        {
+            UpdateEntry(entry with { SelectedByUs = false });
+            _pressedKey = null;
+
+            return false;
+        }
+
+        PushRedirectScope();
+
+        return true;
+    }
+
+    public void DeselectEntry(SwapOptionEntry entry)
+    {
+        if (_pressedKey == entry.ContentKey)
+            _pressedKey = null;
+
+        UpdateEntry(entry with { SelectedByUs = false });
+
+        PushSelections();
         PushRedirectScope();
     }
 
-    public void RecordServedSkeleton(string skeleton)
+    public void DeselectAll()
     {
-        if (Current is not { } current || current.Skeleton == skeleton)
+        var selected = Registry.Entries.Where(entry => entry.SelectedByUs).ToList();
+
+        if (selected.Count == 0)
             return;
 
-        Current = current with { Skeleton = skeleton };
-        PersistManifest(Current);
+        foreach (var entry in selected)
+            UpdateEntry(entry with { SelectedByUs = false });
+
+        _pressedKey = null;
+
+        PushSelections();
+        PushRedirectScope();
+    }
+
+    private bool PushSelections()
+    {
+        if (_identity.Names is not { } names)
+            return false;
+
+        var collection = CollectionForSelection();
+        var armed = Registry.Entries.Where(entry => entry.SelectedByUs).ToList();
+
+        using (_ownMutations.Enter())
+        {
+            if (armed.Count == 0)
+                return _gateway.RemoveTemporarySettings(collection, names.Directory);
+
+            var selections = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+
+            foreach (var entry in Registry.Entries)
+                selections[entry.GroupName] = [OptionNaming.NoneOptionName];
+
+            foreach (var entry in armed)
+                selections[entry.GroupName] = [entry.OptionName];
+
+            var ec = _gateway.SetTemporarySettings(collection, names.Directory, enabled: true,
+                Registry.AppliedPriority, selections);
+
+            if (IsSuccess(ec))
+                return true;
+
+            var version = _gateway.ReportedApiVersion();
+
+            NoireLogger.LogError(
+                $"Penumbra refused the settings of '{names.Directory}' in collection {collection} (ec={ec}, "
+                + $"Penumbra api {(version is { } v ? $"{v.Breaking}.{v.Feature}" : "unknown")}). "
+                + $"Penumbra holds: {PenumbraOptionsLine(armed[0].GroupName, armed[0].OptionName)}", LogPrefix);
+
+            return false;
+        }
+    }
+
+    private void DeselectAllUnder(SwapModNames names)
+    {
+        if (!Registry.Entries.Any(entry => entry.SelectedByUs))
+            return;
+
+        using (_ownMutations.Enter())
+            _gateway.RemoveTemporarySettings(Registry.CollectionId, names.Directory);
+    }
+
+    public bool AddAndSelect(SwapOptionEntry entry, IReadOnlyDictionary<string, byte[]> filesToWrite, string drawnRace)
+    {
+        if (ModDirectory is not { } modDirectory || _identity.Names == null)
+            return false;
+
+        if (RaceForNewOption(entry, drawnRace) is not { } race)
+        {
+            NoireLogger.LogError($"'{entry.OptionName}' carries no files for any body, so it cannot be kept.", LogPrefix);
+            return false;
+        }
+
+        if (Registry.Skeleton != race && !RewriteForSkeleton(SkeletonRewritePlanner.For(Registry, race), race))
+            return false;
+
+        var folder = PrepareGeneratedModFolder(modDirectory, GeneratedModName);
+
+        if (folder == GeneratedModFolder.Unusable || !WriteSwapFiles(modDirectory, filesToWrite))
+            return false;
+
+        var groups = ReadGroups();
+
+        var group = groups.TryGetValue(entry.GroupName, out var existing)
+            ? existing.Group
+            : ModGroupFile.NewGroup(entry.GroupName);
+
+        var isNewOption = !group.Options.Any(option => option.Name == entry.OptionName);
+
+        if (isNewOption
+            && RegistryDecisions.EvictionCandidate(Registry, entry.GroupName, Configuration.MaxKeptSwapsPerTarget) is { } evicted)
+        {
+            group = ModGroupFile.Remove(group, evicted.OptionName);
+            RemoveEntry(evicted);
+
+            NoireLogger.LogDebug($"'{evicted.OptionName}' was dropped from '{entry.GroupName}' to stay under the cap.", LogPrefix);
+        }
+
+        group = isNewOption
+            ? ModGroupFile.Add(group, new ModGroupOption(entry.OptionName, entry.FilesByRace[race]))
+            : ModGroupFile.WithFiles(group, entry.OptionName, entry.FilesByRace[race]);
+
+        using (_ownMutations.Enter())
+        {
+            if (!WriteGroup(group, IndexFor(groups, entry.GroupName))
+                || !EnsurePenumbraReadsTheMod(folder == GeneratedModFolder.Created))
+            {
+                return false;
+            }
+        }
+
+        UpdateEntry(entry);
+        ReassertSelections();
+        SweepUnreferencedFiles();
+
+        var selected = SelectExisting(entry);
+
+        if (selected && _gateway.RefreshOwnPanel())
+            NoireLogger.LogDebug("The mod's panel was on screen, so its option list was refreshed.", LogPrefix);
+
+        return selected;
+    }
+
+    private const int MaxJudgementsPerSwap = 8;
+
+    internal int ApplyRulesPlan(string stamp, Func<SwapOptionEntry, RegistryDecisions.RulesVerdict> judge)
+    {
+        var plan = RegistryDecisions.JudgeAgainstRules(Registry, stamp, _pressedKey, judge,
+            Configuration.MaxKeptSwapsPerTarget, MaxJudgementsPerSwap);
+
+        var restamped = plan.Entries.Count(entry => entry.RulesStamp == stamp)
+            != Registry.Entries.Count(entry => entry.RulesStamp == stamp);
+
+        if (plan.Dropped.Count == 0 && !restamped)
+            return 0;
+
+        Registry = Registry with { Entries = plan.Entries };
+        PersistRegistry();
+
+        if (plan.Dropped.Count == 0)
+            return 0;
+
+        NoireLogger.LogDebug($"{plan.Dropped.Count} kept swap(s) the settings would no longer make were dropped: "
+            + string.Join(", ", plan.Dropped.Select(entry => $"'{entry.OptionName}' in '{entry.GroupName}'")), LogPrefix);
+
+        DropOptionsFromDisk(plan.Dropped);
+
+        SweepUnreferencedFiles();
+        ReassertSelections();
+        PushRedirectScope();
+
+        if (_gateway.RefreshOwnPanel())
+            NoireLogger.LogDebug("The mod's panel was on screen, so its option list was refreshed.", LogPrefix);
+
+        return plan.Dropped.Count;
+    }
+
+    private void DropOptionsFromDisk(IReadOnlyList<SwapOptionEntry> dropped)
+    {
+        if (ModDirectory is not { } modDirectory)
+            return;
+
+        var groups = ReadGroups();
+        var touched = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var entry in dropped)
+        {
+            if (!groups.TryGetValue(entry.GroupName, out var onDisk))
+                continue;
+
+            groups[entry.GroupName] = onDisk with { Group = ModGroupFile.Remove(onDisk.Group, entry.OptionName) };
+            touched.Add(entry.GroupName);
+        }
+
+        using (_ownMutations.Enter())
+        {
+            foreach (var groupName in touched)
+            {
+                // A group left with nothing but its empty option is a row of the mod panel that serves no swap.
+                if (ModGroupFile.IsEmpty(groups[groupName].Group))
+                    RemoveRivalGroupFiles(modDirectory, groupName, keptFileName: string.Empty);
+                else
+                    WriteGroup(groups[groupName].Group, groups[groupName].Index);
+            }
+
+            EnsurePenumbraReadsTheMod(isFirstCreation: false);
+        }
+    }
+
+    private static bool IsSuccess(PenumbraApiEc ec) => ec is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged;
+
+    private string PenumbraOptionsLine(string wantedGroup, string wantedOption)
+    {
+        if (_identity.Names is not { } names)
+            return "no mod name yet";
+
+        if (_gateway.GetAvailableOptions(names.Directory) is not { } available)
+            return "nothing at all, so Penumbra does not hold the mod";
+
+        if (available.Count == 0)
+            return "the mod, but not one group";
+
+        var groups = string.Join("; ", available.Select(group => $"{group.Key} [{string.Join(", ", group.Value)}]"));
+
+        var exact = available.Keys.Any(name => string.Equals(name, wantedGroup, StringComparison.Ordinal));
+
+        var loose = available.Keys.FirstOrDefault(name => string.Equals(name, wantedGroup, StringComparison.OrdinalIgnoreCase));
+
+        var groupVerdict = exact
+            ? "the group name matches exactly"
+            : loose is { } near
+                ? $"no exact group match; closest is {Spell(near)} against {Spell(wantedGroup)}"
+                : $"no group match at all for {Spell(wantedGroup)}";
+
+        var optionVerdict = loose is { } matched && available[matched].Any(name => string.Equals(name, wantedOption, StringComparison.Ordinal))
+            ? "the option name matches exactly"
+            : $"no exact option match for {Spell(wantedOption)}";
+
+        return $"{groups} | {groupVerdict} | {optionVerdict}";
+    }
+
+    private static string Spell(string value)
+        => $"'{value}' ({value.Length} chars: {string.Join(" ", value.Select(character => ((int)character).ToString("x2")))})";
+
+    private string? RaceForNewOption(SwapOptionEntry entry, string drawnRace)
+    {
+        if (entry.FilesByRace.ContainsKey(drawnRace))
+            return drawnRace;
+
+        return Registry.Skeleton is { } skeleton && entry.FilesByRace.ContainsKey(skeleton)
+            ? skeleton
+            : entry.FilesByRace.Keys.FirstOrDefault();
+    }
+
+    private static bool WriteSwapFiles(string modDirectory, IReadOnlyDictionary<string, byte[]> filesToWrite)
+    {
+        foreach (var (gamePath, bytes) in filesToWrite)
+        {
+            var relativePath = RedirectedPathValue(DeriveFileName(bytes, FileExtensionFor(gamePath)));
+
+            if (!Store.WriteAt(Path.Combine(modDirectory, relativePath), bytes))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static void RemoveRivalGroupFiles(string modDirectory, string groupName, string keptFileName)
+    {
+        if (!Directory.Exists(modDirectory))
+            return;
+
+        foreach (var path in Directory.GetFiles(modDirectory, ModGroupFile.FileNamePrefix + "*.json"))
+        {
+            if (string.Equals(Path.GetFileName(path), keptFileName, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            try
+            {
+                if (ModGroupFile.Deserialize(File.ReadAllText(path)) is { } rival && rival.Name == groupName)
+                {
+                    File.Delete(path);
+                    NoireLogger.LogDebug(keptFileName.Length == 0
+                        ? $"Removed '{Path.GetFileName(path)}', the last file of group '{groupName}'."
+                        : $"Removed '{Path.GetFileName(path)}', a second file for group '{groupName}'.", LogPrefix);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                NoireLogger.LogDebug($"Could not read or remove '{path}' ({ex.Message}).", LogPrefix);
+            }
+        }
+    }
+
+    private sealed record GroupOnDisk(ModGroup Group, int Index);
+
+    private Dictionary<string, GroupOnDisk> ReadGroups()
+    {
+        var groups = new Dictionary<string, GroupOnDisk>(StringComparer.Ordinal);
+
+        if (ModDirectory is not { } modDirectory || !Directory.Exists(modDirectory))
+            return groups;
+
+        foreach (var path in Directory.EnumerateFiles(modDirectory, ModGroupFile.FileNamePrefix + "*.json"))
+        {
+            try
+            {
+                if (ModGroupFile.Deserialize(File.ReadAllText(path)) is not { } group)
+                    continue;
+
+                if (!groups.TryGetValue(group.Name, out var seen) || group.Options.Count > seen.Group.Options.Count)
+                    groups[group.Name] = new GroupOnDisk(group, IndexInFileName(path));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                NoireLogger.LogDebug($"Could not read the group file '{path}' ({ex.Message}).", LogPrefix);
+            }
+        }
+
+        return groups;
+    }
+
+    private bool WriteGroup(ModGroup group, int index)
+    {
+        if (ModDirectory is not { } modDirectory)
+            return false;
+
+        var fileName = ModGroupFile.FileNameFor(group.Name, index);
+
+        try
+        {
+            RemoveRivalGroupFiles(modDirectory, group.Name, fileName);
+
+            AtomicFile.WriteAllText(Path.Combine(modDirectory, fileName), ModGroupFile.Serialize(group));
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            NoireLogger.LogError(ex, $"Failed to write the group file for '{group.Name}'.", LogPrefix);
+            return false;
+        }
+    }
+
+    internal static int IndexInFileName(string path)
+    {
+        var name = Path.GetFileNameWithoutExtension(path);
+
+        if (name.Length <= ModGroupFile.FileNamePrefix.Length)
+            return 0;
+
+        var digits = new string(name[ModGroupFile.FileNamePrefix.Length..].TakeWhile(char.IsAsciiDigit).ToArray());
+
+        return digits.Length > 0 && int.TryParse(digits, out var index) ? index : 0;
+    }
+
+    private static int IndexFor(Dictionary<string, GroupOnDisk> groups, string groupName)
+        => groups.TryGetValue(groupName, out var existing) && existing.Index > 0
+            ? existing.Index
+            : groups.Values.Select(entry => entry.Index).DefaultIfEmpty(0).Max() + 1;
+
+    public string? GroupNameForTarget(uint targetEmote)
+        => Registry.Entries.FirstOrDefault(entry => entry.TargetEmote == targetEmote)?.GroupName;
+
+    public IReadOnlySet<string> TakenGroupNames()
+        => Registry.Entries.Select(entry => entry.GroupName).ToHashSet(StringComparer.Ordinal);
+
+    public IReadOnlySet<string> TakenOptionNames(string groupName)
+        => Registry.Entries.Where(entry => entry.GroupName == groupName)
+            .Select(entry => entry.OptionName)
+            .ToHashSet(StringComparer.Ordinal);
+
+    public ModState? PenumbraState()
+    {
+        if (_identity.Names is not { } names)
+            return null;
+
+        var states = _gateway.GetAllModStates(Registry.CollectionId);
+
+        return states != null && states.TryGetValue(names.Directory, out var state) ? state : null;
+    }
+    public long SwapFilesSize()
+    {
+        if (ModDirectory is not { } modDirectory)
+            return 0;
+
+        var swapsDirectory = Path.Combine(modDirectory, SwapsSubfolderName);
+
+        if (!Directory.Exists(swapsDirectory))
+            return 0;
+
+        try
+        {
+            return Directory.EnumerateFiles(swapsDirectory, SwapFileSearchPattern)
+                .Sum(path => new FileInfo(path).Length);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            NoireLogger.LogDebug($"Could not measure '{swapsDirectory}' ({ex.Message}).", LogPrefix);
+            return 0;
+        }
+    }
+
+    internal bool RewriteForSkeleton(SkeletonRewritePlanner.RewritePlan plan, string newSkeleton)
+    {
+        if (plan.Rewrites.Count == 0)
+        {
+            Registry = Registry with { Skeleton = newSkeleton };
+            PersistRegistry();
+
+            PushRedirectScope();
+
+            return true;
+        }
+
+        var groups = ReadGroups();
+
+        foreach (var rewrite in plan.Rewrites)
+        {
+            if (groups.TryGetValue(rewrite.GroupName, out var onDisk))
+            {
+                groups[rewrite.GroupName] =
+                    onDisk with { Group = ModGroupFile.WithFiles(onDisk.Group, rewrite.OptionName, rewrite.Files) };
+            }
+        }
+
+        using (_ownMutations.Enter())
+        {
+            foreach (var onDisk in groups.Values)
+            {
+                if (!WriteGroup(onDisk.Group, onDisk.Index))
+                    return false;
+            }
+
+            if (!EnsurePenumbraReadsTheMod(isFirstCreation: false))
+                return false;
+        }
+
+        Registry = Registry with { Skeleton = newSkeleton };
+        PersistRegistry();
+
+        ReassertSelections();
+        PushRedirectScope();
+
+        return true;
+    }
+
+    public void StartupSweep()
+    {
+        Registry = LoadRegistryFromDisk();
+
+        DeselectAll();
+        ReconcileWithDisk();
+        SweepUnreferencedFiles();
+    }
+
+    public void ForgetAll()
+    {
+        DeselectAll();
+
+        NoireLogger.LogDebug($"Dropping {Registry.Entries.Count} kept swap(s) and everything they name.", LogPrefix);
+
+        Registry = Registry with { Entries = [] };
+        _pressedKey = null;
+        PersistRegistry();
+
+        var hadModFolder = ModDirectory is { } modDirectory && Directory.Exists(modDirectory);
+
+        DeleteGroupFiles();
+
+        SweepUnreferencedFiles();
+
+        if (hadModFolder)
+        {
+            EnsureEmptyDefaultMap();
+
+            using (_ownMutations.Enter())
+                EnsurePenumbraReadsTheMod(isFirstCreation: false);
+        }
+
+        PushRedirectScope();
+    }
+
+    private void DeleteGroupFiles()
+    {
+        if (ModDirectory is not { } modDirectory || !Directory.Exists(modDirectory))
+            return;
+
+        foreach (var path in Directory.GetFiles(modDirectory, ModGroupFile.FileNamePrefix + "*.json"))
+        {
+            try
+            {
+                File.Delete(path);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                NoireLogger.LogDebug($"Could not delete the group file '{path}' ({ex.Message}).", LogPrefix);
+            }
+        }
+    }
+
+    private void ReconcileWithDisk()
+    {
+        if (_identity.Names is not { } names)
+            return;
+
+        var groups = ReadGroups();
+
+        var optionsOnDisk = groups.ToDictionary(pair => pair.Key,
+            pair => (IReadOnlyList<string>)pair.Value.Group.Options.Select(option => option.Name).ToList(),
+            StringComparer.Ordinal);
+
+        var plan = RegistryDecisions.Reconcile(Registry, optionsOnDisk,
+            new Dictionary<string, string>(StringComparer.Ordinal));
+
+        Registry = Registry with { Entries = plan.Entries };
+        PersistRegistry();
+
+        var mapEmptied = EnsureEmptyDefaultMap();
+
+        if (plan.OrphanOptions.Count == 0)
+        {
+            if (mapEmptied)
+                ReloadAndReassert();
+
+            return;
+        }
+
+        foreach (var (groupName, optionName) in plan.OrphanOptions)
+        {
+            if (groups.TryGetValue(groupName, out var onDisk))
+                groups[groupName] = onDisk with { Group = ModGroupFile.Remove(onDisk.Group, optionName) };
+        }
+
+        NoireLogger.LogDebug($"{plan.OrphanOptions.Count} option(s) nothing knows about were dropped.", LogPrefix);
+
+        using (_ownMutations.Enter())
+        {
+            foreach (var onDisk in groups.Values)
+                WriteGroup(onDisk.Group, onDisk.Index);
+        }
+
+        ReloadAndReassert();
+    }
+
+    private void ReloadAndReassert()
+    {
+        using (_ownMutations.Enter())
+            EnsurePenumbraReadsTheMod(isFirstCreation: false);
+
+        ReassertSelections();
+    }
+
+    private void ReassertSelections() => PushSelections();
+
+    private bool EnsureEmptyDefaultMap()
+    {
+        if (ModDirectory is not { } modDirectory || !Directory.Exists(modDirectory))
+            return false;
+
+        return WriteRealModJsons(modDirectory, GeneratedModName, NoRedirects) == true;
+    }
+
+    private void SweepUnreferencedFiles()
+    {
+        if (ModDirectory is not { } modDirectory)
+            return;
+
+        var referenced = Registry.Entries
+            .SelectMany(entry => entry.FilesByRace.Values)
+            .SelectMany(files => files.Values);
+
+        Store.RemoveUnreferenced(Path.Combine(modDirectory, SwapsSubfolderName), referenced);
     }
 
     public void HandleExternalChange()
@@ -366,67 +798,88 @@ public sealed class SwapModManager
         if (_ownMutations.IsInside)
             return;
 
-        Current = null;
+        ReconcileWithDisk();
+        PushRedirectScope();
+    }
+
+    private void HandleOwnModDeleted()
+    {
+        if (_ownMutations.IsInside)
+            return;
+
+        NoireLogger.LogDebug("Penumbra no longer holds the generated mod; the registry is emptied.", LogPrefix);
+
+        Registry = Registry with { Entries = [] };
+        _pressedKey = null;
+
+        PersistRegistry();
+        PushRedirectScope();
     }
 
     public void HandleCompetingModChange(Guid collectionId)
     {
-        if (Current is not { } current || _ownMutations.IsInside || collectionId != current.EnabledInCollection)
+        if (_ownMutations.IsInside || collectionId != Registry.CollectionId)
             return;
 
         ReconcilePriority();
     }
 
-    private const int MaxPriorityPasses = 4;
-
     public void ReconcilePriority()
     {
+        if (_identity.Names is not { } names)
+            return;
+
         for (var pass = 0; pass < MaxPriorityPasses; pass++)
         {
-            if (Current is not { } current)
+            var servedPaths = SelectedGamePaths();
+
+            if (servedPaths.Count == 0)
                 return;
 
-            var competitors = CompetingMods(current, out var target);
-            var listChanged = !SameMods(current.CompetingMods, competitors);
+            var competitors = CompetingMods(servedPaths, out var target);
+            var listChanged = !SameMods(Registry.CompetingMods, competitors);
 
-            if (target == current.AppliedPriority)
+            if (target == Registry.AppliedPriority)
             {
                 if (!listChanged)
                     return;
 
-                Current = current with { CompetingMods = competitors };
-                PersistManifest(Current);
+                Registry = Registry with { CompetingMods = competitors };
+                PersistRegistry();
                 return;
             }
 
-            bool moved;
+            Registry = Registry with { AppliedPriority = target };
 
-            using (_ownMutations.Enter())
+            if (!PushSelections())
             {
-                moved = (SwapModFlavor)current.FlavorUsed == SwapModFlavor.RealMod
-                    ? MovePriorityOfRealMod(current, target)
-                    : MovePriorityOfTemporaryMod(current, target);
+                NoireLogger.LogError(
+                    $"Failed to rank '{names.Directory}' at {target} in collection {Registry.CollectionId}.", LogPrefix);
+                return;
             }
 
-            if (!moved)
-                return;
-
-            NoireLogger.LogDebug($"Swap mod priority moved {current.AppliedPriority} -> {target}"
+            NoireLogger.LogDebug($"Swap mod priority moved {Registry.AppliedPriority} -> {target}"
                 + $" against {competitors.Count} competing mod(s).", LogPrefix);
 
-            Current = current with { AppliedPriority = target, CompetingMods = competitors };
-            PersistManifest(Current);
+            Registry = Registry with { AppliedPriority = target, CompetingMods = competitors };
+            PersistRegistry();
         }
     }
 
-    private IReadOnlyList<string> CompetingMods(SwapManifest current, out int priority)
+    private IReadOnlyList<string> SelectedGamePaths()
+        => Registry.Entries.Where(entry => entry.SelectedByUs)
+            .SelectMany(ServedPathsOf)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+    private IReadOnlyList<string> CompetingMods(IReadOnlyList<string> servedPaths, out int priority)
     {
         var modRoot = _gateway.GetModRootDirectory();
         var winners = new List<string>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var unattributable = false;
 
-        foreach (var gamePath in current.RedirectedPaths.Keys)
+        foreach (var gamePath in servedPaths)
         {
             var resolved = _gateway.ResolvePlayerPath(gamePath);
             if (resolved == gamePath || IsOwnPathCore(resolved, modRoot, _configDirectory))
@@ -443,7 +896,7 @@ public sealed class SwapModManager
             }
         }
 
-        var recorded = current.CompetingMods ?? [];
+        var recorded = Registry.CompetingMods ?? [];
 
         if (winners.Count == 0 && recorded.Count == 0)
         {
@@ -451,7 +904,7 @@ public sealed class SwapModManager
             return winners;
         }
 
-        var states = _gateway.GetAllModStates(current.EnabledInCollection);
+        var states = _gateway.GetAllModStates(Registry.CollectionId);
 
         return RankAgainst(winners, recorded, unattributable,
             directory => states != null && states.TryGetValue(directory, out var state) ? state : null, out priority);
@@ -515,49 +968,6 @@ public sealed class SwapModManager
         return true;
     }
 
-    private bool MovePriorityOfRealMod(SwapManifest current, int newPriority)
-    {
-        if (_gateway.TrySetModPriority(current.EnabledInCollection, ModDirectoryName, newPriority))
-            return true;
-
-        NoireLogger.LogError($"Failed to rank '{ModDirectoryName}' at {newPriority} in collection {current.EnabledInCollection}.", LogPrefix);
-        return false;
-    }
-
-    private bool MovePriorityOfTemporaryMod(SwapManifest current, int newPriority)
-    {
-        var removeEc = _gateway.RemoveTemporaryMod(TempTag, current.EnabledInCollection, current.AppliedPriority);
-
-        if (removeEc == PenumbraApiEc.NothingChanged)
-            return true;
-
-        if (removeEc != PenumbraApiEc.Success)
-        {
-            NoireLogger.LogError($"Failed to remove the temporary swap mod to move its priority (ec={removeEc}).", LogPrefix);
-            return false;
-        }
-
-        var fullPaths = ToFullPaths(current.RedirectedPaths, FlavorStorageDirectory(SwapModFlavor.TemporaryMod) ?? string.Empty);
-
-        var addEc = _gateway.AddTemporaryMod(TempTag, current.EnabledInCollection, fullPaths, newPriority);
-        if (IsSuccess(addEc))
-            return true;
-
-        NoireLogger.LogError($"Failed to re-add the temporary swap mod at its new priority (ec={addEc}).", LogPrefix);
-        return false;
-    }
-
-    public void StartupSweep(SwapLifetime lifetime)
-    {
-        if (lifetime == SwapLifetime.Ephemeral && Current != null)
-            Deactivate();
-
-        if (FlavorStorageDirectory(SwapModFlavor.TemporaryMod) is not { } tempDirectory)
-            return;
-
-        DeleteUnreferencedSwapFiles(tempDirectory, Current?.RedirectedPaths.Values ?? Enumerable.Empty<string>());
-    }
-
     internal enum GeneratedModFolder
     {
         Created,
@@ -585,152 +995,6 @@ public sealed class SwapModManager
         return existed ? GeneratedModFolder.AlreadyThere : GeneratedModFolder.Created;
     }
 
-    internal static bool CanReuseCore(SwapManifest? current, uint sourceEmote, uint targetEmote,
-        string resolvedSourcePath, long stampTicks, Guid collectionId, string skeleton, int currentFlavor,
-        string? flavorStorageDirectory)
-    {
-        if (current == null)
-            return false;
-
-        var fieldsMatch = current.SchemaVersion == CurrentManifestSchemaVersion
-            && current.SourceEmote == sourceEmote
-            && current.TargetEmote == targetEmote
-            && current.ResolvedSourcePath == resolvedSourcePath
-            && current.SourceStampTicks == stampTicks
-            && current.EnabledInCollection == collectionId
-            && current.FlavorUsed == currentFlavor
-            // An output carries the bone data of the body it was built from, so another skeleton rebuilds.
-            && current.Skeleton == skeleton;
-
-        return fieldsMatch && AllRedirectedFilesExist(current.RedirectedPaths, flavorStorageDirectory);
-    }
-
-    private static bool AllRedirectedFilesExist(IReadOnlyDictionary<string, string> redirectedPaths, string? storageDirectory)
-    {
-        if (string.IsNullOrEmpty(storageDirectory))
-            return false;
-
-        foreach (var relativePath in redirectedPaths.Values)
-        {
-            if (!File.Exists(Path.Combine(storageDirectory, relativePath)))
-                return false;
-        }
-
-        return true;
-    }
-
-    internal static bool IsOwnPathCore(string resolvedDiskPath, string? modRoot, string configDirectory)
-    {
-        if (string.IsNullOrEmpty(resolvedDiskPath))
-            return false;
-
-        var normalizedPath = NormalizeSlashes(resolvedDiskPath);
-
-        if (ModDirectoryFromDiskPath(resolvedDiskPath, modRoot) is { } modDirectory
-            && (modDirectory.StartsWith(SwapModIdentity.DirectoryPrefix, StringComparison.OrdinalIgnoreCase)
-                || modDirectory.Equals(LegacySharedModDirectoryName, StringComparison.OrdinalIgnoreCase)))
-        {
-            return true;
-        }
-
-        return normalizedPath.StartsWith(OwnPrefix(configDirectory, CharactersFolderName), StringComparison.OrdinalIgnoreCase)
-            || normalizedPath.StartsWith(OwnPrefix(configDirectory, TempStorageFolderName), StringComparison.OrdinalIgnoreCase);
-    }
-
-    internal static string? ModDirectoryFromDiskPath(string resolvedDiskPath, string? modRoot)
-        => FirstSegmentUnder(modRoot, resolvedDiskPath);
-
-    internal static string RedirectedPathValue(string fileName, SwapModFlavor flavor)
-        => flavor == SwapModFlavor.RealMod ? $"{SwapsSubfolderName}/{fileName}" : fileName;
-
-    public sealed record SwapFilePlan(SwapModFlavor Flavor, string? ModRootDirectory, SwapModNames? Names);
-
-    public sealed record PreparedSwapFiles(SwapModFlavor Flavor, string SwapFileDirectory,
-        IReadOnlyDictionary<string, string> RedirectedPaths, bool IsFirstCreation, SwapModNames Names);
-
-    internal static PreparedSwapFiles? PrepareFilesCore(SwapFilePlan plan, string configDirectory,
-        IReadOnlyDictionary<string, byte[]> gamePathToPapBytes)
-    {
-        var prepareClock = Stopwatch.StartNew();
-
-        var redirectedPaths = new Dictionary<string, string>(gamePathToPapBytes.Count);
-        foreach (var (gamePath, bytes) in gamePathToPapBytes)
-            redirectedPaths[gamePath] = RedirectedPathValue(DeriveFileName(bytes, FileExtensionFor(gamePath)), plan.Flavor);
-
-        var elapsedAtNames = prepareClock.ElapsedMilliseconds;
-
-        if (plan.Names is not { } names)
-        {
-            NoireLogger.LogError("Cannot apply a swap: no character is loaded, so the mod has no name.", LogPrefix);
-            return null;
-        }
-
-        if (plan.Flavor != SwapModFlavor.RealMod)
-        {
-            var tempDirectory = TempStorageDirectoryFor(configDirectory, names);
-
-            if (!FileHelper.EnsureDirectoryExists(tempDirectory) || !WriteNewPapFiles(tempDirectory, gamePathToPapBytes, redirectedPaths))
-                return null;
-
-            NoireLogger.LogDebug(
-                $"Prepare timings (temp): names {elapsedAtNames}ms, files {prepareClock.ElapsedMilliseconds - elapsedAtNames}ms.",
-                LogPrefix);
-
-            return new PreparedSwapFiles(plan.Flavor, tempDirectory, redirectedPaths, IsFirstCreation: false, names);
-        }
-
-        if (string.IsNullOrEmpty(plan.ModRootDirectory))
-        {
-            NoireLogger.LogError("Cannot apply a real-mod swap: Penumbra's mod root directory is unavailable.", LogPrefix);
-            return null;
-        }
-
-        var modDirectory = Path.Combine(plan.ModRootDirectory, names.Directory);
-        var swapsDirectory = Path.Combine(modDirectory, SwapsSubfolderName);
-
-        var isFirstCreation = !Directory.Exists(modDirectory);
-
-        if (!FileHelper.EnsureDirectoryExists(swapsDirectory) || !WriteNewPapFiles(modDirectory, gamePathToPapBytes, redirectedPaths))
-            return null;
-
-        NoireLogger.LogDebug(
-            $"Prepare timings (real): names {elapsedAtNames}ms, files {prepareClock.ElapsedMilliseconds - elapsedAtNames}ms.",
-            LogPrefix);
-
-        return new PreparedSwapFiles(plan.Flavor, swapsDirectory, redirectedPaths, isFirstCreation, names);
-    }
-
-    private static string TempStorageDirectoryFor(string configDirectory, SwapModNames names)
-        => Path.Combine(CharacterDirectoryCore(configDirectory, names.CharacterKey), TempStorageFolderName);
-
-    private void DisableRealMod(Guid collection, string modDirectoryName)
-    {
-        var ec = _gateway.SetModEnabled(collection, modDirectoryName, false);
-
-        if (IsSuccess(ec))
-            return;
-
-        if (ec is PenumbraApiEc.ModMissing or PenumbraApiEc.CollectionMissing)
-        {
-            NoireLogger.LogDebug(
-                $"Penumbra no longer holds '{modDirectoryName}' in collection {collection} ({ec}), so there was "
-                + "nothing left to turn off.", LogPrefix);
-            return;
-        }
-
-        var retry = _gateway.SetModEnabled(collection, modDirectoryName, false);
-
-        if (IsSuccess(retry))
-        {
-            NoireLogger.LogDebug($"'{modDirectoryName}' turned off on the second attempt (first said {ec}).", LogPrefix);
-            return;
-        }
-
-        NoireLogger.LogWarning(
-            $"Penumbra would not turn '{modDirectoryName}' off in collection {collection} ({ec}, then {retry}). "
-            + "The next swap rewrites and re-enables it from scratch.", LogPrefix);
-    }
-
     private bool EnsurePenumbraReadsTheMod(bool isFirstCreation)
     {
         if (isFirstCreation ? _gateway.AddMod(ModDirectoryName) : _gateway.ReloadMod(ModDirectoryName))
@@ -750,75 +1014,76 @@ public sealed class SwapModManager
         return false;
     }
 
-    private bool RegisterRealMod(SwapManifest manifest, PreparedSwapFiles prepared)
+    internal static bool IsOwnPathCore(string resolvedDiskPath, string? modRoot, string configDirectory)
     {
-        var registerClock = Stopwatch.StartNew();
-
-        if (!WriteRealModJsons(prepared))
+        if (string.IsNullOrEmpty(resolvedDiskPath))
             return false;
 
-        if (!EnsurePenumbraReadsTheMod(prepared.IsFirstCreation))
-            return false;
+        var normalizedPath = NormalizeSlashes(resolvedDiskPath);
 
-        var elapsedAtRegister = registerClock.ElapsedMilliseconds;
-
-        var collection = manifest.EnabledInCollection;
-
-        if (!_gateway.TrySetModEnabled(collection, ModDirectoryName, true))
+        if (ModDirectoryFromDiskPath(resolvedDiskPath, modRoot) is { } modDirectory
+            && (modDirectory.StartsWith(SwapModIdentity.DirectoryPrefix, StringComparison.OrdinalIgnoreCase)
+                || modDirectory.Equals(LegacySharedModDirectoryName, StringComparison.OrdinalIgnoreCase)))
         {
-            NoireLogger.LogError($"Failed to enable '{ModDirectoryName}' in collection {collection}.", LogPrefix);
-            return false;
+            return true;
         }
 
-        if (!_gateway.TrySetModPriority(collection, ModDirectoryName, manifest.AppliedPriority))
-        {
-            NoireLogger.LogError($"Failed to set priority for '{ModDirectoryName}' in collection {collection}.", LogPrefix);
-            return false;
-        }
-
-        if (!Serves(prepared.RedirectedPaths) && !RepairAndVerify(manifest, prepared))
-            return false;
-
-        NoireLogger.LogDebug(
-            $"Apply timings (real): {(prepared.IsFirstCreation ? "add" : "reload")} {elapsedAtRegister}ms, " +
-            $"enable {registerClock.ElapsedMilliseconds - elapsedAtRegister}ms.", LogPrefix);
-
-        return true;
+        return normalizedPath.StartsWith(OwnPrefix(configDirectory, CharactersFolderName), StringComparison.OrdinalIgnoreCase);
     }
 
-    private bool Serves(IReadOnlyDictionary<string, string> redirectedPaths)
-        => redirectedPaths.Count == 0 || AnyPathRedirected(redirectedPaths.Keys);
+    internal static string? ModDirectoryFromDiskPath(string resolvedDiskPath, string? modRoot)
+        => FirstSegmentUnder(modRoot, resolvedDiskPath);
 
-    private bool RepairAndVerify(SwapManifest manifest, PreparedSwapFiles prepared)
+    internal static string RedirectedPathValue(string fileName)
+        => $"{SwapsSubfolderName}/{fileName}";
+
+    public sealed record SwapFilePlan(string? ModRootDirectory, SwapModNames? Names);
+
+    public sealed record PreparedSwapFiles(string SwapFileDirectory,
+        IReadOnlyDictionary<string, string> RedirectedPaths, bool IsFirstCreation, SwapModNames Names);
+
+    public SwapFilePlan BeginPrepare()
+        => new(_gateway.GetModRootDirectory(), _identity.Names);
+
+    public PreparedSwapFiles? PrepareFiles(SwapFilePlan plan, IReadOnlyDictionary<string, byte[]> gamePathToPapBytes)
+        => PrepareFilesCore(plan, gamePathToPapBytes);
+
+    internal static PreparedSwapFiles? PrepareFilesCore(SwapFilePlan plan,
+        IReadOnlyDictionary<string, byte[]> gamePathToPapBytes)
     {
-        var modDirectory = Path.GetDirectoryName(prepared.SwapFileDirectory);
+        var prepareClock = Stopwatch.StartNew();
 
-        if (string.IsNullOrEmpty(modDirectory)
-            || PrepareGeneratedModFolder(modDirectory, prepared.Names.Display) == GeneratedModFolder.Unusable)
+        var redirectedPaths = new Dictionary<string, string>(gamePathToPapBytes.Count);
+        foreach (var (gamePath, bytes) in gamePathToPapBytes)
+            redirectedPaths[gamePath] = RedirectedPathValue(DeriveFileName(bytes, FileExtensionFor(gamePath)));
+
+        var elapsedAtNames = prepareClock.ElapsedMilliseconds;
+
+        if (plan.Names is not { } names)
         {
-            return false;
+            NoireLogger.LogError("Cannot apply a swap: no character is loaded, so the mod has no name.", LogPrefix);
+            return null;
         }
 
-        NoireLogger.LogDebug($"'{ModDirectoryName}' redirects none of its paths; writing and registering it again.", LogPrefix);
-
-        if (WriteRealModJsons(modDirectory, prepared.Names.Display, prepared.RedirectedPaths) == null)
-            return false;
-
-        var collection = manifest.EnabledInCollection;
-
-        if (!EnsurePenumbraReadsTheMod(isFirstCreation: true)
-            || !_gateway.TrySetModEnabled(collection, ModDirectoryName, true)
-            || !_gateway.TrySetModPriority(collection, ModDirectoryName, manifest.AppliedPriority)
-            || !Serves(prepared.RedirectedPaths))
+        if (string.IsNullOrEmpty(plan.ModRootDirectory))
         {
-            NoireLogger.LogWarning(
-                $"Penumbra still redirects nothing for '{ModDirectoryName}' in collection {collection}. Check that "
-                + "the mod is present and enabled in Penumbra, then try the emote again.", LogPrefix);
-
-            return false;
+            NoireLogger.LogError("Cannot apply a swap: Penumbra's mod root directory is unavailable.", LogPrefix);
+            return null;
         }
 
-        return true;
+        var modDirectory = Path.Combine(plan.ModRootDirectory, names.Directory);
+        var swapsDirectory = Path.Combine(modDirectory, SwapsSubfolderName);
+
+        var isFirstCreation = !Directory.Exists(modDirectory);
+
+        if (!FileHelper.EnsureDirectoryExists(swapsDirectory) || !WriteNewPapFiles(modDirectory, gamePathToPapBytes, redirectedPaths))
+            return null;
+
+        NoireLogger.LogDebug(
+            $"Prepare timings: names {elapsedAtNames}ms, files {prepareClock.ElapsedMilliseconds - elapsedAtNames}ms.",
+            LogPrefix);
+
+        return new PreparedSwapFiles(swapsDirectory, redirectedPaths, isFirstCreation, names);
     }
 
     internal static bool WriteRealModJsons(PreparedSwapFiles prepared)
@@ -848,34 +1113,6 @@ public sealed class SwapModManager
         }
     }
 
-    private bool RegisterTemporaryMod(SwapManifest manifest, SwapManifest? previous, PreparedSwapFiles prepared)
-    {
-        var registerClock = Stopwatch.StartNew();
-
-        if (previous != null && (SwapModFlavor)previous.FlavorUsed == SwapModFlavor.TemporaryMod)
-        {
-            var removeEc = _gateway.RemoveTemporaryMod(TempTag, previous.EnabledInCollection, previous.AppliedPriority);
-            if (!IsSuccess(removeEc))
-            {
-                NoireLogger.LogError($"Failed to remove the previous temporary swap mod (ec={removeEc}).", LogPrefix);
-                return false;
-            }
-        }
-
-        var fullPaths = ToFullPaths(prepared.RedirectedPaths, prepared.SwapFileDirectory);
-
-        var addEc = _gateway.AddTemporaryMod(TempTag, manifest.EnabledInCollection, fullPaths, manifest.AppliedPriority);
-        if (!IsSuccess(addEc))
-        {
-            NoireLogger.LogError($"Failed to add the temporary swap mod (ec={addEc}).", LogPrefix);
-            return false;
-        }
-
-        NoireLogger.LogDebug($"Apply timings (temp): remove+add {registerClock.ElapsedMilliseconds}ms.", LogPrefix);
-
-        return true;
-    }
-
     private static bool WriteNewPapFiles(string storageDirectory, IReadOnlyDictionary<string, byte[]> gamePathToPapBytes,
         Dictionary<string, string> redirectedPaths)
     {
@@ -888,78 +1125,127 @@ public sealed class SwapModManager
         return true;
     }
 
-    private static Dictionary<string, string> ToFullPaths(IReadOnlyDictionary<string, string> gamePathToFileName, string storageDirectory)
+    private string? RegistryPath
+        => CharacterDirectory is { } characterDirectory ? Path.Combine(characterDirectory, RegistryFileName) : null;
+
+    private SwapRegistry EmptyRegistry()
+        => new(CurrentRegistrySchemaVersion, _gateway.GetPlayerCollection()?.Id ?? Guid.Empty, null, 0, []);
+
+    private SwapRegistry LoadRegistryFromDisk()
     {
-        var result = new Dictionary<string, string>(gamePathToFileName.Count);
-        foreach (var (gamePath, fileName) in gamePathToFileName)
-            result[gamePath] = Path.Combine(storageDirectory, fileName);
+        DeleteStaleManifest();
 
-        return result;
-    }
-
-    private static bool IsSuccess(PenumbraApiEc ec) => ec is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged;
-
-    private string? FlavorStorageDirectory(SwapModFlavor flavor)
-    {
-        if (_identity.Names is not { } names)
-            return null;
-
-        if (flavor != SwapModFlavor.RealMod)
-            return TempStorageDirectoryFor(_configDirectory, names);
-
-        var modRoot = _gateway.GetModRootDirectory();
-        return string.IsNullOrEmpty(modRoot) ? null : Path.Combine(modRoot, names.Directory);
-    }
-
-    private string? ManifestPath
-        => CharacterDirectory is { } characterDirectory ? Path.Combine(characterDirectory, ManifestFileName) : null;
-
-    private SwapManifest? LoadManifestFromDisk()
-    {
-        if (ManifestPath is not { } path || !File.Exists(path))
-            return null;
+        if (RegistryPath is not { } path || !File.Exists(path))
+            return EmptyRegistry();
 
         try
         {
-            return FileHelper.ReadJsonFromFile<SwapManifest>(path);
+            var read = FileHelper.ReadJsonFromFile<SwapRegistry>(path);
+            return read is { SchemaVersion: CurrentRegistrySchemaVersion } ? read : EmptyRegistry();
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Failed to read the swap manifest at '{path}'; treating as no active swap.", LogPrefix);
-            return null;
+            NoireLogger.LogError(ex, $"Failed to read the swap registry at '{path}'; starting from an empty one.", LogPrefix);
+            return EmptyRegistry();
         }
     }
 
-    private void PersistManifest(SwapManifest manifest)
+    private void DeleteStaleManifest()
     {
-        if (ManifestPath is not { } path)
+        if (CharacterDirectory is not { } characterDirectory)
+            return;
+
+        var stale = Path.Combine(characterDirectory, StaleManifestFileName);
+
+        try
+        {
+            if (File.Exists(stale))
+                File.Delete(stale);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            NoireLogger.LogDebug($"Could not delete the stale manifest at '{stale}' ({ex.Message}).", LogPrefix);
+        }
+    }
+
+    private void PersistRegistry()
+    {
+        if (RegistryPath is not { } path)
             return;
 
         try
         {
-            FileHelper.WriteJsonToFile(path, manifest, atomic: true, IndentedJson);
+            FileHelper.WriteJsonToFile(path, Registry, atomic: true, IndentedJson);
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Failed to persist the swap manifest to '{path}'.", LogPrefix);
+            NoireLogger.LogError(ex, $"Failed to persist the swap registry to '{path}'.", LogPrefix);
         }
     }
 
-    private static void DeleteUnreferencedSwapFiles(string storageDirectory, IEnumerable<string> referencedPaths)
-        => Store.RemoveUnreferenced(storageDirectory, referencedPaths);
+    private Guid CollectionForSelection()
+    {
+        if (Registry.CollectionId != Guid.Empty)
+            return Registry.CollectionId;
+
+        if (_gateway.GetPlayerCollection() is not { } collection)
+            return Guid.Empty;
+
+        Registry = Registry with { CollectionId = collection.Id };
+        PersistRegistry();
+
+        return collection.Id;
+    }
+
+    private void UpdateEntry(SwapOptionEntry entry)
+    {
+        var entries = Registry.Entries.ToList();
+        var index = entries.FindIndex(candidate => candidate.ContentKey == entry.ContentKey);
+
+        if (index < 0)
+            entries.Add(entry);
+        else
+            entries[index] = entry;
+
+        Registry = Registry with { Entries = entries };
+        PersistRegistry();
+    }
+
+    private void RemoveEntry(SwapOptionEntry entry)
+    {
+        Registry = Registry with
+        {
+            Entries = Registry.Entries.Where(candidate => candidate.ContentKey != entry.ContentKey).ToList(),
+        };
+
+        PersistRegistry();
+    }
+
+    private long NextStamp()
+        => Registry.Entries.Count == 0 ? 1 : Registry.Entries.Max(entry => entry.LastUsedStamp) + 1;
+
+    private bool AllFilesExist(SwapOptionEntry entry)
+    {
+        if (ModDirectory is not { } modDirectory)
+            return false;
+
+        foreach (var files in entry.FilesByRace.Values)
+        {
+            foreach (var relativePath in files.Values)
+            {
+                if (!File.Exists(Path.Combine(modDirectory, relativePath)))
+                    return false;
+            }
+        }
+
+        return true;
+    }
 
     private static string OwnPrefix(string directory, string subfolder) => NormalizeSlashes(Path.Combine(directory, subfolder)) + "/";
 
-    /// <summary>Turns every backslash into a forward slash.</summary>
-    /// <param name="path">The path to normalize.</param>
-    /// <returns>The path with forward slashes, or an empty string when <paramref name="path"/> is null.</returns>
     private static string NormalizeSlashes(string? path)
         => path == null ? string.Empty : path.Replace('\\', '/');
 
-    /// <summary>The first path segment below a root, ignoring slash style and case.</summary>
-    /// <param name="root">The directory the path should be under.</param>
-    /// <param name="path">The path to take apart.</param>
-    /// <returns>The first segment below the root, or null when the path is not under it or is the root itself.</returns>
     private static string? FirstSegmentUnder(string? root, string? path)
     {
         if (string.IsNullOrEmpty(root) || string.IsNullOrEmpty(path))
@@ -974,7 +1260,6 @@ public sealed class SwapModManager
         if (!normalizedPath.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase))
             return null;
 
-        // Must be a segment boundary: "mods2/x" is not under "mods".
         if (normalizedPath[normalizedRoot.Length] != '/')
             return null;
 
