@@ -1,4 +1,4 @@
-using BypassEmote.Helpers;
+﻿using BypassEmote.Helpers;
 using BypassEmote.Models;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
@@ -13,11 +13,12 @@ public sealed partial class SwapOrchestrator
 {
     private sealed record SwapTimings(Stopwatch Clock, long AtMatch, long AtPair, long AtRetarget, long AtPrepare, long AtApply);
 
-    private bool TryReuseAndExecute(EmoteAttributes source, EmoteAttributes target, SwapTimings timings)
+    private bool TryReuseAndExecute(SwapOptionEntry kept, EmoteAttributes source, EmoteAttributes target,
+        SwapTimings timings)
     {
         NoireLogger.LogDebug($"Reuse route for /{source.Command} onto /{target.Command}.", LogPrefix);
 
-        if (!_swapMods.Reactivate())
+        if (!_swapMods.SelectExisting(kept))
         {
             NoireLogger.LogDebug($"The existing swap could not be put back, so /{source.Command} is built again.", LogPrefix);
             FeedbackHelper.DebugLine(">   reuse refused, rebuilding");
@@ -44,7 +45,7 @@ public sealed partial class SwapOrchestrator
 
         if (Configuration.SelfBypassMode != SelfBypassMode.EmoteSwap)
         {
-            AbandonUnexecutedSwap(generation);
+            AbandonUnexecutedSwap(generation, target.RowId);
             return;
         }
 
@@ -89,8 +90,8 @@ public sealed partial class SwapOrchestrator
         if (TargetDropsSourceIntro(source, target))
             FeedbackHelper.Notice(TargetIntroDroppedMessageFor(target));
 
-        if (Configuration.SwapLifetime == SwapLifetime.Ephemeral)
-            _endWatcher.Arm();
+        if (Configuration.SwapLifetime == SwapLifetime.WhenEmoteEnds && _swapMods.ArmedFor(target.RowId) is { } armed)
+            _endWatcher.Arm(armed);
         else
             _endWatcher.StopWatching();
 
@@ -111,12 +112,12 @@ public sealed partial class SwapOrchestrator
         => $"{(emote.Intro == IntroKind.Pap ? "intro" : "no intro")}"
         + $" + {(emote.LoopKind == EmotePlayType.Looped ? "loop" : "one shot")}";
 
-    private void FailSwapTail(int generation, string debugDetail)
+    private void FailSwapTail(int generation, uint targetRowId, string debugDetail)
     {
         NoireLogger.LogDebug(debugDetail, LogPrefix);
 
         if (_generations.IsCurrent(generation))
-            _swapMods.Deactivate();
+            DeselectArmed(targetRowId);
         else
             NoireLogger.LogDebug("The failed execute's swap was already superseded; the mod is left to its new owner.", LogPrefix);
 
@@ -196,7 +197,7 @@ public sealed partial class SwapOrchestrator
             if (Configuration.SelfBypassMode != SelfBypassMode.EmoteSwap)
             {
                 ClearExecuteRetry();
-                AbandonUnexecutedSwap(pending.Generation);
+                AbandonUnexecutedSwap(pending.Generation, pending.Target.RowId);
                 return;
             }
 
@@ -207,7 +208,7 @@ public sealed partial class SwapOrchestrator
                 if (!ExecuteRetryPolicy.ShouldKeepTrying(elapsed))
                 {
                     ClearExecuteRetry();
-                    FailSwapTail(pending.Generation,
+                    FailSwapTail(pending.Generation, pending.Target.RowId,
                         $"The game kept refusing /{pending.Target.Command} for {elapsed}ms; the swap did not play.");
                 }
 
@@ -226,7 +227,7 @@ public sealed partial class SwapOrchestrator
             if (!ExecuteRetryPolicy.ShouldKeepTrying(pending.RetryClock.ElapsedMilliseconds))
             {
                 ClearExecuteRetry();
-                FailSwapTail(pending.Generation,
+                FailSwapTail(pending.Generation, pending.Target.RowId,
                     $"The game kept refusing /{pending.Target.Command} for {pending.RetryClock.ElapsedMilliseconds}ms; the swap did not play.");
             }
         }
@@ -237,7 +238,7 @@ public sealed partial class SwapOrchestrator
         }
     }
 
-    private void AbandonUnexecutedSwap(int generation)
+    private void AbandonUnexecutedSwap(int generation, uint targetRowId)
     {
         if (!_generations.IsCurrent(generation))
         {
@@ -245,8 +246,14 @@ public sealed partial class SwapOrchestrator
             return;
         }
 
-        NoireLogger.LogDebug("The execute never ran; deactivating the swap that was applied for it.", LogPrefix);
-        _swapMods.Deactivate();
+        NoireLogger.LogDebug("The execute never ran; turning off the swap that was selected for it.", LogPrefix);
+        DeselectArmed(targetRowId);
+    }
+
+    private void DeselectArmed(uint targetRowId)
+    {
+        if (_swapMods.ArmedFor(targetRowId) is { } armed)
+            _swapMods.DeselectEntry(armed);
     }
 
     internal static bool ExecuteSucceeded(bool managerAvailable, bool gameAccepted)

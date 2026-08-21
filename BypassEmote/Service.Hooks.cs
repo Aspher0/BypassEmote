@@ -1,4 +1,4 @@
-using BypassEmote.Helpers;
+﻿using BypassEmote.Helpers;
 using BypassEmote.Models;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
@@ -148,11 +148,12 @@ public partial class Service
     // Necessary since emote bypassing will prevent the player from executing any base/obtained emote otherwise
     private static unsafe bool DetourExecuteEmote(EmoteManager* emoteManager, ushort emoteId, PlayEmoteOption* playEmoteOption)
     {
-        if (Orchestrator is { } orchestrator &&
-            ShouldEndSwapBeforeExecuting(Configuration.SelfBypassMode, orchestrator.IsExecutingSwap, SwapMods?.Current, emoteId))
+        if (Orchestrator is { } orchestrator && SwapMods?.ArmedFor(emoteId) is { } armed
+            && ShouldEndSwapBeforeExecuting(Configuration.SelfBypassMode, orchestrator.IsExecutingSwap, armed, emoteId)
+            && Configuration.SwapLifetime != SwapLifetime.Never)
         {
             EndWatcher?.StopWatching();
-            SwapMods?.Deactivate();
+            SwapMods.DeselectEntry(armed);
         }
 
         var chara = NoireService.ObjectTable.LocalPlayer;
@@ -177,11 +178,11 @@ public partial class Service
     }
 
     internal static bool ShouldEndSwapBeforeExecuting(SelfBypassMode mode, bool isExecutingSwap,
-        SwapManifest? current, ushort emoteId)
+        SwapOptionEntry? armed, ushort emoteId)
         => mode == SelfBypassMode.EmoteSwap
         && !isExecutingSwap
-        && current != null
-        && current.TargetEmote == emoteId;
+        && armed != null
+        && armed.TargetEmote == emoteId;
 
     // Hooking this function to detect when an emote is played by any character (including the local player)
     // This is necessary if a player is playing a bypassed looping emote and then tries to play

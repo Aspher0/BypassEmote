@@ -4,6 +4,7 @@ using NoireLib;
 using NoireLib.Animations.Helpers;
 using NoireLib.Enums;
 using NoireLib.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -51,7 +52,7 @@ public sealed partial class SwapOrchestrator
         public bool NoUsablePair { get; init; }
     }
 
-    // Debug tab
+    // Debug tab only for now
     internal SwapPreview Preview(uint sourceRowId, EmoteCondition rawCondition)
         => PreviewCore(sourceRowId, rawCondition) with { PipelineBlocked = PipelineBlockedBy() };
 
@@ -206,11 +207,15 @@ public sealed partial class SwapOrchestrator
             && IsStaleVulnerableShape(best.LoopKind, best.Intro,
                 SourceCarriesOwnDistinctIntroFile(source, fallbackOrder));
 
-        var wouldAlternate = staleVulnerable && Alternates();
+        var spreads = Spreads(staleVulnerable);
 
         // The tier is what a dispatched repeat picks from. Asking for the pick itself is what must not happen
         // here: ResolveDispatchedTarget writes the memory the next real swap reads.
-        var tier = BestMatchResolver.ResolveSameTier(source, pool, config, posture, wouldAlternate ? 2 : 0).Tier;
+        var tier = spreads
+            ? BestMatchResolver.ResolveSameTier(source, pool, config, posture,
+                wantedCount: Math.Max(1, Configuration.MaxTargetsPerRank),
+                maxScoreDistance: BestMatchResolver.DistanceFor(Configuration.DispatchFidelity)).Tier
+            : BestMatchResolver.ResolveSameTier(source, pool, config, posture).Tier;
 
         return new SwapPreview
         {
@@ -227,7 +232,7 @@ public sealed partial class SwapOrchestrator
             Tier = tier,
             LoopsFirstFailed = loopsFirstFailed,
             TriesIdlePose = triesIdlePose,
-            WouldAlternate = wouldAlternate,
+            WouldAlternate = spreads,
             NoUsablePair = match.Target is { } target && PairVariants(source, target, skeleton).Count == 0,
         };
     }

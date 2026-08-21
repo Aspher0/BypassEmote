@@ -489,7 +489,7 @@ public class EmoteWindow : Window, IDisposable
     {
         var directPlay = Configuration.SelfBypassMode == SelfBypassMode.DirectPlay;
 
-        if (ToolbarButton(FontAwesomeIcon.PeopleArrows, directPlay ? "Sync..." : "Sync All", "##BypassEmoteSync", width, height))
+        if (ToolbarButton(FontAwesomeIcon.PeopleArrows, directPlay ? "Sync..." : "Sync All (/be syncall)", "##BypassEmoteSync", width, height))
         {
             if (directPlay)
                 ImGui.OpenPopup(SyncPopupId);
@@ -501,10 +501,10 @@ public class EmoteWindow : Window, IDisposable
         if (!popup)
             return;
 
-        if (ImGui.MenuItem("Sync BE users"))
+        if (ImGui.MenuItem("Sync BE users (/be sync)"))
             EmotePlayer.SyncEmotes(false);
 
-        if (ImGui.MenuItem("Sync all"))
+        if (ImGui.MenuItem("Sync all (/be syncall)"))
             EmotePlayer.SyncEmotes(true);
     }
 

@@ -78,9 +78,76 @@ public sealed partial class SwapOrchestrator
         return changedBy;
     }
 
+    internal static (string? ChangedBy, bool Worth) ChangedVerdict(IReadOnlyList<string> requested,
+        IReadOnlyList<string> resolved, int start, int count, Func<string, bool> isOwnPath,
+        Func<string, string?> modDirectoryOf)
+    {
+        var certain = true;
+
+        for (var index = start; index < start + count; index++)
+        {
+            if (resolved[index] == requested[index])
+                continue;
+
+            if (isOwnPath(resolved[index]))
+            {
+                certain = false;
+                continue;
+            }
+
+            return (modDirectoryOf(resolved[index]) ?? string.Empty, true);
+        }
+
+        return (null, certain);
+    }
+
+    private void PrimeChangedTargets(IReadOnlyList<EmoteAttributes> pool, string skeleton,
+        IReadOnlyList<string> fallbackOrder)
+    {
+        var pending = new List<(EmoteAttributes Candidate, int Start, int Count)>();
+        var requested = new List<string>();
+
+        foreach (var candidate in pool)
+        {
+            if (_changedByAnotherMod.ContainsKey((skeleton, candidate.RowId)))
+                continue;
+
+            var start = requested.Count;
+
+            foreach (var variant in candidate.Variants)
+            {
+                foreach (var step in fallbackOrder)
+                    requested.Add(EmotePathHelper.GetSkeletonPath(step, variant.RelativePapPath));
+            }
+
+            if (requested.Count > start)
+                pending.Add((candidate, start, requested.Count - start));
+        }
+
+        if (pending.Count == 0)
+            return;
+
+        if (_penumbra.ResolvePlayerPaths(requested) is not { } resolved)
+            return;
+
+        var modRoot = _penumbra.GetModRootDirectory();
+
+        foreach (var (candidate, start, count) in pending)
+        {
+            var (changedBy, worth) = ChangedVerdict(requested, resolved, start, count,
+                _swapMods.IsOwnPath,
+                path => SwapModManager.ModDirectoryFromDiskPath(path, modRoot));
+
+            if (worth)
+                _changedByAnotherMod[(skeleton, candidate.RowId)] = changedBy;
+        }
+    }
+
     private IReadOnlySet<uint>? ChangedTargetRowIds(IReadOnlyList<EmoteAttributes> pool, string skeleton,
         IReadOnlyList<string> fallbackOrder)
     {
+        PrimeChangedTargets(pool, skeleton, fallbackOrder);
+
         var changed = new HashSet<uint>();
 
         foreach (var candidate in pool)
@@ -107,8 +174,12 @@ public sealed partial class SwapOrchestrator
 
     private List<EmoteAttributes> PoolAvoidingChangedTargets(EmoteAttributes source, List<EmoteAttributes> pool,
         MatchConfig matchConfig, PostureFlags posture, string skeleton, IReadOnlyList<string> fallbackOrder)
-        => PoolAvoidingChangedTargetsCore(source, pool, matchConfig, posture,
+    {
+        PrimeChangedTargets(pool, skeleton, fallbackOrder);
+
+        return PoolAvoidingChangedTargetsCore(source, pool, matchConfig, posture,
             candidate => ChangedByAnotherMod(candidate, skeleton, fallbackOrder) != null);
+    }
 
     internal static List<EmoteAttributes> PoolAvoidingChangedTargetsCore(EmoteAttributes source,
         List<EmoteAttributes> pool, MatchConfig matchConfig, PostureFlags posture,

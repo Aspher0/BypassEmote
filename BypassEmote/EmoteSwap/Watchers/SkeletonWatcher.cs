@@ -1,4 +1,4 @@
-using BypassEmote.Models;
+﻿using BypassEmote.Models;
 using Dalamud.Plugin.Services;
 using NoireLib;
 using System;
@@ -79,7 +79,9 @@ public sealed class SkeletonWatcher : IDisposable
         if (_drawnSkeleton is not { } skeleton)
             return;
 
-        if (_swapMods.Current is not { } current || current.Skeleton == skeleton)
+        var servedSkeleton = _swapMods.Registry.Skeleton;
+
+        if (servedSkeleton == skeleton)
         {
             _requestedFor = null;
             return;
@@ -91,7 +93,7 @@ public sealed class SkeletonWatcher : IDisposable
         _requestedFor = skeleton;
 
         NoireLogger.LogDebug(
-            $"The local player is drawn as {skeleton}, and the live swap was built for {current.Skeleton ?? "an unrecorded body"}.",
+            $"The local player is drawn as {skeleton}, and the kept swaps serve {servedSkeleton ?? "an unrecorded body"}.",
             LogPrefix);
 
         Service.Orchestrator?.CorrectForDrawnSkeleton(skeleton);

@@ -149,7 +149,7 @@ internal static class FfxivCollectHelper
         }
         catch (Exception ex)
         {
-            NoireLogger.LogWarning($"Could not read the cached response at '{path}': {ex.Message}", LogPrefix);
+            NoireLogger.LogError($"Could not read the cached response at '{path}': {ex.Message}", LogPrefix);
             return null;
         }
     }

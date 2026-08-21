@@ -59,9 +59,9 @@ internal static class SettingsLayout
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
     }
 
-    internal static bool Check(string name, ref bool value)
+    internal static bool Check(string name, ref bool value, string? alarm = null)
     {
-        Name(name);
+        Name(name, alarm);
         return ImGui.Checkbox("##" + name, ref value);
     }
 

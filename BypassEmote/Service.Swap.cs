@@ -1,4 +1,4 @@
-using BypassEmote.EmoteSwap;
+﻿using BypassEmote.EmoteSwap;
 using BypassEmote.IPC;
 using NoireLib;
 using NoireLib.Helpers;
@@ -95,7 +95,7 @@ public partial class Service
             if (SwapIdentity?.Names is { } names && _sweptFor != names.CharacterKey)
             {
                 _sweptFor = names.CharacterKey;
-                SwapMods?.StartupSweep(Configuration.SwapLifetime);
+                SwapMods?.StartupSweep();
             }
         });
     }

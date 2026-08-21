@@ -515,7 +515,7 @@ public sealed unsafe class SchedulerResidencyProbe
         }
     }
 
-    // File name of a source key's resolved path, stamp dropped.
+    // A source key shortened for reading: the file name alone when the key is a path, the key itself otherwise.
     private static string ShortSourceName(string sourceKey)
     {
         var stampSeparator = sourceKey.LastIndexOf(':');
@@ -597,7 +597,7 @@ public sealed unsafe class SchedulerResidencyProbe
 
         NoireLogger.LogDebug(
             _redirectedIds.Count == 0
-                ? "Redirect scope cleared."
+                ? $"Redirect scope holds no played emote; {_redirectedPaths.Count} redirected path(s) stay served."
                 : $"Redirect scope set to emote {targetEmoteRowId} (ids {string.Join(", ", _redirectedIds)}; "
                   + $"{_redirectedPaths.Count} redirected path(s); {_uniqueNameMap?.Count ?? 0} unique name(s); "
                   + $"{_internalNames?.Count ?? 0} internal name(s)).",
@@ -702,7 +702,7 @@ public sealed unsafe class SchedulerResidencyProbe
             // A foreign argument set builds the path on the wrong skeleton.
             if (!_ourLoaderArgsCaptured)
             {
-                NoireLogger.LogWarning(
+                NoireLogger.LogDebug(
                     $"Republish of '{vanillaKey}' skipped: no load of ours captured yet this session.", LogPrefix);
                 return;
             }
@@ -734,7 +734,7 @@ public sealed unsafe class SchedulerResidencyProbe
             _republishing = false;
         }
 
-        NoireLogger.LogWarning($"Republished '{vanillaKey}' under its vanilla name.", LogPrefix);
+        NoireLogger.LogDebug($"Republished '{vanillaKey}' under its vanilla name.", LogPrefix);
     }
 
     // Opens the substitution window, right before each of our own executes.
@@ -1136,7 +1136,7 @@ public sealed unsafe class SchedulerResidencyProbe
             if (!TakeLogSlot(ref _containerSetupWindowStamp, ref _containerSetupCount, ContainerSetupLogsPerPress))
                 return;
 
-            NoireLogger.LogWarning(
+            NoireLogger.LogDebug(
                 $"Container setup #{_containerSetupCount} 0x{container:X}: mapArg 0x{mapSource:X} flag {flag}.",
                 LogPrefix);
         }
@@ -1189,7 +1189,7 @@ public sealed unsafe class SchedulerResidencyProbe
             var read = GuardedMemory.ReadSpan(binding, head, 0, AnimationBindingDumpSize);
             if (read < sizeof(nint))
             {
-                NoireLogger.LogWarning($"Animation binding 0x{binding:X}: unreadable.", LogPrefix);
+                NoireLogger.LogError($"Animation binding 0x{binding:X}: unreadable.", LogPrefix);
                 return;
             }
 
@@ -1217,7 +1217,7 @@ public sealed unsafe class SchedulerResidencyProbe
             var body = strings.ToString().Contains(BodyBindingMarker, StringComparison.Ordinal) ? " BODY" : "";
 
             var pressedKey = _pressedSourceKey;
-            NoireLogger.LogWarning(
+            NoireLogger.LogDebug(
                 $"Animation binding #{_bindingDumpCount}{body} 0x{binding:X} owner 0x{owner:X} at +{sinceExecute}ms "
                 + $"playing [{(pressedKey == null ? "none" : ShortSourceName(pressedKey))}]: {tracks} track(s), "
                 + $"blend {blend}, bones [" + (indices.Length == 0 ? "none" : indices)
@@ -1351,7 +1351,7 @@ public sealed unsafe class SchedulerResidencyProbe
 
             var corrected = CorrectBindingPack(packSet, text, pack, out var note);
             if (note.Length > 0)
-                NoireLogger.LogWarning($"Binding scan for '{text}': {note}.", LogPrefix);
+                NoireLogger.LogDebug($"Binding scan for '{text}': {note}.", LogPrefix);
 
             // Recorded corrected or not, so the mapper can follow the animation that plays.
             RememberBoundPack(packSet, text, corrected, pack);
@@ -1380,7 +1380,7 @@ public sealed unsafe class SchedulerResidencyProbe
         {
             // Nothing has named what this pack holds, so two of ours cannot be told apart and list order wins.
             if (TakeBindingLogSlot())
-                NoireLogger.LogWarning(
+                NoireLogger.LogDebug(
                     $"Binding scan for '{text}': no content map for pack 0x{chosen:X}, [{pressed}] kept on the "
                     + "game's own choice.", LogPrefix);
 
@@ -1614,7 +1614,7 @@ public sealed unsafe class SchedulerResidencyProbe
     private nint DeclineMapperSource(string text, string reason, nint original)
     {
         if (TakeMapperLogSlot())
-            NoireLogger.LogWarning(
+            NoireLogger.LogDebug(
                 $"Mapping source declined for '{text}': {reason}; kept mapper 0x{original:X}.", LogPrefix);
 
         return original;
@@ -1665,16 +1665,11 @@ public sealed unsafe class SchedulerResidencyProbe
                 return original;
 
             var text = ReadCString(name);
-            if (!names.Contains(text))
-            {
-                // Print the name this walk is keyed on before refusing.
-                if (TakeMapperLogSlot())
-                    NoireLogger.LogWarning(
-                        $"Mapper source asked for '{text}' (flag {flag}, returned 0x{original:X}), "
-                        + "which is not one of ours; left alone.", LogPrefix);
 
+            // The walk runs for every animation the character plays, ours or not, so a name that is not ours is the
+            // ordinary case and says nothing worth a line.
+            if (!names.Contains(text))
                 return original;
-            }
 
             return CorrectMapperSource(packSet, text, flag, original);
         }
@@ -1747,7 +1742,7 @@ public sealed unsafe class SchedulerResidencyProbe
             case MapperAction.Disarm:
                 _replicaDisarmed = true;
                 if (TakeMapperLogSlot())
-                    NoireLogger.LogWarning(
+                    NoireLogger.LogDebug(
                         $"Mapping source for '{text}': replica disagrees on pack 0x{bound:X} "
                         + $"(game 0x{original:X}, ours 0x{computed.Value:X}, outcome {computed.Outcome}); "
                         + "correction disarmed for this session.",
@@ -1756,7 +1751,7 @@ public sealed unsafe class SchedulerResidencyProbe
 
             case MapperAction.InstallFound:
                 if (TakeMapperLogSlot())
-                    NoireLogger.LogWarning(
+                    NoireLogger.LogDebug(
                         $"Mapping source for '{text}': playing [{pressed}] off pack 0x{bound:X}, pack key "
                         + $"0x{packKey:X8} vs skeleton key 0x{ownerKey:X8}; mapper 0x{original:X} -> "
                         + $"0x{computed.Value:X}.",
@@ -1765,7 +1760,7 @@ public sealed unsafe class SchedulerResidencyProbe
 
             case MapperAction.InstallNone when computed.Outcome == MapperSourceOutcome.Native:
                 if (TakeMapperLogSlot())
-                    NoireLogger.LogWarning(
+                    NoireLogger.LogDebug(
                         $"Mapping source for '{text}': playing [{pressed}] off pack 0x{bound:X}, pack key "
                         + $"0x{packKey:X8} is the skeleton's own; mapper 0x{original:X} -> none.",
                         LogPrefix);
@@ -1773,7 +1768,7 @@ public sealed unsafe class SchedulerResidencyProbe
 
             case MapperAction.InstallNone:
                 if (TakeMapperLogSlot())
-                    NoireLogger.LogWarning(
+                    NoireLogger.LogDebug(
                         $"Mapping source for '{text}': skeleton 0x{owner:X} holds no retarget for pack key "
                         + $"0x{packKey:X8} (its own key is 0x{ownerKey:X8}, chain {ChainKeys(owner)}); "
                         + "installing none.",
@@ -1784,7 +1779,7 @@ public sealed unsafe class SchedulerResidencyProbe
                 if (computed.Outcome == MapperSourceOutcome.Unreadable)
                 {
                     if (TakeMapperLogSlot())
-                        NoireLogger.LogWarning(
+                        NoireLogger.LogDebug(
                             $"Mapping source declined for '{text}': the retarget maps of skeleton 0x{owner:X} "
                             + $"are unreadable (pack key 0x{packKey:X8}, its own key 0x{ownerKey:X8}, chain "
                             + $"{ChainKeys(owner)}); kept mapper 0x{original:X}.",

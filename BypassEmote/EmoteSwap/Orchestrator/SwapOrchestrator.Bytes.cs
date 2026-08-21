@@ -141,6 +141,27 @@ public sealed partial class SwapOrchestrator
         return ApplyFaceLibrary(retargeted, pair.SourceFaceLibrary, pair.TargetRequestedPath, PapFaceLibrary.Inject);
     }
 
+    internal static Func<IReadOnlyList<ResolvedVariantPair>, GroupOutput?> RetargetingOncePerInput(
+        Dictionary<string, GroupOutput?> built, IReadOnlyList<string> fallbackOrder, bool composeUniqueNames)
+        => group =>
+        {
+            var key = GroupInputKey(group);
+
+            if (!built.TryGetValue(key, out var bare))
+            {
+                bare = BuildGroupOutput(group, fallbackOrder, composeUniqueNames: false);
+                built[key] = bare;
+            }
+
+            return bare is { } output ? WithUniqueNames(output, group, fallbackOrder, composeUniqueNames) : null;
+        };
+
+    internal static string GroupInputKey(IReadOnlyList<ResolvedVariantPair> group)
+        => string.Join("|", group.Select(member =>
+            $"{member.Pair.SourceRequestedPath}>{member.ResolvedSourcePath}"
+            + $">{member.Pair.RequiredNamesPath ?? member.Pair.TargetRequestedPath}"
+            + $">{member.Pair.SourceFaceLibrary}"));
+
     private static GroupOutput? BuildGroupOutput(IReadOnlyList<ResolvedVariantPair> group,
         IReadOnlyList<string> fallbackOrder, bool composeUniqueNames)
     {
@@ -240,7 +261,7 @@ public sealed partial class SwapOrchestrator
             return null;
         }
 
-        NoireLogger.LogWarning(
+        NoireLogger.LogDebug(
             $"Served '{lead.Pair.TargetRequestedPath}' from '{lead.ResolvedSourcePath}': "
             + $"{FootstepEntryCount(retargeted)} footstep entr(y/ies), {clampedNames.Count} name(s) clamped.",
             LogPrefix);

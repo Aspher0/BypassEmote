@@ -22,7 +22,7 @@ public partial class Service
 
         if (entries.Count == 0)
         {
-            NoireLogger.LogWarning<Service>("FFXIVCollect emotes API returned no results.");
+            NoireLogger.LogError<Service>("FFXIVCollect emotes API returned no results.");
             return;
         }
 

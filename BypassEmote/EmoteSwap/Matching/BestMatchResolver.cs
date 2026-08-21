@@ -150,7 +150,8 @@ public static class BestMatchResolver
         IReadOnlyList<EmoteAttributes> pool,
         MatchConfig config,
         PostureFlags currentPosture,
-        int minimumTier = 0)
+        int wantedCount = 0,
+        int maxScoreDistance = SameTierScoreBand)
     {
         var first = Resolve(source, pool, config, currentPosture);
         var tier = new List<EmoteAttributes>();
@@ -171,14 +172,16 @@ public static class BestMatchResolver
 
         while (remaining.Count > 0)
         {
+            if (wantedCount > 0 && tier.Count >= wantedCount)
+                break;
+
             if (Resolve(source, remaining, config, currentPosture).Target is not { } next)
                 break;
 
-            if (tier.Count >= minimumTier
-                && bestScore - ComputeScore(source, next, config, currentPosture) >= SameTierScoreBand)
-            {
+            // Every candidate here already passed the player's rules; the distance only says how far below the best
+            // one this emote scores, so it decides how far the rank may widen, never whether a rule may be broken.
+            if (bestScore - ComputeScore(source, next, config, currentPosture) >= maxScoreDistance)
                 break;
-            }
 
             tier.Add(next);
             remaining.RemoveAll(candidate => candidate.RowId == next.RowId);
@@ -189,6 +192,16 @@ public static class BestMatchResolver
 
     // Sits above the soft scores (+/-1200) and below the smallest tier step (25k)
     internal const int SameTierScoreBand = 10_000;
+
+    // What one rank is worth
+    internal const int RankStep = 25_000;
+
+    internal static int DistanceFor(DispatchFidelity fidelity) => fidelity switch
+    {
+        DispatchFidelity.OneRankBelow => SameTierScoreBand + RankStep,
+        DispatchFidelity.AnythingAllowed => int.MaxValue,
+        _ => SameTierScoreBand,
+    };
 
     private static string? FirstFailingFilter(EmoteAttributes source, EmoteAttributes candidate, MatchConfig config)
     {

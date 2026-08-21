@@ -87,7 +87,152 @@ public class DebugWindow : Window, IDisposable
                 if (tab)
                     EmotePoolTab.Draw();
             }
+
+            using (var tab = ImRaii.TabItem("Kept Swaps"))
+            {
+                if (tab)
+                    DrawKeptSwapsTab();
+            }
         }
+    }
+
+    private static void DrawKeptSwapsTab()
+    {
+        var manager = Service.SwapMods;
+
+        if (manager == null)
+        {
+            ImGui.TextUnformatted("The swap mod manager is not initialized.");
+            return;
+        }
+
+        var registry = manager.Registry;
+        var directory = manager.ModDirectoryName;
+
+        ImGui.TextUnformatted($"Mod directory: {(directory.Length == 0 ? "<no character loaded>" : directory)}");
+        ImGui.TextUnformatted($"Penumbra: {DescribeModState(manager.PenumbraState())}");
+        ImGui.TextUnformatted($"Drawn body: {registry.Skeleton ?? "<unknown>"}");
+        ImGui.TextUnformatted($"Swap files: {DescribeSize(manager.SwapFilesSize())}");
+
+        var clearing = ImGui.Button("Clear kept swaps##KeptSwaps");
+
+        ImGui.Separator();
+
+        if (registry.Entries.Count == 0)
+        {
+            ImGui.TextUnformatted("No swap is kept.");
+        }
+        else
+        {
+            DrawKeptSwapsTable(manager, registry.Entries);
+        }
+
+        // Run after the table, so the registry never changes under the rows being drawn.
+        if (clearing)
+            manager.ForgetAll();
+    }
+
+    private static void DrawKeptSwapsTable(SwapModManager manager, IReadOnlyList<SwapOptionEntry> entries)
+    {
+        using var table = ImRaii.Table("##KeptSwapsTable", 8,
+            ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingStretchProp
+            | ImGuiTableFlags.ScrollY | ImGuiTableFlags.NoSavedSettings);
+
+        if (!table)
+            return;
+
+        ImGui.TableSetupColumn("Target");
+        ImGui.TableSetupColumn("Source");
+        ImGui.TableSetupColumn("Option");
+        ImGui.TableSetupColumn("Races", ImGuiTableColumnFlags.WidthFixed);
+        ImGui.TableSetupColumn("Last used", ImGuiTableColumnFlags.WidthFixed);
+        ImGui.TableSetupColumn("Selected", ImGuiTableColumnFlags.WidthFixed);
+        ImGui.TableSetupColumn("Rules", ImGuiTableColumnFlags.WidthFixed);
+        ImGui.TableSetupColumn("##KeptSwapsActions", ImGuiTableColumnFlags.WidthFixed);
+        ImGui.TableHeadersRow();
+
+        var currentRules = SwapRulesStamp.Current();
+
+        (SwapOptionEntry Entry, bool Select)? pending = null;
+
+        for (var index = 0; index < entries.Count; index++)
+        {
+            var entry = entries[index];
+
+            ImGui.TableNextRow();
+
+            ImGui.TableNextColumn();
+            ImGui.TextUnformatted(EmoteLabel(entry.TargetEmote) + (entry.IsIdlePoseSwap ? " (idle pose)" : string.Empty));
+
+            ImGui.TableNextColumn();
+            ImGui.TextUnformatted(EmoteLabel(entry.SourceEmote));
+
+            ImGui.TableNextColumn();
+            ImGui.TextUnformatted($"{entry.GroupName} / {entry.OptionName}");
+
+            ImGui.TableNextColumn();
+            ImGui.TextUnformatted(entry.FilesByRace.Count.ToString());
+
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip(string.Join(", ", entry.FilesByRace.Keys));
+
+            ImGui.TableNextColumn();
+            ImGui.TextUnformatted(entry.LastUsedStamp.ToString());
+
+            ImGui.TableNextColumn();
+            ImGui.TextUnformatted(entry.SelectedByUs ? "yes" : "no");
+
+            ImGui.TableNextColumn();
+
+            if (ImGui.Button($"Select##KeptSwap{index}"))
+                pending = (entry, true);
+
+            ImGui.SameLine();
+
+            using (ImRaii.Disabled(!entry.SelectedByUs))
+            {
+                if (ImGui.Button($"Turn off##KeptSwap{index}"))
+                    pending = (entry, false);
+            }
+        }
+
+        // Run after the rows: both calls rewrite the registry the table is reading.
+        if (pending is not { } action)
+            return;
+
+        if (action.Select)
+            manager.SelectExisting(action.Entry);
+        else
+            manager.DeselectEntry(action.Entry);
+    }
+
+    private static string DescribeModState(ModState? state)
+    {
+        if (state is not { } held)
+            return "does not hold the mod";
+
+        return $"{(held.Enabled ? "enabled" : "disabled")}, priority {held.Priority}";
+    }
+
+    private static string DescribeSize(long bytes)
+    {
+        if (bytes < 1024)
+            return $"{bytes} B";
+
+        if (bytes < 1024 * 1024)
+            return $"{bytes / 1024f:0.#} KB";
+
+        return $"{bytes / (1024f * 1024f):0.##} MB";
+    }
+
+    private static string EmoteLabel(uint emoteRowId)
+    {
+        if (emoteRowId == 0)
+            return "-";
+
+        return EmoteHelper.GetEmoteById(emoteRowId) is { } emote
+            ? $"{CommonHelper.GetEmoteName(emote)} (#{emoteRowId})"
+            : $"#{emoteRowId}";
     }
 
 #if DEBUG

@@ -1,4 +1,4 @@
-using BypassEmote.IPC;
+﻿using BypassEmote.IPC;
 using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Helpers;
@@ -75,7 +75,7 @@ public partial class Service
 
         Orchestrator?.CancelPendingExecute();
         EndWatcher?.StopWatching();
-        SwapMods?.Deactivate();
+        SwapMods?.DeselectAll();
     }
 
     public static void OpenKofi() => SystemHelper.OpenUrl("https://ko-fi.com/aspher0");

@@ -1,4 +1,4 @@
-using NoireLib;
+﻿using NoireLib;
 using NoireLib.Helpers;
 using NoireLib.HistoryLogger;
 using System;
@@ -56,7 +56,7 @@ public static class FeedbackHelper
 
     public static void DebugLine(string message)
     {
-        NoireLogger.LogWarning(message, "[SwapTrail] ");
+        NoireLogger.LogDebug(message, "[SwapTrail] ");
     }
 
     internal static bool ShouldShowSwapLine(string sourceCommand, string targetCommand)

@@ -61,10 +61,17 @@ public class ConfigurationInstance : NoireConfigBase
     public SelfBypassMode SelfBypassMode { get; set; } = SelfBypassMode.EmoteSwap;
 
     [AutoSave]
-    public SwapModFlavor SwapModFlavor { get; set; } = SwapModFlavor.RealMod;
+    public SwapLifetime SwapLifetime { get; set; } = SwapLifetime.WhenTargetPlayed;
 
     [AutoSave]
-    public SwapLifetime SwapLifetime { get; set; } = SwapLifetime.Lingering;
+    public SwapBehavior SwapBehavior { get; set; } = SwapBehavior.KeepAll;
+
+    // 0 means no cap.
+    [AutoSave]
+    public int MaxKeptSwapsPerTarget { get; set; } = 5;
+
+    [AutoSave]
+    public bool AnonymizeModName { get; set; } = false;
 
     [AutoSave]
     public LoopMatchRule LoopMatching { get; set; } = LoopMatchRule.Strict;
@@ -76,7 +83,13 @@ public class ConfigurationInstance : NoireConfigBase
     public SoundMatchRule SoundMatching { get; set; } = SoundMatchRule.Strict;
 
     [AutoSave]
-    public AlternateTargetsMode AlternateTargets { get; set; } = AlternateTargetsMode.TwoEmotesWhenCacheBreakDown;
+    public CachedDispatchMode CachedDispatch { get; set; } = CachedDispatchMode.On;
+
+    [AutoSave]
+    public int MaxTargetsPerRank { get; set; } = 3;
+
+    [AutoSave]
+    public DispatchFidelity DispatchFidelity { get; set; } = DispatchFidelity.OneRankBelow;
 
     [AutoSave]
     public IdlePoseFallback IdlePoseLoops { get; set; } = IdlePoseFallback.NothingElseFits;

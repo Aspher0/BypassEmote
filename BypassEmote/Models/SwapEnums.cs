@@ -6,16 +6,17 @@ public enum SelfBypassMode : int
     EmoteSwap = 1,
 }
 
-public enum SwapModFlavor : int
-{
-    RealMod = 0,
-    TemporaryMod = 1,
-}
-
 public enum SwapLifetime : int
 {
-    Ephemeral = 0,
-    Lingering = 1,
+    WhenEmoteEnds = 0,
+    WhenTargetPlayed = 1,
+    Never = 2,
+}
+
+public enum SwapBehavior : int
+{
+    KeepAll = 0,
+    OneAtATime = 1,
 }
 
 public enum LoopMatchRule : int
@@ -24,17 +25,18 @@ public enum LoopMatchRule : int
     AllowLoopOnOneShot = 1,
 }
 
-/// <summary> Whether a swap may move to a second equally good emote rather than wait for the first to be free. </summary>
-public enum AlternateTargetsMode : int
+public enum CachedDispatchMode : int
 {
-    /// <summary> Never alternate. </summary>
     Off = 0,
+    WhenNecessary = 1,
+    On = 2,
+}
 
-    /// <summary> Alternates 2 emotes only while the cache break is down and a repeat would show stale frames. </summary>
-    TwoEmotesWhenCacheBreakDown = 1,
-
-    /// <summary> Alternates 2 emotes at all times. </summary>
-    TwoEmotes = 2,
+public enum DispatchFidelity : int
+{
+    SameRank = 0,
+    OneRankBelow = 1,
+    AnythingAllowed = 2,
 }
 
 public enum TurnMatchRule : int
@@ -57,17 +59,9 @@ public enum IdlePoseFallback : int
     Allowed = 2,
 }
 
-/// <summary>
-/// What a swap does about a target emote one of the player's other mods already replaces.
-/// </summary>
 public enum ModdedTargetRule : int
 {
-    /// <summary> Land on them like any other emote. </summary>
     Allowed = 0,
-
-    /// <summary> Step over them, and take one only when nothing else fits. </summary>
     LastResort = 1,
-
-    /// <summary> Never take one, even when it costs the swap. </summary>
     Blocked = 2,
 }

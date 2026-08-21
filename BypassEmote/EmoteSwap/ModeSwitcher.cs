@@ -1,6 +1,7 @@
-using BypassEmote.Helpers;
+﻿using BypassEmote.Helpers;
 using BypassEmote.Models;
 using NoireLib;
+using System.Linq;
 
 namespace BypassEmote.EmoteSwap;
 
@@ -41,10 +42,11 @@ public static class ModeSwitcher
 
     private static void LeaveEmoteSwap()
     {
-        var wasIdlePoseSwap = Service.SwapMods?.Current?.IsIdlePoseSwap == true;
+        var wasIdlePoseSwap = Service.SwapMods?.Registry.Entries
+            .Any(entry => entry.SelectedByUs && entry.IsIdlePoseSwap) == true;
 
         Service.EndWatcher?.StopWatching();
-        Service.SwapMods?.Deactivate();
+        Service.SwapMods?.DeselectAll();
 
         if (wasIdlePoseSwap && NoireService.ObjectTable.LocalPlayer != null)
             Service.Penumbra?.RedrawLocalPlayer();

@@ -21,6 +21,7 @@ public sealed class SwapModIdentity : IDisposable
 
     private bool _subscribed;
     private ulong _contentId;
+    private bool _anonymous;
 
     public SwapModIdentity()
     {
@@ -60,14 +61,16 @@ public sealed class SwapModIdentity : IDisposable
     private void Evaluate()
     {
         var contentId = CharacterHelper.IsPlayerLoaded ? CharacterHelper.LocalContentId : 0;
+        var anonymous = Configuration.AnonymizeModName;
 
-        if (contentId == _contentId)
+        if (contentId == _contentId && anonymous == _anonymous)
             return;
 
         var previous = Names;
 
         _contentId = contentId;
-        Names = contentId == 0 ? null : BuildNames(contentId);
+        _anonymous = anonymous;
+        Names = contentId == 0 ? null : BuildNames(contentId, anonymous);
 
         NoireLogger.LogDebug(Names is { } names
             ? $"The generated mod for this character is '{names.Directory}'."
@@ -76,15 +79,33 @@ public sealed class SwapModIdentity : IDisposable
         Changed?.Invoke(previous);
     }
 
-    private static SwapModNames BuildNames(ulong contentId)
+    private static SwapModNames BuildNames(ulong contentId, bool anonymous)
     {
         var name = LocalPlayerName();
         var world = LocalPlayerWorld();
 
         var key = $"{Sanitize(name)}_{ShortDigest(contentId)}";
 
-        return new SwapModNames($"{DirectoryPrefix}{key}",
-            FillTemplate(Service.PenumbraModNameTemplate, name, world), key);
+        var display = anonymous
+            ? FillTemplate(Service.PenumbraModNameTemplate, Initials(name), string.Empty)
+            : FillTemplate(Service.PenumbraModNameTemplate, name, world);
+
+        return new SwapModNames($"{DirectoryPrefix}{key}", display, key);
+    }
+
+    internal static string Initials(string name)
+    {
+        var initials = new StringBuilder();
+
+        foreach (var word in name.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (initials.Length > 0)
+                initials.Append(' ');
+
+            initials.Append(char.ToUpperInvariant(word[0])).Append('.');
+        }
+
+        return initials.Length == 0 ? UnnamedCharacter : initials.ToString();
     }
 
     internal static string FillTemplate(string template, string playerName, string playerWorld)

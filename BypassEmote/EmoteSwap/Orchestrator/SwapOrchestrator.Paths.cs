@@ -86,6 +86,57 @@ public sealed partial class SwapOrchestrator
     internal static string PathSignatureFor(IEnumerable<VariantPair> pairs)
         => string.Join("|", pairs.Select(pair => $"{pair.SourceRequestedPath}>{pair.TargetRequestedPath}"));
 
+    internal sealed record RaceBuildInput(string Race, IReadOnlyList<string> FallbackOrder,
+        IReadOnlyList<ResolvedVariantPair> Pairs, RaceSourceInput Source);
+
+    internal IReadOnlyList<RaceBuildInput> RaceInputsFor(EmoteAttributes source, EmoteAttributes target,
+        string drawnSkeleton)
+    {
+        var modProvides = Memoized(ForeignModProvides);
+        var vanillaExists = Memoized(VanillaExists);
+        var resolve = Memoized(ResolveOutsideOwnMod);
+
+        var inputs = new List<RaceBuildInput>();
+
+        foreach (var race in RaceOrderFrom(drawnSkeleton))
+        {
+            var fallbackOrder = EmotePathHelper.GetFallbackOrder(race);
+            var pairs = BuildPairs(source, target, fallbackOrder, modProvides, vanillaExists);
+
+            if (pairs.Count == 0)
+                continue;
+
+            var resolved = pairs
+                .Select(pair => new ResolvedVariantPair(pair, resolve(pair.SourceRequestedPath)))
+                .ToList();
+
+            var main = resolved[0];
+
+            inputs.Add(new RaceBuildInput(race, fallbackOrder, resolved,
+                new RaceSourceInput(race, main.ResolvedSourcePath,
+                    StampFor(main.Pair.SourceRequestedPath, main.ResolvedSourcePath), PathSignatureFor(pairs))));
+        }
+
+        return inputs;
+    }
+
+    private static List<string> RaceOrderFrom(string drawnSkeleton)
+    {
+        var order = new List<string> { drawnSkeleton };
+
+        order.AddRange(EmotePathHelper.AllHumanSkeletons.Where(
+            race => !string.Equals(race, drawnSkeleton, StringComparison.OrdinalIgnoreCase)));
+
+        return order;
+    }
+
+    private static Func<string, T> Memoized<T>(Func<string, T> probe)
+    {
+        var known = new Dictionary<string, T>(StringComparer.Ordinal);
+
+        return path => known.TryGetValue(path, out var answer) ? answer : known[path] = probe(path);
+    }
+
     internal RacePaths? PathsFor(EmoteAttributes source, EmoteAttributes target, string skeleton)
     {
         var pairs = PairVariants(source, target, skeleton);
@@ -148,7 +199,7 @@ public sealed partial class SwapOrchestrator
     }
 
     private string ResolveOutsideOwnMod(string requestedPath)
-        => ResolveOutsideOwnModCore(requestedPath, _penumbra.ResolvePlayerPath, _swapMods.IsOwnPath, _swapMods.Deactivate);
+        => ResolveOutsideOwnModCore(requestedPath, _penumbra.ResolvePlayerPath, _swapMods.IsOwnPath, _swapMods.DeselectAll);
 
     internal static string ResolveOutsideOwnModCore(string requestedPath, Func<string, string> resolve,
         Func<string, bool> isOwnPath, Action deactivate)
@@ -187,38 +238,6 @@ public sealed partial class SwapOrchestrator
         return maxWinningPriority is { } winner ? Math.Max(0, winner + 1) : 0;
     }
 
-    private int ComputeAppliedPriorityForFreshApply(IReadOnlyCollection<string> requestedPaths, Guid collectionId,
-        out IReadOnlyList<string> competingMods)
-    {
-        var modRoot = _penumbra.GetModRootDirectory();
-        var met = new List<string>();
-
-        IReadOnlyDictionary<string, ModState>? states = null;
-        var statesFetched = false;
-
-        int? PriorityOfWinningMod(string resolvedPath)
-        {
-            if (SwapModManager.ModDirectoryFromDiskPath(resolvedPath, modRoot) is not { } winnerDirectory)
-                return null;
-
-            if (!met.Contains(winnerDirectory, StringComparer.OrdinalIgnoreCase))
-                met.Add(winnerDirectory);
-
-            if (!statesFetched)
-            {
-                states = _penumbra.GetAllModStates(collectionId);
-                statesFetched = true;
-            }
-
-            return states != null && states.TryGetValue(winnerDirectory, out var state) ? state.Priority : null;
-        }
-
-        var priority = ComputeAppliedPriority(requestedPaths, ResolveOutsideOwnMod, _swapMods.IsOwnPath, PriorityOfWinningMod);
-
-        competingMods = met;
-        return priority;
-    }
-
     private bool SourceCarriesOwnDistinctIntroFile(EmoteAttributes source, IReadOnlyList<string> fallbackOrder)
     {
         try
@@ -253,8 +272,11 @@ public sealed partial class SwapOrchestrator
         => targetLoopKind == EmotePlayType.Looped
            && !(targetIntro == IntroKind.Pap && sourceCarriesOwnDistinctIntroFile);
 
-    internal static bool OnDiskShapeMatches(SwapManifest? current, bool composeUniqueNames)
-        => (current?.RedirectedPaths.Keys.Any(UniqueNamePlanner.IsComposedPapPath) == true) == composeUniqueNames;
+    internal static bool OnDiskShapeMatches(SwapOptionEntry? kept, bool composeUniqueNames)
+        => (kept != null && GamePathsOf(kept).Any(UniqueNamePlanner.IsComposedPapPath)) == composeUniqueNames;
+
+    internal static IEnumerable<string> GamePathsOf(SwapOptionEntry kept)
+        => kept.FilesByRace.Values.SelectMany(files => files.Keys);
 
     internal static string SkeletonFor(ICharacter character)
         => CharacterHelper.ResolveSkeletonId(character);

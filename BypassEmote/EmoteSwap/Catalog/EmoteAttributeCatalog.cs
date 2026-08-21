@@ -104,7 +104,7 @@ public sealed class EmoteAttributeCatalog
 
         if (rows.Count == 0)
         {
-            NoireLogger.LogWarning("Emote catalog build produced no rows, will retry next start.", LogPrefix);
+            NoireLogger.LogError("Emote catalog build produced no rows, will retry next start.", LogPrefix);
             return;
         }
 

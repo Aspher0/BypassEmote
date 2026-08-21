@@ -122,7 +122,7 @@ internal static class PermanentModBuilder
 
             SimpleV3ModWriter.Write(modDirectory, meta, redirects);
 
-            NoireLogger.LogWarning($"Wrote '{name}' to '{modDirectory}': /{source.Command} over /{target.Command}, "
+            NoireLogger.LogDebug($"Wrote '{name}' to '{modDirectory}': /{source.Command} over /{target.Command}, "
                 + $"{files.Count} file(s).", LogPrefix);
 
             return true;

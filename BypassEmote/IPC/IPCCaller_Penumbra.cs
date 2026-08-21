@@ -17,6 +17,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
     private const string LogOnceScope = "BypassEmote.Penumbra.";
     private const int RequiredBreakingVersion = 5;
     private const int LocalPlayerObjectIndex = 0;
+    private const string TemporarySettingsSource = "BypassEmote";
 
     private static readonly TimeSpan ReprobeInterval = TimeSpan.FromSeconds(1);
 
@@ -27,18 +28,22 @@ public sealed class IPCCaller_Penumbra : IDisposable
     private readonly ApiVersion _apiVersion;
     private readonly GetEnabledState _getEnabledState;
     private readonly ResolvePlayerPath _resolvePlayerPath;
+    private readonly ResolvePlayerPaths _resolvePlayerPaths;
     private readonly GetCollectionForObject _getCollectionForObject;
     private readonly GetAllModSettings _getAllModSettings;
     private readonly GetModList _getModList;
     private readonly OpenMainWindow _openMainWindow;
     private readonly TrySetMod _trySetMod;
     private readonly TrySetModPriority _trySetModPriority;
+    private readonly TrySetModSettings _trySetModSettings;
+    private readonly SetTemporaryModSettings _setTemporaryModSettings;
+    private readonly RemoveTemporaryModSettings _removeTemporaryModSettings;
+    private readonly GetCurrentModSettings _getCurrentModSettings;
+    private readonly GetAvailableModSettings _getAvailableModSettings;
     private readonly AddMod _addMod;
     private readonly ReloadMod _reloadMod;
     private readonly GetModPath _getModPath;
     private readonly GetModDirectory _getModDirectory;
-    private readonly AddTemporaryMod _addTemporaryMod;
-    private readonly RemoveTemporaryMod _removeTemporaryMod;
     private readonly RedrawObject _redrawObject;
 
     private readonly EventSubscriber _initialized;
@@ -49,6 +54,13 @@ public sealed class IPCCaller_Penumbra : IDisposable
     private readonly EventSubscriber<string, bool> _modDirectoryChanged;
     private readonly EventSubscriber<nint, int> _gameObjectRedrawn;
     private readonly EventSubscriber<nint, string, string> _resourcePathResolved;
+    private readonly EventSubscriber<string> _preSettingsDraw;
+
+    private long _ownPanelDrawnAt;
+
+    private string? _bounceTarget;
+
+    private const long PanelFreshnessMilliseconds = 250;
 
 
     private bool _available;
@@ -69,18 +81,22 @@ public sealed class IPCCaller_Penumbra : IDisposable
         _apiVersion = new ApiVersion(pluginInterface);
         _getEnabledState = new GetEnabledState(pluginInterface);
         _resolvePlayerPath = new ResolvePlayerPath(pluginInterface);
+        _resolvePlayerPaths = new ResolvePlayerPaths(pluginInterface);
         _getCollectionForObject = new GetCollectionForObject(pluginInterface);
         _getAllModSettings = new GetAllModSettings(pluginInterface);
         _getModList = new GetModList(pluginInterface);
         _openMainWindow = new OpenMainWindow(pluginInterface);
         _trySetMod = new TrySetMod(pluginInterface);
         _trySetModPriority = new TrySetModPriority(pluginInterface);
+        _trySetModSettings = new TrySetModSettings(pluginInterface);
+        _setTemporaryModSettings = new SetTemporaryModSettings(pluginInterface);
+        _removeTemporaryModSettings = new RemoveTemporaryModSettings(pluginInterface);
+        _getCurrentModSettings = new GetCurrentModSettings(pluginInterface);
+        _getAvailableModSettings = new GetAvailableModSettings(pluginInterface);
         _addMod = new AddMod(pluginInterface);
         _reloadMod = new ReloadMod(pluginInterface);
         _getModPath = new GetModPath(pluginInterface);
         _getModDirectory = new GetModDirectory(pluginInterface);
-        _addTemporaryMod = new AddTemporaryMod(pluginInterface);
-        _removeTemporaryMod = new RemoveTemporaryMod(pluginInterface);
         _redrawObject = new RedrawObject(pluginInterface);
 
         _initialized = Initialized.Subscriber(pluginInterface);
@@ -91,6 +107,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
         _modDirectoryChanged = ModDirectoryChanged.Subscriber(pluginInterface);
         _gameObjectRedrawn = Penumbra.Api.IpcSubscribers.GameObjectRedrawn.Subscriber(pluginInterface);
         _resourcePathResolved = GameObjectResourcePathResolved.Subscriber(pluginInterface);
+        _preSettingsDraw = PreSettingsDraw.Subscriber(pluginInterface);
 
         _initialized.Event += OnPenumbraInitialized;
         _disposed.Event += OnPenumbraDisposed;
@@ -100,6 +117,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
         _modDirectoryChanged.Event += OnModDirectoryChanged;
         _gameObjectRedrawn.Event += OnGameObjectRedrawn;
         _resourcePathResolved.Event += OnResourcePathResolved;
+        _preSettingsDraw.Event += OnPreSettingsDraw;
 
         _initialized.Enable();
         _disposed.Enable();
@@ -109,6 +127,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
         _modDirectoryChanged.Enable();
         _gameObjectRedrawn.Enable();
         _resourcePathResolved.Enable();
+        _preSettingsDraw.Enable();
 
         Probe();
     }
@@ -137,6 +156,25 @@ public sealed class IPCCaller_Penumbra : IDisposable
         }
     }
 
+    public IReadOnlyList<string>? ResolvePlayerPaths(IReadOnlyList<string> gamePaths)
+    {
+        if (gamePaths.Count == 0)
+            return [];
+
+        try
+        {
+            var forward = gamePaths as string[] ?? [.. gamePaths];
+            var (resolved, _) = _resolvePlayerPaths.Invoke(forward, []);
+
+            return resolved.Length == gamePaths.Count ? resolved : null;
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(ResolvePlayerPaths), ex);
+            return null;
+        }
+    }
+
     public (Guid Id, string Name)? GetPlayerCollection()
     {
         try
@@ -148,6 +186,89 @@ public sealed class IPCCaller_Penumbra : IDisposable
         {
             LogFailureOnce(nameof(GetPlayerCollection), ex);
             return null;
+        }
+    }
+
+    private void OnPreSettingsDraw(string modDirectory)
+    {
+        if (string.Equals(modDirectory, OwnModDirectoryName, StringComparison.OrdinalIgnoreCase))
+            _ownPanelDrawnAt = Environment.TickCount64;
+    }
+
+    public bool OwnPanelOnScreen
+        => _ownPanelDrawnAt > 0 && Environment.TickCount64 - _ownPanelDrawnAt <= PanelFreshnessMilliseconds;
+
+    public bool RefreshOwnPanel()
+    {
+        if (OwnModDirectoryName is not { Length: > 0 } ownDirectory || !OwnPanelOnScreen)
+            return false;
+
+        if (BounceTarget(ownDirectory) is not { } other)
+            return false;
+
+        return OpenMod(other, string.Empty) && OpenMod(ownDirectory, string.Empty);
+    }
+
+    private string? BounceTarget(string ownDirectory)
+    {
+        var ownFolder = TreeFolderOf(ownDirectory);
+
+        if (_bounceTarget is { } cached
+            && !string.Equals(cached, ownDirectory, StringComparison.OrdinalIgnoreCase)
+            && SameFolder(TreeFolderOf(cached), ownFolder))
+        {
+            return cached;
+        }
+
+        _bounceTarget = null;
+
+        if (GetModNames() is not { } mods)
+            return null;
+
+        foreach (var directory in mods.Keys)
+        {
+            if (string.Equals(directory, ownDirectory, StringComparison.OrdinalIgnoreCase)
+                || !SameFolder(TreeFolderOf(directory), ownFolder))
+            {
+                continue;
+            }
+
+            _bounceTarget = directory;
+
+            NoireLogger.LogDebug(
+                $"'{directory}' shares the folder '{(ownFolder.Length == 0 ? "<root>" : ownFolder)}' with the generated "
+                + "mod, so the panel refresh bounces off it.", LogPrefix);
+
+            return directory;
+        }
+
+        NoireLogger.LogDebug(
+            $"No other mod sits in '{(ownFolder.Length == 0 ? "<root>" : ownFolder)}', so the panel is left as it is.",
+            LogPrefix);
+
+        return null;
+    }
+
+    private static bool SameFolder(string left, string right)
+        => string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
+
+    private string TreeFolderOf(string modDirectory)
+    {
+        try
+        {
+            var (ec, path, _, _) = _getModPath.Invoke(modDirectory, string.Empty);
+
+            if (ec != PenumbraApiEc.Success || path.Length == 0)
+                return string.Empty;
+
+            var lastSeparator = path.LastIndexOf('/');
+
+            return lastSeparator < 0 ? string.Empty : path[..lastSeparator];
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(TreeFolderOf), ex);
+            return string.Empty;
         }
     }
 
@@ -231,6 +352,115 @@ public sealed class IPCCaller_Penumbra : IDisposable
         }
     }
 
+    public bool TrySelectOption(Guid collectionId, string modDirectory, string groupName, string optionName)
+        => SelectOption(collectionId, modDirectory, groupName, optionName)
+            is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged;
+
+    public PenumbraApiEc SelectOption(Guid collectionId, string modDirectory, string groupName, string optionName)
+    {
+        try
+        {
+            return _trySetModSettings.Invoke(collectionId, modDirectory, optionGroupName: groupName,
+                optionNames: [optionName]);
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(SelectOption), ex);
+            return PenumbraApiEc.UnknownError;
+        }
+    }
+
+    public PenumbraApiEc SetTemporarySettings(Guid collectionId, string modDirectory, bool enabled, int priority,
+        IReadOnlyDictionary<string, IReadOnlyList<string>> selections)
+    {
+        try
+        {
+            return _setTemporaryModSettings.Invoke(collectionId, modDirectory, inherit: false, enabled, priority,
+                selections, TemporarySettingsSource);
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(SetTemporarySettings), ex);
+            return PenumbraApiEc.UnknownError;
+        }
+    }
+
+    public bool RemoveTemporarySettings(Guid collectionId, string modDirectory)
+    {
+        try
+        {
+            var ec = _removeTemporaryModSettings.Invoke(collectionId, modDirectory);
+            return ec is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged;
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(RemoveTemporarySettings), ex);
+            return false;
+        }
+    }
+
+    public (int Breaking, int Feature)? ReportedApiVersion()
+    {
+        try
+        {
+            var version = _apiVersion.Invoke();
+            return (version.Breaking, version.Features);
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(ReportedApiVersion), ex);
+            return null;
+        }
+    }
+
+    public IReadOnlyDictionary<string, IReadOnlyList<string>>? GetAvailableOptions(string modDirectory)
+    {
+        try
+        {
+            if (_getAvailableModSettings.Invoke(modDirectory, modName: string.Empty) is not { } available)
+                return null;
+
+            var byGroup = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+
+            foreach (var (groupName, group) in available)
+                byGroup[groupName] = group.Item1;
+
+            return byGroup;
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(GetAvailableOptions), ex);
+            return null;
+        }
+    }
+
+    public IReadOnlyDictionary<string, string>? GetSelectedOptions(Guid collectionId, string modDirectory)
+    {
+        try
+        {
+            var (ec, settings) = _getCurrentModSettings.Invoke(collectionId, modDirectory, modName: string.Empty,
+                ignoreInheritance: false);
+
+            if (ec != PenumbraApiEc.Success || settings is not { } current)
+                return null;
+
+            var selected = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            foreach (var (groupName, options) in current.Item3)
+            {
+                if (options.Count > 0)
+                    selected[groupName] = options[0];
+            }
+
+            return selected;
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(GetSelectedOptions), ex);
+            return null;
+        }
+    }
+
     public bool AddMod(string modDirectory)
     {
         try
@@ -281,32 +511,6 @@ public sealed class IPCCaller_Penumbra : IDisposable
         {
             LogFailureOnce(nameof(GetModRootDirectory), ex);
             return null;
-        }
-    }
-
-    public PenumbraApiEc AddTemporaryMod(string tag, Guid collectionId, Dictionary<string, string> paths, int priority)
-    {
-        try
-        {
-            return _addTemporaryMod.Invoke(tag, collectionId, paths, string.Empty, priority);
-        }
-        catch (Exception ex)
-        {
-            LogFailureOnce(nameof(AddTemporaryMod), ex);
-            return PenumbraApiEc.UnknownError;
-        }
-    }
-
-    public PenumbraApiEc RemoveTemporaryMod(string tag, Guid collectionId, int priority)
-    {
-        try
-        {
-            return _removeTemporaryMod.Invoke(tag, collectionId, priority);
-        }
-        catch (Exception ex)
-        {
-            LogFailureOnce(nameof(RemoveTemporaryMod), ex);
-            return PenumbraApiEc.UnknownError;
         }
     }
 
@@ -397,10 +601,10 @@ public sealed class IPCCaller_Penumbra : IDisposable
         }
         catch
         {
-            // Logging must never interfere with a resolve.
+            // no-op
         }
 
-        NoireLogger.LogWarning(
+        NoireLogger.LogDebug(
             $"{(isPap ? "Pap" : "Tmb")} requested by the game: '{gamePath}' [{key}] served {served} "
             + $"({size} bytes, object 0x{gameObject:X} {(onLocalPlayer ? "LOCAL PLAYER" : "other or none")}).",
             LogPrefix);
@@ -442,6 +646,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
         _modDirectoryChanged.Event -= OnModDirectoryChanged;
         _gameObjectRedrawn.Event -= OnGameObjectRedrawn;
         _resourcePathResolved.Event -= OnResourcePathResolved;
+        _preSettingsDraw.Event -= OnPreSettingsDraw;
 
         _initialized.Disable();
         _disposed.Disable();
@@ -460,6 +665,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
         _modDirectoryChanged.Dispose();
         _gameObjectRedrawn.Dispose();
         _resourcePathResolved.Dispose();
+        _preSettingsDraw.Dispose();
 
         AvailabilityChanged = null;
         OwnModSettingChanged = null;

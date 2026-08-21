@@ -1,3 +1,4 @@
+﻿using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin.Services;
 using NoireLib;
@@ -16,6 +17,7 @@ public sealed class SwapEndWatcher
 
     private bool _armed;
     private bool _subscribed;
+    private SwapOptionEntry? _armedEntry;
     private Vector3 _armedPosition;
 
     private ushort _watchedEmote;
@@ -27,9 +29,10 @@ public sealed class SwapEndWatcher
     public SwapEndWatcher(SwapModManager swapMods)
         => _swapMods = swapMods;
 
-    public void Arm()
+    public void Arm(SwapOptionEntry entry)
     {
         _armed = true;
+        _armedEntry = entry;
         _isIdlePoseWatch = false;
         _idlePoseRedraw = null;
         _armedPosition = Vector3.Zero;
@@ -48,9 +51,10 @@ public sealed class SwapEndWatcher
         EnsureSubscribed();
     }
 
-    public void ArmIdlePose(Action redrawLocalPlayer)
+    public void ArmIdlePose(SwapOptionEntry entry, Action redrawLocalPlayer)
     {
         _armed = true;
+        _armedEntry = entry;
         _isIdlePoseWatch = true;
         _idlePoseRedraw = redrawLocalPlayer;
         _armedPosition = Vector3.Zero;
@@ -69,6 +73,7 @@ public sealed class SwapEndWatcher
     public void Disarm()
     {
         var wasArmed = _armed;
+        var armedEntry = _armedEntry;
         var idlePoseRedraw = _isIdlePoseWatch ? _idlePoseRedraw : null;
 
         StopWatching();
@@ -76,7 +81,9 @@ public sealed class SwapEndWatcher
         if (!wasArmed)
             return;
 
-        _swapMods.Deactivate();
+        if (armedEntry != null)
+            _swapMods.DeselectEntry(armedEntry);
+
         idlePoseRedraw?.Invoke();
     }
 
@@ -86,6 +93,7 @@ public sealed class SwapEndWatcher
         Unsubscribe();
 
         _armed = false;
+        _armedEntry = null;
         _watchedEmote = 0;
         _isIdlePoseWatch = false;
         _idlePoseRedraw = null;

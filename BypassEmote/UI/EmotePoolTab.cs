@@ -1,4 +1,4 @@
-#if DEBUG
+﻿#if DEBUG
 using BypassEmote.EmoteSwap;
 using BypassEmote.Helpers;
 using BypassEmote.Models;
@@ -140,7 +140,10 @@ internal static class EmotePoolTab
 
         ImGui.TextDisabled($"rules: loop {Configuration.LoopMatching}, turn {Configuration.TurnMatching}, "
             + $"sound {Configuration.SoundMatching}, modded {Configuration.ModdedTargets}, "
-            + $"idle pose {Configuration.IdlePoseLoops}, alternate {Configuration.AlternateTargets}");
+            + $"idle pose {Configuration.IdlePoseLoops}, dispatch "
+            + (Configuration.CachedDispatch == CachedDispatchMode.Off
+                ? "off"
+                : $"{Configuration.CachedDispatch}, {Configuration.MaxTargetsPerRank} per rank, {Configuration.DispatchFidelity}"));
     }
 
     private static void DrawSourceList()
@@ -487,7 +490,7 @@ internal static class EmotePoolTab
         return $"{_sourceEmoteId}|{_condition}|{live}|{Configuration.SelfBypassMode}|{Configuration.LoopMatching}"
             + $"|{Configuration.TurnMatching}"
             + $"|{Configuration.SoundMatching}|{Configuration.ModdedTargets}|{Configuration.IdlePoseLoops}"
-            + $"|{Configuration.AlternateTargets}|{blocked.Count}:{blocked.Sum(rowId => (long)rowId)}";
+            + $"|{Configuration.CachedDispatch}|{Configuration.MaxTargetsPerRank}|{Configuration.DispatchFidelity}|{blocked.Count}:{blocked.Sum(rowId => (long)rowId)}";
     }
 
     private static List<Emote> Emotes()

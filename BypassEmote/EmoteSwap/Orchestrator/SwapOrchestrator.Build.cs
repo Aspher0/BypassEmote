@@ -9,13 +9,46 @@ namespace BypassEmote.EmoteSwap;
 
 public sealed partial class SwapOrchestrator
 {
-    private sealed record SwapBuildRequest(EmoteAttributes Source, EmoteAttributes Target, int Generation,
-        IReadOnlyList<ResolvedVariantPair> Pairs, IReadOnlyList<string> FallbackOrder, string Skeleton,
-        string PathSignature, SwapModManager.SwapFilePlan Plan, bool ComposeUniqueNames,
-        bool PublishInternalNames, SwapTimings Timings, bool ExecuteAfterApply = true);
+    private static string DisplayNameFor(EmoteAttributes emote)
+    {
+        var name = EmoteHelper.GetEmoteById(emote.RowId) is { } row ? CommonHelper.GetEmoteName(row) : string.Empty;
 
-    private sealed record SwapBuildOutcome(string MainResolvedSourcePath, long MainStampTicks,
-        SwapModManager.PreparedSwapFiles Prepared, long ElapsedAtRetarget, long ElapsedAtPrepare,
+        return string.IsNullOrWhiteSpace(name) ? emote.Command : name;
+    }
+
+    private static string? CommandFor(EmoteAttributes emote)
+    {
+        if (!string.IsNullOrWhiteSpace(emote.Command))
+            return WithSlash(emote.Command);
+
+        if (EmoteHelper.GetEmoteById(emote.RowId)?.TextCommand.ValueNullable is not { } textCommand)
+            return null;
+
+        foreach (var candidate in new[]
+                 {
+                     textCommand.Command, textCommand.ShortCommand, textCommand.Alias, textCommand.ShortAlias,
+                 })
+        {
+            var text = candidate.ExtractText();
+
+            if (!string.IsNullOrWhiteSpace(text))
+                return WithSlash(text);
+        }
+
+        return null;
+    }
+
+    private static string WithSlash(string command)
+        => command.StartsWith('/') ? command : $"/{command}";
+
+    private sealed record SwapBuildRequest(EmoteAttributes Source, EmoteAttributes Target, int Generation,
+        IReadOnlyList<RaceBuildInput> Races, string Skeleton, string ContentKey,
+        SwapModManager.SwapFilePlan Plan, bool ComposeUniqueNames, bool PublishInternalNames, string? SourceModName,
+        SwapTimings Timings, bool ExecuteAfterApply = true);
+
+    private sealed record SwapBuildOutcome(IReadOnlyDictionary<string, byte[]> Files,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> FilesByRace,
+        long ElapsedAtRetarget, long ElapsedAtPrepare,
         bool FadeProtectedIntro, bool ClampedIntro, bool UniqueNamesApplied,
         IReadOnlyDictionary<string, string>? UniqueNameByKey, bool InternalUniqueNamesApplied,
         IReadOnlyList<string>? InternalNames);
@@ -47,30 +80,87 @@ public sealed partial class SwapOrchestrator
 
     private SwapBuildOutcome? BuildSwapFiles(SwapBuildRequest request)
     {
-        var grouped = BuildGroupedFiles(request.Pairs,
-            group => BuildGroupOutput(group, request.FallbackOrder, request.ComposeUniqueNames),
-            request.PublishInternalNames);
+        var retargeted = new Dictionary<string, GroupOutput?>(StringComparer.Ordinal);
+        var allFiles = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+        var gamePathsByRace = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+
+        GroupedSwapFiles? drawnFiles = null;
+        IReadOnlyList<ResolvedVariantPair> drawnPairs = [];
+
+        foreach (var race in request.Races)
+        {
+            var grouped = BuildGroupedFiles(race.Pairs,
+                RetargetingOncePerInput(retargeted, race.FallbackOrder, request.ComposeUniqueNames),
+                request.PublishInternalNames);
+
+            var isDrawnBody = race.Race == request.Skeleton;
+
+            if (grouped.Main == null)
+            {
+                if (isDrawnBody)
+                {
+                    NoireLogger.LogError($"No variant of /{request.Source.Command} could be retargeted onto /{request.Target.Command}.", LogPrefix);
+                    return null;
+                }
+
+                NoireLogger.LogDebug($"Nothing retargeted for {race.Race}; that body is left out of this swap.", LogPrefix);
+                continue;
+            }
+
+            if (isDrawnBody)
+            {
+                drawnFiles = grouped;
+                drawnPairs = race.Pairs;
+            }
+
+            foreach (var (gamePath, bytes) in grouped.Files)
+                allFiles.TryAdd(gamePath, bytes);
+
+            gamePathsByRace[race.Race] = [.. grouped.Files.Keys];
+        }
 
         var elapsedAtRetarget = request.Timings.Clock.ElapsedMilliseconds;
 
-        if (grouped.Main is not { } main)
+        if (drawnFiles is not { } drawn)
         {
-            NoireLogger.LogError($"No variant of /{request.Source.Command} could be retargeted onto /{request.Target.Command}.", LogPrefix);
+            NoireLogger.LogError($"The swap of /{request.Source.Command} covers no body to play it on.", LogPrefix);
             return null;
         }
 
-        if (_swapMods.PrepareFiles(request.Plan, grouped.Files) is not { } prepared)
+        if (_swapMods.PrepareFiles(request.Plan, allFiles) is not { } prepared)
             return null;
 
-        return new SwapBuildOutcome(main.ResolvedSourcePath,
-            StampFor(main.Pair.SourceRequestedPath, main.ResolvedSourcePath), prepared, elapsedAtRetarget,
-            request.Timings.Clock.ElapsedMilliseconds,
-            FadeProtectedIntro: OutputFadeProtected(request.Pairs, grouped),
-            ClampedIntro: grouped.ClampedIntro,
-            UniqueNamesApplied: grouped.UniqueNames,
-            UniqueNameByKey: grouped.UniqueNameByKey,
-            InternalUniqueNamesApplied: grouped.InternalUniqueNames,
-            InternalNames: grouped.InternalNames);
+        return new SwapBuildOutcome(allFiles, FilesByRace(gamePathsByRace, prepared.RedirectedPaths),
+            elapsedAtRetarget, request.Timings.Clock.ElapsedMilliseconds,
+            FadeProtectedIntro: OutputFadeProtected(drawnPairs, drawn),
+            ClampedIntro: drawn.ClampedIntro,
+            UniqueNamesApplied: drawn.UniqueNames,
+            UniqueNameByKey: drawn.UniqueNameByKey,
+            InternalUniqueNamesApplied: drawn.InternalUniqueNames,
+            InternalNames: drawn.InternalNames);
+    }
+
+    private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> FilesByRace(
+        IReadOnlyDictionary<string, IReadOnlyList<string>> gamePathsByRace,
+        IReadOnlyDictionary<string, string> redirectedPaths)
+    {
+        var byRace = new Dictionary<string, IReadOnlyDictionary<string, string>>(
+            gamePathsByRace.Count, StringComparer.Ordinal);
+
+        foreach (var (race, gamePaths) in gamePathsByRace)
+        {
+            var redirects = new Dictionary<string, string>(gamePaths.Count, StringComparer.Ordinal);
+
+            foreach (var gamePath in gamePaths)
+            {
+                if (redirectedPaths.TryGetValue(gamePath, out var relativePath))
+                    redirects[gamePath] = relativePath;
+            }
+
+            byRace[race] = redirects;
+        }
+
+        return byRace;
     }
 
     private void FinishSwapOnFrameworkThread(SwapBuildRequest request, SwapBuildOutcome? outcome)
@@ -82,7 +172,7 @@ public sealed partial class SwapOrchestrator
         catch (Exception ex)
         {
             NoireLogger.LogError(ex, $"Finishing the swap of /{request.Source.Command} failed.", LogPrefix);
-            FeedbackHelper.Error(GenericFailureMessage);
+            ReportFailure(request, GenericFailureMessage);
         }
     }
 
@@ -103,43 +193,18 @@ public sealed partial class SwapOrchestrator
 
         var built = outcome!;
 
-        if (_penumbra.GetPlayerCollection() is not { } collection)
+        if (_penumbra.GetPlayerCollection() == null)
         {
             _generations.Relinquish(request.Generation);
-            FeedbackHelper.Error(PenumbraUnavailableMessage);
+            ReportFailure(request, PenumbraUnavailableMessage);
             return;
         }
 
-        var reused = OnDiskShapeMatches(_swapMods.Current, request.ComposeUniqueNames)
-            && _swapMods.CanReuse(request.Source.RowId, request.Target.RowId, built.MainResolvedSourcePath,
-                built.MainStampTicks, collection.Id, request.Skeleton)
-            && _swapMods.Reactivate();
-
-        if (!reused)
+        if (!_swapMods.AddAndSelect(EntryFor(request, built), built.Files, request.Skeleton))
         {
-            var appliedPriority = ComputeAppliedPriorityForFreshApply(
-                new HashSet<string>(built.Prepared.RedirectedPaths.Keys, StringComparer.Ordinal), collection.Id,
-                out var competingMods);
-
-            var manifest = new SwapManifest(SwapModManager.CurrentManifestSchemaVersion, request.Source.RowId,
-                request.Target.RowId, built.MainResolvedSourcePath, built.MainStampTicks, collection.Id,
-                RedirectsComputedByApply, appliedPriority, (int)built.Prepared.Flavor,
-                FadeProtectedIntro: built.FadeProtectedIntro,
-                ClampedIntro: built.ClampedIntro,
-                UniqueNames: built.UniqueNamesApplied,
-                UniqueNameByKey: built.UniqueNameByKey,
-                InternalUniqueNames: built.InternalUniqueNamesApplied,
-                InternalNames: built.InternalNames,
-                Skeleton: request.Skeleton,
-                PathSignature: request.PathSignature,
-                CompetingMods: competingMods);
-
-            if (!_swapMods.Register(manifest, built.Prepared))
-            {
-                _generations.Relinquish(request.Generation);
-                FeedbackHelper.Error(GenericFailureMessage);
-                return;
-            }
+            _generations.Relinquish(request.Generation);
+            ReportFailure(request, GenericFailureMessage);
+            return;
         }
 
         var timings = request.Timings with
@@ -151,7 +216,7 @@ public sealed partial class SwapOrchestrator
 
         if (!request.ExecuteAfterApply)
         {
-            NoireLogger.LogWarning(
+            NoireLogger.LogDebug(
                 $"The swap of /{request.Source.Command} onto /{request.Target.Command} now serves {request.Skeleton}"
                 + $" ({timings.AtApply}ms).", LogPrefix);
 
@@ -159,6 +224,30 @@ public sealed partial class SwapOrchestrator
         }
 
         ExecuteSwapTail(request.Source, request.Target, request.Generation, timings);
+    }
+
+    private SwapOptionEntry EntryFor(SwapBuildRequest request, SwapBuildOutcome built)
+    {
+        var kept = _swapMods.KeptWithKey(request.ContentKey);
+
+        var groupName = kept?.GroupName
+            ?? _swapMods.GroupNameForTarget(request.Target.RowId)
+            ?? OptionNaming.GroupNameFor(DisplayNameFor(request.Target), CommandFor(request.Target), request.Target.RowId,
+                _swapMods.TakenGroupNames());
+
+        var optionName = kept?.OptionName
+            ?? OptionNaming.OptionNameFor(DisplayNameFor(request.Source), request.SourceModName,
+                _swapMods.TakenOptionNames(groupName));
+
+        return new SwapOptionEntry(request.ContentKey, groupName, optionName, request.Source.RowId,
+            request.Target.RowId, IsIdlePoseSwap: false, built.FilesByRace,
+            UniqueNameByKey: built.UniqueNameByKey,
+            InternalNames: built.InternalNames,
+            FadeProtectedIntro: built.FadeProtectedIntro,
+            ClampedIntro: built.ClampedIntro,
+            UniqueNames: built.UniqueNamesApplied,
+            InternalUniqueNames: built.InternalUniqueNamesApplied,
+            RulesStamp: SwapRulesStamp.Current());
     }
 
     private void RefuseBackgroundReturn(SwapBuildRequest request, BackgroundVerdict verdict)
@@ -170,7 +259,13 @@ public sealed partial class SwapOrchestrator
             $"{BackgroundRefusalDetail(verdict)} (/{request.Source.Command} onto /{request.Target.Command}).", LogPrefix);
 
         if (ShouldWarnOnRefusal(verdict))
-            FeedbackHelper.Error(GenericFailureMessage);
+            ReportFailure(request, GenericFailureMessage);
+    }
+
+    private static void ReportFailure(SwapBuildRequest request, string message)
+    {
+        if (request.ExecuteAfterApply)
+            FeedbackHelper.Error(message);
     }
 
     internal enum BackgroundVerdict

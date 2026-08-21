@@ -23,9 +23,6 @@ public sealed partial class SwapOrchestrator : IDisposable
     private const string GenericFailureMessage = "Something went wrong. Emote not swapped.";
     private const string NoCollectionMessage = "No Penumbra collection is assigned to your character. Emote not swapped.";
 
-    private static readonly IReadOnlyDictionary<string, string> RedirectsComputedByApply =
-        new Dictionary<string, string>();
-
     private readonly IPCCaller_Penumbra _penumbra;
     private readonly EmoteAttributeCatalog _catalog;
     private readonly SwapModManager _swapMods;
@@ -94,6 +91,8 @@ public sealed partial class SwapOrchestrator : IDisposable
         var loopsFirst = source.LoopKind == EmotePlayType.Looped
             && matchConfig.Loop == LoopMatchRule.AllowLoopOnOneShot;
 
+        DropSwapsTheRulesNoLongerMake(pool, matchConfig, posture, fallbackOrder);
+
         var choice = ChooseTarget(source, pool,
             loopsFirst ? matchConfig with { Loop = LoopMatchRule.Strict } : matchConfig, posture, fallbackOrder);
 
@@ -124,27 +123,27 @@ public sealed partial class SwapOrchestrator : IDisposable
             ReportChangedTarget(target, changedBy);
         }
 
-        var pairs = PairVariants(source, target, skeleton);
+        var raceInputs = RaceInputsFor(source, target, skeleton);
         var elapsedAtPair = swapClock.ElapsedMilliseconds;
 
-        if (pairs.Count == 0)
+        if (raceInputs.Count == 0 || raceInputs[0].Race != skeleton)
         {
             NoireLogger.LogDebug($"/{source.Command} and /{target.Command} share no usable posture variant on {skeleton}.", LogPrefix);
             FeedbackHelper.Error(NoMatchMessage(source, []), NoMatchKind);
             return;
         }
 
-        var resolvedPairs = pairs
-            .Select(pair => new ResolvedVariantPair(pair, ResolveOutsideOwnMod(pair.SourceRequestedPath)))
-            .ToList();
+        var resolvedPairs = raceInputs[0].Pairs;
 
-        NoireLogger.LogWarning($"Reading /{source.Command} onto /{target.Command} on {skeleton}: "
+        NoireLogger.LogDebug($"Reading /{source.Command} onto /{target.Command} on {skeleton}: "
             + string.Join("; ", resolvedPairs.Select(entry =>
                 $"'{entry.Pair.SourceRequestedPath}' -> '{entry.ResolvedSourcePath}' onto '{entry.Pair.TargetRequestedPath}'")),
             LogPrefix);
 
+        NoireLogger.LogDebug($"This swap is built for {raceInputs.Count} bod(y/ies): "
+            + $"{string.Join(", ", raceInputs.Select(race => race.Race))}.", LogPrefix);
+
         var elapsedAtResolve = swapClock.ElapsedMilliseconds;
-        var mainCandidate = resolvedPairs[0];
         var composeUniqueNames = ComposeUniqueNamesFor(target, out var reading);
 
         NoireLogger.LogDebug($"/{target.Command}: {reading}, so this swap "
@@ -152,11 +151,11 @@ public sealed partial class SwapOrchestrator : IDisposable
 
         FeedbackHelper.DebugLine((composeUniqueNames ? ">   composed name" : ">   vanilla path") + $" | {reading}");
 
-        if (OnDiskShapeMatches(_swapMods.Current, composeUniqueNames)
-            && _swapMods.CanReuse(source.RowId, target.RowId, mainCandidate.ResolvedSourcePath,
-                StampFor(mainCandidate.Pair.SourceRequestedPath, mainCandidate.ResolvedSourcePath),
-                collectionId, skeleton)
-            && TryReuseAndExecute(source, target, new SwapTimings(swapClock, elapsedAtMatch, elapsedAtPair,
+        var contentKey = ContentKeyFor(source, target, raceInputs);
+
+        if (_swapMods.FindReusable(contentKey) is { } kept
+            && OnDiskShapeMatches(kept, composeUniqueNames)
+            && TryReuseAndExecute(kept, source, target, new SwapTimings(swapClock, elapsedAtMatch, elapsedAtPair,
                 AtRetarget: elapsedAtResolve, AtPrepare: elapsedAtResolve, AtApply: 0)))
         {
             return;
@@ -164,9 +163,9 @@ public sealed partial class SwapOrchestrator : IDisposable
 
         const bool publishInternalNames = true;
 
-        StartBackgroundBuild(new SwapBuildRequest(source, target, _generations.TakeOwnership(), resolvedPairs,
-            fallbackOrder, skeleton, PathSignatureFor(pairs), _swapMods.BeginPrepare(), composeUniqueNames,
-            publishInternalNames,
+        StartBackgroundBuild(new SwapBuildRequest(source, target, _generations.TakeOwnership(), raceInputs,
+            skeleton, contentKey, _swapMods.BeginPrepare(), composeUniqueNames, publishInternalNames,
+            ModServingAnimation(source, skeleton),
             new SwapTimings(swapClock, elapsedAtMatch, elapsedAtPair, AtRetarget: 0, AtPrepare: 0, AtApply: 0)));
     }
 
@@ -254,9 +253,16 @@ public sealed partial class SwapOrchestrator : IDisposable
             : (config, PoolAvoidingChangedTargets(source, pool, config, posture, skeleton, fallbackOrder));
     }
 
+    // Identifies a build by what every body it covers reads, so pressing the same emote again selects the option
+    // that was already made for it.
+    internal static string ContentKeyFor(EmoteAttributes source, EmoteAttributes target,
+        IReadOnlyList<RaceBuildInput> races)
+        => SwapContentKey.For(EmoteAttributeCatalog.RulesVersion, target.RowId, source.RowId,
+            [.. races.Select(race => race.Source)]);
+
     private bool ComposeUniqueNamesFor(EmoteAttributes target, out string reading)
     {
-        var knownNames = _swapMods.Current?.TargetEmote == target.RowId ? _swapMods.Current?.InternalNames : null;
+        var knownNames = _swapMods.ArmedFor(target.RowId)?.InternalNames;
         var packResident = _residency.AnyPackNameResident(knownNames ?? [], out var packTrace);
 
         var residencyIds = target.AnimationTimelineIds is { Count: > 0 } ids
@@ -339,8 +345,8 @@ public sealed partial class SwapOrchestrator : IDisposable
             && IsStaleVulnerableShape(bestTarget.LoopKind, bestTarget.Intro,
                 SourceCarriesOwnDistinctIntroFile(source, fallbackOrder));
 
-        if (staleVulnerable && Alternates())
-            match = ResolveDispatchedTarget(source, pool, matchConfig, posture, maxDistinctTargets: 2);
+        if (Spreads(staleVulnerable))
+            match = ResolveDispatchedTarget(source, pool, matchConfig, posture);
 
         return new TargetChoice(match, plainBest, staleVulnerable);
     }

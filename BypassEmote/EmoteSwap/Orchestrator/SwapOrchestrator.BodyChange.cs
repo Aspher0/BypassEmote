@@ -1,10 +1,7 @@
 using BypassEmote.Models;
 using NoireLib;
-using NoireLib.Animations.Helpers;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace BypassEmote.EmoteSwap;
 
@@ -27,79 +24,60 @@ public sealed partial class SwapOrchestrator
         if (Configuration.SelfBypassMode != SelfBypassMode.EmoteSwap || !_catalog.Ready)
             return;
 
-        if (_swapMods.Current is not { } current)
+        if (_swapMods.Registry.Skeleton == skeleton)
             return;
 
-        if (SignatureUnder(current, skeleton) is { } signature && signature == current.PathSignature)
+        var plan = SkeletonRewritePlanner.For(_swapMods.Registry, skeleton);
+
+        NoireLogger.LogDebug(
+            $"The drawn body became {skeleton}; {plan.Rewrites.Count} option(s) are rewritten for it.", LogPrefix);
+
+        _swapMods.RewriteForSkeleton(plan, skeleton);
+
+        if (plan.UncoveredKeys.Count == 0)
+            return;
+
+        NoireLogger.LogDebug(
+            $"{plan.UncoveredKeys.Count} kept swap(s) hold no file for {skeleton}; the live ones are built again.",
+            LogPrefix);
+
+        foreach (var key in plan.UncoveredKeys)
+            RebuildUncovered(key, skeleton);
+    }
+
+    private void RebuildUncovered(string contentKey, string skeleton)
+    {
+        if (_swapMods.KeptWithKey(contentKey) is not { SelectedByUs: true, IsIdlePoseSwap: false } kept)
+            return;
+
+        if (NoireService.ObjectTable.LocalPlayer is not { } localPlayer)
+            return;
+
+        if (_catalog.Get(kept.SourceEmote) is not { } source || _catalog.Get(kept.TargetEmote) is not { } target)
+            return;
+
+        source = WithConditionVariant(source, DirectPlayPlanner.PlayableAsFor(
+            DirectPlayPlanner.ReadState(localPlayer).Condition));
+
+        var raceInputs = RaceInputsFor(source, target, skeleton);
+
+        if (raceInputs.Count == 0 || raceInputs[0].Race != skeleton)
         {
             NoireLogger.LogDebug(
-                $"{skeleton} asks for the same paths as {current.Skeleton}, so the swap is left exactly as it is.", LogPrefix);
+                $"/{source.Command} and /{target.Command} share no usable posture variant on {skeleton}, "
+                + $"so '{kept.OptionName}' is left as it was.", LogPrefix);
 
-            _swapMods.RecordServedSkeleton(skeleton);
             return;
         }
 
-        if (_swapMods.TurnedOffSinceLastOn)
-        {
-            NoireLogger.LogDebug($"The drawn body became {skeleton} while the swap was off; the next press builds for it.", LogPrefix);
-            return;
-        }
+        NoireLogger.LogDebug($"'{kept.OptionName}' is on, so it is built again for {skeleton}.", LogPrefix);
 
-        if (current.IsIdlePoseSwap)
-        {
-            EndForBodyChange($"the drawn body became {skeleton} under an idle-pose swap");
-            return;
-        }
+        const bool publishInternalNames = true;
 
-        if (_catalog.Get(current.SourceEmote) is not { } source || _catalog.Get(current.TargetEmote) is not { } target)
-        {
-            EndForBodyChange($"emote {current.SourceEmote} or {current.TargetEmote} could not be read back for {skeleton}");
-            return;
-        }
-
-        var pairs = PairVariants(source, target, skeleton);
-
-        if (pairs.Count == 0)
-        {
-            EndForBodyChange($"/{source.Command} and /{target.Command} share no usable variant on {skeleton}");
-            return;
-        }
-
-        var resolvedPairs = new List<ResolvedVariantPair>(pairs.Count);
-        foreach (var pair in pairs)
-            resolvedPairs.Add(new ResolvedVariantPair(pair, ResolveOutsideOwnMod(pair.SourceRequestedPath)));
-
-        NoireLogger.LogWarning(
-            $"The drawn body became {skeleton}, which /{source.Command} onto /{target.Command} was not built for; "
-            + "rewriting the mod for it without touching the emote.", LogPrefix);
-
-        var composeUniqueNames = current.RedirectedPaths.Keys.Any(UniqueNamePlanner.IsComposedPapPath);
-
-        var request = new SwapBuildRequest(source, target, _generations.TakeOwnership(), resolvedPairs,
-            EmotePathHelper.GetFallbackOrder(skeleton), skeleton, PathSignatureFor(pairs),
-            _swapMods.BeginPrepare(), composeUniqueNames, PublishInternalNames: true,
+        StartBackgroundBuild(new SwapBuildRequest(source, target, _generations.TakeOwnership(), raceInputs,
+            skeleton, kept.ContentKey, _swapMods.BeginPrepare(), ComposeUniqueNamesFor(target, out _),
+            publishInternalNames, ModServingAnimation(source, skeleton),
             new SwapTimings(Stopwatch.StartNew(), AtMatch: 0, AtPair: 0, AtRetarget: 0, AtPrepare: 0, AtApply: 0),
-            ExecuteAfterApply: false);
-
-        StartBackgroundBuild(request);
-    }
-
-    private string? SignatureUnder(SwapManifest current, string skeleton)
-    {
-        if (current.PathSignature == null || current.IsIdlePoseSwap)
-            return null;
-
-        if (_catalog.Get(current.SourceEmote) is not { } source || _catalog.Get(current.TargetEmote) is not { } target)
-            return null;
-
-        return PathSignatureFor(PairVariants(source, target, skeleton));
-    }
-
-    private void EndForBodyChange(string reason)
-    {
-        NoireLogger.LogDebug($"Ending the swap: {reason}.", LogPrefix);
-
-        _endWatcher.StopWatching();
-        _swapMods.Deactivate();
+            ExecuteAfterApply: false));
     }
 }

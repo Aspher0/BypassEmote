@@ -1,4 +1,4 @@
-using BypassEmote.Helpers;
+﻿using BypassEmote.Helpers;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
@@ -196,21 +196,18 @@ public sealed partial class SwapOrchestrator
                 "the player's Penumbra collection is unavailable.");
         }
 
-        var reused = _swapMods.CanReuse(source.RowId, IdlePoseTargetEmote, resolvedSourcePath, stampTicks, collection.Id, skeleton)
-            && _swapMods.Current is { } current
-            && current.RedirectedPaths.Keys.ToHashSet(StringComparer.Ordinal).SetEquals(files.Keys)
-            && _swapMods.Reactivate();
+        var contentKey = SwapContentKey.For(EmoteAttributeCatalog.RulesVersion, IdlePoseTargetEmote, source.RowId,
+            [new RaceSourceInput(skeleton, resolvedSourcePath, stampTicks, string.Join(";", files.Keys.Order(StringComparer.Ordinal)))]);
+
+        var entry = _swapMods.FindReusable(contentKey);
+
+        var reused = entry != null && _swapMods.SelectExisting(entry);
 
         if (!reused)
         {
-            var appliedPriority = ComputeAppliedPriorityForFreshApply(files.Keys, collection.Id, out var competingMods);
+            entry = IdlePoseEntryFor(contentKey, source, skeleton, files);
 
-            var manifest = new SwapManifest(SwapModManager.CurrentManifestSchemaVersion, source.RowId,
-                IdlePoseTargetEmote, resolvedSourcePath, stampTicks, collection.Id, RedirectsComputedByApply,
-                appliedPriority, (int)Configuration.SwapModFlavor, IsIdlePoseSwap: true, Skeleton: skeleton,
-                CompetingMods: competingMods);
-
-            if (!_swapMods.Apply(manifest, files))
+            if (!_swapMods.AddAndSelect(entry, files, skeleton))
             {
                 return IdlePoseFailed(IdlePoseFailure.ModCouldNotBeApplied,
                     $"the swap mod could not be applied for [{string.Join(", ", files.Keys)}] in collection {collection.Id}.");
@@ -223,7 +220,7 @@ public sealed partial class SwapOrchestrator
 
         if (!_penumbra.RedrawLocalPlayer())
         {
-            _swapMods.Deactivate();
+            _swapMods.DeselectEntry(entry!);
             return IdlePoseFailed(IdlePoseFailure.RedrawFailed,
                 "the redraw could not be requested.");
         }
@@ -235,8 +232,8 @@ public sealed partial class SwapOrchestrator
         if (IdlePoseDropsSourceIntro(posePaths.StartRelativePapPath, source.Intro, sourceIntroRequestedPath))
             FeedbackHelper.Notice(IdlePoseIntroDroppedMessage);
 
-        if (Configuration.SwapLifetime == SwapLifetime.Ephemeral)
-            _endWatcher.ArmIdlePose(() => _penumbra.RedrawLocalPlayer());
+        if (Configuration.SwapLifetime == SwapLifetime.WhenEmoteEnds)
+            _endWatcher.ArmIdlePose(entry!, () => _penumbra.RedrawLocalPlayer());
         else
             _endWatcher.StopWatching();
 
@@ -246,6 +243,30 @@ public sealed partial class SwapOrchestrator
             $"total {elapsedAtRedraw}ms.", LogPrefix);
 
         return true;
+    }
+
+    private SwapOptionEntry IdlePoseEntryFor(string contentKey, EmoteAttributes source, string skeleton,
+        IReadOnlyDictionary<string, byte[]> files)
+    {
+        var redirectedPaths = new Dictionary<string, string>(files.Count, StringComparer.Ordinal);
+
+        foreach (var (gamePath, bytes) in files)
+        {
+            redirectedPaths[gamePath] = SwapModManager.RedirectedPathValue(
+                SwapModManager.DeriveFileName(bytes, SwapModManager.FileExtensionFor(gamePath)));
+        }
+
+        var groupName = OptionNaming.IdlePoseGroupName;
+
+        var filesByRace = new Dictionary<string, IReadOnlyDictionary<string, string>>(StringComparer.Ordinal)
+        {
+            [skeleton] = redirectedPaths,
+        };
+
+        return new SwapOptionEntry(contentKey, groupName,
+            OptionNaming.OptionNameFor(source.Command, null, _swapMods.TakenOptionNames(groupName)),
+            source.RowId, IdlePoseTargetEmote, IsIdlePoseSwap: true, filesByRace,
+            RulesStamp: SwapRulesStamp.Current());
     }
 
     private static byte[]? BuildIdlePosePap(string sourceRequestedPath, string resolvedSourcePath,
