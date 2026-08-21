@@ -133,6 +133,8 @@ public sealed partial class SwapOrchestrator
         var posture = PostureForCondition(condition);
         var fallbackOrder = EmotePathHelper.GetFallbackOrder(skeleton);
 
+        source = WithMotionFolder(source, MotionFolderFor(source, localPlayer, fallbackOrder));
+
         var askTheGame = EmoteHelper.ConditionOf(localPlayer) == rawCondition;
 
         var pool = new List<EmoteAttributes>();

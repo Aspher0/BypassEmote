@@ -1,4 +1,4 @@
-﻿using BypassEmote.Helpers;
+using BypassEmote.Helpers;
 using BypassEmote.IPC;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -79,6 +79,8 @@ public sealed partial class SwapOrchestrator : IDisposable
         var fallbackOrder = EmotePathHelper.GetFallbackOrder(skeleton);
 
         NoireLogger.LogDebug($"Serving for the drawn skeleton '{skeleton}', chain [{string.Join(", ", fallbackOrder)}].", LogPrefix);
+
+        source = WithMotionFolder(source, MotionFolderFor(source, localPlayer, fallbackOrder));
 
         var pool = BuildPool(localPlayer, source, condition);
         var poolHasLoop = pool.Any(candidate => candidate.LoopKind == EmotePlayType.Looped);

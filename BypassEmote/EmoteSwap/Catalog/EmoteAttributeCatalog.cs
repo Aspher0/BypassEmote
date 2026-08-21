@@ -15,7 +15,8 @@ using System.Threading.Tasks;
 
 namespace BypassEmote.EmoteSwap;
 
-internal sealed record RawSlotData(int SlotIndex, uint TimelineRowId, string Key, int LoadType, int SlotColumn, bool Pause);
+internal sealed record RawSlotData(int SlotIndex, uint TimelineRowId, string Key, int LoadType, int SlotColumn,
+    bool Pause, int ActionTimelineIdMode = 0);
 
 internal sealed record RawEmoteData(
     uint RowId, string Command, uint CategoryRowId, uint EmoteModeRowId, bool EmoteModeCamera, bool DrawsWeapon,
@@ -28,10 +29,16 @@ public sealed class EmoteAttributeCatalog
     private const string LogPrefix = "[EmoteAttributeCatalog] ";
     private const string CacheFileName = "emote_catalog.json";
 
-    internal const int RulesVersion = 1;
+    internal const int RulesVersion = 2;
 
     private const int ActionTimelineSlotCount = ActionTimelineSlots.SlotCount;
-    private const string VanillaPapPathFormat = "chara/human/c0101/animation/a0001/bt_common/{0}.pap";
+    private const string SharedFolder = "bt_common";
+
+    // Weapon-motion slots are catalogued against one folder that carries every battle key, and the swap path
+    // moves them onto the folder the player's own weapons name.
+    internal const string ReferenceMotionFolder = WeaponMotionFolders.ReferenceFolder;
+
+    private const string CatalogProbeSkeleton = "c0101";
 
     private const string ActionTmbPathFormat = "chara/action/{0}.tmb";
     private const string FacialPosePrefix = "facial/pose/";
@@ -42,6 +49,7 @@ public sealed class EmoteAttributeCatalog
     private const uint ChangePoseRowId = 90;
     private static readonly HashSet<uint> PoseFamilyRowIds = new() { ChangePoseRowId, 218, 219, 243, 244, 253 };
     private const int LoadTypePerJob = 1;
+    private const int WeaponMotionIdMode = 2;
     private static readonly HashSet<uint> PostureLockEmoteModes = new() { 1, 2 };
     private static readonly HashSet<string> ScannedMagics = new(StringComparer.Ordinal) { "C053", "C063", "TMPP" };
     private static readonly PublishedData EmptyPublished = new(Array.Empty<EmoteAttributes>(), new Dictionary<uint, EmoteAttributes>());
@@ -82,6 +90,7 @@ public sealed class EmoteAttributeCatalog
             ExcelSheetHelper.GetSheet<Emote>();
             ExcelSheetHelper.GetSheet<ActionTimeline>();
             ExcelSheetHelper.GetSheet<TextCommand>();
+            ExcelSheetHelper.GetSheet<ResidentMotionType>();
         }
         catch (Exception ex)
         {
@@ -92,6 +101,11 @@ public sealed class EmoteAttributeCatalog
     private void BuildAndPublish()
     {
         var buildClock = Stopwatch.StartNew();
+
+        WeaponMotionTable.Warm();
+
+        // Read here rather than on the first swap, so no press ever pays for the sheet.
+        WeaponMotionFolders.GroupedFolders();
 
         if (Cache.Read(RulesVersion) is { Count: > 0 } cachedRows)
         {
@@ -150,7 +164,9 @@ public sealed class EmoteAttributeCatalog
 
         var animationTimelineIds = AnimationTimelineIdsFor(populatedSlots);
 
-        return new EmoteAttributes(raw.RowId, command, loopKind, sound, turn, postures, hasIntro, introRelativePapPath, eligibleTarget, variants, raw.EmoteModeCamera, intro, isPoseFamily, faceLibraries, animationTimelineIds);
+        return new EmoteAttributes(raw.RowId, command, loopKind, sound, turn, postures, hasIntro, introRelativePapPath,
+            eligibleTarget, variants, raw.EmoteModeCamera, intro, isPoseFamily, faceLibraries, animationTimelineIds,
+            introSlot != null && IsWeaponMotionSlot(introSlot));
     }
 
     private static IReadOnlyDictionary<string, string>? BuildFaceLibraries(List<RawSlotData> populatedSlots,
@@ -219,7 +235,7 @@ public sealed class EmoteAttributeCatalog
             if (UsablePapPathFor(slot) is not { } relativePapPath)
                 continue;
 
-            variants.Add(new VariantPaths(posture, relativePapPath));
+            variants.Add(new VariantPaths(posture, relativePapPath, IsWeaponMotionSlot(slot)));
         }
 
         return variants;
@@ -227,14 +243,25 @@ public sealed class EmoteAttributeCatalog
 
     private static string? UsablePapPathFor(RawSlotData slot)
     {
-        if (slot.LoadType == LoadTypePerJob)
-            return null;
-
         if (string.IsNullOrEmpty(slot.Key) || slot.Key.StartsWith(FacialPosePrefix, StringComparison.Ordinal))
             return null;
 
-        return "bt_common/" + slot.Key + ".pap";
+        var weaponMotion = IsWeaponMotionSlot(slot);
+
+        // A per-job slot the folder rule does not recognise stays unusable, as it was before.
+        if (slot.LoadType == LoadTypePerJob && !weaponMotion)
+            return null;
+
+        return (weaponMotion ? ReferenceMotionFolder : SharedFolder) + "/" + slot.Key + ".pap";
     }
+
+    /// <summary> Whether a slot's animation is served from a per-weapon folder rather than the shared one. </summary>
+    internal static bool IsWeaponMotionSlot(RawSlotData slot) => slot.ActionTimelineIdMode == WeaponMotionIdMode;
+
+    // The path the catalog reads a slot's shipped pap from, which for weapon-motion slots is the reference folder.
+    private static string CatalogProbePath(RawSlotData slot)
+        => EmotePathHelper.GetSkeletonPath(CatalogProbeSkeleton,
+            UsablePapPathFor(slot) ?? SharedFolder + "/" + slot.Key + ".pap");
 
     private static bool IsExcluded(RawEmoteData raw, List<RawSlotData> populatedSlots, bool isPoseFamily)
         => PostureLockEmoteModes.Contains(raw.EmoteModeRowId)
@@ -242,6 +269,7 @@ public sealed class EmoteAttributeCatalog
         || raw.RowId == ChangePoseRowId
         || string.IsNullOrEmpty(raw.Command)
         || populatedSlots.Any(s => s.LoadType == LoadTypePerJob)
+        || populatedSlots.Any(IsWeaponMotionSlot)
         || raw.DrawsWeapon
         || raw.DoNotPlay
         || CatalogRules.SideEffectToggleEmotes.Contains(raw.RowId)
@@ -309,7 +337,7 @@ public sealed class EmoteAttributeCatalog
 
         try
         {
-            return NoireService.DataManager.FileExists(string.Format(VanillaPapPathFormat, introSlot.Key));
+            return NoireService.DataManager.FileExists(CatalogProbePath(introSlot));
         }
         catch (Exception ex)
         {
@@ -339,7 +367,8 @@ public sealed class EmoteAttributeCatalog
                 continue;
             }
 
-            slots.Add(new RawSlotData(i, slotRef.RowId, timeline.Key.ExtractText(), timeline.LoadType, timeline.Slot, timeline.Pause));
+            slots.Add(new RawSlotData(i, slotRef.RowId, timeline.Key.ExtractText(), timeline.LoadType,
+                timeline.Slot, timeline.Pause, timeline.ActionTimelineIDMode));
         }
 
         return slots;
@@ -358,7 +387,7 @@ public sealed class EmoteAttributeCatalog
 
             try
             {
-                var path = string.Format(VanillaPapPathFormat, slot.Key);
+                var path = CatalogProbePath(slot);
                 if (!NoireService.DataManager.FileExists(path))
                     continue;
 

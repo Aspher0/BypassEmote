@@ -1,4 +1,4 @@
-﻿#if DEBUG
+#if DEBUG
 using BypassEmote.EmoteSwap;
 using BypassEmote.Helpers;
 using BypassEmote.IPC;
@@ -292,6 +292,14 @@ public class DebugWindow : Window, IDisposable
 
     private static void DrawSwapLayers()
     {
+        LayerSwitch("Swap owned emotes##SwapLayer", SwapLayers.SwapOwnedEmotes,
+            value => SwapLayers.SwapOwnedEmotes = value);
+
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker("Sends emotes you already own through the swap instead of letting the game play them, for debugging only.");
+
+        ImGui.Spacing();
+
         LayerSwitch("Unique pack names##SwapLayer", SwapLayers.UniquePackNames,
             value => SwapLayers.UniquePackNames = value);
 
@@ -300,6 +308,7 @@ public class DebugWindow : Window, IDisposable
         LayerSwitch("Loader door##SwapLayer", SwapLayers.DoorLoader,
             value => SwapLayers.DoorLoader = value);
 
+        ImGui.SameLine();
         LayerSwitch("Bind door##SwapLayer", SwapLayers.DoorBind,
             value => SwapLayers.DoorBind = value);
 

@@ -76,16 +76,21 @@ internal static class RegistryDecisions
 
         foreach (var entry in registry.Entries)
         {
-            if (!Concerns(entry, stamp, sourceKey, sourceEmote) || entry.ContentKey == pressedKey)
+            if (!Concerns(entry, sourceKey, sourceEmote))
             {
                 kept.Add(entry);
                 continue;
             }
 
-            if (entry.TargetEmote == keptTarget)
-                kept.Add(entry with { RulesStamp = stamp, SourceKey = sourceKey });
-            else
+            if (entry.TargetEmote != keptTarget)
+            {
                 dropped.Add(entry);
+                continue;
+            }
+
+            kept.Add(entry.RulesStamp == stamp && entry.SourceKey == sourceKey
+                ? entry
+                : entry with { RulesStamp = stamp, SourceKey = sourceKey });
         }
 
         TrimToCap(kept, dropped, pressedKey, keptCap);
@@ -93,12 +98,12 @@ internal static class RegistryDecisions
         return new RulesPlan(kept, dropped);
     }
 
-    private static bool Concerns(SwapOptionEntry entry, string stamp, string sourceKey, uint sourceEmote)
+    private static bool Concerns(SwapOptionEntry entry, string sourceKey, uint sourceEmote)
     {
         if (entry.SourceKey == null)
             return entry.SourceEmote == sourceEmote;
 
-        return entry.SourceKey == sourceKey && entry.RulesStamp != stamp;
+        return entry.SourceKey == sourceKey;
     }
 
     private static void TrimToCap(List<SwapOptionEntry> kept, List<SwapOptionEntry> dropped, string? pressedKey, int cap)

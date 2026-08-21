@@ -1,4 +1,4 @@
-﻿using BypassEmote.EmoteSwap;
+using BypassEmote.EmoteSwap;
 using BypassEmote.IPC;
 using NoireLib;
 using NoireLib.Helpers;
@@ -17,6 +17,9 @@ public partial class Service
 
     public static string PenumbraModVersion
         => NoireService.PluginInstance?.GetType().Assembly.GetName().Version?.ToString(4) ?? "0.0.0.0";
+
+    internal static bool LeaveToTheGame(uint emoteRowId)
+        => EmoteHelper.IsEmoteUnlocked(emoteRowId) && !SwapLayers.SwapOwnedEmotes;
 
     public static SwapModIdentity? SwapIdentity;
     public static IPCCaller_Penumbra? Penumbra;

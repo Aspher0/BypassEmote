@@ -220,7 +220,7 @@ public sealed partial class Plugin
             return;
         }
 
-        if (EmoteHelper.IsEmoteUnlocked(emote.RowId))
+        if (Service.LeaveToTheGame(emote.RowId))
         {
             NoireService.Framework.RunOnFrameworkThread(() => ExecuteOwnedEmote(emote.RowId));
             return;

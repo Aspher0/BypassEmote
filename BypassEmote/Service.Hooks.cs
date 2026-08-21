@@ -1,4 +1,4 @@
-﻿using BypassEmote.Helpers;
+using BypassEmote.Helpers;
 using BypassEmote.Models;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
@@ -105,7 +105,7 @@ public partial class Service
         if (NoireService.ObjectTable.LocalPlayer == null)
             return false;
 
-        if (EmoteHelper.GetEmoteById(hotbarSlot->CommandId) is not { } emote || EmoteHelper.IsEmoteUnlocked(emote.RowId))
+        if (EmoteHelper.GetEmoteById(hotbarSlot->CommandId) is not { } emote || LeaveToTheGame(emote.RowId))
             return false;
 
         if (IsPoseFamilySource(emote.RowId)) // Might be unnecessary since poses are all unlocked by default, but whatever
@@ -128,7 +128,7 @@ public partial class Service
         var emote = inHotbarSlot ? null : ResolveSelfEmote(emoteId);
 
         if (emote.HasValue && Configuration.SelfBypassMode == SelfBypassMode.EmoteSwap
-            && !EmoteHelper.IsEmoteUnlocked(emote.Value.RowId) && !IsPoseFamilySource(emote.Value.RowId))
+            && !LeaveToTheGame(emote.Value.RowId) && !IsPoseFamilySource(emote.Value.RowId))
         {
             Orchestrator?.TrySwap(emote.Value);
             return;

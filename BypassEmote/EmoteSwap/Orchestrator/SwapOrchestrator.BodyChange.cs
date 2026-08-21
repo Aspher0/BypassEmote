@@ -1,5 +1,6 @@
-﻿using BypassEmote.Models;
+using BypassEmote.Models;
 using NoireLib;
+using NoireLib.Animations.Helpers;
 using System;
 using System.Diagnostics;
 
@@ -58,6 +59,9 @@ public sealed partial class SwapOrchestrator
 
         source = WithConditionVariant(source, DirectPlayPlanner.PlayableAsFor(
             DirectPlayPlanner.ReadState(localPlayer).Condition));
+
+        source = WithMotionFolder(source,
+            MotionFolderFor(source, localPlayer, EmotePathHelper.GetFallbackOrder(skeleton)));
 
         var raceInputs = RaceInputsFor(source, target, skeleton);
 

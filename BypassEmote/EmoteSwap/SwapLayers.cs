@@ -13,4 +13,5 @@ public static class SwapLayers
     public static bool MappingPackCorrection { get; set; } = true;
     public static bool PublishVanillaPath { get; set; } = true;
     public static bool AlwaysComposePaths { get; set; } = false;
+    public static bool SwapOwnedEmotes { get; set; } = false;
 }
