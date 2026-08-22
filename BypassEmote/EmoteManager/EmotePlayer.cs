@@ -1,5 +1,6 @@
 using BypassEmote.Helpers;
 using BypassEmote.Models;
+using BypassEmote.UI;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -55,6 +56,15 @@ internal static unsafe class EmotePlayer
         var isLocalPlayer = NoireService.ObjectTable.LocalPlayer is { } localPlayer
             && chara.Address == localPlayer.Address;
 
+        // Prevents direct play when migration prompt is shown
+        if (isLocalPlayer && SwapPromptWindow.IsShowing)
+        {
+            FeedbackHelper.Error(
+                SwapPromptWindow.WaitingForAChoiceMessage, SwapPromptWindow.WaitingForAChoiceKind);
+
+            return;
+        }
+
         if (DirectPlayPlanner.RefusedByMode(
                 chara is INpc or IBattleNpc,
                 CommonHelper.IsCharacterInBypassedLoop(chara),
@@ -77,6 +87,16 @@ internal static unsafe class EmotePlayer
             if (plan == null)
             {
                 FeedbackHelper.Error(DirectPlayPlanner.RefusalMessageFor(emote, state), DirectPlayRefusalKind);
+                return;
+            }
+
+            var isSafeState = DirectPlayGate.IsSafeState(
+                CharacterPoseState.Read(chara).Index, state.Condition, plan.SlotIndex);
+
+            if (DirectPlayGate.ShouldBlockSelfPlay(
+                    Configuration.SelfBypassMode, Configuration.DirectPlayUnsafe, isLocalPlayer, isSafeState))
+            {
+                FeedbackHelper.Error(DirectPlayGate.SafeModeMessage, DirectPlayGate.SafeModeRefusalKind);
                 return;
             }
         }

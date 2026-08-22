@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Dalamud.NET.Sdk/15.0.0">
   <PropertyGroup>
-    <Version>1.7.4.0</Version>
-    <Description>A simple plugin that lets you play any game emote, whether you unlocked it or not.\nClient side only.\nJust type the emote command as you would normally.\nWorks with custom animations and syncable over Mare.</Description>
+    <Version>2.0.0.0</Version>
+    <Description>A simple plugin that lets you play any game emote, whether you unlocked it or not.\nJust type the emote command as you would normally.\nWorks with custom animations and usable on Sync Services.</Description>
     <PackageProjectUrl>https://github.com/Aspher0/BypassEmote</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
     <IsPackable>false</IsPackable>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebugType>none</DebugType>
@@ -14,10 +15,14 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NoireLib" Version="1.8.0.3" />
+    <Content Include="BypassEmote.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NoireLib" Version="2.0.0.0" />
+    <PackageReference Include="Penumbra.Api" Version="5.15.1" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Update="DalamudPackager" Version="15.0.0" />
-    <PackageReference Update="DotNet.ReproducibleBuilds" Version="2.0.2" />
+    <PackageReference Update="DotNet.ReproducibleBuilds" Version="2.0.5" />
   </ItemGroup>
 </Project>

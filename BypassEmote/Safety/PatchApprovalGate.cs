@@ -1,4 +1,5 @@
 using BypassEmote.Helpers;
+using BypassEmote.Models;
 using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Plugin.Services;
 using NoireLib;
@@ -23,6 +24,8 @@ public sealed class PatchApprovalGate : IDisposable
 
     internal static readonly TimeSpan RetryInterval = TimeSpan.FromMinutes(10);
 
+    internal static readonly TimeSpan ManualCheckCooldown = TimeSpan.FromSeconds(10);
+
     internal const string ApprovedNowMessage =
         "The plugin has been approved for this patch. If you noticed weird behaviors prior to this message, "
         + "try again and it should be fixed now.";
@@ -35,9 +38,15 @@ public sealed class PatchApprovalGate : IDisposable
 
     private readonly List<INoireHook> _held = [];
 
+    private readonly object _pollLock = new();
+
     private Reading _reading;
     private int _seenHookVersion = -1;
     private bool _frameworkAttached;
+    private bool _seenGoverns;
+    private CancellationTokenSource? _pollTokens;
+    private Task? _polling;
+    private DateTime? _manualCheckRequestedUtc;
 
     private sealed record Reading(PatchApprovalStatus Status, string Reason, string? Notice, DateTime? CheckedUtc);
 
@@ -65,6 +74,11 @@ public sealed class PatchApprovalGate : IDisposable
 
     public bool Approved => Status == PatchApprovalStatus.Approved;
 
+    public bool Governs => Configuration.SelfBypassMode == SelfBypassMode.EmoteSwap;
+
+    public int ManualCooldownSeconds
+        => PatchApproval.CooldownSeconds(_manualCheckRequestedUtc, DateTime.UtcNow, ManualCheckCooldown);
+
     public int HeldCount => _held.Count;
 
     public void Start()
@@ -75,6 +89,14 @@ public sealed class PatchApprovalGate : IDisposable
         {
             NoireService.Framework.Update += OnFrameworkUpdate;
             _frameworkAttached = true;
+        }
+
+        if (!Governs)
+        {
+            NoireLogger.LogDebug("Direct Play does not use the functions the approval gates, so the list is left "
+                + "unread and nothing is switched off.", LogPrefix);
+
+            return;
         }
 
         if (Approved)
@@ -89,10 +111,50 @@ public sealed class PatchApprovalGate : IDisposable
                 + $"{RetryInterval.TotalMinutes:0} minutes.", LogPrefix);
         }
 
-        _ = PollAsync(_tokens.Token);
+        Resume();
     }
 
-    public Task CheckNowAsync() => CheckAsync(_tokens.Token);
+    public async Task CheckNowAsync()
+    {
+        if (!Governs || ManualCooldownSeconds > 0)
+            return;
+
+        _manualCheckRequestedUtc = DateTime.UtcNow;
+
+        await CheckAsync(_tokens.Token).ConfigureAwait(false);
+    }
+
+    public void OnModeChanged()
+    {
+        if (Governs)
+            Resume();
+        else
+            StopPolling();
+    }
+
+    private void Resume()
+    {
+        lock (_pollLock)
+        {
+            if (_tokens.IsCancellationRequested || _polling is { IsCompleted: false })
+                return;
+
+            _pollTokens?.Dispose();
+            _pollTokens = CancellationTokenSource.CreateLinkedTokenSource(_tokens.Token);
+            _polling = PollAsync(_pollTokens.Token);
+        }
+    }
+
+    private void StopPolling()
+    {
+        lock (_pollLock)
+        {
+            _pollTokens?.Cancel();
+            _pollTokens?.Dispose();
+            _pollTokens = null;
+            _polling = null;
+        }
+    }
 
     private bool RememberedApproval()
         => !string.IsNullOrEmpty(GameVersion)
@@ -108,21 +170,28 @@ public sealed class PatchApprovalGate : IDisposable
 
     private async Task PollAsync(CancellationToken token)
     {
+        var wait = PatchApproval.TimeUntilNextCheck(LastCheckedUtc, DateTime.UtcNow, RetryInterval);
+
         while (!token.IsCancellationRequested)
         {
+            if (wait > TimeSpan.Zero)
+            {
+                try
+                {
+                    await Task.Delay(wait, token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+            }
+
             await CheckAsync(token).ConfigureAwait(false);
 
             if (Approved || token.IsCancellationRequested)
                 return;
 
-            try
-            {
-                await Task.Delay(RetryInterval, token).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
+            wait = RetryInterval;
         }
     }
 
@@ -190,7 +259,7 @@ public sealed class PatchApprovalGate : IDisposable
 
     private void OnFrameworkUpdate(IFramework framework)
     {
-        if (NoireHook.Version == _seenHookVersion)
+        if (NoireHook.Version == _seenHookVersion && Governs == _seenGoverns)
             return;
 
         Apply();
@@ -198,12 +267,13 @@ public sealed class PatchApprovalGate : IDisposable
 
     private void Apply()
     {
-        if (Approved)
+        if (Approved || !Governs)
             Release();
         else
             Hold();
 
         _seenHookVersion = NoireHook.Version;
+        _seenGoverns = Governs;
     }
 
     private void Hold()
@@ -251,6 +321,8 @@ public sealed class PatchApprovalGate : IDisposable
             NoireService.Framework.Update -= OnFrameworkUpdate;
             _frameworkAttached = false;
         }
+
+        StopPolling();
 
         _tokens.Cancel();
         _tokens.Dispose();

@@ -55,6 +55,8 @@ public class ConfigWindow : Window, IDisposable
     private const string ErrorThrottleName = "Repeat an error at most every";
     private const string WarningThrottleName = "Repeat a warning at most every";
 
+    private const string UnsafeToggleName = "Unsafe toggle";
+
     private const string ModdedTargetsName = "Emotes your mods change";
     private const string IdlePoseLoopsName = "Loops on idle poses";
     private const string SwapMessagesName = "Show swap messages";
@@ -66,7 +68,7 @@ public class ConfigWindow : Window, IDisposable
         [ModeName, LifetimeName, BehaviorName, KeptSwapsName, AnonymizeModName, LoopMatchingName, TurnMatchingName, SoundMatchingName,
          CachedDispatchName, MaxTargetsName, DispatchFidelityName, ErrorThrottleName, WarningThrottleName,
          ModdedTargetsName, IdlePoseLoopsName,
-         SwapMessagesName, ErrorMessagesName, WarningMessagesName, FaceTargetName];
+         SwapMessagesName, ErrorMessagesName, WarningMessagesName, FaceTargetName, UnsafeToggleName];
 
     private const string PluginEnabledName = "Enable the plugin";
     private const string HotbarBypassName = "Bypass emotes from locked hotbar slots";
@@ -125,15 +127,44 @@ public class ConfigWindow : Window, IDisposable
         Focus = new FocusStyle { Shape = FocusShape.None },
     };
 
-    private const string DirectPlayTooltip =
-        "Not recommended. Not all sync services support it and Emote Swap is safer.";
+    private const string GeneralTabId = "general";
+    private const string ModeTabId = "mode";
+
+    private const float WarningCountdownSeconds = 5f;
+
+    private static readonly TimeSpan UnsafeAttentionDuration = TimeSpan.FromSeconds(5);
+
+    private const string SyncServicesLine = "Not all sync services support Direct Play.";
+
+    private const string SafeModeLimitLine =
+        "In safe mode you can only bypass emotes from the base pose (pose 0) of your current stance.";
+
+    private const string SafeModeIsNotAPromiseLine =
+        "Safe mode is not 100% guaranteed to be safe either. It prevents Direct Play from being used in states where it was proved to "
+        + "go wrong, but I can not prove the absence of issues. Use Emote Swap if you want to be 100% safe, it will behave almost the same way.";
+
+    private const string UnsafeHeadline =
+        "This is unsafe. Forcing an emote outside your base pose is, in theory, detectable by the server.";
+
+    private const string UnsafeReassurance =
+        "In practice it is a non-issue. This has been a thing in other tools and plugins (and still is in some of them), "
+        + "which people have used for years without trouble. Go back to safe mode, or even better, to emote swap, if you are uncomfy with this.";
+
+    private const string UnsafeToggleHelp =
+        "Lets Direct Play bypass an emote whatever pose you are in."
+        + "\n\nLeave it off unless you know what you are doing: off, the plugin only plays emotes from states where "
+        + "nothing can be noticed.";
+
+    private const string SafeDirectPlayTooltip = "Not all sync services support it. " + SafeModeLimitLine;
+
+    private const string UnsafeDirectPlayTooltip =
+        "Not recommended. Not all sync services support it. Emote Swap is safer and works over any sync service.";
 
     private const string ModeHelp =
         "\"Emote Swap plays\" your emote over one your character owns, through a Penumbra mod. Other players see it "
         + "over any sync service."
-        + "\n\"Direct Play\" sends the emote to the game itself, which is less safe and not every sync service supports it.";
+        + "\n\"Direct Play\" sends the emote to the game itself, which not every sync service supports.";
 
-    // The window never scrolls: the tab bar stays put and each tab scrolls its own body.
     public ConfigWindow() : base("Bypass Emote##BypassEmoteConfig",
         ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
@@ -152,38 +183,42 @@ public class ConfigWindow : Window, IDisposable
         });
     }
 
+    private static readonly NoireTabBar Tabs = new("BypassEmoteConfig")
+    {
+        Tabs =
+        {
+            new UiTab(GeneralTabId, "General settings", () => DrawTabBody("##BypassEmoteGeneralBody", DrawGeneralSettings)),
+            new UiTab(ModeTabId, "Bypass Mode", () => DrawTabBody("##BypassEmoteModeBody", DrawBypassMode)),
+        },
+    };
+
+    private static DateTime unsafeAttentionUntil = DateTime.MinValue;
+
+    private static bool confirmingUnsafe;
+
     public override void Draw()
     {
         DrawPatchApproval();
 
-        if (ImGui.BeginTabBar("##BypassEmoteConfigTabs"))
-        {
-            if (ImGui.BeginTabItem("General settings"))
-            {
-                DrawTabBody("##BypassEmoteGeneralBody", DrawGeneralSettings);
-                ImGui.EndTabItem();
-            }
-
-            if (ImGui.BeginTabItem("Bypass Mode"))
-            {
-                DrawTabBody("##BypassEmoteModeBody", DrawBypassMode);
-                ImGui.EndTabItem();
-            }
-
-            ImGui.EndTabBar();
-        }
+        Tabs.Draw();
     }
+
+    public static void SwitchToBypassMode() => Tabs.SwitchTab(ModeTabId);
+
+    public static void ShowUnsafeToggleAttention() => unsafeAttentionUntil = DateTime.UtcNow + UnsafeAttentionDuration;
 
     private static readonly Vector4 PatchWarningColor = ColorHelper.HexToVector4("#E81313");
     private static readonly Vector4 PatchNoticeColor = ColorHelper.HexToVector4("#FF8C1A");
 
     private static bool checkingApproval;
 
+    private const string CheckNowLabel = "Check now";
+
     private static void DrawPatchApproval()
     {
         var gate = Service.PatchApproval;
 
-        if (gate == null || gate.Approved)
+        if (gate == null || !gate.Governs || gate.Approved)
             return;
 
         ImGui.TextColoredWrapped(PatchWarningColor, "Bypass Emote has not been approved for this game build.");
@@ -200,13 +235,27 @@ public class ConfigWindow : Window, IDisposable
 
         ImGui.TextDisabled($"Checked at {checkedAt}.");
 
-        using (ImRaii.Disabled(checkingApproval))
-        {
-            if (ImGui.Button("Check now##BypassEmotePatchApproval"))
-                _ = CheckApprovalAsync(gate);
-        }
+        DrawCheckNowButton(gate);
 
         ImGui.Separator();
+    }
+
+    private static void DrawCheckNowButton(PatchApprovalGate gate)
+    {
+        var cooldown = gate.ManualCooldownSeconds;
+
+        var label = cooldown > 0
+            ? $"{CheckNowLabel} ({cooldown})"
+            : CheckNowLabel;
+
+        var width = ImGui.CalcTextSize($"{CheckNowLabel} ({PatchApprovalGate.ManualCheckCooldown.TotalSeconds:0})").X
+            + (ImGui.GetStyle().FramePadding.X * 2f);
+
+        using (ImRaii.Disabled(checkingApproval || cooldown > 0))
+        {
+            if (ImGui.Button($"{label}##BypassEmotePatchApproval", new Vector2(width, 0f)))
+                _ = CheckApprovalAsync(gate);
+        }
     }
 
     private static async Task CheckApprovalAsync(PatchApprovalGate gate)
@@ -322,7 +371,6 @@ public class ConfigWindow : Window, IDisposable
 
     private static void DrawBypassMode()
     {
-        // Measured from every name either mode can show, so the columns stay put when the mode changes.
         var names = SettingsLayout.NameColumn(SwapNames);
         var controls = SettingsLayout.ControlColumn(
             ModeOptions, SwapLifetimeOptions, SwapBehaviorOptions, LoopMatchingOptions, TurnMatchingOptions,
@@ -344,11 +392,9 @@ public class ConfigWindow : Window, IDisposable
             return;
         }
 
-        DrawDirectPlayWarning();
         DrawDirectPlaySettings(names, controls);
     }
 
-    // Hand-rolled from BeginCombo: ImGui.Combo cannot color a single option, and Direct Play needs the danger color.
     private static void DrawModeCombo()
     {
         var current = Configuration.SelfBypassMode;
@@ -381,7 +427,7 @@ public class ConfigWindow : Window, IDisposable
         {
             ImGui.BeginTooltip();
             ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35f);
-            ImGui.TextUnformatted(DirectPlayTooltip);
+            ImGui.TextUnformatted(Configuration.DirectPlayUnsafe ? UnsafeDirectPlayTooltip : SafeDirectPlayTooltip);
             ImGui.PopTextWrapPos();
             ImGui.EndTooltip();
         }
@@ -395,34 +441,91 @@ public class ConfigWindow : Window, IDisposable
         ImGui.EndCombo();
     }
 
-    private static void DrawDirectPlayWarning()
-    {
-        var warningColor = NoireTheme.Current.Resolve(ThemeColor.Warning);
-
-        ImGui.Spacing();
-
-        ImGui.PushFont(UiBuilder.IconFont);
-        ImGui.TextColored(warningColor, FontAwesomeIcon.ExclamationTriangle.ToIconString());
-        ImGui.PopFont();
-
-        ImGui.SameLine();
-        ImGui.TextColoredWrapped(warningColor, "This mode is unsafe, use the Emote Swap mode instead unless you know what you're doing.");
-    }
-
     private static void DrawDirectPlaySettings(float names, float controls)
     {
+        SettingsLayout.Heading("Safety");
+
+        using (var rows = SettingsLayout.Rows("##BypassEmoteDirectPlaySafetyRows", names, controls))
+        {
+            if (rows)
+                DrawUnsafeToggleRow();
+        }
+
+        DrawSafetyNotice();
+
         SettingsLayout.Heading("Direct play");
 
-        using var rows = SettingsLayout.Rows("##BypassEmoteDirectPlayRows", names, controls);
-        if (!rows)
-            return;
+        using (var rows = SettingsLayout.Rows("##BypassEmoteDirectPlayRows", names, controls))
+        {
+            if (!rows)
+                return;
 
-        var autoFaceTarget = Configuration.AutoFaceTargetDirectPlay;
-        if (CheckRow(FaceTargetName, ref autoFaceTarget, "Turns your character toward your target when you bypass an emote."))
-            Configuration.AutoFaceTargetDirectPlay = autoFaceTarget;
+            var autoFaceTarget = Configuration.AutoFaceTargetDirectPlay;
+            if (CheckRow(FaceTargetName, ref autoFaceTarget, "Turns your character toward your target when you bypass an emote."))
+                Configuration.AutoFaceTargetDirectPlay = autoFaceTarget;
+        }
     }
 
-    /// <summary> The matching, Penumbra and message settings. Emote Swap mode only. </summary>
+    private static void DrawUnsafeToggleRow()
+    {
+        var unsafeEnabled = Configuration.DirectPlayUnsafe;
+
+        if (SettingsLayout.Check(UnsafeToggleName, ref unsafeEnabled))
+        {
+            if (unsafeEnabled)
+                _ = ConfirmEnableUnsafeAsync();
+            else
+                Configuration.DirectPlayUnsafe = false;
+        }
+
+        NoireAttention.Glow(DateTime.UtcNow < unsafeAttentionUntil);
+
+        SettingsLayout.Help(UnsafeToggleHelp);
+    }
+
+    private static void DrawSafetyNotice()
+    {
+        ImGui.Spacing();
+
+        if (!Configuration.DirectPlayUnsafe)
+        {
+            var warningColor = NoireTheme.Current.Resolve(ThemeColor.Warning);
+
+            ImGui.TextColoredWrapped(
+                ColorHelper.ScaleAlpha(warningColor, NoireAttention.Pulse()), DirectPlayGate.SafeModeMessage);
+
+            ImGui.Spacing();
+
+            ImGui.TextColoredWrapped(
+                NoireTheme.Current.Resolve(ThemeColor.TextMuted), SafeModeIsNotAPromiseLine);
+
+            return;
+        }
+
+        var danger = ColorHelper.ScaleAlpha(NoireTheme.Current.Resolve(ThemeColor.Danger), NoireAttention.Pulse());
+        var icon = FontAwesomeIcon.ExclamationTriangle.ToIconString();
+        var top = ImGui.GetCursorPosY();
+
+        Vector2 iconSize;
+
+        using (ImRaii.PushFont(UiBuilder.IconFont))
+            iconSize = ImGui.CalcTextSize(icon);
+
+        ImGui.SetCursorPosY(top + MathF.Max(0f, NoireText.CenterOffset(TextSize.Heading) - (iconSize.Y * 0.5f)));
+
+        using (ImRaii.PushFont(UiBuilder.IconFont))
+            ImGui.TextColored(danger, icon);
+
+        ImGui.SameLine();
+        ImGui.SetCursorPosY(top);
+
+        using (ImRaii.PushColor(ImGuiCol.Text, danger))
+            NoireText.Wrapped(ImGui.GetContentRegionAvail().X, UnsafeHeadline, TextSize.Heading);
+
+        ImGui.Spacing();
+        ImGui.TextWrapped(UnsafeReassurance);
+    }
+
     private static void DrawEmoteSwapSettings(float names, float controls)
     {
         SettingsLayout.Heading("Matching");
@@ -454,7 +557,7 @@ public class ConfigWindow : Window, IDisposable
                 var soundMatching = (int)Configuration.SoundMatching;
                 if (ComboRow(SoundMatchingName, "##BypassEmoteSoundMatching", ref soundMatching, SoundMatchingOptions,
                     "\"Strict\" never puts an emote on one that makes sound."
-                    + "\n\"Lenient\" only matches emotes that make sounds together."
+                    + "\n\"Lenient\" allows matching emotes that make sounds together."
                     + "\n\"Off\" will let emotes play regardless of sound."
                     + "\n\nThis is to prevent vanilla people from seeing you play fume which could annoy other vanilla players, for example."
                     + "\n\nRecommended: \"Lenient\"."))
@@ -662,15 +765,77 @@ public class ConfigWindow : Window, IDisposable
         return changed;
     }
 
+    private static NoireContent UnsafeWarningContent(bool withSyncLine)
+    {
+        var danger = NoireTheme.Current.Resolve(ThemeColor.Danger);
+
+        var content = new NoireContent()
+            .AddIcon(FontAwesomeIcon.ExclamationTriangle, danger)
+            .AddSpacing(6f)
+            .AddText(UnsafeHeadline, danger)
+            .AddNewLine()
+            .AddNewLine()
+            .AddText(UnsafeReassurance);
+
+        if (withSyncLine)
+            content.AddNewLine().AddNewLine().AddText(SyncServicesLine);
+
+        return content;
+    }
+
     private static async Task ConfirmSwitchToDirectPlayAsync()
     {
-        var confirmed = await NoireModal.ConfirmAsync(
-            "Switch to Direct Play?",
-            "Not all sync services support it, and it is less safe than Emote Swap.",
-            new ModalOptions { ConfirmLabel = "Switch", CancelLabel = "Cancel" });
+        var liftsTheLimit = Configuration.DirectPlayUnsafe;
+
+        var message = liftsTheLimit
+            ? UnsafeWarningContent(true)
+            : new NoireContent()
+                .AddText(SyncServicesLine)
+                .AddNewLine()
+                .AddNewLine()
+                .AddText(SafeModeLimitLine)
+                .AddNewLine()
+                .AddNewLine()
+                .AddText(SafeModeIsNotAPromiseLine, NoireTheme.Current.Resolve(ThemeColor.TextMuted));
+
+        var confirmed = await NoireModal.ConfirmAsync("Switch to Direct Play?", message, new ModalOptions
+        {
+            ConfirmLabel = "Switch to Direct Play",
+            CancelLabel = "Cancel",
+            Danger = liftsTheLimit,
+            EnableAfterSeconds = liftsTheLimit ? WarningCountdownSeconds : 0f,
+        });
 
         if (confirmed)
             ModeSwitcher.Apply(SelfBypassMode.DirectPlay);
+    }
+
+    private static async Task ConfirmEnableUnsafeAsync()
+    {
+        if (confirmingUnsafe)
+            return;
+
+        confirmingUnsafe = true;
+
+        try
+        {
+            var confirmed = await NoireModal.ConfirmAsync("Enable unsafe mode?", UnsafeWarningContent(false), new ModalOptions
+            {
+                ConfirmLabel = "Enable unsafe mode",
+                CancelLabel = "Cancel",
+                Danger = true,
+                EnableAfterSeconds = WarningCountdownSeconds,
+            });
+
+            if (!confirmed)
+                return;
+
+            await AsyncHelper.RunOnFrameworkThreadAsync(() => Configuration.DirectPlayUnsafe = true);
+        }
+        finally
+        {
+            confirmingUnsafe = false;
+        }
     }
 
     public void Dispose() { }

@@ -1,4 +1,4 @@
-﻿using BypassEmote.Helpers;
+using BypassEmote.Helpers;
 using BypassEmote.Models;
 using NoireLib;
 using System.Linq;
@@ -29,9 +29,11 @@ public static class ModeSwitcher
             LeaveEmoteSwap();
 
         Configuration.SelfBypassMode = newMode;
+
+        // patch approval only for Emote Swap
+        Service.PatchApproval?.OnModeChanged();
     }
 
-    // Local player only: the mode governs self bypass, so companion, pet and chocobo loops are left alone.
     private static void LeaveDirectPlay()
     {
         var localPlayer = NoireService.ObjectTable.LocalPlayer;

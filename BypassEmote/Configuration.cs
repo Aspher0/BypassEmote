@@ -55,6 +55,9 @@ public class ConfigurationInstance : NoireConfigBase
     public bool AutoFaceTargetDirectPlay { get; set; } = true;
 
     [AutoSave]
+    public bool DirectPlayUnsafe { get; set; } = false;
+
+    [AutoSave]
     public bool StopOwnedObjectEmoteOnMove { get; set; } = true;
 
     [AutoSave]

@@ -65,6 +65,26 @@ public static class PatchApproval
         return new(PatchApprovalStatus.Approved, $"Game build {gameVersion} is approved.", notice);
     }
 
+    internal static TimeSpan TimeUntilNextCheck(DateTime? lastCheckedUtc, DateTime nowUtc, TimeSpan interval)
+    {
+        if (lastCheckedUtc is not { } last)
+            return TimeSpan.Zero;
+
+        var elapsed = nowUtc - last;
+
+        if (elapsed >= interval)
+            return TimeSpan.Zero;
+
+        return elapsed < TimeSpan.Zero ? interval : interval - elapsed;
+    }
+
+    internal static int CooldownSeconds(DateTime? lastRequestedUtc, DateTime nowUtc, TimeSpan window)
+    {
+        var remaining = TimeUntilNextCheck(lastRequestedUtc, nowUtc, window);
+
+        return remaining <= TimeSpan.Zero ? 0 : (int)Math.Ceiling(remaining.TotalSeconds);
+    }
+
     private static ApprovedPatch? Find(PatchApprovalDocument document, string gameVersion)
     {
         foreach (var entry in document.Approved ?? [])
