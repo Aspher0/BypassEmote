@@ -49,7 +49,7 @@ In the configuration window, you will be able to disable the plugin for yourself
 # FAQ
 
 **Q**: Is this safe to use?<br/>
-**A**: With Emote Swap, yes. The emote your character plays is one you own and the game plays it itself, so there is nothing to notice, which is exactly what [issue #7](https://github.com/Aspher0/BypassEmote/issues/7) was about.<br/>
+**A**: With Emote Swap, yes. The emote your character plays is one you own and the game plays it itself, so there is nothing the server may notice, which is exactly what [issue #7](https://github.com/Aspher0/BypassEmote/issues/7) was about.<br/>
 With Direct Play, safe mode keeps you to the states where nothing has ever been seen to go wrong, and I do everything in my power to minimize any possible risk, but if you want to be certain, use Emote Swap.
 
 **Q**: Do I need Penumbra?<br/>
@@ -61,7 +61,7 @@ If they are using Direct Play, then no. BypassEmote does not work on its own in 
 Try asking the developers of the sync plugin you use to integrate BypassEmote, but please respect them if they refuse.
 
 **Q**: The plugin tells me the game build has not been approved, what does that mean?<br/>
-**A**: A game patch can move the functions BypassEmote needs. So after a patch, the parts of the plugin that rely on them stay off until I have checked the new build and approved it. The plugin checks every 10 minutes on its own, and you can also check for updates manually in the configuration window.
+**A**: A game patch can move the functions BypassEmote needs. So after a patch, the parts of the plugin that rely on them stay off until I have checked the new build and approved it. The plugin checks every 10 minutes on its own, and you can also check for updates manually in the configuration window. The plugin will keep working but you may need to stop your current bypass to bypass another emote.
 
 **Q**: I found a bug, how and where can I report it?<br/>
 **A**: Just open an issue on this Github repository explaining the bug, how to reproduce it and try providing any relevant errors that may appear in the `/xllog` window by filtering the regex global filter with "BypassEmote".
