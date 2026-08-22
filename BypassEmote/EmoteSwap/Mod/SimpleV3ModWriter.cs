@@ -41,7 +41,10 @@ public static class SimpleV3ModWriter
     }
 
     private static string BuildMeta(ModMeta meta)
-        => new JObject
+        => BuildMetaObject(meta).ToString(Formatting.Indented);
+
+    internal static JObject BuildMetaObject(ModMeta meta)
+        => new()
         {
             ["FileVersion"] = 3,
             ["Name"] = meta.Name,
@@ -50,9 +53,12 @@ public static class SimpleV3ModWriter
             ["Version"] = meta.Version,
             ["Website"] = meta.Website,
             ["ModTags"] = new JArray(),
-        }.ToString(Formatting.Indented);
+        };
 
     private static string BuildDefaultMod(IReadOnlyDictionary<string, string> gamePathToRelativeFile)
+        => BuildDefaultObject(gamePathToRelativeFile).ToString(Formatting.Indented);
+
+    internal static JObject BuildDefaultObject(IReadOnlyDictionary<string, string> gamePathToRelativeFile)
     {
         var files = new JObject();
         foreach (var (gamePath, relativeFile) in gamePathToRelativeFile)
@@ -65,28 +71,9 @@ public static class SimpleV3ModWriter
             ["Files"] = files,
             ["FileSwaps"] = new JObject(),
             ["Manipulations"] = new JArray(),
-        }.ToString(Formatting.Indented);
+        };
     }
 
     private static bool WriteIfChanged(string path, string contents)
-    {
-        if (AlreadyHolds(path, contents))
-            return false;
-
-        AtomicFile.WriteAllText(path, contents);
-        return true;
-    }
-
-    private static bool AlreadyHolds(string path, string contents)
-    {
-        try
-        {
-            return File.Exists(path)
-                && File.ReadAllBytes(path).AsSpan().SequenceEqual(Encoding.UTF8.GetBytes(contents));
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-        {
-            return false;
-        }
-    }
+        => ModLayout.WriteIfChanged(path, contents);
 }

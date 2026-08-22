@@ -49,6 +49,7 @@ public sealed class SwapModManager
     private readonly string _configDirectory;
 
     private readonly ReentrancyGuard _ownMutations = new();
+    private readonly ModLayoutDetector _layout;
 
     private string? _pressedKey;
 
@@ -58,6 +59,9 @@ public sealed class SwapModManager
         _identity = identity;
         _configDirectory = configDirectory;
 
+        _layout = new ModLayoutDetector(gateway);
+
+        gateway.AvailabilityChanged += HandleAvailabilityChanged;
         gateway.OwnModSettingChanged += HandleExternalChange;
         gateway.OwnModDeleted += HandleOwnModDeleted;
         gateway.ExternalModChanged += HandleCompetingModChange;
@@ -70,6 +74,25 @@ public sealed class SwapModManager
     public SwapRegistry Registry { get; private set; }
 
     public string ModDirectoryName => _identity.Names?.Directory ?? string.Empty;
+
+    internal int Layout => _layout.Layout;
+
+    internal int EnsureLayout()
+    {
+        if (_layout.Settled)
+            return _layout.Layout;
+
+        using (_ownMutations.Enter())
+            return _layout.Ensure(ModDirectory, ModDirectoryName);
+    }
+
+    private void HandleAvailabilityChanged(bool available)
+    {
+        _layout.Invalidate();
+
+        if (available)
+            EnsureLayout();
+    }
 
     private string GeneratedModName => _identity.Names?.Display ?? "BypassEmote Generated";
 
@@ -115,7 +138,7 @@ public sealed class SwapModManager
         {
             using (_ownMutations.Enter())
             {
-                if (SimpleV3ModWriter.Write(modDirectory, MetaFor(display), new Dictionary<string, string>()))
+                if (ModStore.WriteMeta(EnsureLayout(), modDirectory, MetaFor(display), NoRedirects))
                     EnsurePenumbraReadsTheMod(isFirstCreation: false);
             }
 
@@ -319,7 +342,7 @@ public sealed class SwapModManager
         if (Registry.Skeleton != race && !RewriteForSkeleton(SkeletonRewritePlanner.For(Registry, race), race))
             return false;
 
-        var folder = PrepareGeneratedModFolder(modDirectory, GeneratedModName);
+        var folder = PrepareGeneratedModFolder(modDirectory, GeneratedModName, EnsureLayout());
 
         if (folder == GeneratedModFolder.Unusable || !WriteSwapFiles(modDirectory, entry, filesToWrite))
             return false;
@@ -544,67 +567,10 @@ public sealed class SwapModManager
         return true;
     }
 
-    private static void RemoveRivalGroupFiles(string modDirectory, string groupName, string keptFileName)
-    {
-        if (!Directory.Exists(modDirectory))
-            return;
-
-        foreach (var path in Directory.GetFiles(modDirectory, ModGroupFile.FileNamePrefix + "*.json"))
-        {
-            if (string.Equals(Path.GetFileName(path), keptFileName, StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            try
-            {
-                if (ModGroupFile.Deserialize(File.ReadAllText(path)) is { } rival && rival.Name == groupName)
-                {
-                    File.Delete(path);
-                    NoireLogger.LogDebug(keptFileName.Length == 0
-                        ? $"Removed '{Path.GetFileName(path)}', the last file of group '{groupName}'."
-                        : $"Removed '{Path.GetFileName(path)}', a second file for group '{groupName}'.", LogPrefix);
-                }
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                NoireLogger.LogDebug($"Could not read or remove '{path}' ({ex.Message}).", LogPrefix);
-            }
-        }
-    }
-
-    private sealed record GroupOnDisk(ModGroup Group, int Index, IReadOnlyList<string> Files);
-
     private Dictionary<string, GroupOnDisk> ReadGroups()
-    {
-        var groups = new Dictionary<string, GroupOnDisk>(StringComparer.Ordinal);
-
-        if (ModDirectory is not { } modDirectory || !Directory.Exists(modDirectory))
-            return groups;
-
-        var filesByGroup = new Dictionary<string, List<string>>(StringComparer.Ordinal);
-
-        foreach (var path in Directory.EnumerateFiles(modDirectory, ModGroupFile.FileNamePrefix + "*.json"))
-        {
-            try
-            {
-                if (ModGroupFile.Deserialize(File.ReadAllText(path)) is not { } group)
-                    continue;
-
-                if (!filesByGroup.TryGetValue(group.Name, out var paths))
-                    filesByGroup[group.Name] = paths = [];
-
-                paths.Add(path);
-
-                if (!groups.TryGetValue(group.Name, out var seen) || group.Options.Count > seen.Group.Options.Count)
-                    groups[group.Name] = new GroupOnDisk(group, IndexInFileName(path), paths);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                NoireLogger.LogDebug($"Could not read the group file '{path}' ({ex.Message}).", LogPrefix);
-            }
-        }
-
-        return groups;
-    }
+        => ModDirectory is { } modDirectory
+            ? ModStore.ReadGroups(EnsureLayout(), modDirectory)
+            : new Dictionary<string, GroupOnDisk>(StringComparer.Ordinal);
 
     private static GroupOnDisk? ReusableSlot(Dictionary<string, GroupOnDisk> groups)
         => groups.Values
@@ -613,81 +579,10 @@ public sealed class SwapModManager
             .FirstOrDefault();
 
     private bool WriteGroup(ModGroup group, int index, IReadOnlyList<string>? knownFiles = null)
-    {
-        if (ModDirectory is not { } modDirectory)
-            return false;
+        => ModDirectory is { } modDirectory
+            && ModStore.WriteGroup(EnsureLayout(), modDirectory, group, index, knownFiles);
 
-        var fileName = ModGroupFile.FileNameFor(group.Name, index);
-
-        try
-        {
-            if (knownFiles == null)
-                RemoveRivalGroupFiles(modDirectory, group.Name, fileName);
-            else
-                RemoveKnownGroupFiles(knownFiles, group.Name, fileName);
-
-            RemoveOtherFilesAtIndex(modDirectory, index, fileName);
-
-            AtomicFile.WriteAllText(Path.Combine(modDirectory, fileName), ModGroupFile.Serialize(group));
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            NoireLogger.LogError(ex, $"Failed to write the group file for '{group.Name}'.", LogPrefix);
-            return false;
-        }
-    }
-
-    private static void RemoveOtherFilesAtIndex(string modDirectory, int index, string keptFileName)
-    {
-        foreach (var path in Directory.GetFiles(modDirectory, $"{ModGroupFile.FileNamePrefix}{index:D3}_*.json"))
-        {
-            if (string.Equals(Path.GetFileName(path), keptFileName, StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            try
-            {
-                File.Delete(path);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                NoireLogger.LogDebug($"Could not remove '{path}' ({ex.Message}).", LogPrefix);
-            }
-        }
-    }
-
-    private static void RemoveKnownGroupFiles(IReadOnlyList<string> paths, string groupName, string keptFileName)
-    {
-        foreach (var path in paths)
-        {
-            if (string.Equals(Path.GetFileName(path), keptFileName, StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            try
-            {
-                File.Delete(path);
-
-                NoireLogger.LogDebug($"Removed '{Path.GetFileName(path)}', a second file for group '{groupName}'.", LogPrefix);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                NoireLogger.LogDebug($"Could not remove '{path}' ({ex.Message}).", LogPrefix);
-            }
-        }
-    }
-
-    internal static int IndexInFileName(string path)
-    {
-        var name = Path.GetFileNameWithoutExtension(path);
-
-        if (name.Length <= ModGroupFile.FileNamePrefix.Length)
-            return 0;
-
-        var digits = new string(name[ModGroupFile.FileNamePrefix.Length..].TakeWhile(char.IsAsciiDigit).ToArray());
-
-        return digits.Length > 0 && int.TryParse(digits, out var index) ? index : 0;
-    }
+    internal static int IndexInFileName(string path) => ModStore.IndexInFileName(path);
 
     private static int IndexFor(Dictionary<string, GroupOnDisk> groups, string groupName)
         => groups.TryGetValue(groupName, out var existing) && existing.Index > 0
@@ -782,6 +677,8 @@ public sealed class SwapModManager
 
     public void StartupSweep()
     {
+        EnsureLayout();
+
         Registry = LoadRegistryFromDisk();
 
         DeselectAll();
@@ -830,21 +727,7 @@ public sealed class SwapModManager
         if (ModDirectory is not { } modDirectory || !Directory.Exists(modDirectory))
             return;
 
-        try
-        {
-            foreach (var onDisk in ReadGroups().Values)
-            {
-                if (!ModGroupFile.IsEmpty(onDisk.Group))
-                    continue;
-
-                foreach (var path in onDisk.Files)
-                    File.Delete(path);
-            }
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            NoireLogger.LogDebug($"Could not erase the emptied groups ({ex.Message}).", LogPrefix);
-        }
+        ModStore.DropEmptyGroups(Layout, modDirectory);
     }
 
     private void ReconcileWithDisk()
@@ -925,7 +808,7 @@ public sealed class SwapModManager
         if (ModDirectory is not { } modDirectory || !Directory.Exists(modDirectory))
             return false;
 
-        return WriteRealModJsons(modDirectory, GeneratedModName, NoRedirects) == true;
+        return WriteRealModJsons(modDirectory, GeneratedModName, NoRedirects, EnsureLayout()) == true;
     }
 
     private void SweepUnreferencedFiles()
@@ -1149,7 +1032,8 @@ public sealed class SwapModManager
         Unusable,
     }
 
-    internal static GeneratedModFolder PrepareGeneratedModFolder(string modDirectory, string modName)
+    internal static GeneratedModFolder PrepareGeneratedModFolder(string modDirectory, string modName,
+        int layout = ModLayout.V3)
     {
         var existed = Directory.Exists(modDirectory);
 
@@ -1158,11 +1042,11 @@ public sealed class SwapModManager
 
         try
         {
-            SimpleV3ModWriter.WriteMissing(modDirectory, MetaFor(modName));
+            ModStore.WriteMetaMissing(layout, modDirectory, MetaFor(modName));
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Failed to write the V3 mod files under '{modDirectory}'.", LogPrefix);
+            NoireLogger.LogError(ex, $"Failed to write the mod files under '{modDirectory}'.", LogPrefix);
             return GeneratedModFolder.Unusable;
         }
 
@@ -1170,6 +1054,16 @@ public sealed class SwapModManager
     }
 
     private bool EnsurePenumbraReadsTheMod(bool isFirstCreation)
+    {
+        var read = EnsureReadCore(isFirstCreation);
+
+        if (read)
+            _layout.Observe(ModDirectory);
+
+        return read;
+    }
+
+    private bool EnsureReadCore(bool isFirstCreation)
     {
         if (isFirstCreation)
         {
@@ -1288,29 +1182,29 @@ public sealed class SwapModManager
         return new PreparedSwapFiles(swapsDirectory, redirectedPaths, isFirstCreation, names);
     }
 
-    internal static bool WriteRealModJsons(PreparedSwapFiles prepared)
+    internal static bool WriteRealModJsons(PreparedSwapFiles prepared, int layout = ModLayout.V3)
     {
         var modDirectory = Path.GetDirectoryName(prepared.SwapFileDirectory);
 
         if (string.IsNullOrEmpty(modDirectory))
         {
-            NoireLogger.LogError($"Cannot place the V3 mod jsons: no parent for '{prepared.SwapFileDirectory}'.", LogPrefix);
+            NoireLogger.LogError($"Cannot place the mod jsons: no parent for '{prepared.SwapFileDirectory}'.", LogPrefix);
             return false;
         }
 
-        return WriteRealModJsons(modDirectory, prepared.Names.Display, prepared.RedirectedPaths) != null;
+        return WriteRealModJsons(modDirectory, prepared.Names.Display, prepared.RedirectedPaths, layout) != null;
     }
 
     internal static bool? WriteRealModJsons(string modDirectory, string modName,
-        IReadOnlyDictionary<string, string> redirectedPaths)
+        IReadOnlyDictionary<string, string> redirectedPaths, int layout = ModLayout.V3)
     {
         try
         {
-            return SimpleV3ModWriter.Write(modDirectory, MetaFor(modName), redirectedPaths);
+            return ModStore.WriteMeta(layout, modDirectory, MetaFor(modName), redirectedPaths);
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Failed to write the V3 mod files under '{modDirectory}'.", LogPrefix);
+            NoireLogger.LogError(ex, $"Failed to write the mod files under '{modDirectory}'.", LogPrefix);
             return null;
         }
     }

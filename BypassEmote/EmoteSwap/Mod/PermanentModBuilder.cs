@@ -68,7 +68,9 @@ internal static class PermanentModBuilder
         foreach (var gamePath in files.Keys)
             redirects[gamePath] = RelativeFileFor(gamePath);
 
-        if (!WriteMod(modDirectory, name, source, target, files, redirects))
+        var layout = Service.SwapMods?.EnsureLayout() ?? ModLayout.V3;
+
+        if (!WriteMod(modDirectory, name, source, target, files, redirects, layout))
             return new Outcome(false, "The mod's files could not be written. The log has the details.");
 
         if (!penumbra.AddMod(directoryName))
@@ -103,7 +105,7 @@ internal static class PermanentModBuilder
     }
 
     private static bool WriteMod(string modDirectory, string name, EmoteAttributes source, EmoteAttributes target,
-        IReadOnlyDictionary<string, byte[]> files, IReadOnlyDictionary<string, string> redirects)
+        IReadOnlyDictionary<string, byte[]> files, IReadOnlyDictionary<string, string> redirects, int layout)
     {
         try
         {
@@ -120,7 +122,7 @@ internal static class PermanentModBuilder
             var meta = new ModMeta(name, Service.PenumbraModAuthor, DescriptionFor(source, target),
                 Service.PenumbraModVersion, Service.PenumbraModWebsite);
 
-            SimpleV3ModWriter.Write(modDirectory, meta, redirects);
+            ModStore.WriteMeta(layout, modDirectory, meta, redirects);
 
             NoireLogger.LogDebug($"Wrote '{name}' to '{modDirectory}': /{source.Command} over /{target.Command}, "
                 + $"{files.Count} file(s).", LogPrefix);

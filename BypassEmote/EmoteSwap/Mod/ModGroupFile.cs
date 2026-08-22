@@ -53,6 +53,9 @@ internal static class ModGroupFile
         => $"{FileNamePrefix}{index:D3}_{OptionNaming.FileNamePartFor(groupName)}.json";
 
     internal static string Serialize(ModGroup group)
+        => ToJson(group).ToString(Formatting.Indented);
+
+    internal static JObject ToJson(ModGroup group)
     {
         var options = new JArray();
 
@@ -83,39 +86,44 @@ internal static class ModGroupFile
             ["Type"] = "Single",
             ["DefaultSettings"] = 0,
             ["Options"] = options,
-        }.ToString(Formatting.Indented);
+        };
     }
 
     internal static ModGroup? Deserialize(string json)
     {
         try
         {
-            if (JObject.Parse(json) is not { } root || root["Name"]?.Value<string>() is not { } name)
-                return null;
-
-            var options = new List<ModGroupOption>();
-
-            foreach (var option in root["Options"] as JArray ?? [])
-            {
-                if (option["Name"]?.Value<string>() is not { } optionName)
-                    continue;
-
-                var files = new Dictionary<string, string>(StringComparer.Ordinal);
-
-                foreach (var file in (option["Files"] as JObject ?? []).Properties())
-                {
-                    if (file.Value.Value<string>() is { } relativeFile)
-                        files[file.Name] = relativeFile;
-                }
-
-                options.Add(new ModGroupOption(optionName, files));
-            }
-
-            return options.Count == 0 ? null : new ModGroup(name, options);
+            return FromJson(JObject.Parse(json));
         }
         catch (JsonException)
         {
             return null;
         }
+    }
+
+    internal static ModGroup? FromJson(JObject? root)
+    {
+        if (root == null || root["Name"]?.Value<string>() is not { } name)
+            return null;
+
+        var options = new List<ModGroupOption>();
+
+        foreach (var option in root["Options"] as JArray ?? [])
+        {
+            if (option["Name"]?.Value<string>() is not { } optionName)
+                continue;
+
+            var files = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            foreach (var file in (option["Files"] as JObject ?? []).Properties())
+            {
+                if (file.Value.Value<string>() is { } relativeFile)
+                    files[file.Name] = relativeFile;
+            }
+
+            options.Add(new ModGroupOption(optionName, files));
+        }
+
+        return options.Count == 0 ? null : new ModGroup(name, options);
     }
 }
