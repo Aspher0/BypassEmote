@@ -124,6 +124,9 @@ public class ConfigurationInstance : NoireConfigBase
     [AutoSave]
     public string ApprovedPluginVersion { get; set; } = string.Empty;
 
+    [AutoSave]
+    public string AnnouncedApprovalGameVersion { get; set; } = string.Empty;
+
     public class MigrationV1ToV2 : ConfigMigrationBase
     {
         public override int FromVersion => 1;

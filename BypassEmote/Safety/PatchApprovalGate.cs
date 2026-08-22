@@ -92,23 +92,15 @@ public sealed class PatchApprovalGate : IDisposable
         }
 
         if (!Governs)
-        {
-            NoireLogger.LogDebug("Direct Play does not use the functions the approval gates, so the list is left "
-                + "unread and nothing is switched off.", LogPrefix);
-
             return;
-        }
 
         if (Approved)
         {
-            NoireLogger.LogDebug($"Game build {GameVersion} was approved before, so the plugin starts whole; the "
-                + "list is read once more to catch an approval that has since been withdrawn.", LogPrefix);
+            NoireLogger.LogDebug($"Game build {GameVersion} was approved before.", LogPrefix);
         }
         else
         {
-            NoireLogger.LogWarning($"Game build '{GameVersion}' is not approved: {Reason} Every function this "
-                + $"plugin finds by signature stays switched off, and the list is read again every "
-                + $"{RetryInterval.TotalMinutes:0} minutes.", LogPrefix);
+            NoireLogger.LogWarning($"Game build '{GameVersion}' is not approved: {Reason}.", LogPrefix);
         }
 
         Resume();
@@ -168,6 +160,9 @@ public sealed class PatchApprovalGate : IDisposable
         Configuration.ApprovedPluginVersion = approved ? PluginVersion?.ToString() ?? string.Empty : string.Empty;
     }
 
+    private void RememberAnnouncement(bool approved)
+        => Configuration.AnnouncedApprovalGameVersion = approved ? GameVersion : string.Empty;
+
     private async Task PollAsync(CancellationToken token)
     {
         var wait = PatchApproval.TimeUntilNextCheck(LastCheckedUtc, DateTime.UtcNow, RetryInterval);
@@ -214,7 +209,7 @@ public sealed class PatchApprovalGate : IDisposable
 
         if (document == null && RememberedApproval())
         {
-            NoireLogger.LogDebug("The approval list could not be reached; the approval already recorded for "
+            NoireLogger.LogDebug("The approval list could not be reached. The approval already recorded for "
                 + $"game build {GameVersion} stands.", LogPrefix);
 
             Volatile.Write(ref _reading, Volatile.Read(ref _reading) with { CheckedUtc = DateTime.UtcNow });
@@ -230,16 +225,19 @@ public sealed class PatchApprovalGate : IDisposable
 
         Remember(verdict.Status == PatchApprovalStatus.Approved && !string.IsNullOrEmpty(GameVersion));
 
-        var justApproved = verdict.Status == PatchApprovalStatus.Approved && !wasApproved;
+        var announce = PatchApproval.ShouldAnnounce(verdict.Status, wasApproved, GameVersion,
+            Configuration.AnnouncedApprovalGameVersion);
 
-        if (justApproved)
-            NoireLogger.LogWarning($"Game build {GameVersion} is now approved; the plugin is whole again.", LogPrefix);
+        RememberAnnouncement(verdict.Status == PatchApprovalStatus.Approved);
+
+        if (announce)
+            NoireLogger.LogDebug($"Game build {GameVersion} is now approved.", LogPrefix);
 
         await AsyncHelper.RunOnFrameworkThreadAsync(() =>
         {
             Apply();
 
-            if (justApproved)
+            if (announce)
                 AnnounceApproval();
         }).ConfigureAwait(false);
     }

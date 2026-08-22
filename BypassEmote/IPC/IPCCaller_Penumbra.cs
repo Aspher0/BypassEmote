@@ -583,10 +583,12 @@ public sealed class IPCCaller_Penumbra : IDisposable
             // no-op
         }
 
+#if DEBUG
         NoireLogger.LogDebug(
             $"{(isPap ? "Pap" : "Tmb")} requested by the game: '{gamePath}' [{key}] served {served} "
             + $"({size} bytes, object 0x{gameObject:X} {(onLocalPlayer ? "LOCAL PLAYER" : "other or none")}).",
             LogPrefix);
+#endif
     }
 
     private void OnModDeleted(string modDirectory)

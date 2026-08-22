@@ -65,6 +65,13 @@ public static class PatchApproval
         return new(PatchApprovalStatus.Approved, $"Game build {gameVersion} is approved.", notice);
     }
 
+    internal static bool ShouldAnnounce(PatchApprovalStatus status, bool wasApproved, string? gameVersion,
+        string? announcedGameVersion)
+        => status == PatchApprovalStatus.Approved
+            && !wasApproved
+            && !string.IsNullOrWhiteSpace(gameVersion)
+            && !string.Equals(Trimmed(announcedGameVersion), Trimmed(gameVersion), StringComparison.OrdinalIgnoreCase);
+
     internal static TimeSpan TimeUntilNextCheck(DateTime? lastCheckedUtc, DateTime nowUtc, TimeSpan interval)
     {
         if (lastCheckedUtc is not { } last)
