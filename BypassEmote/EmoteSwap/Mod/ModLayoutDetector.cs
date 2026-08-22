@@ -66,7 +66,7 @@ internal sealed class ModLayoutDetector
             if (_layout >= ModLayout.V4 || ModLayout.OnDisk(modDirectory) < ModLayout.V4)
                 return;
 
-            Adopt(ModLayout.V4, "Penumbra migrated the mod it was just handed");
+            Adopt(ModLayout.V4, "Penumbra migrated the mod");
 
             ModLayout.RemoveV3Files(modDirectory);
         }
@@ -81,7 +81,7 @@ internal sealed class ModLayoutDetector
 
             if (!File.Exists(Path.Combine(modDirectory, ModLayout.MetaFileName)))
             {
-                NoireLogger.LogDebug("No generated mod to probe with yet; writing V3 until Penumbra says otherwise.", LogPrefix);
+                NoireLogger.LogDebug("No generated mod to probe with yet. writing V3.", LogPrefix);
                 return;
             }
 
@@ -89,13 +89,13 @@ internal sealed class ModLayoutDetector
 
             if (before >= ModLayout.V4 && !ModLayout.ToV3(modDirectory))
             {
-                Adopt(ModLayout.V4, "the mod is V4 and could not be rewritten for the probe");
+                Adopt(ModLayout.V4, "the mod is V4 and could not be rewritten");
                 return;
             }
 
             if (_gateway.ReloadMod(modDirectoryName) is ModReadResult.NotHeld or ModReadResult.Refused)
             {
-                NoireLogger.LogDebug($"Penumbra would not read '{modDirectoryName}', so its layout stays unknown.", LogPrefix);
+                NoireLogger.LogDebug($"Penumbra would not read '{modDirectoryName}', its layout stays unknown.", LogPrefix);
                 return;
             }
 
@@ -110,7 +110,7 @@ internal sealed class ModLayoutDetector
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, "Could not work out Penumbra's mod layout; keeping the last one that held.", LogPrefix);
+            NoireLogger.LogError(ex, "Could not work out Penumbra's mod layout.", LogPrefix);
         }
     }
 
