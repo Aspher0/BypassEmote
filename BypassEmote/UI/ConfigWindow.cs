@@ -545,7 +545,9 @@ public class ConfigWindow : Window, IDisposable
 
                 var turnMatching = Array.IndexOf(TurnMatchingOrder, Configuration.TurnMatching);
                 if (ComboRow(TurnMatchingName, "##BypassEmoteTurnMatching", ref turnMatching, TurnMatchingOptions,
-                    "\"Very strict\" only picks emotes that look at your target the exact same way."
+                    "Emotes have different turn behaviors when you target someone. Some emotes will make your torso turn (i.e: /hum), some only your head (i.e: /stepdance),"
+                    + "some will only make your eyes follow your target (i.e: /beesknees) while others will not move at all (i.e:/guard)."
+                    + "\n\n\"Very strict\" only picks emotes that behaves the same way."
                     + "\n\"Strict\" allows eye following differences but keeps emotes head and body turn behaviors."
                     + "\n\"Lenient\" allows any turn behavior."
                     + "\n\nThe plugin will still always try to find the best match first, regardless of the selected rule."
@@ -592,13 +594,14 @@ public class ConfigWindow : Window, IDisposable
                 var dispatchFidelity = (int)Configuration.DispatchFidelity;
                 if (ComboRow(DispatchFidelityName, "##BypassEmoteDispatchFidelity", ref dispatchFidelity,
                     DispatchFidelityOptions,
-                    "How far the plugin may look for a target emote nothing else is using."
-                    + "\n\n\"Same rank only\" keeps to the emotes that fit your emote just as well as the very best one."
-                    + "\n\"One rank below\" also accepts the rank under it, which is what lets an emote have a target to "
-                    + "itself when its own rank holds only one."
-                    + "\n\"Anything allowed\" takes any emote at all, however far it fits."
-                    + "\n\nNone of them ever breaks your matching rules above."
-                    + "\n\nRecommended: \"One rank below\"."))
+                    "Takes effect when \"Spread swaps over several emote\" is enabled. This determines which emotes become available for a source emote. "
+                    + "Basically, if you want to spread swaps over 5 emotes, and you try to bypass an emote but you only have 2 same-rank targets available, "
+                    + "this is how it will determine what to do in this scenario. A rank is basically a category of emotes with similar characteristics (same turn behaviour, etc)."
+                    + "\n\n\"Same rank only\" strictly picks targets of the same rank."
+                    + "\n\"One rank below\" also accepts targets one rank below."
+                    + "\n\"Anything allowed\" picks any target it can find, regardless of the rank."
+                    + "\n\nNone of them ever breaks your other rules."
+                    + "\n\nRecommended: \"One rank below\", or \"Same rank only\" if you want behavior accuracy."))
                 {
                     Configuration.DispatchFidelity = (DispatchFidelity)dispatchFidelity;
                 }
@@ -608,7 +611,7 @@ public class ConfigWindow : Window, IDisposable
                     "Determines whether to block unlocked emotes from being picked when they are modified by at least one of your mods. "
                     + "This prevents other people from seeing other modded emotes you might have before the swap takes place."
                     + "\nAs an example, you have a mod on beesknees, and you try to bypass /conduct which happens to land on beesknees: "
-                    + "other players might see the modded beesknees for a moment."
+                    + "other players might or might not see the modded beesknees for a moment."
                     + "\n\n\"Allowed\" allows using unlocked emotes that are modified by one of your mods."
                     + "\n\"Last resort\" uses one only when nothing else fits."
                     + "\n\"Blocked\" never uses one, and show an error message in the chat with options to disable or open the mod in penumbra."
@@ -641,18 +644,19 @@ public class ConfigWindow : Window, IDisposable
                 var swapLifetime = (int)Configuration.SwapLifetime;
                 if (ComboRow(LifetimeName, "##BypassEmoteLifetime", ref swapLifetime, SwapLifetimeOptions,
                     "\"When the emote ends\" puts your real emote back as soon as the animation stops."
-                    + "\n\"When you play the target emote\" keeps the swap live until you play that emote for real."
+                    + "\n\"When you play the target emote\" keeps the swap enabled until the next time you play the target emote."
                     + "\n\"Never\" keeps the swap live until another swap claims the same target emote."
-                    + "\n\nRecommended: \"When you play the target emote\"."))
+                    + "\n\nRecommended: \"When you play the target emote\". \"When the emote ends\" is not recommended, as people will "
+                    + "see you redraw constantly after swapping."))
                 {
                     Configuration.SwapLifetime = (SwapLifetime)swapLifetime;
                 }
 
                 var swapBehavior = (int)Configuration.SwapBehavior;
                 if (ComboRow(BehaviorName, "##BypassEmoteSwapBehavior", ref swapBehavior, SwapBehaviorOptions,
-                    "\"Multiple swaps\" lets swaps on different target emotes stay live together."
-                    + "\n\"One swap at a time\" turns the previous one off as soon as a new one starts."
-                    + "\n\nRecommended: \"Multiple swaps\"."))
+                    "\"Multiple swaps\" keeps multiple swaps active at the same time in the mod."
+                    + "\n\"One swap at a time\" turns the previous swaps off as soon as a new one starts."
+                    + "\n\nRecommended: \"Multiple swaps\", unless for some reason you want to only keep one swap at a time."))
                 {
                     Configuration.SwapBehavior = (SwapBehavior)swapBehavior;
                 }
@@ -664,8 +668,8 @@ public class ConfigWindow : Window, IDisposable
                     Configuration.MaxKeptSwapsPerTarget = maxKeptSwaps;
 
                 SettingsLayout.Help("How many swaps are kept per target emote. 0 keeps them all."
-                    + "\n\nEach kept swap stays as an option of the generated Penumbra mod, so playing that emote "
-                    + "again puts it back without rebuilding anything.");
+                    + "\n\nEach kept swap stays as an option of the generated Penumbra mod, so playing an emote "
+                    + "again enables it again without rebuilding it. The only cost is that the mod gets bigger.");
 
                 var anonymizeModName = Configuration.AnonymizeModName;
                 if (CheckRow(AnonymizeModName, ref anonymizeModName,
