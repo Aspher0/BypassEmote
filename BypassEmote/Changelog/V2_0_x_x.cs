@@ -58,6 +58,7 @@ public class V2_0_x_x : BaseChangelogVersion
                 EntryBullet("Fixed emotes that make your character draw its weapon.", White, 1),
                 EntryBullet("Fixed visual effects not playing on some bypassed emotes.", White, 1),
                 EntryBullet("Various bug fixes over the versions.", White, 1),
+                EntryBullet("Added Penumbra V4 support.", White, 1),
                 Separator(),
                 Header("Technical Changes", Blue, 0, FontAwesomeIcon.Wrench),
                 EntryBullet("BypassEmote now checks that the game patch you are on has been approved before enabling anything it finds by signature.\n" +
