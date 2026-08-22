@@ -3,6 +3,7 @@ using BypassEmote.Helpers;
 using BypassEmote.Models;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using NoireLib;
 using NoireLib.Helpers;
 using NoireLib.UI;
 using System;
@@ -26,7 +27,7 @@ public class SwapPromptWindow : IDisposable
         + "Character Configuration > Control Settings > Character tab is what causes this.";
 
     private const string WhatItDoesNow =
-        "The new mode uses Prenumbra to swap locked emotes onto unlocked ones. "
+        "The new mode uses Penumbra to swap locked emotes onto unlocked ones. "
         + "The game itself does the playing, and nothing mismatches between the game and the server anymore.";
 
     private const string Footer = "You can change this at any time in the settings.";
@@ -59,8 +60,14 @@ public class SwapPromptWindow : IDisposable
             IsShowing = false;
         }
 
+        if (!NoireService.IsInitialized())
+            return;
+
         await AsyncHelper.RunOnFrameworkThreadAsync(() =>
         {
+            if (!NoireService.IsInitialized())
+                return;
+
             switch (choice)
             {
                 case 0:
