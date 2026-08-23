@@ -157,11 +157,15 @@ internal static class DebugLogExporter
     private static List<(string FilePath, string? EntryName)> ConfigEntries(string configDirectory, string excluded)
     {
         var entries = new List<(string FilePath, string? EntryName)>();
+        var vanillaCopies = Path.Combine(configDirectory, EmoteSwap.CacheBreaker.VanillaCopyFolder);
 
         foreach (var file in Directory.EnumerateFiles(configDirectory, "*", SearchOption.AllDirectories))
         {
-            if (file.StartsWith(excluded, StringComparison.OrdinalIgnoreCase))
+            if (file.StartsWith(excluded, StringComparison.OrdinalIgnoreCase)
+                || file.StartsWith(vanillaCopies, StringComparison.OrdinalIgnoreCase))
+            {
                 continue;
+            }
 
             var relative = Path.GetRelativePath(configDirectory, file).Replace('\\', '/');
             entries.Add((file, $"{ConfigEntryFolder}/{relative}"));

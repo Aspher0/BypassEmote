@@ -14,7 +14,7 @@ public sealed class CacheBreaker : IDisposable
 
     private const string TemporaryModTag = "BypassEmote.CacheBreak";
     private const int TemporaryModPriority = int.MaxValue;
-    private const string VanillaCopyFolder = "cache-break";
+    internal const string VanillaCopyFolder = "cache-break";
     private const int IdentityHexLength = 10;
 
     private readonly IPCCaller_Penumbra _penumbra;
