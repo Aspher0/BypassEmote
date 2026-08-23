@@ -6,7 +6,7 @@ using System.IO;
 namespace BypassEmote.EmoteSwap;
 
 /// <summary>
-/// Determines Penumbra's mod version. V3 for stable, V4 for testing.
+/// Determines Penumbra's mod version. As of 23-08-2026, V3 is stable, V4 is testing.
 /// </summary>
 internal sealed class ModLayoutDetector
 {

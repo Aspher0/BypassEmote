@@ -1,4 +1,5 @@
 using BypassEmote.EmoteSwap;
+using BypassEmote.Helpers;
 using BypassEmote.Models;
 using Dalamud.Plugin;
 using NoireLib;
@@ -19,11 +20,18 @@ public enum ModReadResult
     Refused,
 }
 
+public enum PenumbraReadiness
+{
+    Ready,
+    Missing,
+    TooOld,
+}
+
 public sealed class IPCCaller_Penumbra : IDisposable
 {
     private const string LogPrefix = "[IPCCaller_Penumbra] ";
     private const string LogOnceScope = "BypassEmote.Penumbra.";
-    private const int RequiredBreakingVersion = 5;
+    private const int MinimumBreakingVersion = 5;
     private const int LocalPlayerObjectIndex = 0;
 
     private static readonly TimeSpan ReprobeInterval = TimeSpan.FromSeconds(1);
@@ -33,7 +41,6 @@ public sealed class IPCCaller_Penumbra : IDisposable
     private string? OwnModDirectoryName => _identity.DirectoryName;
 
     private readonly ApiVersion _apiVersion;
-    private readonly GetEnabledState _getEnabledState;
     private readonly ResolvePlayerPath _resolvePlayerPath;
     private readonly ResolvePlayerPaths _resolvePlayerPaths;
     private readonly GetCollectionForObject _getCollectionForObject;
@@ -50,10 +57,11 @@ public sealed class IPCCaller_Penumbra : IDisposable
     private readonly GetModPath _getModPath;
     private readonly GetModDirectory _getModDirectory;
     private readonly RedrawObject _redrawObject;
+    private readonly AddTemporaryMod _addTemporaryMod;
+    private readonly RemoveTemporaryMod _removeTemporaryMod;
 
     private readonly EventSubscriber _initialized;
     private readonly EventSubscriber _disposed;
-    private readonly EventSubscriber<bool> _enabledChange;
     private readonly EventSubscriber<ModSettingChange, Guid, string, bool> _modSettingChanged;
     private readonly EventSubscriber<string> _modDeleted;
     private readonly EventSubscriber<string, bool> _modDirectoryChanged;
@@ -69,7 +77,8 @@ public sealed class IPCCaller_Penumbra : IDisposable
 
 
     private bool _available;
-    private bool _breakingVersionOk;
+    private PenumbraReadiness _readiness = PenumbraReadiness.Missing;
+    private int _reportedBreaking;
     private DateTime _lastProbeUtc = DateTime.MinValue;
 
     public event Action<bool>? AvailabilityChanged;
@@ -84,7 +93,6 @@ public sealed class IPCCaller_Penumbra : IDisposable
         _identity = identity;
 
         _apiVersion = new ApiVersion(pluginInterface);
-        _getEnabledState = new GetEnabledState(pluginInterface);
         _resolvePlayerPath = new ResolvePlayerPath(pluginInterface);
         _resolvePlayerPaths = new ResolvePlayerPaths(pluginInterface);
         _getCollectionForObject = new GetCollectionForObject(pluginInterface);
@@ -101,10 +109,11 @@ public sealed class IPCCaller_Penumbra : IDisposable
         _getModPath = new GetModPath(pluginInterface);
         _getModDirectory = new GetModDirectory(pluginInterface);
         _redrawObject = new RedrawObject(pluginInterface);
+        _addTemporaryMod = new AddTemporaryMod(pluginInterface);
+        _removeTemporaryMod = new RemoveTemporaryMod(pluginInterface);
 
         _initialized = Initialized.Subscriber(pluginInterface);
         _disposed = Disposed.Subscriber(pluginInterface);
-        _enabledChange = EnabledChange.Subscriber(pluginInterface);
         _modSettingChanged = ModSettingChanged.Subscriber(pluginInterface);
         _modDeleted = ModDeleted.Subscriber(pluginInterface);
         _modDirectoryChanged = ModDirectoryChanged.Subscriber(pluginInterface);
@@ -114,7 +123,6 @@ public sealed class IPCCaller_Penumbra : IDisposable
 
         _initialized.Event += OnPenumbraInitialized;
         _disposed.Event += OnPenumbraDisposed;
-        _enabledChange.Event += OnEnabledChange;
         _modSettingChanged.Event += OnModSettingChanged;
         _modDeleted.Event += OnModDeleted;
         _modDirectoryChanged.Event += OnModDirectoryChanged;
@@ -124,7 +132,6 @@ public sealed class IPCCaller_Penumbra : IDisposable
 
         _initialized.Enable();
         _disposed.Enable();
-        _enabledChange.Enable();
         _modSettingChanged.Enable();
         _modDeleted.Enable();
         _modDirectoryChanged.Enable();
@@ -135,16 +142,26 @@ public sealed class IPCCaller_Penumbra : IDisposable
         Probe();
     }
 
-    public bool Available
+    public bool Available => Readiness == PenumbraReadiness.Ready;
+
+    public PenumbraReadiness Readiness
     {
         get
         {
             if (!_available && DateTime.UtcNow - _lastProbeUtc >= ReprobeInterval)
                 Probe();
 
-            return _available;
+            return _readiness;
         }
     }
+
+    public string UnavailableReason => Readiness switch
+    {
+        PenumbraReadiness.Ready => string.Empty,
+        PenumbraReadiness.TooOld => $"Penumbra answers over interface version {_reportedBreaking}, and Bypass Emote "
+            + $"needs version {MinimumBreakingVersion} or newer. Update Penumbra.",
+        _ => "Penumbra is not running. Emote Swap needs it installed.",
+    };
 
     public string ResolvePlayerPath(string gamePath)
     {
@@ -238,16 +255,14 @@ public sealed class IPCCaller_Penumbra : IDisposable
 
             _bounceTarget = directory;
 
-            NoireLogger.LogDebug(
-                $"'{directory}' shares the folder '{(ownFolder.Length == 0 ? "<root>" : ownFolder)}' with the generated "
-                + "mod, so the panel refresh bounces off it.", LogPrefix);
-
             return directory;
         }
 
         NoireLogger.LogDebug(
-            $"No other mod sits in '{(ownFolder.Length == 0 ? "<root>" : ownFolder)}', so the panel is left as it is.",
+            $"No other mod in '{(ownFolder.Length == 0 ? "<root>" : ownFolder)}', could not visually refresh the mod.",
             LogPrefix);
+
+        FeedbackHelper.Notice($"Could not refresh the penumbra mod window, you may have to re-open the mod manually.", kind: "RefreshModWindowFailed");
 
         return null;
     }
@@ -312,7 +327,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
 
             var states = new Dictionary<string, ModState>(settings.Count, StringComparer.OrdinalIgnoreCase);
 
-            // Unnamed tuple: (Enabled, Priority, Settings, Inherited, Temporary), so Item1 and Item2 are wanted.
+            // Unnamed tuple: (Enabled, Priority, Settings, Inherited, Temporary)
             foreach (var (modDirectory, entry) in settings)
                 states[modDirectory] = new ModState(entry.Item1, entry.Item2);
 
@@ -370,6 +385,39 @@ public sealed class IPCCaller_Penumbra : IDisposable
         {
             LogFailureOnce(nameof(SelectOption), ex);
             return PenumbraApiEc.UnknownError;
+        }
+    }
+
+    public bool SetTemporaryRedirects(string tag, Guid collectionId, IReadOnlyDictionary<string, string> redirects,
+        int priority)
+    {
+        try
+        {
+            var forward = new Dictionary<string, string>(redirects.Count);
+            foreach (var (gamePath, file) in redirects)
+                forward[gamePath] = file;
+
+            var ec = _addTemporaryMod.Invoke(tag, collectionId, forward, string.Empty, priority);
+            return ec is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged;
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(SetTemporaryRedirects), ex);
+            return false;
+        }
+    }
+
+    public bool ClearTemporaryRedirects(string tag, Guid collectionId, int priority)
+    {
+        try
+        {
+            var ec = _removeTemporaryMod.Invoke(tag, collectionId, priority);
+            return ec is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged;
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(ClearTemporaryRedirects), ex);
+            return false;
         }
     }
 
@@ -511,19 +559,25 @@ public sealed class IPCCaller_Penumbra : IDisposable
     {
         _lastProbeUtc = DateTime.UtcNow;
         var wasAvailable = _available;
+        var wasReadiness = _readiness;
 
         try
         {
             var (breaking, _) = _apiVersion.Invoke();
-            _breakingVersionOk = breaking == RequiredBreakingVersion;
-            _available = _breakingVersionOk && _getEnabledState.Invoke();
+
+            _reportedBreaking = breaking;
+            _readiness = breaking >= MinimumBreakingVersion ? PenumbraReadiness.Ready : PenumbraReadiness.TooOld;
         }
         catch (Exception ex)
         {
             LogFailureOnce(nameof(Probe), ex);
-            _breakingVersionOk = false;
-            _available = false;
+            _readiness = PenumbraReadiness.Missing;
         }
+
+        _available = _readiness == PenumbraReadiness.Ready;
+
+        if (_readiness != wasReadiness)
+            NoireLogger.LogDebug($"Penumbra reads as {_readiness}.", LogPrefix);
 
         if (_available != wasAvailable)
             RaiseAvailabilityChanged();
@@ -535,19 +589,10 @@ public sealed class IPCCaller_Penumbra : IDisposable
     private void OnPenumbraDisposed()
     {
         var wasAvailable = _available;
-        _breakingVersionOk = false;
+        _readiness = PenumbraReadiness.Missing;
         _available = false;
 
         if (wasAvailable)
-            RaiseAvailabilityChanged();
-    }
-
-    private void OnEnabledChange(bool enabled)
-    {
-        var wasAvailable = _available;
-        _available = _breakingVersionOk && enabled;
-
-        if (_available != wasAvailable)
             RaiseAvailabilityChanged();
     }
 
@@ -621,7 +666,6 @@ public sealed class IPCCaller_Penumbra : IDisposable
     {
         _initialized.Event -= OnPenumbraInitialized;
         _disposed.Event -= OnPenumbraDisposed;
-        _enabledChange.Event -= OnEnabledChange;
         _modSettingChanged.Event -= OnModSettingChanged;
         _modDeleted.Event -= OnModDeleted;
         _modDirectoryChanged.Event -= OnModDirectoryChanged;
@@ -631,7 +675,6 @@ public sealed class IPCCaller_Penumbra : IDisposable
 
         _initialized.Disable();
         _disposed.Disable();
-        _enabledChange.Disable();
         _modSettingChanged.Disable();
         _modDeleted.Disable();
         _modDirectoryChanged.Disable();
@@ -640,7 +683,6 @@ public sealed class IPCCaller_Penumbra : IDisposable
 
         _initialized.Dispose();
         _disposed.Dispose();
-        _enabledChange.Dispose();
         _modSettingChanged.Dispose();
         _modDeleted.Dispose();
         _modDirectoryChanged.Dispose();

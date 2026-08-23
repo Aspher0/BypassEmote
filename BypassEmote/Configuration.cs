@@ -69,7 +69,7 @@ public class ConfigurationInstance : NoireConfigBase
     [AutoSave]
     public SwapBehavior SwapBehavior { get; set; } = SwapBehavior.KeepAll;
 
-    // 0 means no cap.
+    // 0 means no cap. (fr ong)
     [AutoSave]
     public int MaxKeptSwapsPerTarget { get; set; } = 5;
 
@@ -126,6 +126,9 @@ public class ConfigurationInstance : NoireConfigBase
 
     [AutoSave]
     public string AnnouncedApprovalGameVersion { get; set; } = string.Empty;
+
+    [AutoSave]
+    public bool AlwaysCacheBreak { get; set; } = false;
 
     public class MigrationV1ToV2 : ConfigMigrationBase
     {

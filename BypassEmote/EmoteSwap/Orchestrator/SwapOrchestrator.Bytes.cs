@@ -1,12 +1,15 @@
+﻿using BypassEmote.Models;
 using NoireLib;
 using NoireLib.Animations.Helpers;
 using NoireLib.Animations.PapFormat;
 using NoireLib.Animations.PapFormat.Tmb;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace BypassEmote.EmoteSwap;
 
@@ -54,8 +57,11 @@ public sealed partial class SwapOrchestrator
             if (retargetGroup(members) is not { } output)
                 continue;
 
-            foreach (var member in members)
-                files[member.Pair.TargetRequestedPath] = output.Bytes;
+            if (!output.UniqueNamesApplied || SwapLayers.PublishVanillaPath)
+            {
+                foreach (var member in members)
+                    files[member.Pair.TargetRequestedPath] = output.Bytes;
+            }
 
             if (publishInternalNames)
             {
@@ -141,18 +147,32 @@ public sealed partial class SwapOrchestrator
 
         return ApplyWeaponHold(
             ApplyFaceLibrary(retargeted, pair.SourceFaceLibrary, pair.TargetRequestedPath, PapFaceLibrary.Inject),
-            pair, holdOffHand);
+            pair, holdOffHand, ServedByAMod(pair, resolvedSourcePath));
     }
 
-    private static byte[]? ApplyWeaponHold(byte[]? papBytes, VariantPair pair, bool? holdOffHand)
+    internal static bool ServedByAMod(VariantPair pair, string resolvedSourcePath)
+        => !string.Equals(resolvedSourcePath, pair.SourceRequestedPath, StringComparison.Ordinal);
+
+    private static byte[] HoldWeapons(byte[] papBytes, bool offHand)
+        => PapWeaponHold.Apply(papBytes, offHand, SwapLayers.WeaponStowAtEnd, SwapLayers.WeaponTravelAnimation);
+
+    internal static byte[]? ApplyWeaponHold(byte[]? papBytes, VariantPair pair, bool? holdOffHand, bool sourceIsModded,
+        Func<byte[], bool, byte[]>? hold = null)
     {
         if (papBytes == null || holdOffHand is not { } offHand || !pair.WeaponMotion)
             return papBytes;
 
+        if (sourceIsModded)
+        {
+            NoireLogger.LogDebug($"'{pair.SourceRequestedPath}' comes from a mod, so its own timeline decides where "
+                + "the weapons go and nothing of ours is written into it.", LogPrefix);
+
+            return papBytes;
+        }
+
         try
         {
-            var held = PapWeaponHold.Apply(papBytes, offHand, SwapLayers.WeaponStowAtEnd,
-                SwapLayers.WeaponTravelAnimation);
+            var held = (hold ?? HoldWeapons)(papBytes, offHand);
 
             var statements = EntryCount(held, WeaponPositionMagic);
 
@@ -318,7 +338,7 @@ public sealed partial class SwapOrchestrator
             + $"{FootstepEntryCount(retargeted)} footstep entr(y/ies), {clampedNames.Count} name(s) clamped.",
             LogPrefix);
 
-        return ApplyWeaponHold(ApplyFaceLibrary(retargeted, lead.Pair.SourceFaceLibrary, lead.Pair.TargetRequestedPath, PapFaceLibrary.Inject), lead.Pair, holdOffHand) is { } withFace
+        return ApplyWeaponHold(ApplyFaceLibrary(retargeted, lead.Pair.SourceFaceLibrary, lead.Pair.TargetRequestedPath, PapFaceLibrary.Inject), lead.Pair, holdOffHand, ServedByAMod(lead.Pair, lead.ResolvedSourcePath)) is { } withFace
             ? WithUniqueNames(new GroupOutput(withFace, ClampedIntro: clampedNames.Count != 0), group, fallbackOrder,
                 composeUniqueNames)
             : null;
@@ -338,6 +358,48 @@ public sealed partial class SwapOrchestrator
         {
             return -1;
         }
+    }
+
+    private readonly ConcurrentDictionary<uint, IReadOnlyList<string>> _cacheBreakNames = new();
+
+    internal IReadOnlyList<string> CacheBreakNamesFor(EmoteAttributes emote, IReadOnlyList<string> fallbackOrder)
+    {
+        if (_cacheBreakNames.TryGetValue(emote.RowId, out var known))
+            return known;
+
+        var paths = VanillaNamePathsFor(emote, fallbackOrder);
+        if (paths.Count == 0)
+        {
+            _cacheBreakNames[emote.RowId] = [];
+            return [];
+        }
+
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                var names = new List<string>();
+                var seen = new HashSet<string>(StringComparer.Ordinal);
+
+                foreach (var path in paths)
+                {
+                    foreach (var name in ReadVanillaNamesForNamesPath(path) ?? [])
+                    {
+                        if (seen.Add(name))
+                            names.Add(name);
+                    }
+                }
+
+                _cacheBreakNames[emote.RowId] = names;
+            }
+            catch (Exception ex)
+            {
+                NoireLogger.LogDebug($"Could not read the vanilla names of /{emote.Command} ({ex.Message}).", LogPrefix);
+                _cacheBreakNames[emote.RowId] = [];
+            }
+        });
+
+        return [];
     }
 
     private static IReadOnlyList<string>? ReadVanillaNamesForNamesPath(string namesPath)

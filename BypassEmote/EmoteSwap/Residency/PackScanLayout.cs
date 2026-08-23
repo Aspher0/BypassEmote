@@ -14,9 +14,6 @@ internal static class PackScanLayout
     internal const int PackNameTableOffset = 0xF0;
     internal const int PackNameEntryStride = 0x28;
 
-    // Where an entry stores its own index into the holder's tables. Not its position in the name table.
-    internal const int PackNameEntryTableIndexOffset = 0x22;
-
     internal const int PackAnimationTableOffset = 0x110;
     internal const int PackHavokHolderOffset = 0xC0;
     internal const int PackHavokTableOffset = 0x30;
@@ -60,9 +57,4 @@ internal static class PackScanLayout
 
     internal static long PackMappingTable(long holder) => holder + PackMappingTableOffset;
 
-    internal static long PackNameEntryTableIndex(long table, int ordinal)
-        => PackNameEntry(table, ordinal) + PackNameEntryTableIndexOffset;
-
-    // The stored index, or -1 when the entry has no table slot.
-    internal static int TableIndexOf(ushort stored) => (short)stored < 0 ? -1 : stored;
 }

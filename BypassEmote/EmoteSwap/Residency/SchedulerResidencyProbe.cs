@@ -15,7 +15,7 @@ namespace BypassEmote.EmoteSwap;
 // Hooks the animation load path so a swapped emote serves its own content, and answers whether the scheduler cache
 // still holds a timeline key. The loader dedupes by ActionTimeline key, so the doors below hand it a unique name
 // per content.
-public sealed unsafe class SchedulerResidencyProbe
+public sealed unsafe partial class SchedulerResidencyProbe
 {
     private const string LogPrefix = "[SchedulerResidencyProbe] ";
 
@@ -270,8 +270,11 @@ public sealed unsafe class SchedulerResidencyProbe
                 (a1, a2, a3, a4, a5, a6, a7, a8) =>
                 {
                     CaptureLoaderArgs(a1, a2, a3, a4, a5, a6, a7, a8);
-                    return _migratoryHook!.Original(
-                        a1, a2, a3, a4, a5, a6, SubstituteMotionPackName("loader", a1, a7), a8);
+                    var name = SubstituteMotionPackName("loader", a1, a7);
+                    var loaded = _migratoryHook!.Original(a1, a2, a3, a4, a5, a6, name, a8);
+                    NoteFreshLoad(name, loaded);
+                    RepublishAfterOwnLoad();
+                    return loaded;
                 },
                 autoEnable: false, name: "LoadMigratoryMotionPack");
             NoireLogger.LogDebug("Resolved LoadMigratoryMotionPack; parked.", LogPrefix);
@@ -285,10 +288,7 @@ public sealed unsafe class SchedulerResidencyProbe
         try
         {
             _packRequestHook = new NoireHook<PackRequestDelegate>(
-                PackRequestSignature,
-                (owner, type, name, variant, a5, a6, a7, a8) => _packRequestHook!.Original(
-                    owner, type, SubstituteMotionPackName("request", owner, name), variant, a5, a6, a7, a8),
-                autoEnable: true, name: "GetOrCreatePackRequest");
+                PackRequestSignature, PackRequestDetour, autoEnable: true, name: "GetOrCreatePackRequest");
             NoireLogger.LogDebug("Hooked the pack-request get-or-create.", LogPrefix);
         }
         catch (Exception ex)
@@ -484,15 +484,20 @@ public sealed unsafe class SchedulerResidencyProbe
         yield return new("FindPackAnimationByName", _findPackAnimationHook, true, false);
         yield return new("BindingScan", _bindingScanHook, true, false);
 
-        yield return new("GetOrCreatePackRequest", _packRequestHook, uniqueNames && SwapLayers.DoorRequest, true);
-        yield return new("PackRequestMatch", _packMatchHook, uniqueNames && SwapLayers.MatchEnforcement, true);
+        var release = SwapLayers.ReleaseCachedPacks;
+
+        yield return new("GetOrCreatePackRequest", _packRequestHook,
+            release || (uniqueNames && SwapLayers.DoorRequest), true);
+        yield return new("PackRequestMatch", _packMatchHook,
+            release || (uniqueNames && SwapLayers.MatchEnforcement), true);
         yield return new("MapperSource", _mapperSourceHook, SwapLayers.MappingPackCorrection, true);
-        yield return new("LoadTimelineResources", _timelineResourcesHook, SwapLayers.PublishVanillaPath, true);
+        yield return new("LoadTimelineResources", _timelineResourcesHook,
+            release || SwapLayers.PublishVanillaPath, true);
 
         // The republish replays this loader and reads its arguments off the same detour, so the capture has
         // to be running before the switch is thrown: it stays up for every composed load.
         yield return new("LoadMigratoryMotionPack", _migratoryHook,
-            uniqueNames || SwapLayers.PrewarmPacks || SwapLayers.PublishVanillaPath, true);
+            release || uniqueNames || SwapLayers.PrewarmPacks || SwapLayers.PublishVanillaPath, true);
     }
 
     // Every hook installed, skipping the ones whose signature did not resolve.
@@ -549,8 +554,7 @@ public sealed unsafe class SchedulerResidencyProbe
         try
         {
             var redirectedPaths = _redirectedPaths;
-            if (!noCache && path.HasValue && redirectedPaths.Count > 0
-                && SwapLayers.NoCacheFlip)
+            if (!noCache && path.HasValue && redirectedPaths.Count > 0 && SwapLayers.NoCacheFlip)
             {
                 var requested = ReadCString((nint)path.Value);
                 if (redirectedPaths.Contains(requested))
@@ -643,15 +647,15 @@ public sealed unsafe class SchedulerResidencyProbe
     // Marks the span of the local player's own timeline load.
     private ulong TimelineResourcesDetour(nint timeline)
     {
-        var key = LocalTimelineKey(timeline);
-        if (key == null)
+        if (!IsLocalPlayerTimeline(timeline))
             return _timelineResourcesHook!.Original(timeline);
 
         var previousInside = _insideLocalTimelineLoad;
         var previousKey = _loadingTimelineKey;
 
         _insideLocalTimelineLoad = true;
-        _loadingTimelineKey = key;
+        _loadingTimelineKey = ComposedKeyOf(timeline);
+
         try
         {
             return _timelineResourcesHook!.Original(timeline);
@@ -663,25 +667,39 @@ public sealed unsafe class SchedulerResidencyProbe
         }
     }
 
-    // The key a timeline is playing, when it is the local player's and the swap is served composed. A swap served
-    // on the vanilla path has no map entry, so this answers null and nothing is republished.
-    private string? LocalTimelineKey(nint timeline)
+    private bool IsLocalPlayerTimeline(nint timeline)
+    {
+        try
+        {
+            return timeline != 0
+                && GuardedMemory.IsReadable(timeline + TimelineOwnerIndexOffset, sizeof(uint))
+                && *(uint*)(timeline + TimelineOwnerIndexOffset) == LocalPlayerObjectIndex;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private string? ComposedKeyOf(nint timeline)
     {
         try
         {
             var map = _uniqueNameMap;
-            if (timeline == 0 || map is not { Count: > 0 })
-                return null;
+            var breakMap = CacheBreakSubstituteOpen ? _cacheBreakNameMap : null;
 
-            if (!GuardedMemory.IsReadable(timeline + TimelineOwnerIndexOffset, sizeof(uint))
-                || *(uint*)(timeline + TimelineOwnerIndexOffset) != LocalPlayerObjectIndex)
+            if (map is not { Count: > 0 } && breakMap is not { Count: > 0 })
                 return null;
 
             if (!GuardedMemory.TryReadPointer(timeline + TimelineKeyOffset, out var keyPointer) || keyPointer == 0)
                 return null;
 
             var key = ReadCString(keyPointer);
-            return map.ContainsKey(key) ? key : null;
+
+            if (map?.ContainsKey(key) == true)
+                return key;
+
+            return breakMap?.ContainsKey(key) == true ? key : null;
         }
         catch
         {
@@ -707,7 +725,7 @@ public sealed unsafe class SchedulerResidencyProbe
                 return;
             }
 
-            var armed = _substituteArmedTick;
+            var armed = PressStamp;
             if (armed != _republishedWindowStamp)
             {
                 _republishedWindowStamp = armed;
@@ -735,6 +753,24 @@ public sealed unsafe class SchedulerResidencyProbe
         }
 
         NoireLogger.LogDebug($"Republished '{vanillaKey}' under its vanilla name.", LogPrefix);
+    }
+
+    private void RepublishAfterOwnLoad()
+    {
+        if (!_insideLocalTimelineLoad || _republishing || !SwapLayers.PublishVanillaPath)
+            return;
+
+        if (_loadingTimelineKey is not { } key)
+            return;
+
+        try
+        {
+            RepublishVanillaPath(key);
+        }
+        catch
+        {
+            // Must never break the load that triggered it.
+        }
     }
 
     // Opens the substitution window, right before each of our own executes.
@@ -831,22 +867,39 @@ public sealed unsafe class SchedulerResidencyProbe
         }
     }
 
-    // For our own names the stored name must match exactly; everything else keeps the game's answer.
     private byte PackRequestMatchDetour(nint inner, nint type, nint name, nint variant)
     {
         try
         {
-            if (name != 0 && inner != 0)
+            if (SwapLayers.MatchEnforcement && name != 0 && inner != 0)
             {
                 var first = *(byte*)name;
                 if (first >= 0x20 && first <= 0x7E)
                 {
                     var requested = ReadCString(name);
 
-                    bool ours;
-                    if (!SwapLayers.MatchEnforcement)
-                        return _packMatchHook!.Original(inner, type, name, variant);
+                    RecordedRequest recorded = default;
+                    bool substitutedNode;
+                    lock (_requestNamesLock)
+                        substitutedNode = _requestNameByInner.TryGetValue(inner, out recorded);
 
+                    if (substitutedNode && RequestStillRecorded(inner, recorded))
+                    {
+                        if (string.Equals(recorded.Name, requested, StringComparison.Ordinal))
+                            return _packMatchHook!.Original(inner, type, name, variant);
+
+                        if (Environment.TickCount64 - _lastRefusalLogTick > 100)
+                        {
+                            _lastRefusalLogTick = Environment.TickCount64;
+                            NoireLogger.LogDebug(
+                                $"Pack-request match refused: requested '{requested}' vs our request holding '{recorded.Name}' (throttled).",
+                                LogPrefix);
+                        }
+
+                        return 0;
+                    }
+
+                    bool ours;
                     lock (IssuedNamesGate)
                         ours = IssuedUniqueNames.Contains(requested);
 
@@ -898,11 +951,7 @@ public sealed unsafe class SchedulerResidencyProbe
             if (_republishing && Environment.CurrentManagedThreadId == _republishThreadId)
                 return namePointer;
 
-            var map = _uniqueNameMap;
-            if (map == null || namePointer == 0 || !DoorEnabled(door))
-                return namePointer;
-
-            if (Environment.TickCount64 - _substituteArmedTick > SubstituteWindowMs)
+            if (namePointer == 0 || !DoorEnabled(door))
                 return namePointer;
 
             var first = *(byte*)namePointer;
@@ -910,26 +959,14 @@ public sealed unsafe class SchedulerResidencyProbe
                 return namePointer;
 
             var requested = ReadCString(namePointer);
-            if (!map.TryGetValue(requested, out var uniqueBuffer))
-                return namePointer;
 
-            lock (_substituteLock)
-            {
-                if (Environment.TickCount64 - _substituteArmedTick > SubstituteWindowMs)
-                    return namePointer;
+            if (SwapScopeSubstitute(door, a1, requested) is { } uniqueBuffer)
+                return uniqueBuffer;
 
-                if (!_substitutedThisWindow.Add(requested))
-                    return namePointer;
-            }
+            if (CacheBreakSubstitute(door, a1, requested) is { } aliasBuffer)
+                return aliasBuffer;
 
-            // The same object our C010 items carry at [ctx+0x38].
-            if (a1 != 0)
-                _ourPackOwner = a1;
-
-            NoireLogger.LogDebug(
-                $"MotionPack name substituted [{door}]: '{requested}' -> '{ReadCString(uniqueBuffer)}' (a1 0x{a1:X}).",
-                LogPrefix);
-            return uniqueBuffer;
+            return namePointer;
         }
         catch
         {
@@ -937,10 +974,130 @@ public sealed unsafe class SchedulerResidencyProbe
         }
     }
 
+    private nint? SwapScopeSubstitute(string door, nint a1, string requested)
+    {
+        var map = _uniqueNameMap;
+        if (map == null || Environment.TickCount64 - _substituteArmedTick > SubstituteWindowMs)
+            return null;
+
+        if (!map.TryGetValue(requested, out var uniqueBuffer))
+            return null;
+
+        lock (_substituteLock)
+        {
+            if (Environment.TickCount64 - _substituteArmedTick > SubstituteWindowMs)
+                return null;
+
+            if (!_substitutedThisWindow.Add(requested) && (a1 == 0 || a1 != _ourPackOwner))
+                return null;
+        }
+
+        // The same object our C010 items carry at [ctx+0x38].
+        if (a1 != 0)
+            _ourPackOwner = a1;
+
+        NoireLogger.LogDebug(
+            $"MotionPack name substituted [{door}]: '{requested}' -> '{ReadCString(uniqueBuffer)}' (a1 0x{a1:X}).",
+            LogPrefix);
+        return uniqueBuffer;
+    }
+
+    private nint PackRequestDetour(nint owner, nint type, nint name, nint variant, nint a5, nint a6,
+        nint a7, nint a8)
+    {
+        var substituted = SubstituteMotionPackName("request", owner, name);
+        var request = _packRequestHook!.Original(owner, type, substituted, variant, a5, a6, a7, a8);
+
+        if (substituted != name)
+            RememberSubstitutedRequest(request, substituted, variant);
+        else
+            LabelScopedVanillaRequest(request, name, variant);
+
+        return request;
+    }
+
+    private const int RequestInnerOffset = 0x38;
+    private const int InnerVariantOffset = 0x5C;
+
+    private const int SubstitutedRequestCap = 64;
+
+    private readonly record struct RecordedRequest(string Name, int Variant);
+
+    private readonly object _requestNamesLock = new();
+    private readonly Dictionary<nint, RecordedRequest> _requestNameByInner = new();
+    private readonly Queue<nint> _requestNameOrder = new();
+
+    private void RememberSubstitutedRequest(nint request, nint namePointer, nint variant)
+    {
+        try
+        {
+            if (request == 0 || namePointer == 0)
+                return;
+
+            var name = ReadCString(namePointer);
+            var inner = request + RequestInnerOffset;
+
+            lock (_requestNamesLock)
+            {
+                if (!_requestNameByInner.ContainsKey(inner))
+                {
+                    while (_requestNameOrder.Count >= SubstitutedRequestCap)
+                        _requestNameByInner.Remove(_requestNameOrder.Dequeue());
+
+                    _requestNameOrder.Enqueue(inner);
+                }
+
+                _requestNameByInner[inner] = new RecordedRequest(name, (int)variant);
+            }
+        }
+        catch
+        {
+        }
+    }
+
+    private void LabelScopedVanillaRequest(nint request, nint namePointer, nint variant)
+    {
+        try
+        {
+            var map = _uniqueNameMap;
+            if (map == null || request == 0 || namePointer == 0)
+                return;
+
+            var first = *(byte*)namePointer;
+            if (first < 0x20 || first > 0x7E)
+                return;
+
+            if (!map.TryGetValue(ReadCString(namePointer), out var uniqueBuffer))
+                return;
+
+            RememberSubstitutedRequest(request, uniqueBuffer, variant);
+        }
+        catch
+        {
+        }
+    }
+
+    private bool RequestStillRecorded(nint inner, RecordedRequest recorded)
+    {
+        var storedVariant = GuardedMemory.IsReadable(inner + InnerVariantOffset, sizeof(int))
+            ? *(int*)(inner + InnerVariantOffset)
+            : int.MinValue;
+
+        var storedName = GuardedMemory.TryReadPointer(inner + InnerSlotNameOffset, out var pointer) ? pointer : 0;
+
+        if (storedVariant == recorded.Variant && storedName == 0)
+            return true;
+
+        lock (_requestNamesLock)
+            _requestNameByInner.Remove(inner);
+
+        return false;
+    }
+
     // A manifest is applied and every hook of the load chain resolved. A missing link means a rebind could still
     // reach old content, so the caller's release wait has to stay on.
     public bool RedirectionActive
-        => _redirectedIds.Count > 0 && _hook != null && _getResourceAsyncHook != null
+        => _redirectedIds.Count > 0 && _hook != null
             && _migratoryHook != null && _bindHook != null && _packRequestHook != null && _packMatchHook != null;
 
     // A manifest whose redirects are not served substitutes nothing.
@@ -973,6 +1130,27 @@ public sealed unsafe class SchedulerResidencyProbe
 
         return missing;
     }
+
+    private long PressStamp
+    {
+        get
+        {
+            var armed = _substituteArmedTick;
+            var release = _releaseArmedTick;
+            return release > armed ? release : armed;
+        }
+    }
+
+    private long _ambiguousWindowStamp;
+    private volatile bool _ambiguousThisWindow;
+
+    private void SetAmbiguous(bool ambiguous)
+    {
+        _ambiguousWindowStamp = PressStamp;
+        _ambiguousThisWindow = ambiguous;
+    }
+
+    private bool LearningBlocked => _ambiguousThisWindow && _ambiguousWindowStamp == PressStamp;
 
     // How far ahead of a stream pointer the fingerprint reads.
     internal const int ChunkWindowForward = 0x400;
@@ -1047,7 +1225,10 @@ public sealed unsafe class SchedulerResidencyProbe
             if (!ours && (container == 0 || container != _ourPackOwner))
                 return;
 
-            var armed = _substituteArmedTick;
+            if (LearningBlocked)
+                return;
+
+            var armed = PressStamp;
             if (armed != _learnWindowStamp)
             {
                 _learnWindowStamp = armed;
@@ -1082,7 +1263,7 @@ public sealed unsafe class SchedulerResidencyProbe
     // Armed, inside the window and under the cap. True takes one slot.
     private bool TakeLogSlot(ref long windowStamp, ref int count, int cap)
     {
-        var armedTick = _substituteArmedTick;
+        var armedTick = PressStamp;
 
         if (armedTick == 0)
             return false;
@@ -1338,24 +1519,32 @@ public sealed unsafe class SchedulerResidencyProbe
         var pack = _bindingScanHook!.Original(packSet, name);
         try
         {
-            // A character has one pack set per animation container, so every set the scan walks is kept.
-            RememberPackSet(packSet);
-
-            var names = _internalNames;
-            if (names == null || name == 0 || pack == 0)
+            if (name == 0 || pack == 0)
                 return pack;
 
             var text = ReadCString(name);
-            if (!names.Contains(text))
-                return pack;
 
-            var corrected = CorrectBindingPack(packSet, text, pack, out var note);
-            if (note.Length > 0)
-                NoireLogger.LogDebug($"Binding scan for '{text}': {note}.", LogPrefix);
+            if (_internalNames is { } names && names.Contains(text) && _pressedSourceKey != null)
+            {
+                var corrected = CorrectBindingPack(packSet, text, pack, out var note);
+                if (note.Length > 0)
+                    NoireLogger.LogDebug($"Binding scan for '{text}': {note}.", LogPrefix);
 
-            // Recorded corrected or not, so the mapper can follow the animation that plays.
-            RememberBoundPack(packSet, text, corrected, pack);
-            return corrected;
+                RememberBoundPack(packSet, text, corrected, pack);
+                return corrected;
+            }
+
+            if (CacheBreakBoundPack(packSet, text, pack) is { } fresh)
+                return fresh;
+
+            if (ReleasedThisWindow(text))
+            {
+                var moved = PackDeclaringOtherThanReleased(packSet, text, pack);
+                RememberBoundPack(packSet, text, moved, pack);
+                return moved;
+            }
+
+            return pack;
         }
         catch
         {
@@ -1376,19 +1565,21 @@ public sealed unsafe class SchedulerResidencyProbe
 
         var pressed = ShortSourceName(pressedKey);
         var chosenSource = SourceOfPackContent(chosen, text);
-        if (chosenSource == null)
-        {
-            // Nothing has named what this pack holds, so two of ours cannot be told apart and list order wins.
-            if (TakeBindingLogSlot())
-                NoireLogger.LogDebug(
-                    $"Binding scan for '{text}': no content map for pack 0x{chosen:X}, [{pressed}] kept on the "
-                    + "game's own choice.", LogPrefix);
+        var chosenLabel = chosenSource ?? "unnamed content";
 
+        if (string.Equals(chosenSource, pressed, StringComparison.Ordinal))
+        {
+            SetAmbiguous(false);
             return chosen;
         }
 
-        if (string.Equals(chosenSource, pressed, StringComparison.Ordinal))
-            return chosen;
+        if (chosenSource == null && TakeBindingLogSlot())
+        {
+            NoireLogger.LogDebug($"Binding scan for '{text}': no content map for pack 0x{chosen:X}; looking for "
+                + $"[{pressed}] among the resident packs.", LogPrefix);
+        }
+
+        var otherDeclaring = 0;
 
         for (var group = 0; group < PackScanLayout.Groups; group++)
         {
@@ -1408,10 +1599,16 @@ public sealed unsafe class SchedulerResidencyProbe
                         || candidate == chosen)
                         continue;
 
+                    if (IndexOfPackNamePerEntry(candidate, text) < 0)
+                        continue;
+
+                    otherDeclaring++;
+
                     if (!string.Equals(SourceOfPackContent(candidate, text), pressed, StringComparison.Ordinal))
                         continue;
 
-                    note = $"corrected from [{chosenSource}] pack 0x{chosen:X} -> pack 0x{candidate:X}";
+                    note = $"corrected from [{chosenLabel}] pack 0x{chosen:X} -> pack 0x{candidate:X}";
+                    SetAmbiguous(false);
                     return candidate;
                 }
             }
@@ -1425,16 +1622,15 @@ public sealed unsafe class SchedulerResidencyProbe
             if (!string.Equals(SourceOfPackContent(candidate, text), pressed, StringComparison.Ordinal))
                 continue;
 
-            // It must still declare the name and hold a havok animation for it.
-            if (PackHavokAnimationAt(candidate, IndexOfPackNamePerEntry(candidate, text)) == 0)
-                continue;
-
-            note = $"corrected from [{chosenSource}] pack 0x{chosen:X} -> pack 0x{candidate:X} (seen this press)";
+            note = $"corrected from [{chosenLabel}] pack 0x{chosen:X} -> pack 0x{candidate:X} (seen this press)";
+            SetAmbiguous(false);
             return candidate;
         }
 
-        note = $"not correctable, first match is [{chosenSource}] and nothing resident holds [{pressed}]. "
+        note = $"not correctable, first match is [{chosenLabel}] and nothing resident holds [{pressed}]. "
             + DescribeResidentPacks(text, chosen);
+
+        SetAmbiguous(chosenSource != null && otherDeclaring > 0);
 
         return chosen;
     }
@@ -1468,99 +1664,6 @@ public sealed unsafe class SchedulerResidencyProbe
     // drops them, which is what a composed name works around.
     private readonly List<nint> _packSets = new();
 
-    private const int PackSetCap = 16;
-
-    private void RememberPackSet(nint packSet)
-    {
-        if (packSet == 0)
-            return;
-
-        lock (_packSets)
-        {
-            if (_packSets.Contains(packSet))
-                return;
-
-            if (_packSets.Count >= PackSetCap)
-                _packSets.RemoveAt(0);
-
-            _packSets.Add(packSet);
-        }
-    }
-
-    // Whether a pack declaring any of these names still sits in one of the pack sets seen so far. names: The
-    // animation names a leftover pack would declare.. trace: How many sets were held and how many packs the walk
-    // read.. Null before any pack set has been seen, so the caller can decide for itself.
-    public bool? AnyPackNameResident(IReadOnlyList<string> names, out string trace)
-    {
-        nint[] packSets;
-        lock (_packSets)
-            packSets = _packSets.ToArray();
-
-        trace = $"{packSets.Length} set(s), 0 pack(s) read";
-
-        if (packSets.Length == 0 || names.Count == 0)
-            return null;
-
-        var packsRead = 0;
-
-        try
-        {
-            foreach (var packSet in packSets)
-            {
-                foreach (var name in names)
-                {
-                    if (IsNameInPackSet(packSet, name, ref packsRead))
-                    {
-                        trace = $"{packSets.Length} set(s), {packsRead} pack(s) read";
-                        return true;
-                    }
-                }
-            }
-
-            trace = $"{packSets.Length} set(s), {packsRead} pack(s) read";
-            return false;
-        }
-        catch (Exception ex)
-        {
-            // Reading it as resident only costs a composed name, which always plays.
-            NoireLogger.LogError(ex, "Could not walk the pack sets; reading the name as resident.", LogPrefix);
-            trace = $"{packSets.Length} set(s), {packsRead} pack(s) read, walk failed";
-            return true;
-        }
-    }
-
-    // The same guarded walk the binding correction uses, asking only whether the name is declared. No havok
-    // animation is required: a pack answers the game's name walk on the name alone.
-    private static bool IsNameInPackSet(nint packSet, string name, ref int packsRead)
-    {
-        for (var group = 0; group < PackScanLayout.Groups; group++)
-        {
-            for (var slot = 0; slot < PackScanLayout.SlotsPerGroup; slot++)
-            {
-                var vector = PackScanLayout.VectorAddress(packSet, group, slot);
-                if (!GuardedMemory.TryReadPointer(vector, out var begin) || !GuardedMemory.TryReadPointer(vector + 8, out var end))
-                    continue;
-
-                if (!PackScanLayout.IsPlausibleVector(begin, end))
-                    continue;
-
-                var count = PackScanLayout.PackCount(begin, end);
-                for (var index = 0; index < count; index++)
-                {
-                    if (!GuardedMemory.TryReadPointer(begin + index * 8, out var pack) || pack == 0)
-                        continue;
-
-                    packsRead++;
-
-                    if (IndexOfPackNamePerEntry(pack, name) >= 0)
-                        return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
     // Which content a pack belongs to, via its TMB stream's fingerprint.
     private string? SourceOfPackContent(nint pack, string text)
     {
@@ -1591,7 +1694,7 @@ public sealed unsafe class SchedulerResidencyProbe
     {
         lock (_boundPacks)
         {
-            var armed = _substituteArmedTick;
+            var armed = PressStamp;
             if (armed != _boundPacksWindowStamp)
             {
                 _boundPacksWindowStamp = armed;
@@ -1616,7 +1719,7 @@ public sealed unsafe class SchedulerResidencyProbe
 
         lock (_boundPacks)
         {
-            if (_substituteArmedTick != _boundPacksWindowStamp
+            if (PressStamp != _boundPacksWindowStamp
                 || !_boundPacks.TryGetValue((packSet, text), out var record))
                 return false;
 
@@ -1676,7 +1779,7 @@ public sealed unsafe class SchedulerResidencyProbe
         try
         {
             // This walk runs for every character in the zone, so the cheapest gate comes first.
-            var armed = _substituteArmedTick;
+            var armed = PressStamp;
             if (armed == 0)
                 return original;
 
@@ -1687,15 +1790,12 @@ public sealed unsafe class SchedulerResidencyProbe
             if (!SwapLayers.MappingPackCorrection || _replicaDisarmed)
                 return original;
 
-            var names = _internalNames;
-            if (names == null || packSet == 0 || name == 0)
+            if (packSet == 0 || name == 0)
                 return original;
 
             var text = ReadCString(name);
 
-            // The walk runs for every animation the character plays, ours or not, so a name that is not ours is the
-            // ordinary case and says nothing worth a line.
-            if (!names.Contains(text))
+            if (_internalNames?.Contains(text) != true && !ReleasedThisWindow(text) && !CacheBreakDeclares(text))
                 return original;
 
             return CorrectMapperSource(packSet, text, flag, original);
@@ -1714,7 +1814,7 @@ public sealed unsafe class SchedulerResidencyProbe
     {
         lock (_mapperSourceCache)
         {
-            var armed = _substituteArmedTick;
+            var armed = PressStamp;
             if (armed != _mapperSourceCacheStamp)
             {
                 _mapperSourceCacheStamp = armed;
@@ -1750,7 +1850,7 @@ public sealed unsafe class SchedulerResidencyProbe
 
         lock (_mapperSourceCache)
         {
-            if (_substituteArmedTick == _mapperSourceCacheStamp && _mapperSourceCache.Count < BoundPackCap)
+            if (PressStamp == _mapperSourceCacheStamp && _mapperSourceCache.Count < BoundPackCap)
                 _mapperSourceCache[(packSet, text, flag)] = answer;
         }
 

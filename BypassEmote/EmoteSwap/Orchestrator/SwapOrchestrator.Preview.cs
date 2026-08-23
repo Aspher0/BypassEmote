@@ -68,7 +68,7 @@ public sealed partial class SwapOrchestrator
             return PenumbraUnavailableMessage;
 
         if (_penumbra.GetPlayerCollection() is not { } collection)
-            return PenumbraUnavailableMessage;
+            return _penumbra.Available ? NoCharacterMessage : PenumbraUnavailableMessage;
 
         return IsUnassignedCollection(collection.Id) ? NoCollectionMessage : null;
     }

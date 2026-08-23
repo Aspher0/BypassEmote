@@ -53,6 +53,8 @@ public sealed class SwapModManager
 
     private string? _pressedKey;
 
+    private bool _shutDown;
+
     public SwapModManager(IPCCaller_Penumbra gateway, SwapModIdentity identity, string configDirectory)
     {
         _gateway = gateway;
@@ -88,6 +90,9 @@ public sealed class SwapModManager
 
     private void HandleAvailabilityChanged(bool available)
     {
+        if (_shutDown)
+            return;
+
         _layout.Invalidate();
 
         if (available)
@@ -109,6 +114,9 @@ public sealed class SwapModManager
 
     private void HandleIdentityChanged(SwapModNames? previous)
     {
+        if (_shutDown)
+            return;
+
         if (previous != null && _identity.Names is { } names
             && string.Equals(previous.Directory, names.Directory, StringComparison.OrdinalIgnoreCase))
         {
@@ -211,6 +219,8 @@ public sealed class SwapModManager
     public SwapOptionEntry? KeptWithKey(string contentKey) => RegistryDecisions.FindByKey(Registry, contentKey);
 
     public SwapOptionEntry? ArmedFor(uint targetEmote) => RegistryDecisions.FindArmedByTarget(Registry, targetEmote);
+
+    public SwapOptionEntry? ArmedIdlePose() => RegistryDecisions.FindArmedIdlePose(Registry);
 
     public bool SelectExisting(SwapOptionEntry entry)
     {
@@ -317,11 +327,19 @@ public sealed class SwapModManager
 
     private void DisableModIfNothingSelected()
     {
-        if (_identity.Names is not { } names || Registry.Entries.Any(entry => entry.SelectedByUs))
+        if (Registry.Entries.Any(entry => entry.SelectedByUs))
             return;
 
+        DisableMod();
+    }
+
+    private bool DisableMod()
+    {
+        if (_identity.Names is not { } names || CollectionForSelection() is var collection && collection == Guid.Empty)
+            return false;
+
         using (_ownMutations.Enter())
-            _gateway.TrySetModEnabled(Registry.CollectionId, names.Directory, false);
+            return _gateway.TrySetModEnabled(collection, names.Directory, false);
     }
 
     public bool AddAndSelect(SwapOptionEntry entry, IReadOnlyDictionary<string, byte[]> filesToWrite, string drawnRace)
@@ -724,6 +742,31 @@ public sealed class SwapModManager
 
     public void ShutDown()
     {
+        if (_shutDown)
+            return;
+
+        var armed = Registry.Entries.Where(entry => entry.SelectedByUs).ToList();
+        var heldTheIdlePose = armed.Any(entry => entry.IsIdlePoseSwap);
+
+        DeselectAll();
+
+        var disabled = DisableMod();
+
+        if (heldTheIdlePose)
+            _gateway.RedrawLocalPlayer();
+
+        _shutDown = true;
+
+        _gateway.AvailabilityChanged -= HandleAvailabilityChanged;
+        _gateway.OwnModSettingChanged -= HandleExternalChange;
+        _gateway.OwnModDeleted -= HandleOwnModDeleted;
+        _gateway.ExternalModChanged -= HandleCompetingModChange;
+        _identity.Changed -= HandleIdentityChanged;
+
+        NoireLogger.LogDebug($"Shutting down: {armed.Count} swap(s) put back to none, the generated mod "
+            + (disabled ? "switched off" : "left as it is")
+            + (heldTheIdlePose ? ", and the character redrawn off its swapped idle pose." : "."), LogPrefix);
+
         if (ModDirectory is not { } modDirectory || !Directory.Exists(modDirectory))
             return;
 
@@ -825,6 +868,9 @@ public sealed class SwapModManager
 
     public void HandleExternalChange()
     {
+        if (_shutDown)
+            return;
+
         ForgetModStates();
 
         if (_ownMutations.IsInside)
@@ -836,7 +882,7 @@ public sealed class SwapModManager
 
     private void HandleOwnModDeleted()
     {
-        if (_ownMutations.IsInside)
+        if (_shutDown || _ownMutations.IsInside)
             return;
 
         NoireLogger.LogDebug("Penumbra no longer holds the generated mod; the registry is emptied.", LogPrefix);
@@ -850,6 +896,9 @@ public sealed class SwapModManager
 
     public void HandleCompetingModChange(Guid collectionId)
     {
+        if (_shutDown)
+            return;
+
         ForgetModStates();
 
         if (_ownMutations.IsInside || collectionId != Registry.CollectionId)

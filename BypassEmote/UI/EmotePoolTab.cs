@@ -1,4 +1,4 @@
-﻿#if DEBUG
+#if DEBUG
 using BypassEmote.EmoteSwap;
 using BypassEmote.Helpers;
 using BypassEmote.Models;
@@ -261,7 +261,7 @@ internal static class EmotePoolTab
         if (preview.ResolvedFrom is { } pressed)
         {
             ImGui.SameLine();
-            ImGui.TextColored(Notice, $"- you pressed {NameOf(pressed)}; the game answers with this row");
+            ImGui.TextColored(Notice, $", you pressed {NameOf(pressed)}");
         }
 
         if (preview.Source is { } attributes)
@@ -269,7 +269,7 @@ internal static class EmotePoolTab
 
         if (preview.HandedToGame)
         {
-            ImGui.TextColored(Notice, "Pose family: reaches the game untouched, never swapped.");
+            ImGui.TextColored(Notice, "Pose family, never swapped.");
             return;
         }
 
@@ -283,8 +283,7 @@ internal static class EmotePoolTab
 
         if (!preview.GameGateApplied)
         {
-            ImGui.TextColored(Notice, "The game's own check was skipped: it only answers for the state you "
-                + "are actually in.");
+            ImGui.TextColored(Notice, "The condition check was skipped.");
         }
     }
 
@@ -294,7 +293,7 @@ internal static class EmotePoolTab
         var owned = preview.Pool.Count + preview.Excluded.Count;
 
         ImGui.TextWrapped($"Pool of {preview.Pool.Count}: {view.Accepted.Count} usable, {view.Refused.Count} "
-            + $"refused. {preview.Excluded.Count} of your {owned} owned emotes never got in.");
+            + $"refused. {preview.Excluded.Count} of your {owned} owned emotes were excluded.");
 
         if (preview.TriesIdlePose)
         {
@@ -304,7 +303,7 @@ internal static class EmotePoolTab
         if (preview.LoopsFirstFailed)
         {
             ImGui.TextColored(Notice, "No owned loop fitted. This is the lenient pass, where a one-shot "
-                + "can carry the loop.");
+                + "can be used for a loop.");
         }
 
         if (preview.Match?.Target == null)
@@ -321,8 +320,7 @@ internal static class EmotePoolTab
 
         if (preview.WouldAlternate)
         {
-            ImGui.TextColored(Notice, "A repeat moves to a second same-tier target instead of waiting for "
-                + "this one.");
+            ImGui.TextColored(Notice, "If this was to alternate, it would land on a second same-tier emote.");
         }
     }
 
@@ -361,9 +359,9 @@ internal static class EmotePoolTab
 
             ImGui.TextColored(Refused, blockedBy switch
             {
-                BestMatchResolver.BlockedByRules => "- blocked by your rules",
-                BestMatchResolver.BlockedByModdedTarget => "- another of your mods changes it",
-                _ => $"- blocked on {blockedBy.ToLowerInvariant()}",
+                BestMatchResolver.BlockedByRules => ", blocked by your rules",
+                BestMatchResolver.BlockedByModdedTarget => ", another of your mods changes it",
+                _ => $", blocked on {blockedBy.ToLowerInvariant()}",
             });
         }
 

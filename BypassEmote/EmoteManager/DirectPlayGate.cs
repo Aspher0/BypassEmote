@@ -5,7 +5,7 @@ using NoireLib.Enums;
 namespace BypassEmote;
 
 /// <summary>
-/// Whether Direct Play may play an animation on the player, given the state they are in.
+/// Whether Direct Play may play an animation or not based on if unsafe mod is enabled
 /// </summary>
 internal static class DirectPlayGate
 {

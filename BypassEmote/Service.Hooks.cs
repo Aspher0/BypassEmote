@@ -1,3 +1,4 @@
+using BypassEmote.EmoteSwap;
 using BypassEmote.Helpers;
 using BypassEmote.Models;
 using BypassEmote.Safety;
@@ -6,6 +7,7 @@ using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using Lumina.Excel.Sheets;
 using NoireLib;
+using NoireLib.Animations.Helpers;
 using NoireLib.Helpers;
 using NoireLib.Hooking;
 using System;
@@ -107,14 +109,46 @@ public partial class Service
         if (NoireService.ObjectTable.LocalPlayer == null)
             return false;
 
-        if (EmoteHelper.GetEmoteById(hotbarSlot->CommandId) is not { } emote || LeaveToTheGame(emote.RowId))
+        if (EmoteHelper.GetEmoteById(hotbarSlot->CommandId) is not { } emote)
             return false;
 
         if (IsPoseFamilySource(emote.RowId)) // Might be unnecessary since poses are all unlocked by default, but whatever
             return false;
 
+        if (LeaveToTheGame(emote.RowId))
+            return false;
+
         Orchestrator?.TrySwap(emote);
         return true;
+    }
+
+    private static void ArmCacheBreak(ushort emoteId)
+    {
+        if (!Configuration.PluginEnabled || !Configuration.AlwaysCacheBreak)
+            return;
+
+        if (Configuration.SelfBypassMode != SelfBypassMode.EmoteSwap || NoireService.ClientState.IsGPosing)
+            return;
+
+        if (Orchestrator is not { IsExecutingSwap: false } orchestrator || Breaker is not { } breaker
+            || NoireService.ObjectTable.LocalPlayer is not { } localPlayer)
+        {
+            return;
+        }
+
+        if (!LeaveToTheGame(emoteId) || IsPoseFamilySource(emoteId) || Catalog?.Get(emoteId) is not { } emote)
+            return;
+
+        try
+        {
+            var fallbackOrder = EmotePathHelper.GetFallbackOrder(SwapOrchestrator.SkeletonFor(localPlayer));
+
+            breaker.BreakFor(emote, fallbackOrder, orchestrator.CacheBreakNamesFor(emote, fallbackOrder));
+        }
+        catch (Exception ex)
+        {
+            NoireLogger.LogError(ex, $"Cache break for emote {emoteId} failed; the press is left to the game.");
+        }
     }
 
     // A /cpose cycle member, or Change Pose itself
@@ -130,10 +164,13 @@ public partial class Service
         var emote = inHotbarSlot ? null : ResolveSelfEmote(emoteId);
 
         if (emote.HasValue && Configuration.SelfBypassMode == SelfBypassMode.EmoteSwap
-            && !LeaveToTheGame(emote.Value.RowId) && !IsPoseFamilySource(emote.Value.RowId))
+            && !IsPoseFamilySource(emote.Value.RowId))
         {
-            Orchestrator?.TrySwap(emote.Value);
-            return;
+            if (!LeaveToTheGame(emote.Value.RowId))
+            {
+                Orchestrator?.TrySwap(emote.Value);
+                return;
+            }
         }
 
         AgentExecuteEmoteHook.Original(agent, emoteId, playEmoteOption, addToHistory, liveUpdateHistory);
@@ -150,12 +187,22 @@ public partial class Service
     // Necessary since emote bypassing will prevent the player from executing any base/obtained emote otherwise
     private static unsafe bool DetourExecuteEmote(EmoteManager* emoteManager, ushort emoteId, PlayEmoteOption* playEmoteOption)
     {
+        DropSwappedIdlePose(emoteId);
+
         if (Orchestrator is { } orchestrator && SwapMods?.ArmedFor(emoteId) is { } armed
             && ShouldEndSwapBeforeExecuting(Configuration.SelfBypassMode, orchestrator.IsExecutingSwap, armed, emoteId)
             && Configuration.SwapLifetime != SwapLifetime.Never)
         {
             EndWatcher?.StopWatching();
+
+            ResidencyProbe?.ArmRelease(SwapOrchestrator.VanillaTimelineKeysOf(armed), armed.InternalNames ?? [],
+                releasedSource: armed.ContentKey);
+
             SwapMods.DeselectEntry(armed);
+        }
+        else
+        {
+            ArmCacheBreak(emoteId);
         }
 
         var chara = NoireService.ObjectTable.LocalPlayer;
@@ -177,6 +224,24 @@ public partial class Service
         }
 
         return ExecuteEmoteHook.Original(emoteManager, emoteId, playEmoteOption);
+    }
+
+    private static void DropSwappedIdlePose(ushort emoteId)
+    {
+        if (Configuration.SelfBypassMode != SelfBypassMode.EmoteSwap)
+            return;
+
+        if (SwapMods?.ArmedIdlePose() is not { } idlePose)
+            return;
+
+        EndWatcher?.StopWatchingIdlePose();
+        SwapMods.DeselectEntry(idlePose);
+
+        var redrawn = SwapOrchestrator.IdlePoseNeedsRedrawOnEnd(idlePose.IdlePoseIndex)
+            && Penumbra?.RedrawLocalPlayer() == true;
+
+        NoireLogger.LogDebug($"Emote {emoteId} is being played, dropping swapped idle pose. "
+            + (redrawn ? "Character redrawn." : ""));
     }
 
     internal static bool ShouldEndSwapBeforeExecuting(SelfBypassMode mode, bool isExecutingSwap,

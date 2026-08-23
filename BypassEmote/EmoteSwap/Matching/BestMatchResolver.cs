@@ -27,7 +27,6 @@ public static class BestMatchResolver
 
     // Deliberately large negative scores to keep the tiering separate from the soft scores above.
 
-    // What a target carries is what vanilla players hear. Strict refuses a sounding one outright
     private const int SoundingTargetTierPenalty = -10_000;
 
     private const int CancelsOnRotateTierPenalty = -100_000;
@@ -35,6 +34,7 @@ public static class BestMatchResolver
     private const int SourceIntroDroppedTierPenalty = -50_000;
 
     // Slot 1 populated with no pap behind it, so its windup plays over any swap.
+    // Might be unncessary
     private const int TmbOnlyIntroTierPenalty = -75_000;
 
     // Needs the shared-pap machinery, so it goes last of the intro cases.
@@ -179,8 +179,6 @@ public static class BestMatchResolver
             if (Resolve(source, remaining, config, currentPosture).Target is not { } next)
                 break;
 
-            // Every candidate here already passed the player's rules; the distance only says how far below the best
-            // one this emote scores, so it decides how far the rank may widen, never whether a rule may be broken.
             if (bestScore - ComputeScore(source, next, config, currentPosture) >= maxScoreDistance)
                 break;
 

@@ -18,7 +18,7 @@ namespace BypassEmote.UI;
 /// <summary> Turns a pair of emotes into an simple Penumbra mod. </summary>
 public sealed class CreateModWindow : Window, IDisposable
 {
-    private const string PenumbraMissingMessage = "Penumbra not available.";
+    private const string PenumbraMissingMessage = "Penumbra is not running.";
 
     private NoireExcelPicker<Emote>? _source;
     private NoireExcelPicker<Emote>? _target;
@@ -44,7 +44,7 @@ public sealed class CreateModWindow : Window, IDisposable
         };
     }
 
-    /// <summary> Opens the window with the emote already in the source slot. </summary>
+    /// <summary> Opens the window with the emote already in the source slot (from the main UI). </summary>
     public void ShowFor(Emote emote)
     {
         Picker(ref _source, SourcePickerId, SourcePlaceholder).Select(emote.RowId);
@@ -65,7 +65,8 @@ public sealed class CreateModWindow : Window, IDisposable
     {
         if (Service.Penumbra is not { Available: true })
         {
-            ImGui.TextColored(NoireTheme.Current.Resolve(ThemeColor.Danger), PenumbraMissingMessage);
+            ImGui.TextColored(NoireTheme.Current.Resolve(ThemeColor.Danger),
+                Service.Penumbra?.UnavailableReason is { Length: > 0 } reason ? reason : PenumbraMissingMessage);
             return;
         }
 
@@ -203,7 +204,6 @@ public sealed class CreateModWindow : Window, IDisposable
         picker.Draw();
     }
 
-    // Which copy of the source animation the mod will be built from
     private void DrawSourceAnimation()
     {
         if (_source?.SelectedRowId is not { } rowId
@@ -222,7 +222,6 @@ public sealed class CreateModWindow : Window, IDisposable
             ImGui.TextDisabled("Vanilla animation");
     }
 
-    /// <summary> Warns when picked races share one animation file, or when unpicked races read it too. </summary>
     private void DrawCoverageWarnings()
     {
         if (_racesFilledFor == null)

@@ -93,8 +93,6 @@ internal static class FfxivCollectHelper
         return response?.Results ?? [];
     }
 
-    // Serves the copy on disk while it is younger than the lifetime, and falls back to a stale copy when the site
-    // cannot be reached, so a start without network still has a catalog.
     private static async Task<T?> GetCachedAsync<T>(string url, CancellationToken token) where T : class
     {
         var cachePath = CachePathFor(url);
@@ -122,7 +120,6 @@ internal static class FfxivCollectHelper
         if (configDirectory.IsNullOrWhitespace())
             return null;
 
-        // Named after the URL's hash so a query string cannot produce an unusable file name.
         var tag = EncryptionHelper.ShortTag(url, 16);
 
         return Path.Combine(configDirectory, CacheFolderName, $"{tag}.json");
@@ -136,7 +133,6 @@ internal static class FfxivCollectHelper
         }
         catch
         {
-            // A copy whose timestamp cannot be read cannot be shown to be fresh.
             return false;
         }
     }

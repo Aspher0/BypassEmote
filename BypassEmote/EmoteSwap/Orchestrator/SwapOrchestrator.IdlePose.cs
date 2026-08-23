@@ -1,4 +1,4 @@
-﻿using BypassEmote.Helpers;
+using BypassEmote.Helpers;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
@@ -95,6 +95,14 @@ public sealed partial class SwapOrchestrator
         FeedbackHelper.Error(IdlePoseFailureLine(reason), IdlePoseFailureKind + reason);
         return false;
     }
+
+    internal static bool ArmsIdlePoseWatch(SwapLifetime lifetime)
+        => lifetime != SwapLifetime.Never;
+
+    internal const byte PersistentIdlePoseIndex = 0;
+
+    internal static bool IdlePoseNeedsRedrawOnEnd(byte poseIndex)
+        => poseIndex == PersistentIdlePoseIndex;
 
     internal static bool ShouldAttemptIdlePoseFallback(EmoteAttributes source, MatchResult match,
         IdlePoseFallback mode, bool poolHasLoop)
@@ -212,7 +220,7 @@ public sealed partial class SwapOrchestrator
 
         if (!reused)
         {
-            entry = IdlePoseEntryFor(contentKey, sourceKey, source, skeleton, files);
+            entry = IdlePoseEntryFor(contentKey, sourceKey, source, skeleton, files, poseType, poseIndex);
 
             if (!_swapMods.AddAndSelect(entry, files, skeleton))
             {
@@ -239,7 +247,7 @@ public sealed partial class SwapOrchestrator
         if (IdlePoseDropsSourceIntro(posePaths.StartRelativePapPath, source.Intro, sourceIntroRequestedPath))
             FeedbackHelper.Notice(IdlePoseIntroDroppedMessage);
 
-        if (Configuration.SwapLifetime == SwapLifetime.WhenEmoteEnds)
+        if (ArmsIdlePoseWatch(Configuration.SwapLifetime))
             _endWatcher.ArmIdlePose(entry!, () => _penumbra.RedrawLocalPlayer());
         else
             _endWatcher.StopWatching();
@@ -253,7 +261,7 @@ public sealed partial class SwapOrchestrator
     }
 
     private SwapOptionEntry IdlePoseEntryFor(string contentKey, string sourceKey, EmoteAttributes source, string skeleton,
-        IReadOnlyDictionary<string, byte[]> files)
+        IReadOnlyDictionary<string, byte[]> files, EmoteController.PoseType poseType, byte poseIndex)
     {
         var redirectedPaths = new Dictionary<string, string>(files.Count, StringComparer.Ordinal);
 
@@ -263,7 +271,7 @@ public sealed partial class SwapOrchestrator
                 SwapModManager.DeriveFileName(bytes, SwapModManager.FileExtensionFor(gamePath)));
         }
 
-        var groupName = OptionNaming.IdlePoseGroupName;
+        var groupName = OptionNaming.IdlePoseGroupNameFor(poseType, poseIndex);
 
         var filesByRace = new Dictionary<string, IReadOnlyDictionary<string, string>>(StringComparer.Ordinal)
         {
@@ -274,7 +282,8 @@ public sealed partial class SwapOrchestrator
             OptionNaming.OptionNameFor(source.Command, null, _swapMods.TakenOptionNames(groupName)),
             source.RowId, IdlePoseTargetEmote, IsIdlePoseSwap: true, filesByRace,
             RulesStamp: SwapRulesStamp.Current(),
-            SourceKey: sourceKey);
+            SourceKey: sourceKey,
+            IdlePoseIndex: poseIndex);
     }
 
     private static byte[]? BuildIdlePosePap(string sourceRequestedPath, string resolvedSourcePath,

@@ -205,7 +205,7 @@ public class EmoteWindow : Window, IDisposable
                 var displayedName = Configuration.ShowEmoteIds ? $"[{emote.Item1.RowId}] " : "";
                 displayedName += CommonHelper.GetEmoteName(emote.Item1);
 
-                // Every command form the emote answers to, comma separated.
+                // Every text command the emote answers to
                 var commands = new List<string>(4);
                 var tc = emote.Item1.TextCommand.ValueNullable;
                 void AddCmd(string? s)
@@ -228,7 +228,7 @@ public class EmoteWindow : Window, IDisposable
 
                 var starSize = 20f;
                 var isFavorite = Configuration.FavoriteEmotes.Contains(emote.Item1.RowId);
-                var starColor = isFavorite ? new Vector4(1f, 0.9f, 0f, 1f) : new Vector4(0.35f, 0.35f, 0.35f, 1f); // Yellow if favorite, gray if not
+                var starColor = isFavorite ? new Vector4(1f, 0.9f, 0f, 1f) : new Vector4(0.35f, 0.35f, 0.35f, 1f);
                 var starIcon = FontAwesomeIcon.Star;
 
                 var initialPosY = ImGui.GetCursorPosY();
@@ -255,7 +255,7 @@ public class EmoteWindow : Window, IDisposable
                 ImGui.SameLine(0, 2f);
 
                 var isBlocked = Configuration.BlockedTargetEmotesEmoteSwap.Contains(emote.Item1.RowId);
-                var blockColor = isBlocked ? new Vector4(0.9f, 0.2f, 0.2f, 1f) : new Vector4(0.35f, 0.35f, 0.35f, 1f); // Red if blocked, gray if not
+                var blockColor = isBlocked ? new Vector4(0.9f, 0.2f, 0.2f, 1f) : new Vector4(0.35f, 0.35f, 0.35f, 1f);
 
                 ImGui.PushFont(UiBuilder.IconFont);
                 ImGui.PushStyleColor(ImGuiCol.Text, blockColor);

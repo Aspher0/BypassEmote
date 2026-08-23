@@ -18,10 +18,14 @@ public sealed partial class SwapOrchestrator : IDisposable
 {
     private const string LogPrefix = "[SwapOrchestrator] ";
 
-    private const string PenumbraUnavailableMessage = "Penumbra is not available. Emote not swapped.";
     private const string CatalogLoadingMessage = "Still loading emote data. Try again in a moment.";
     private const string GenericFailureMessage = "Something went wrong. Emote not swapped.";
     private const string NoCollectionMessage = "No Penumbra collection is assigned to your character. Emote not swapped.";
+
+    private string PenumbraUnavailableMessage => $"{_penumbra.UnavailableReason} Emote not swapped.";
+
+    private const string NoCharacterMessage =
+        "Penumbra could not say which collection your character uses. Emote not swapped.";
 
     private readonly IPCCaller_Penumbra _penumbra;
     private readonly EmoteAttributeCatalog _catalog;
@@ -123,6 +127,12 @@ public sealed partial class SwapOrchestrator : IDisposable
             ReportChangedTarget(target, changedBy);
         }
 
+        BuildAndPlay(localPlayer, source, target, skeleton, swapClock, elapsedAtMatch);
+    }
+
+    private void BuildAndPlay(ICharacter localPlayer, EmoteAttributes source, EmoteAttributes target,
+        string skeleton, Stopwatch swapClock, long elapsedAtMatch)
+    {
         var raceInputs = RaceInputsFor(source, target, skeleton);
         var elapsedAtPair = swapClock.ElapsedMilliseconds;
 
@@ -220,7 +230,7 @@ public sealed partial class SwapOrchestrator : IDisposable
         }
 
         if (_penumbra.GetPlayerCollection() is not { } collection)
-            return Refuse(PenumbraUnavailableMessage);
+            return Refuse(_penumbra.Available ? NoCharacterMessage : PenumbraUnavailableMessage);
 
         if (IsUnassignedCollection(collection.Id))
             return Refuse(NoCollectionMessage);
@@ -258,8 +268,6 @@ public sealed partial class SwapOrchestrator : IDisposable
             : (config, PoolAvoidingChangedTargets(source, pool, config, posture, skeleton, fallbackOrder));
     }
 
-    // Identifies a build by what every body it covers reads, so pressing the same emote again selects the option
-    // that was already made for it.
     internal static string ContentKeyFor(EmoteAttributes source, EmoteAttributes target,
         IReadOnlyList<RaceBuildInput> races)
         => SwapContentKey.For(EmoteAttributeCatalog.RulesVersion, target.RowId, source.RowId,
@@ -267,23 +275,13 @@ public sealed partial class SwapOrchestrator : IDisposable
 
     private bool ComposeUniqueNamesFor(EmoteAttributes target, out string reading)
     {
-        var knownNames = _swapMods.ArmedFor(target.RowId)?.InternalNames;
-        var packResident = _residency.AnyPackNameResident(knownNames ?? [], out var packTrace);
-
         var residencyIds = target.AnimationTimelineIds is { Count: > 0 } ids
             ? ids
             : EmoteHelper.GetActionTimelineIds(target.RowId);
 
         var consumers = residencyIds.Select(id => (Id: id, Count: _residency.ConsumersOf(id))).ToList();
 
-        reading = $"timeline [{string.Join(" ", consumers.Select(entry => $"{entry.Id}:{entry.Count}"))}], packs "
-            + packResident switch
-            {
-                true => $"hold [{string.Join(", ", knownNames!)}]",
-                false => $"dropped [{string.Join(", ", knownNames!)}]",
-                null => "nothing of ours to look for",
-            }
-            + $" ({packTrace})";
+        reading = $"timeline [{string.Join(" ", consumers.Select(entry => $"{entry.Id}:{entry.Count}"))}]";
 
         return SwapLayers.AlwaysComposePaths || consumers.Any(entry => entry.Count > 0);
     }

@@ -28,6 +28,7 @@ public partial class Service
     public static SwapEndWatcher? EndWatcher;
     public static SkeletonWatcher? BodyWatcher;
     public static SchedulerResidencyProbe? ResidencyProbe;
+    public static CacheBreaker? Breaker;
 #if DEBUG
     public static ClientTriggerMonitor? TriggerMonitor;
 #endif
@@ -55,6 +56,8 @@ public partial class Service
         TriggerMonitor = new ClientTriggerMonitor();
 #endif
         Orchestrator = new SwapOrchestrator(Penumbra, Catalog, SwapMods, EndWatcher, ResidencyProbe);
+
+        Breaker = new CacheBreaker(Penumbra, ResidencyProbe, NoireService.PluginInterface.GetPluginConfigDirectory());
 
         BodyWatcher = new SkeletonWatcher(SwapMods);
 
@@ -110,6 +113,7 @@ public partial class Service
 
         BodyWatcher?.Dispose();
         Orchestrator?.Dispose();
+        Breaker?.Dispose();
 
         EndWatcher?.Disarm();
 

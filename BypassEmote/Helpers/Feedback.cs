@@ -40,10 +40,11 @@ public sealed class Feedback
         Throttled(window, kind ?? message, () => Print(message, color, chat));
     }
 
-    public void SayAlways(string message, Vector3 color, string category, HistoryLogLevel level = HistoryLogLevel.Info)
+    public void SayAlways(string message, Vector3 color, string category, HistoryLogLevel level = HistoryLogLevel.Info,
+        NoireLogger.ChatMessageBuilder? chat = null)
     {
         Record(message, category, level);
-        Print(message, color);
+        Print(message, color, chat);
     }
 
     public bool ShouldShowChange(string key, string value)

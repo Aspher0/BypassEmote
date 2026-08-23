@@ -1,3 +1,4 @@
+using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,7 +10,19 @@ internal static class OptionNaming
 {
     internal const string NoneOptionName = "None";
 
-    internal const string IdlePoseGroupName = "Idle pose";
+    private const string IdlePoseGroupPrefix = "Idle pose";
+
+    internal static string StanceLabelFor(EmoteController.PoseType stance) => stance switch
+    {
+        EmoteController.PoseType.Idle => "Standing",
+        EmoteController.PoseType.Sit => "Chair sit",
+        EmoteController.PoseType.GroundSit => "Ground sit",
+        EmoteController.PoseType.Doze => "Doze",
+        _ => stance.ToString(),
+    };
+
+    internal static string IdlePoseGroupNameFor(EmoteController.PoseType stance, byte poseIndex)
+        => $"{IdlePoseGroupPrefix} {poseIndex} - {StanceLabelFor(stance)}";
 
     private const string GroupPrefix = "On: ";
 

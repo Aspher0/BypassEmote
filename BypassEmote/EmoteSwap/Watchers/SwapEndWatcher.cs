@@ -1,8 +1,6 @@
-﻿using BypassEmote.Models;
-using Dalamud.Game.ClientState.Objects.Types;
+using BypassEmote.Models;
 using Dalamud.Plugin.Services;
 using NoireLib;
-using NoireLib.Animations.Helpers;
 using NoireLib.Helpers;
 using System;
 using System.Numerics;
@@ -23,8 +21,9 @@ public sealed class SwapEndWatcher
     private ushort _watchedEmote;
 
     private bool _isIdlePoseWatch;
+    private bool _playerAway;
+    private bool _idlePoseRedrawsOnEnd;
     private Action? _idlePoseRedraw;
-    private CharacterPoseState _armedPoseState;
 
     public SwapEndWatcher(SwapModManager swapMods)
         => _swapMods = swapMods;
@@ -34,6 +33,8 @@ public sealed class SwapEndWatcher
         _armed = true;
         _armedEntry = entry;
         _isIdlePoseWatch = false;
+        _playerAway = false;
+        _idlePoseRedrawsOnEnd = false;
         _idlePoseRedraw = null;
         _armedPosition = Vector3.Zero;
         _watchedEmote = 0;
@@ -56,25 +57,29 @@ public sealed class SwapEndWatcher
         _armed = true;
         _armedEntry = entry;
         _isIdlePoseWatch = true;
+        _playerAway = false;
+        _idlePoseRedrawsOnEnd = SwapOrchestrator.IdlePoseNeedsRedrawOnEnd(entry.IdlePoseIndex);
         _idlePoseRedraw = redrawLocalPlayer;
         _armedPosition = Vector3.Zero;
         _watchedEmote = 0;
 
         if (NoireService.ObjectTable.LocalPlayer is { } localPlayer)
-        {
             _armedPosition = localPlayer.Position;
-            SnapshotPoseState(localPlayer);
-        }
 
         EnsureSubscribed();
     }
 
     // Stops watching and turns the swap off.
-    public void Disarm()
+    public void Disarm() => Disarm(forceIdlePoseRedraw: true);
+
+    private void Disarm(bool forceIdlePoseRedraw)
     {
         var wasArmed = _armed;
         var armedEntry = _armedEntry;
-        var idlePoseRedraw = _isIdlePoseWatch ? _idlePoseRedraw : null;
+
+        var idlePoseRedraw = _isIdlePoseWatch && (forceIdlePoseRedraw || _idlePoseRedrawsOnEnd)
+            ? _idlePoseRedraw
+            : null;
 
         StopWatching();
 
@@ -87,6 +92,15 @@ public sealed class SwapEndWatcher
         idlePoseRedraw?.Invoke();
     }
 
+    public bool StopWatchingIdlePose()
+    {
+        if (!_armed || !_isIdlePoseWatch)
+            return false;
+
+        StopWatching();
+        return true;
+    }
+
     // Stops watching without touching the swap, for lingering swaps
     public void StopWatching()
     {
@@ -96,6 +110,8 @@ public sealed class SwapEndWatcher
         _armedEntry = null;
         _watchedEmote = 0;
         _isIdlePoseWatch = false;
+        _playerAway = false;
+        _idlePoseRedrawsOnEnd = false;
         _idlePoseRedraw = null;
     }
 
@@ -140,7 +156,18 @@ public sealed class SwapEndWatcher
 
         if (NoireService.ObjectTable.LocalPlayer is not { } localPlayer)
         {
-            End("the local player is gone");
+            _playerAway = true;
+            return;
+        }
+
+        if (_playerAway)
+        {
+            _playerAway = false;
+            _armedPosition = localPlayer.Position;
+
+            NoireLogger.LogDebug("The character was redrawn. Watcher picking up where it left off.",
+                LogPrefix);
+
             return;
         }
 
@@ -150,17 +177,10 @@ public sealed class SwapEndWatcher
             return;
         }
 
-        var playing = EmoteHelper.GetPlayingEmoteId(localPlayer);
-
         if (_isIdlePoseWatch)
-        {
-            if (playing != 0)
-                End($"the player started emote {playing}");
-            else if (LeftArmedPoseState(localPlayer))
-                End("the player left the pose the swap was applied to");
-
             return;
-        }
+
+        var playing = EmoteHelper.GetPlayingEmoteId(localPlayer);
 
         if (playing == _watchedEmote)
             return;
@@ -172,16 +192,12 @@ public sealed class SwapEndWatcher
 
     private void End(string reason)
     {
-        NoireLogger.LogDebug($"Ending the swap: {reason}.", LogPrefix);
-        Disarm();
+        NoireLogger.LogDebug($"Ending the swap: {reason}"
+            + (_isIdlePoseWatch
+                ? _idlePoseRedrawsOnEnd ? ", with a redraw." : ", leaving the character as it is."
+                : "."),
+            LogPrefix);
+
+        Disarm(forceIdlePoseRedraw: false);
     }
-
-    private void SnapshotPoseState(ICharacter character)
-        => _armedPoseState = CharacterPoseState.Read(character);
-
-    private bool LeftArmedPoseState(ICharacter character)
-        => IdlePoseWatchEnded(_armedPoseState, CharacterPoseState.Read(character));
-
-    internal static bool IdlePoseWatchEnded(CharacterPoseState armed, CharacterPoseState now)
-        => armed != now;
 }

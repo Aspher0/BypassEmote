@@ -36,7 +36,7 @@ public sealed class EmoteAttributeCatalog
     private const string SharedFolder = "bt_common";
 
     // Weapon-motion slots are catalogued against one folder that carries every battle key, and the swap path
-    // moves them onto the folder the player's own weapons name.
+    // moves them onto the right folder for the player's own weapons.
     internal const string ReferenceMotionFolder = WeaponMotionFolders.ReferenceFolder;
 
     private const string CatalogProbeSkeleton = "c0101";

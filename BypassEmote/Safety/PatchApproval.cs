@@ -8,11 +8,13 @@ public enum PatchApprovalStatus
     Checking,
     Approved,
     Blocked,
+    Untested,
 }
 
 public sealed class ApprovedPatch
 {
     public string? GameVersion { get; set; }
+    public string? Client { get; set; }
     public string? MinimumPluginVersion { get; set; }
     public string? Notice { get; set; }
 }
@@ -28,21 +30,18 @@ public readonly record struct PatchApprovalVerdict(PatchApprovalStatus Status, s
 public static class PatchApproval
 {
     public static PatchApprovalVerdict Decide(PatchApprovalDocument? document, string? gameVersion,
-        Version? pluginVersion)
+        Version? pluginVersion, GameClient client = GameClient.Global)
     {
         if (string.IsNullOrWhiteSpace(gameVersion))
             return new(PatchApprovalStatus.Blocked, "The installed game build could not be read.", null);
 
         if (document == null)
-            return new(PatchApprovalStatus.Blocked, "The approval list could not be reached.", null);
+            return Unapproved(client, "The approval list could not be reached.", null);
 
         var notice = Trimmed(document.Notice);
 
-        if (Find(document, gameVersion) is not { } entry)
-        {
-            return new(PatchApprovalStatus.Blocked,
-                $"Game build {gameVersion} has not been approved yet.", notice);
-        }
+        if (Find(document, gameVersion, client) is not { } entry)
+            return Unapproved(client, $"Game build {gameVersion} has not been approved yet.", notice);
 
         notice = Trimmed(entry.Notice) ?? notice;
 
@@ -92,11 +91,29 @@ public static class PatchApproval
         return remaining <= TimeSpan.Zero ? 0 : (int)Math.Ceiling(remaining.TotalSeconds);
     }
 
-    private static ApprovedPatch? Find(PatchApprovalDocument document, string gameVersion)
+    private const string UntestedTail = "has not and can not be tested. This plugin might not work and might be "
+        + "unstable/unusable. Please don't use it if it does not work well.";
+
+    public static string UntestedReason(GameClient client) => client switch
+    {
+        GameClient.Korean or GameClient.Chinese
+            => $"The {GameClientReader.Name(client)} client {UntestedTail}",
+        _ => $"This game client is not the Global one, and {UntestedTail}",
+    };
+
+    private static PatchApprovalVerdict Unapproved(GameClient client, string blockedReason, string? notice)
+        => client == GameClient.Global
+            ? new(PatchApprovalStatus.Blocked, blockedReason, notice)
+            : new(PatchApprovalStatus.Untested, UntestedReason(client), notice);
+
+    private static ApprovedPatch? Find(PatchApprovalDocument document, string gameVersion, GameClient client)
     {
         foreach (var entry in document.Approved ?? [])
         {
-            if (string.Equals(Trimmed(entry.GameVersion), gameVersion, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(Trimmed(entry.GameVersion), gameVersion, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (GameClientReader.Parse(entry.Client) == client)
                 return entry;
         }
 

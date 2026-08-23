@@ -17,6 +17,9 @@ internal static class RegistryDecisions
     internal static SwapOptionEntry? FindArmedByTarget(SwapRegistry registry, uint targetEmote)
         => registry.Entries.FirstOrDefault(entry => entry.SelectedByUs && entry.TargetEmote == targetEmote);
 
+    internal static SwapOptionEntry? FindArmedIdlePose(SwapRegistry registry)
+        => registry.Entries.FirstOrDefault(entry => entry.SelectedByUs && entry.IsIdlePoseSwap);
+
     internal static SwapOptionEntry? EvictionCandidate(SwapRegistry registry, string groupName, int cap)
     {
         if (cap <= 0)

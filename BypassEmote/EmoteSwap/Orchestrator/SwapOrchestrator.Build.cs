@@ -198,7 +198,7 @@ public sealed partial class SwapOrchestrator
         if (_penumbra.GetPlayerCollection() == null)
         {
             _generations.Relinquish(request.Generation);
-            ReportFailure(request, PenumbraUnavailableMessage);
+            ReportFailure(request, _penumbra.Available ? NoCharacterMessage : PenumbraUnavailableMessage);
             return;
         }
 

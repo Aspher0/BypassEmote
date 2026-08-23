@@ -4,13 +4,16 @@ using System.Numerics;
 
 namespace BypassEmote.Helpers;
 
-// Chat payloads (links) to look at a mod that got in a swap's way, or switch it off.
+// Chat payloads (links) to look at a mod that prevented a swap or to switch it off
 internal static class ModActionChatPayloads
 {
     private static readonly Vector3 LinkColor = ColorHelper.HexToVector3("#4FA3FF");
 
     private const string OpenFailedKind = "modaction.open-failed";
     private const string DisableFailedKind = "modaction.disable-failed";
+
+    private static string PenumbraReason()
+        => Service.Penumbra?.UnavailableReason is { Length: > 0 } reason ? reason : "Penumbra is not running.";
 
     internal static void Append(NoireLogger.ChatMessageBuilder chat, string modDirectory, string modName)
     {
@@ -27,7 +30,7 @@ internal static class ModActionChatPayloads
     {
         if (Service.Penumbra is not { Available: true } penumbra)
         {
-            FeedbackHelper.Error("Penumbra is not available. Mod not opened.");
+            FeedbackHelper.Error($"{PenumbraReason()} Mod not opened.");
             return;
         }
 
@@ -39,7 +42,7 @@ internal static class ModActionChatPayloads
     {
         if (Service.Penumbra is not { Available: true } penumbra)
         {
-            FeedbackHelper.Error("Penumbra is not available. Mod not disabled.");
+            FeedbackHelper.Error($"{PenumbraReason()} Mod not disabled.");
             return;
         }
 

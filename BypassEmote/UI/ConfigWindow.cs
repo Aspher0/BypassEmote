@@ -46,6 +46,7 @@ public class ConfigWindow : Window, IDisposable
     private const string BehaviorName = "Swaps at the same time";
     private const string KeptSwapsName = "Kept swaps per emote";
     private const string AnonymizeModName = "Hide your name on the mod";
+    private const string AlwaysCacheBreakName = "Always cache-break (experimental)";
     private const string LoopMatchingName = "Loop matching";
     private const string TurnMatchingName = "Turn matching";
     private const string SoundMatchingName = "Sound matching";
@@ -67,7 +68,7 @@ public class ConfigWindow : Window, IDisposable
     private static readonly string[] SwapNames =
         [ModeName, LifetimeName, BehaviorName, KeptSwapsName, AnonymizeModName, LoopMatchingName, TurnMatchingName, SoundMatchingName,
          CachedDispatchName, MaxTargetsName, DispatchFidelityName, ErrorThrottleName, WarningThrottleName,
-         ModdedTargetsName, IdlePoseLoopsName,
+         ModdedTargetsName, IdlePoseLoopsName, AlwaysCacheBreakName,
          SwapMessagesName, ErrorMessagesName, WarningMessagesName, FaceTargetName, UnsafeToggleName];
 
     private const string PluginEnabledName = "Enable the plugin";
@@ -218,7 +219,16 @@ public class ConfigWindow : Window, IDisposable
     {
         var gate = Service.PatchApproval;
 
-        if (gate == null || !gate.Governs || gate.Approved)
+        if (gate == null)
+            return;
+
+        if (gate.Untested)
+        {
+            DrawUntestedClient(gate);
+            return;
+        }
+
+        if (!gate.Governs || gate.Approved)
             return;
 
         ImGui.TextColoredWrapped(PatchWarningColor, "Bypass Emote has not been approved for this game build.");
@@ -236,6 +246,18 @@ public class ConfigWindow : Window, IDisposable
         ImGui.TextDisabled($"Checked at {checkedAt}.");
 
         DrawCheckNowButton(gate);
+
+        ImGui.Separator();
+    }
+
+    private static void DrawUntestedClient(PatchApprovalGate gate)
+    {
+        ImGui.TextColoredWrapped(PatchWarningColor, "Bypass Emote cannot be tested on this game client.");
+
+        ImGui.TextWrapped(gate.Reason);
+
+        if (gate.Notice is { Length: > 0 } notice)
+            ImGui.TextColoredWrapped(PatchNoticeColor, notice);
 
         ImGui.Separator();
     }
@@ -677,6 +699,16 @@ public class ConfigWindow : Window, IDisposable
                 {
                     Configuration.AnonymizeModName = anonymizeModName;
                 }
+
+                var alwaysCacheBreak = Configuration.AlwaysCacheBreak;
+                if (CheckRow(AlwaysCacheBreakName, ref alwaysCacheBreak,
+                    "Applies the cache-break mechanism to every emote, even those you own. This is a bonus feature and "
+                    + "is experimental. This will allow the client to always \"refresh\" animations so you never have "
+                    + "to redraw yourself or stop emoting to apply an animation change.",
+                    AlwaysCacheBreakAlarm()))
+                {
+                    Configuration.AlwaysCacheBreak = alwaysCacheBreak;
+                }
             }
         }
 
@@ -731,6 +763,23 @@ public class ConfigWindow : Window, IDisposable
                     + "\nSet to 0 to disable.");
             }
         }
+    }
+
+    private static string? AlwaysCacheBreakAlarm()
+    {
+        var residency = Service.ResidencyProbe;
+        var intact = residency.IsDefault() || residency.CacheBreakIntact;
+        var approved = Service.PatchApproval is not { } gate || !gate.HoldsHooks;
+
+        if (intact && approved && SwapLayers.ReleaseCachedPacks)
+            return null;
+
+        if (!SwapLayers.ReleaseCachedPacks)
+            return "The release layer is switched off.";
+
+        return (approved ? string.Empty
+                : "This game build is not approved yet, this will not work.\n")
+            + (intact || residency.IsDefault() ? string.Empty : $"Not running: {residency.DescribeCacheBreakFault()}.\n");
     }
 
     private static string? CachedDispatchAlarm()

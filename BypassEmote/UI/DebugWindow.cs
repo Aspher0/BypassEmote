@@ -3,6 +3,7 @@ using BypassEmote.EmoteSwap;
 using BypassEmote.Helpers;
 using BypassEmote.IPC;
 using BypassEmote.Models;
+using BypassEmote.Safety;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -93,7 +94,66 @@ public class DebugWindow : Window, IDisposable
                 if (tab)
                     DrawKeptSwapsTab();
             }
+
+            using (var tab = ImRaii.TabItem("Patch Approval"))
+            {
+                if (tab)
+                    DrawPatchApprovalTab();
+            }
         }
+    }
+
+    private static void DrawPatchApprovalTab()
+    {
+        if (Service.PatchApproval is not { } gate)
+        {
+            ImGui.TextUnformatted("The gate is not up.");
+            return;
+        }
+
+        ImGui.TextUnformatted($"Probed client: {GameClientReader.Name(GameClientReader.Detected())}");
+        ImGui.TextUnformatted($"Gate reads: {GameClientReader.Name(gate.Client)}");
+
+        ImGui.Separator();
+
+        DrawPretendToggle("Pretend this is the Korean client", GameClient.Korean);
+        DrawPretendToggle("Pretend this is the Chinese client", GameClient.Chinese);
+        DrawPretendToggle("Pretend this client cannot be identified", GameClient.Unknown);
+
+        ImGui.Separator();
+
+        ImGui.TextUnformatted($"Game build: {gate.GameVersion}");
+        ImGui.TextUnformatted($"Status: {gate.Status}");
+        ImGui.TextWrapped($"Reason: {gate.Reason}");
+
+        if (gate.Notice is { Length: > 0 } notice)
+            ImGui.TextWrapped($"Notice: {notice}");
+
+        ImGui.TextUnformatted($"Governs: {gate.Governs}    Holds hooks: {gate.HoldsHooks}    Held: {gate.HeldCount}");
+
+        var due = gate.LastCheckedUtc is { } checkedUtc
+            ? (checkedUtc + PatchApprovalGate.RetryInterval).ToLocalTime().ToString("HH:mm:ss")
+            : "as soon as the loop runs";
+
+        ImGui.TextUnformatted($"Next automatic check: {due}");
+
+        ImGui.Separator();
+
+        if (ImGui.Button("Drop the recorded approval"))
+            gate.Forget();
+
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker("Clears the approval stored in the config and holds the hooks again, as on a "
+            + $"fresh install. The retry loop waits a full {PatchApprovalGate.RetryInterval.TotalMinutes:0} "
+            + "minutes before its next read, so nothing is fetched on the click.");
+    }
+
+    private static void DrawPretendToggle(string label, GameClient client)
+    {
+        var pretending = GameClientReader.Forced == client;
+
+        if (ImGui.Checkbox(label, ref pretending))
+            GameClientReader.Forced = pretending ? client : null;
     }
 
     private static void DrawKeptSwapsTab()
@@ -127,7 +187,6 @@ public class DebugWindow : Window, IDisposable
             DrawKeptSwapsTable(manager, registry.Entries);
         }
 
-        // Run after the table, so the registry never changes under the rows being drawn.
         if (clearing)
         {
             manager.ForgetAll();
@@ -199,7 +258,6 @@ public class DebugWindow : Window, IDisposable
             }
         }
 
-        // Run after the rows: both calls rewrite the registry the table is reading.
         if (pending is not { } action)
             return;
 
@@ -264,7 +322,6 @@ public class DebugWindow : Window, IDisposable
         {
             relay.Options.EnableLan = enableLan;
 
-            // Option changes only apply on activation
             if (relay.IsActive)
                 relay.SetActive(false).SetActive(true);
         }
@@ -350,6 +407,12 @@ public class DebugWindow : Window, IDisposable
 
         LayerSwitch("Republish the vanilla path##SwapLayer", SwapLayers.PublishVanillaPath,
             value => SwapLayers.PublishVanillaPath = value);
+
+        LayerSwitch("Release cached packs##SwapLayer", SwapLayers.ReleaseCachedPacks,
+            value => SwapLayers.ReleaseCachedPacks = value);
+
+        LayerSwitch("Release binds off the old content##SwapLayer", SwapLayers.ReleaseBindNewest,
+            value => SwapLayers.ReleaseBindNewest = value);
     }
 
     private static void LayerSwitch(string label, bool current, Action<bool> write)

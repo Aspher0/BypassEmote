@@ -40,7 +40,7 @@ internal static class PermanentModBuilder
             return new Outcome(false, "Pick at least one race for the mod to cover.");
 
         if (Service.Penumbra is not { Available: true } penumbra)
-            return new Outcome(false, "Penumbra not available.");
+            return new Outcome(false, Service.Penumbra?.UnavailableReason ?? "Penumbra is not running.");
 
         var name = CleanName(modName);
         if (name.Length == 0)

@@ -42,6 +42,13 @@ public static class FeedbackHelper
             Configuration.ShowWarningMessages, Configuration.ThrottleTimeWarnings,
             kind == null ? null : ThrottleKeyFor(WarningChannel, kind), chat);
 
+    public static void NoticeAlways(string message, NoireLogger.ChatMessageBuilder? chat = null)
+        => Channel.SayAlways(message, WarningColor, WarningCategory, HistoryLogLevel.Warning, chat);
+
+    internal static Vector3 NoticeColor => WarningColor;
+
+    internal static Vector3 AlertColor => ErrorColor;
+
     public static void Success(string message)
         => Channel.SayAlways(message, SuccessColor, InfoCategory);
 

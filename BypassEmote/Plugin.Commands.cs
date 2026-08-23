@@ -47,20 +47,30 @@ public sealed partial class Plugin
             .AddSubCommand("stop", sub => sub
                 .WithHelp("Stops the emote currently playing on yourself.")
                 .WithDisplayOrder(4)
-                .Handle(() => StopEmote(ResolveLocalPlayer())));
+                .Handle(() => StopEmote(ResolveLocalPlayer())))
+            .AddSubCommand("logs", sub => sub
+                .WithHelp("Exports a zip with the plugin logs and settings, to send to the developer.")
+                .WithDisplayOrder(5)
+                .Handle(DebugLogExporter.Export));
 
 #if DEBUG
         mainCommand
             .AddSubCommand("debug", sub => sub
                 .WithHelp("Opens the debug window.")
                 .AddAlias("d")
-                .WithDisplayOrder(5)
+                .WithDisplayOrder(6)
                 .Handle(ToggleDebug))
             .AddSubCommand("hooks", sub => sub
                 .WithHelp("Shows the hooks window.")
-                .WithDisplayOrder(6)
+                .WithDisplayOrder(7)
                 .Handle(() => NoireHook.ShowWindow()));
 #endif
+
+        commandRouter.Map("/belogs")
+            .WithHelp("Exports a zip with the plugin logs and settings, to send to the developer.")
+            .WithDisplayOrder(5)
+            .ShowDetailedDalamudHelp(false)
+            .Handle(DebugLogExporter.Export);
 
         commandRouter.Map("/bet")
             .WithHelp("Applies any emote to a targetted NPC. Only works on NPCs and owned minions/pets. Use /bet <emote_command> or /bet stop.")

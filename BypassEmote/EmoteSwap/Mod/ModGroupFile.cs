@@ -20,9 +20,6 @@ internal static class ModGroupFile
     internal static ModGroup NewGroup(string name)
         => new(name, [new ModGroupOption(OptionNaming.NoneOptionName, NoFiles)]);
 
-    // A new option goes right behind the empty one, never at the end. Penumbra's mod panel draws its option list from a
-    // cache that a reload does not invalidate, so an index past the list it still holds throws while it is on screen.
-    // Index 1 exists in both the old list and the new one, and the newest swap reading first is a bonus.
     internal static ModGroup Add(ModGroup group, ModGroupOption option)
         => group with { Options = [group.Options[0], option, .. group.Options.Skip(1)] };
 
@@ -37,7 +34,6 @@ internal static class ModGroupFile
         };
     }
 
-    // Nothing but the empty option left, so the group serves no swap any more.
     internal static bool IsEmpty(ModGroup group)
         => group.Options.All(option => option.Name == OptionNaming.NoneOptionName);
 

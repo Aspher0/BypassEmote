@@ -1,4 +1,4 @@
-using BypassEmote.Models;
+﻿using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using NoireLib;
@@ -279,10 +279,68 @@ public sealed partial class SwapOrchestrator
            && !(targetIntro == IntroKind.Pap && sourceCarriesOwnDistinctIntroFile);
 
     internal static bool OnDiskShapeMatches(SwapOptionEntry? kept, bool composeUniqueNames)
-        => (kept != null && GamePathsOf(kept).Any(UniqueNamePlanner.IsComposedPapPath)) == composeUniqueNames;
+    {
+        if (kept == null)
+            return !composeUniqueNames;
+
+        var paths = GamePathsOf(kept).ToList();
+
+        if (paths.Any(UniqueNamePlanner.IsComposedPapPath) != composeUniqueNames)
+            return false;
+
+        return !SwapLayers.PublishVanillaPath || paths.Any(path => !UniqueNamePlanner.IsComposedPapPath(path));
+    }
 
     internal static IEnumerable<string> GamePathsOf(SwapOptionEntry kept)
         => kept.FilesByRace.Values.SelectMany(files => files.Keys);
+
+    internal static IReadOnlyList<string> VanillaTimelineKeysOf(SwapOptionEntry entry)
+        => [.. GamePathsOf(entry)
+            .Where(path => !UniqueNamePlanner.IsComposedPapPath(path))
+            .Select(UniqueNamePlanner.TimelineKeyFromPapPath)
+            .Where(key => key != null)
+            .Distinct(StringComparer.Ordinal)!];
+
+    internal static IReadOnlyList<string> VanillaTimelineKeysOf(EmoteAttributes emote)
+    {
+        var keys = new List<string>(emote.Variants.Count + 1);
+
+        void Add(string relative)
+        {
+            if (UniqueNamePlanner.TimelineKeyFromPapPath("/" + relative) is { } key && !keys.Contains(key))
+                keys.Add(key);
+        }
+
+        foreach (var variant in emote.Variants)
+            Add(variant.RelativePapPath);
+
+        if (emote.IntroRelativePapPath is { } intro)
+            Add(intro);
+
+        return keys;
+    }
+
+    internal IReadOnlyList<string> VanillaNamePathsFor(EmoteAttributes emote, IReadOnlyList<string> fallbackOrder)
+    {
+        var paths = new List<string>(emote.Variants.Count + 1);
+
+        void Add(string relative)
+        {
+            if (SelectRequestedPath(relative, fallbackOrder, static _ => false, VanillaExists) is { } path
+                && !paths.Contains(path))
+            {
+                paths.Add(path);
+            }
+        }
+
+        foreach (var variant in emote.Variants)
+            Add(variant.RelativePapPath);
+
+        if (emote.IntroRelativePapPath is { } intro)
+            Add(intro);
+
+        return paths;
+    }
 
     internal static string SkeletonFor(ICharacter character)
         => CharacterHelper.ResolveSkeletonId(character);

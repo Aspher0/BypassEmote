@@ -41,6 +41,8 @@ public sealed class PatchApprovalGate : IDisposable
     private readonly object _pollLock = new();
 
     private Reading _reading;
+    private PatchApprovalDocument? _document;
+    private GameClient _seenClient;
     private int _seenHookVersion = -1;
     private bool _frameworkAttached;
     private bool _seenGoverns;
@@ -55,12 +57,24 @@ public sealed class PatchApprovalGate : IDisposable
         GameVersion = GameVersionHelper.CurrentGameVersion(string.Empty);
         PluginVersion = Assembly.GetExecutingAssembly().GetName().Version;
 
-        _reading = RememberedApproval()
-            ? new Reading(PatchApprovalStatus.Approved, $"Game build {GameVersion} was approved earlier.", null, null)
-            : new Reading(PatchApprovalStatus.Checking, "Reading the approval list.", null, null);
+        _reading = FirstReading();
+        _seenClient = Client;
+    }
+
+    private Reading FirstReading()
+    {
+        if (RememberedApproval())
+            return new(PatchApprovalStatus.Approved, $"Game build {GameVersion} was approved earlier.", null, null);
+
+        if (Client != GameClient.Global)
+            return new(PatchApprovalStatus.Untested, PatchApproval.UntestedReason(Client), null, null);
+
+        return new(PatchApprovalStatus.Checking, "Reading the approval list.", null, null);
     }
 
     public string GameVersion { get; }
+
+    public GameClient Client => GameClientReader.Current();
 
     public Version? PluginVersion { get; }
 
@@ -74,7 +88,11 @@ public sealed class PatchApprovalGate : IDisposable
 
     public bool Approved => Status == PatchApprovalStatus.Approved;
 
+    public bool Untested => Status == PatchApprovalStatus.Untested;
+
     public bool Governs => Configuration.SelfBypassMode == SelfBypassMode.EmoteSwap;
+
+    public bool HoldsHooks => Governs && !Approved && !Untested;
 
     public int ManualCooldownSeconds
         => PatchApproval.CooldownSeconds(_manualCheckRequestedUtc, DateTime.UtcNow, ManualCheckCooldown);
@@ -98,6 +116,11 @@ public sealed class PatchApprovalGate : IDisposable
         {
             NoireLogger.LogDebug($"Game build {GameVersion} was approved before.", LogPrefix);
         }
+        else if (Untested)
+        {
+            NoireLogger.LogWarning($"Game build '{GameVersion}' reads as the {GameClientReader.Name(Client)} "
+                + $"client. {Reason}", LogPrefix);
+        }
         else
         {
             NoireLogger.LogWarning($"Game build '{GameVersion}' is not approved: {Reason}.", LogPrefix);
@@ -114,6 +137,28 @@ public sealed class PatchApprovalGate : IDisposable
         _manualCheckRequestedUtc = DateTime.UtcNow;
 
         await CheckAsync(_tokens.Token).ConfigureAwait(false);
+    }
+
+    // Debug only
+    public void Forget()
+    {
+        StopPolling();
+
+        Remember(false);
+        RememberAnnouncement(false);
+
+        _document = null;
+
+        Volatile.Write(ref _reading, new Reading(PatchApprovalStatus.Checking,
+            $"The approval recorded for game build {GameVersion} was dropped.", null, DateTime.UtcNow));
+
+        NoireLogger.LogDebug($"Dropped the approval recorded for game build {GameVersion}; the list is read "
+            + $"again in {RetryInterval.TotalMinutes:0} minutes.", LogPrefix);
+
+        Apply();
+
+        if (Governs)
+            Resume();
     }
 
     public void OnModeChanged()
@@ -217,7 +262,9 @@ public sealed class PatchApprovalGate : IDisposable
             return;
         }
 
-        var verdict = PatchApproval.Decide(document, GameVersion, PluginVersion);
+        _document = document;
+
+        var verdict = PatchApproval.Decide(document, GameVersion, PluginVersion, Client);
         var wasApproved = Approved;
 
         Volatile.Write(ref _reading,
@@ -257,21 +304,45 @@ public sealed class PatchApprovalGate : IDisposable
 
     private void OnFrameworkUpdate(IFramework framework)
     {
+        if (Client != _seenClient)
+        {
+            Reconsider();
+            return;
+        }
+
         if (NoireHook.Version == _seenHookVersion && Governs == _seenGoverns)
             return;
 
         Apply();
     }
 
+    private void Reconsider()
+    {
+        var reading = _document == null && Client == GameClient.Global && RememberedApproval()
+            ? new Reading(PatchApprovalStatus.Approved, $"Game build {GameVersion} was approved earlier.", null,
+                LastCheckedUtc)
+            : Read(PatchApproval.Decide(_document, GameVersion, PluginVersion, Client));
+
+        Volatile.Write(ref _reading, reading);
+
+        NoireLogger.LogDebug($"The client now reads as {GameClientReader.Name(Client)}: {reading.Reason}", LogPrefix);
+
+        Apply();
+    }
+
+    private Reading Read(PatchApprovalVerdict verdict)
+        => new(verdict.Status, verdict.Reason, verdict.Notice, LastCheckedUtc);
+
     private void Apply()
     {
-        if (Approved || !Governs)
-            Release();
-        else
+        if (HoldsHooks)
             Hold();
+        else
+            Release();
 
         _seenHookVersion = NoireHook.Version;
         _seenGoverns = Governs;
+        _seenClient = Client;
     }
 
     private void Hold()

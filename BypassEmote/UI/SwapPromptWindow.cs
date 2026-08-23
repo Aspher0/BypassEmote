@@ -2,7 +2,6 @@ using BypassEmote.EmoteSwap;
 using BypassEmote.Helpers;
 using BypassEmote.Models;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
 using NoireLib;
 using NoireLib.Helpers;
 using NoireLib.UI;
@@ -115,31 +114,6 @@ public class SwapPromptWindow : IDisposable
             .AddNewLine()
             .AddNewLine()
             .AddText(Footer, muted);
-    }
-
-    private static void Mode(
-        NoireContent content, FontAwesomeIcon icon, Vector4 color, string name, string aside,
-        Vector4 asideColor)
-    {
-        content
-            .AddIcon(icon, color)
-            .AddSpacing(MarkGap)
-            .AddText(name, color)
-            .AddSpacing(MarkGap * 2f)
-            .AddText(aside, asideColor)
-            .AddNewLine();
-    }
-
-    private static void Point(
-        NoireContent content, bool isPro, Vector4 favorColor,
-        Vector4 againstColor, string text)
-    {
-        content
-            .AddSpacing(PointIndent)
-            .AddIcon(isPro ? FontAwesomeIcon.Plus : FontAwesomeIcon.Minus, isPro ? favorColor : againstColor)
-            .AddSpacing(MarkGap)
-            .AddText(text, isPro ? null : againstColor)
-            .AddNewLine();
     }
 
     public void Dispose() { }
