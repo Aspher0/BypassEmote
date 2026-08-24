@@ -1,3 +1,4 @@
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
 using BypassEmote.IPC;
 using BypassEmote.Models;
@@ -66,7 +67,7 @@ public sealed partial class SwapOrchestrator : IDisposable
         catch (Exception ex)
         {
             NoireLogger.LogError(ex, $"Swapping emote {sourceEmote.RowId} failed.", LogPrefix);
-            FeedbackHelper.Error(GenericFailureMessage);
+            LogHelper.Error(GenericFailureMessage);
         }
     }
 
@@ -117,7 +118,7 @@ public sealed partial class SwapOrchestrator : IDisposable
             return;
         }
 
-        FeedbackHelper.DebugLine($"> {source.Command} -> {target.Command}"
+        LogHelper.DebugLine($"> {source.Command} -> {target.Command}"
             + (choice.StaleVulnerable ? " | stale-guarded shape" : " | free shape")
             + (choice.PlainBest != null && choice.PlainBest != target.RowId ? " | dispatched off the plain best" : ""));
 
@@ -139,7 +140,7 @@ public sealed partial class SwapOrchestrator : IDisposable
         if (raceInputs.Count == 0 || raceInputs[0].Race != skeleton)
         {
             NoireLogger.LogDebug($"/{source.Command} and /{target.Command} share no usable posture variant on {skeleton}.", LogPrefix);
-            FeedbackHelper.Error(NoMatchMessage(source, []), NoMatchKind);
+            LogHelper.Error(NoMatchMessage(source, []), NoMatchKind);
             return;
         }
 
@@ -159,7 +160,7 @@ public sealed partial class SwapOrchestrator : IDisposable
         NoireLogger.LogDebug($"/{target.Command}: {reading}, so this swap "
             + (composeUniqueNames ? "loads under a composed name." : "is served on its own path."), LogPrefix);
 
-        FeedbackHelper.DebugLine((composeUniqueNames ? ">   composed name" : ">   vanilla path") + $" | {reading}");
+        LogHelper.DebugLine((composeUniqueNames ? ">   composed name" : ">   vanilla path") + $" | {reading}");
 
         var sourceKey = SourceKeyFor(source, raceInputs);
 
@@ -239,7 +240,7 @@ public sealed partial class SwapOrchestrator : IDisposable
 
         static PipelineStart? Refuse(string message)
         {
-            FeedbackHelper.Error(message);
+            LogHelper.Error(message);
             return null;
         }
     }

@@ -1,5 +1,7 @@
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
-using BypassEmote.Models;
+using BypassEmote.IPC.Enums;
+using BypassEmote.IPC.Models;
 using BypassEmote.UI;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.SubKinds;
@@ -59,8 +61,8 @@ internal static unsafe class EmotePlayer
         // Prevents direct play when migration prompt is shown
         if (isLocalPlayer && SwapPromptWindow.IsShowing)
         {
-            FeedbackHelper.Error(
-                SwapPromptWindow.WaitingForAChoiceMessage, SwapPromptWindow.WaitingForAChoiceKind);
+            LogHelper.Error(
+                "Bypass Emote is waiting for you to choose how it should play locked emotes.", "prompt.pending");
 
             return;
         }
@@ -74,7 +76,7 @@ internal static unsafe class EmotePlayer
                 isLocalPlayer && NoireService.Condition[ConditionFlag.Fishing]))
         {
             if (isLocalPlayer)
-                FeedbackHelper.Error("You cannot bypass this emote right now.");
+                LogHelper.Error("You cannot bypass this emote right now.");
             return;
         }
 
@@ -86,7 +88,7 @@ internal static unsafe class EmotePlayer
 
             if (plan == null)
             {
-                FeedbackHelper.Error(DirectPlayPlanner.RefusalMessageFor(emote, state), DirectPlayRefusalKind);
+                LogHelper.Error(DirectPlayPlanner.RefusalMessageFor(emote, state), DirectPlayRefusalKind);
                 return;
             }
 
@@ -96,7 +98,7 @@ internal static unsafe class EmotePlayer
             if (DirectPlayGate.ShouldBlockSelfPlay(
                     Configuration.SelfBypassMode, Configuration.DirectPlayUnsafe, isLocalPlayer, isSafeState))
             {
-                FeedbackHelper.Error(DirectPlayGate.SafeModeMessage, DirectPlayGate.SafeModeRefusalKind);
+                LogHelper.Error(DirectPlayGate.SafeModeMessage, DirectPlayGate.SafeModeRefusalKind);
                 return;
             }
         }

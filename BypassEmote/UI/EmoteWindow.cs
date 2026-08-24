@@ -1,5 +1,5 @@
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
-using BypassEmote.Models;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -441,8 +441,6 @@ public class EmoteWindow : Window, IDisposable
         ImGui.PopStyleVar();
     }
 
-    private const string SyncPopupId = "##BypassEmoteSyncMenu";
-
     private static void DrawToolbar()
     {
         var penumbraReady = Service.Penumbra is { Available: true };
@@ -504,12 +502,12 @@ public class EmoteWindow : Window, IDisposable
         if (ToolbarButton(FontAwesomeIcon.PeopleArrows, directPlay ? "Sync..." : "Sync All (/be syncall)", "##BypassEmoteSync", width, height))
         {
             if (directPlay)
-                ImGui.OpenPopup(SyncPopupId);
+                ImGui.OpenPopup("##BypassEmoteSyncMenu");
             else
                 EmotePlayer.SyncEmotes(true);
         }
 
-        using var popup = ImRaii.Popup(SyncPopupId);
+        using var popup = ImRaii.Popup("##BypassEmoteSyncMenu");
         if (!popup)
             return;
 
@@ -553,7 +551,7 @@ public class EmoteWindow : Window, IDisposable
         var addr = CharacterHelper.GetCompanionAddress(player);
         if (addr == 0)
         {
-            FeedbackHelper.Info("No minion summoned.");
+            LogHelper.Info("No minion summoned.");
             return;
         }
 
@@ -571,7 +569,7 @@ public class EmoteWindow : Window, IDisposable
         var addr = CharacterHelper.GetPetAddress(player);
         if (addr == 0)
         {
-            FeedbackHelper.Info("No pet summoned.");
+            LogHelper.Info("No pet summoned.");
             return;
         }
 
@@ -589,7 +587,7 @@ public class EmoteWindow : Window, IDisposable
         var addr = CharacterHelper.GetBuddyAddress(player);
         if (addr == 0)
         {
-            FeedbackHelper.Info("No chocobo summoned.");
+            LogHelper.Info("No chocobo summoned.");
             return;
         }
 

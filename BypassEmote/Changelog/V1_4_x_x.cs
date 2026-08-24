@@ -18,7 +18,7 @@ public class V1_4_x_x : BaseChangelogVersion
         var pastelPink = ColorHelper.HexToVector4("#ffa3d4ff");
         return new ChangelogVersion
         {
-            Version = new(1,4,0,0),
+            Version = new(1, 4, 0, 0),
             Date = "16-09-2025",
             Title = "Various QoLs and Changelog System",
             TitleColor = Blue,
@@ -68,7 +68,7 @@ public class V1_4_x_x : BaseChangelogVersion
         };
     }
 
-    private static ChangelogVersion CreateV1_4_1_0() 
+    private static ChangelogVersion CreateV1_4_1_0()
         => new ChangelogVersion
         {
             Version = new(1, 4, 1, 0),

@@ -1,3 +1,4 @@
+using BypassEmote.Enums;
 using System.Collections.Generic;
 
 namespace BypassEmote.Models;

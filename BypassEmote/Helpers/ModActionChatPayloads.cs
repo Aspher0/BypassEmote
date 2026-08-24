@@ -9,9 +9,6 @@ internal static class ModActionChatPayloads
 {
     private static readonly Vector3 LinkColor = ColorHelper.HexToVector3("#4FA3FF");
 
-    private const string OpenFailedKind = "modaction.open-failed";
-    private const string DisableFailedKind = "modaction.disable-failed";
-
     private static string PenumbraReason()
         => Service.Penumbra?.UnavailableReason is { Length: > 0 } reason ? reason : "Penumbra is not running.";
 
@@ -30,34 +27,34 @@ internal static class ModActionChatPayloads
     {
         if (Service.Penumbra is not { Available: true } penumbra)
         {
-            FeedbackHelper.Error($"{PenumbraReason()} Mod not opened.");
+            LogHelper.Error($"{PenumbraReason()} Mod not opened.");
             return;
         }
 
         if (!penumbra.OpenMod(modDirectory, modName))
-            FeedbackHelper.Error($"Penumbra would not open '{modName}'.", OpenFailedKind);
+            LogHelper.Error($"Penumbra would not open '{modName}'.", "modaction.open-failed");
     }
 
     private static void Disable(string modDirectory, string modName)
     {
         if (Service.Penumbra is not { Available: true } penumbra)
         {
-            FeedbackHelper.Error($"{PenumbraReason()} Mod not disabled.");
+            LogHelper.Error($"{PenumbraReason()} Mod not disabled.");
             return;
         }
 
         if (penumbra.GetPlayerCollection() is not { } collection)
         {
-            FeedbackHelper.Error("No Penumbra collection is assigned to your character. Mod not disabled.");
+            LogHelper.Error("No Penumbra collection is assigned to your character. Mod not disabled.");
             return;
         }
 
         if (!penumbra.TrySetModEnabled(collection.Id, modDirectory, false))
         {
-            FeedbackHelper.Error($"Penumbra would not switch '{modName}' off in {collection.Name}.", DisableFailedKind);
+            LogHelper.Error($"Penumbra would not switch '{modName}' off in {collection.Name}.", "modaction.disable-failed");
             return;
         }
 
-        FeedbackHelper.Info($"'{modName}' is now off in {collection.Name}.");
+        LogHelper.Info($"'{modName}' is now off in {collection.Name}.");
     }
 }

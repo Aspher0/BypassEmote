@@ -1,10 +1,12 @@
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
+using BypassEmote.IPC.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using Newtonsoft.Json;
 using NoireLib.Helpers;
 using System;
 
-namespace BypassEmote.Models;
+namespace BypassEmote.IPC.Models;
 
 [Serializable]
 public class CharacterState
@@ -64,7 +66,7 @@ public class CharacterState
     public bool IsLoopedEmote()
     {
         var emote = EmoteHelper.GetEmoteById(EmoteId);
-        return emote == null ? false : CommonHelper.GetEmotePlayType(emote.Value) == Models.EmotePlayType.Looped;
+        return emote == null ? false : CommonHelper.GetEmotePlayType(emote.Value) == EmotePlayType.Looped;
     }
 
     public bool IsCharacterOrBelongsToIt(nint characterAddress)

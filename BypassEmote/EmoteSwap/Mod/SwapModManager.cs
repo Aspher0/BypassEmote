@@ -1,3 +1,4 @@
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
 using BypassEmote.IPC;
 using BypassEmote.Models;

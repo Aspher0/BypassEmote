@@ -1,5 +1,6 @@
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
-using BypassEmote.Models;
+using BypassEmote.IPC.Models;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using NoireLib;
 using NoireLib.Helpers;

@@ -1,3 +1,4 @@
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -92,7 +93,7 @@ public sealed partial class SwapOrchestrator
     private static bool IdlePoseFailed(IdlePoseFailure reason, string debugDetail)
     {
         NoireLogger.LogDebug($"Idle-pose fallback failed ({reason}): {debugDetail}", LogPrefix);
-        FeedbackHelper.Error(IdlePoseFailureLine(reason), IdlePoseFailureKind + reason);
+        LogHelper.Error(IdlePoseFailureLine(reason), IdlePoseFailureKind + reason);
         return false;
     }
 
@@ -242,10 +243,10 @@ public sealed partial class SwapOrchestrator
 
         var elapsedAtRedraw = swapClock.ElapsedMilliseconds;
 
-        FeedbackHelper.SwapLine(source.Command, IdlePoseTargetLabel);
+        LogHelper.SwapLine(source.Command, IdlePoseTargetLabel);
 
         if (IdlePoseDropsSourceIntro(posePaths.StartRelativePapPath, source.Intro, sourceIntroRequestedPath))
-            FeedbackHelper.Notice(IdlePoseIntroDroppedMessage);
+            LogHelper.Notice(IdlePoseIntroDroppedMessage);
 
         if (ArmsIdlePoseWatch(Configuration.SwapLifetime))
             _endWatcher.ArmIdlePose(entry!, () => _penumbra.RedrawLocalPlayer());

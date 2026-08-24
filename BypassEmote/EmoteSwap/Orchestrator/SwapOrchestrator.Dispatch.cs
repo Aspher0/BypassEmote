@@ -1,4 +1,5 @@
-﻿using BypassEmote.Helpers;
+using BypassEmote.Enums;
+using BypassEmote.Helpers;
 using BypassEmote.Models;
 using System;
 using System.Collections.Generic;
@@ -73,7 +74,7 @@ public sealed partial class SwapOrchestrator
 
         if (picked.RowId != first.Target.RowId)
         {
-            FeedbackHelper.DebugLine(heldInRank.ContainsKey(picked.RowId)
+            LogHelper.DebugLine(heldInRank.ContainsKey(picked.RowId)
                 ? $">   dispatch: every target of this rank is taken; /{source.Command} shares /{picked.Command}"
                 : $">   dispatch: /{first.Target.Command} is held by another emote; /{source.Command} gets /{picked.Command}");
         }

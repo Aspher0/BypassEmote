@@ -19,19 +19,6 @@ namespace BypassEmote.Helpers;
 internal static class DebugLogExporter
 {
     private const string LogPrefix = "[DebugLogExporter] ";
-    private const string OperationName = "BypassEmote.ExportDebugLogs";
-
-    private const string FolderName = "DebugLogs";
-    private const string ArchivePrefix = "DO_NOT_POST_PUBLICLY_DebugLogs_";
-    private const string StagingPrefix = ".staging_";
-    private const string ReportEntryName = "report.txt";
-    private const string LogEntryName = "bypassemote.log";
-    private const string ConfigEntryFolder = "config";
-
-    private const string CurrentLogFileName = "dalamud.log";
-    private const string RotatedLogFileName = "dalamud.old.log";
-
-    private const string PluginTag = "BypassEmote";
 
     private const int MaxHeadChars = 4 * 1024 * 1024;
     private const int MaxTailChars = 12 * 1024 * 1024;
@@ -39,23 +26,6 @@ internal static class DebugLogExporter
     private static readonly TimeSpan LoadMargin = TimeSpan.FromMinutes(1);
 
     private static readonly Vector3 LinkColor = ColorHelper.HexToVector3("#4FA3FF");
-
-    private const string ExportingMessage = "Exporting logs...";
-
-    private const string OpeningText = "Debug logs exported to ";
-
-    private const string BodyText =
-        ". Send this file to the developer. Feel free to check the content of the zip and if you need to "
-        + "anonymize any information, please do so before sending it. ";
-
-    private const string AlertText =
-        "Personal information appears in it, DO NOT send this in a public channel.";
-
-    private const string ClosingText =
-        " Ask the developer where to send this file to be extra safe.";
-
-    private const string AlreadyRunningMessage = "A debug log export is already running.";
-    private const string FailedMessage = "Debug logs could not be exported. The Dalamud log has the reason.";
 
     private readonly record struct LogExtract(int Kept, int Dropped, string Sources);
 
@@ -68,13 +38,13 @@ internal static class DebugLogExporter
     {
         if (Interlocked.CompareExchange(ref _running, 1, 0) != 0)
         {
-            FeedbackHelper.Info(AlreadyRunningMessage);
+            LogHelper.Info("A debug log export is already running.");
             return;
         }
 
-        FeedbackHelper.NoticeAlways(ExportingMessage);
+        LogHelper.NoticeAlways("Exporting logs...");
 
-        _ = AsyncHelper.RunInBackgroundAsync(ExportAsync, OperationName);
+        _ = AsyncHelper.RunInBackgroundAsync(ExportAsync, "BypassEmote.ExportDebugLogs");
     }
 
     private static async Task ExportAsync()
@@ -89,7 +59,7 @@ internal static class DebugLogExporter
         catch (Exception ex)
         {
             NoireLogger.LogError(ex, "Exporting the debug logs failed.", LogPrefix);
-            FeedbackHelper.Error(FailedMessage);
+            LogHelper.Error("Debug logs could not be exported. The Dalamud log has the reason.");
         }
         finally
         {
@@ -99,21 +69,26 @@ internal static class DebugLogExporter
 
     private static void Announce(string archivePath)
     {
+        var openText = "Debug logs exported to ";
+        var bodyText = ". Send this file to the developer. Feel free to check the content of the zip and if you need to anonymize any information, please do so before sending it. ";
+        var warningtext = "Personal information appears in it, DO NOT send this in a public channel.";
+        var endText = " Ask the developer where to send this file to be extra safe.";
+
         var key = $"BypassEmote.OpenDebugLogs.{Path.GetFileName(archivePath)}";
 
         void Open() => SystemHelper.OpenFileLocation(archivePath);
 
         var chat = NoireLogger.CreateChatMessageBuilder();
 
-        chat.AddText(OpeningText, FeedbackHelper.NoticeColor);
-        chat.AddLink(archivePath, key, Open, FeedbackHelper.NoticeColor);
-        chat.AddText(BodyText, FeedbackHelper.NoticeColor);
-        chat.AddText(AlertText, FeedbackHelper.AlertColor);
-        chat.AddText(ClosingText, FeedbackHelper.NoticeColor);
+        chat.AddText(openText, LogHelper.WarningColor);
+        chat.AddLink(archivePath, key, Open, LogHelper.WarningColor);
+        chat.AddText(bodyText, LogHelper.WarningColor);
+        chat.AddText(warningtext, LogHelper.ErrorColor);
+        chat.AddText(endText, LogHelper.WarningColor);
         chat.AddText(" ");
         chat.AddLink("[Open folder]", key, Open, LinkColor);
 
-        FeedbackHelper.NoticeAlways(OpeningText + archivePath + BodyText + AlertText + ClosingText, chat);
+        LogHelper.NoticeAlways(openText + archivePath + bodyText + warningtext + endText, chat);
     }
 
     private static string Write(LiveSnapshot live)
@@ -121,31 +96,31 @@ internal static class DebugLogExporter
         if (NoireService.PluginInterface.GetPluginConfigDirectory() is not { Length: > 0 } configDirectory)
             throw new DirectoryNotFoundException("The plugin config directory is unavailable.");
 
-        var destination = Path.Combine(configDirectory, FolderName);
+        var destination = Path.Combine(configDirectory, "DebugLogs");
         var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
-        var staging = Path.Combine(destination, StagingPrefix + stamp);
+        var staging = Path.Combine(destination, ".staging_" + stamp);
 
         Directory.CreateDirectory(staging);
 
         try
         {
-            var logPath = Path.Combine(staging, LogEntryName);
+            var logPath = Path.Combine(staging, "bypassemote.log");
             var extract = WriteLog(logPath);
 
-            var reportPath = Path.Combine(staging, ReportEntryName);
+            var reportPath = Path.Combine(staging, "report.txt");
 
             File.WriteAllText(reportPath, live.Report + EmoteSection(live) + ArchiveSection(extract),
                 new UTF8Encoding(false));
 
             var files = new List<(string FilePath, string? EntryName)>
             {
-                (reportPath, ReportEntryName),
-                (logPath, LogEntryName),
+                (reportPath, "report.txt"),
+                (logPath, "bypassemote.log"),
             };
 
             files.AddRange(ConfigEntries(configDirectory, destination));
 
-            return FileHelper.ZipFiles(files, destination, $"{ArchivePrefix}{stamp}.zip")
+            return FileHelper.ZipFiles(files, destination, $"DO_NOT_POST_PUBLICLY_DebugLogs_{stamp}.zip")
                 ?? throw new IOException("The archive could not be written.");
         }
         finally
@@ -168,7 +143,7 @@ internal static class DebugLogExporter
             }
 
             var relative = Path.GetRelativePath(configDirectory, file).Replace('\\', '/');
-            entries.Add((file, $"{ConfigEntryFolder}/{relative}"));
+            entries.Add((file, $"config/{relative}"));
         }
 
         return entries;
@@ -244,7 +219,7 @@ internal static class DebugLogExporter
             foreach (var line in ReadLines(path))
             {
                 if (EntryStamp(line) is { } stamp)
-                    keeping = stamp >= cutoff && line.Contains(PluginTag, StringComparison.Ordinal);
+                    keeping = stamp >= cutoff && line.Contains("BypassEmote", StringComparison.Ordinal);
 
                 if (keeping)
                     yield return line;
@@ -279,12 +254,12 @@ internal static class DebugLogExporter
         if (DalamudRoot() is not { } root)
             yield break;
 
-        var rotated = Path.Combine(root, RotatedLogFileName);
+        var rotated = Path.Combine(root, "dalamud.old.log");
 
         if (File.Exists(rotated) && new DateTimeOffset(File.GetLastWriteTime(rotated)) >= cutoff)
             yield return rotated;
 
-        var current = Path.Combine(root, CurrentLogFileName);
+        var current = Path.Combine(root, "dalamud.log");
 
         if (File.Exists(current))
             yield return current;
@@ -307,7 +282,7 @@ internal static class DebugLogExporter
         section.AppendLine($"Log sources: {extract.Sources}");
         section.AppendLine($"Log lines kept: {extract.Kept}");
         section.AppendLine($"Log lines dropped: {extract.Dropped}");
-        section.AppendLine($"Contents: {ReportEntryName}, {LogEntryName}, {ConfigEntryFolder}/");
+        section.AppendLine($"Contents: report.txt, bypassemote.log, config/");
 
         return section.ToString();
     }

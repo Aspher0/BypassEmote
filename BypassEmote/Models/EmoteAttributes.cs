@@ -1,32 +1,10 @@
+using BypassEmote.Enums;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace BypassEmote.Models;
 
-public enum SoundClass : int
-{
-    Silent = 0,
-    Sfx = 1,
-    Voiceline = 2,
-}
-
-public enum TurnClass : int
-{
-    None = 0,
-    Eyes = 1,
-    Head = 2,
-    Body = 3,
-    Unknown = 4,
-}
-
 public sealed record VariantPaths(PostureFlags Posture, string RelativePapPath, bool WeaponMotion = false);
-
-public enum IntroKind : int
-{
-    None = 0,
-    Pap = 1,
-    TmbOnly = 2,
-}
 
 public sealed record EmoteAttributes(
     uint RowId, string Command, EmotePlayType LoopKind, SoundClass Sound, TurnClass Turn,

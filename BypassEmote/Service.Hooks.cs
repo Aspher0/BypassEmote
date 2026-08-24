@@ -1,4 +1,5 @@
 using BypassEmote.EmoteSwap;
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
 using BypassEmote.Models;
 using BypassEmote.Safety;
@@ -36,8 +37,7 @@ public partial class Service
         try
         {
             // From https://github.com/RokasKil/EmoteLog/blob/master/EmoteLog/Hooks/EmoteReaderHook.cs#L11
-            OnEmoteHook = new("E8 ?? ?? ?? ?? 48 8D 8B ?? ?? ?? ?? 4C 89 74 24", OnEmoteDetour, true,
-                PatchApprovalGate.EmoteReaderHookName);
+            OnEmoteHook = new("E8 ?? ?? ?? ?? 48 8D 8B ?? ?? ?? ?? 4C 89 74 24", OnEmoteDetour, true, "OnEmote");
         }
         catch (Exception ex)
         {

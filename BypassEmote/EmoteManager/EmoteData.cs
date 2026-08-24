@@ -1,4 +1,5 @@
-﻿using BypassEmote.Helpers;
+using BypassEmote.Enums;
+using BypassEmote.Helpers;
 using BypassEmote.Models;
 using System.Collections.Generic;
 

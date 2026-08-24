@@ -1,4 +1,5 @@
-﻿using BypassEmote.Models;
+using BypassEmote.Enums;
+using BypassEmote.Models;
 using Dalamud.Plugin.Services;
 using NoireLib;
 using System;

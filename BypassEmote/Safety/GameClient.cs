@@ -1,15 +1,8 @@
+using BypassEmote.Enums;
 using NoireLib;
 using System;
 
 namespace BypassEmote.Safety;
-
-public enum GameClient
-{
-    Global,
-    Korean,
-    Chinese,
-    Unknown,
-}
 
 public static class GameClientReader
 {

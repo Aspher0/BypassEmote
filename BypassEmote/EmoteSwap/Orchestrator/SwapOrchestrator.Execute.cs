@@ -1,4 +1,5 @@
-﻿using BypassEmote.Helpers;
+using BypassEmote.Enums;
+using BypassEmote.Helpers;
 using BypassEmote.Models;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
@@ -22,11 +23,11 @@ public sealed partial class SwapOrchestrator
         if (!_swapMods.SelectExisting(kept))
         {
             NoireLogger.LogDebug($"The existing swap could not be put back, so /{source.Command} is built again.", LogPrefix);
-            FeedbackHelper.DebugLine(">   reuse refused, rebuilding");
+            LogHelper.DebugLine(">   reuse refused, rebuilding");
             return false;
         }
 
-        FeedbackHelper.DebugLine(">   reuse");
+        LogHelper.DebugLine(">   reuse");
 
         var generation = _generations.TakeOwnership();
 
@@ -86,10 +87,10 @@ public sealed partial class SwapOrchestrator
     {
         var elapsedAtExecute = timings.Clock.ElapsedMilliseconds;
 
-        FeedbackHelper.SwapLine(source.Command, target.Command);
+        LogHelper.SwapLine(source.Command, target.Command);
 
         if (TargetDropsSourceIntro(source, target))
-            FeedbackHelper.Notice(TargetIntroDroppedMessageFor(target));
+            LogHelper.Notice(TargetIntroDroppedMessageFor(target));
 
         if (Configuration.SwapLifetime == SwapLifetime.WhenEmoteEnds && _swapMods.ArmedFor(target.RowId) is { } armed)
             _endWatcher.Arm(armed);
@@ -106,10 +107,10 @@ public sealed partial class SwapOrchestrator
             + $", gate {elapsedAtTail - timings.AtApply}ms, " +
             $"execute {elapsedAtExecute - elapsedAtTail}ms, total {elapsedAtExecute}ms.", LogPrefix);
 
-        FeedbackHelper.DebugLine(
+        LogHelper.DebugLine(
             $">   executed | gate {elapsedAtTail - timings.AtApply}ms, total {elapsedAtExecute}ms");
 
-        FeedbackHelper.DebugLine(
+        LogHelper.DebugLine(
             $">   shapes | /{source.Command} {ShapeOf(source)} -> /{target.Command} {ShapeOf(target)}");
     }
 
@@ -126,7 +127,7 @@ public sealed partial class SwapOrchestrator
         else
             NoireLogger.LogDebug("The failed execute's swap was already superseded; the mod is left to its new owner.", LogPrefix);
 
-        FeedbackHelper.Error(GenericFailureMessage);
+        LogHelper.Error(GenericFailureMessage);
     }
 
     private sealed record PendingExecute(EmoteAttributes Source, EmoteAttributes Target, int Generation,

@@ -1,3 +1,4 @@
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
 using BypassEmote.Models;
 using NoireLib;
@@ -286,7 +287,7 @@ public sealed partial class SwapOrchestrator
     private static void ReportFailure(SwapBuildRequest request, string message)
     {
         if (request.ExecuteAfterApply)
-            FeedbackHelper.Error(message);
+            LogHelper.Error(message);
     }
 
     internal enum BackgroundVerdict

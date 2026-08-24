@@ -1,12 +1,11 @@
 using BypassEmote.EmoteSwap;
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
-using BypassEmote.Models;
 using Dalamud.Bindings.ImGui;
 using NoireLib;
 using NoireLib.Helpers;
 using NoireLib.UI;
 using System;
-using System.Numerics;
 using System.Threading.Tasks;
 
 namespace BypassEmote.UI;
@@ -14,32 +13,7 @@ namespace BypassEmote.UI;
 /// <summary> One-time popup to pick a bypass mode. </summary>
 public class SwapPromptWindow : IDisposable
 {
-    private const string Title = "Choose how Bypass Emote plays locked emotes";
-
-    private const string Headline = "A safer way to play locked emotes";
-
-    private const string WhyItChanged =
-        "Until now Bypass Emote forced the animation onto your character from your own client. Nothing was ever "
-        + "sent to the server, but in specific cases, where your character would be in any pose other than the base one, the "
-        + "game client would send duplicate change pose packets to the server. This is not caused by the plugin itself, but rather "
-        + "by how the game handles pose changes. The \"Idle Animation Delay\" setting in the game's "
-        + "Character Configuration > Control Settings > Character tab is what causes this.";
-
-    private const string WhatItDoesNow =
-        "The new mode uses Penumbra to swap locked emotes onto unlocked ones. "
-        + "The game itself does the playing, and nothing mismatches between the game and the server anymore.";
-
-    private const string Footer = "You can change this at any time in the settings.";
-
-    private const float PointIndent = 10f;
-    private const float MarkGap = 6f;
-
     private const float DialogWidth = 520f;
-
-    public const string WaitingForAChoiceMessage =
-        "Bypass Emote is waiting for you to choose how it should play locked emotes.";
-
-    public const string WaitingForAChoiceKind = "prompt.pending";
 
     public static bool IsShowing { get; private set; }
 
@@ -51,7 +25,7 @@ public class SwapPromptWindow : IDisposable
 
         try
         {
-            choice = await NoireModal.ChoiceAsync(Title, BuildMessage(), ["Use Emote Swap", "Keep Direct Play"],
+            choice = await NoireModal.ChoiceAsync("Choose how Bypass Emote plays locked emotes", BuildMessage(), ["Use Emote Swap", "Keep Direct Play"],
                 new ModalOptions { Width = DialogWidth });
         }
         finally
@@ -88,7 +62,7 @@ public class SwapPromptWindow : IDisposable
                     {
                         ModeSwitcher.Apply(SelfBypassMode.EmoteSwap);
                         Configuration.SwapPromptPending = false;
-                        FeedbackHelper.Error("Emote Swap was enabled because no choice was made.");
+                        LogHelper.Error("Emote Swap was enabled because no choice was made.");
                     }
 
                     break;
@@ -105,15 +79,20 @@ public class SwapPromptWindow : IDisposable
         var muted = ColorHelper.HexToVector4("#9E9E9E");
 
         return new NoireContent()
-            .AddCustom(() => NoireText.Wrapped(ImGui.GetContentRegionAvail().X, Headline, TextSize.Heading))
+            .AddCustom(() => NoireText.Wrapped(ImGui.GetContentRegionAvail().X, "A safer way to play locked emotes", TextSize.Heading))
             .AddSeparator()
-            .AddText(WhyItChanged)
+            .AddText("Until now Bypass Emote forced the animation onto your character from your own client. Nothing was ever "
+                + "sent to the server, but in specific cases, where your character would be in any pose other than the base one, the "
+                + "game client would send duplicate change pose packets to the server. This is not caused by the plugin itself, but rather "
+                + "by how the game handles pose changes. The \"Idle Animation Delay\" setting in the game's "
+                + "Character Configuration > Control Settings > Character tab is what causes this.")
             .AddNewLine()
             .AddNewLine()
-            .AddText(WhatItDoesNow)
+            .AddText("The new mode uses Penumbra to swap locked emotes onto unlocked ones. "
+                + "The game itself does the playing, and nothing mismatches between the game and the server anymore.")
             .AddNewLine()
             .AddNewLine()
-            .AddText(Footer, muted);
+            .AddText("You can change this at any time in the settings.", muted);
     }
 
     public void Dispose() { }

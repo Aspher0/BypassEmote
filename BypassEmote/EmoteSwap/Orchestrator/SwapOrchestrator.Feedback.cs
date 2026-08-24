@@ -1,3 +1,4 @@
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
 using BypassEmote.Models;
 using NoireLib;
@@ -72,7 +73,7 @@ public sealed partial class SwapOrchestrator
             }
         }
 
-        FeedbackHelper.Error(string.Join('\n', lines), NoMatchKind, chat);
+        LogHelper.Error(string.Join('\n', lines), NoMatchKind, chat);
     }
 
     internal static string NearMissReason(string blockedBy, LoopMatchRule loopRule, TurnMatchRule turnRule,

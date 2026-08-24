@@ -9,14 +9,14 @@ using System.Numerics;
 namespace BypassEmote.Helpers;
 
 
-public sealed class Feedback
+public sealed class Logger
 {
     private readonly string _tag;
     private readonly string _source;
     private readonly string _throttleScope;
     private readonly Dictionary<string, string> _lastShownByKey = new(StringComparer.Ordinal);
 
-    public Feedback(string chatTag, string? sourceName = null, string? throttleScope = null)
+    public Logger(string chatTag, string? sourceName = null, string? throttleScope = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(chatTag);
 

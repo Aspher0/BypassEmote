@@ -1,5 +1,7 @@
+using BypassEmote.Enums;
 using BypassEmote.IPC;
-using BypassEmote.Models;
+using BypassEmote.IPC.Enums;
+using BypassEmote.IPC.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using Lumina.Excel.Sheets;
 using NoireLib;

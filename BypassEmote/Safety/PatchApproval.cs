@@ -1,15 +1,8 @@
+using BypassEmote.Enums;
 using System;
 using System.Collections.Generic;
 
 namespace BypassEmote.Safety;
-
-public enum PatchApprovalStatus
-{
-    Checking,
-    Approved,
-    Blocked,
-    Untested,
-}
 
 public sealed class ApprovedPatch
 {

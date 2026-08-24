@@ -1,4 +1,7 @@
 using BypassEmote.Data;
+using BypassEmote.Enums;
+using BypassEmote.IPC.Enums;
+using BypassEmote.IPC.Models;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;

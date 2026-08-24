@@ -1,4 +1,4 @@
-namespace BypassEmote.Models;
+namespace BypassEmote.IPC.Enums;
 
 public enum CurrentState : int
 {

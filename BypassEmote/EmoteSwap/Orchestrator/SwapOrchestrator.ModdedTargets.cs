@@ -214,6 +214,6 @@ public sealed partial class SwapOrchestrator
         chat.AddText(message, NoticeColor);
         ModActionChatPayloads.Append(chat, modDirectory, modName);
 
-        FeedbackHelper.Notice(message, ChangedTargetKind, chat);
+        LogHelper.Notice(message, ChangedTargetKind, chat);
     }
 }

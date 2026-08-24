@@ -1,4 +1,4 @@
-namespace BypassEmote.Models;
+namespace BypassEmote.Enums;
 
 public enum EmotePlayType
 {

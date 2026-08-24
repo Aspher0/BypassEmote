@@ -1,4 +1,5 @@
-﻿using BypassEmote.Models;
+using BypassEmote.Enums;
+using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using NoireLib;

@@ -1,3 +1,4 @@
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Enums;
@@ -126,7 +127,7 @@ public sealed partial class Plugin
         if (NoireService.ObjectTable.LocalPlayer is { } player)
             return player;
 
-        FeedbackHelper.Info("Error trying to process command");
+        LogHelper.Info("Error trying to process command");
         return null;
     }
 
@@ -135,14 +136,14 @@ public sealed partial class Plugin
         if (CommonHelper.GetLocalTarget() is not ICharacter target ||
             target is not INpc && target is not IBattleNpc)
         {
-            FeedbackHelper.Info("No NPC targeted.");
+            LogHelper.Info("No NPC targeted.");
             return null;
         }
 
         // Minion (Companion) or pet/chocobo (SubKind 2 and 3).
         if ((target.ObjectKind == ObjectKind.Companion || target.SubKind == 2 || target.SubKind == 3) && !CharacterHelper.IsLocalObject(target))
         {
-            FeedbackHelper.Info("You can only target your own minion, pet, chocobo.");
+            LogHelper.Info("You can only target your own minion, pet, chocobo.");
             return null;
         }
 
@@ -166,7 +167,7 @@ public sealed partial class Plugin
         if (lookup(player) is { } owned)
             return owned;
 
-        FeedbackHelper.Info(absentMessage);
+        LogHelper.Info(absentMessage);
         return null;
     }
 
@@ -200,7 +201,7 @@ public sealed partial class Plugin
 
         if (!emote.HasValue)
         {
-            FeedbackHelper.Info($"Emote not found: {arg}\n{usage}");
+            LogHelper.Info($"Emote not found: {arg}\n{usage}");
             return;
         }
 
@@ -219,14 +220,14 @@ public sealed partial class Plugin
 
         if (attributes?.IsPoseFamily == true)
         {
-            FeedbackHelper.Error("Poses cannot be swapped.");
+            LogHelper.Error("Poses cannot be swapped.");
             return;
         }
 
         if (EmoteHelper.GetEmoteCategory(emote) == NoireLib.Enums.EmoteCategory.Unknown
             || (Service.Catalog?.Ready == true && attributes == null))
         {
-            FeedbackHelper.Error("This emote cannot be played in Emote Swap mode.");
+            LogHelper.Error("This emote cannot be played in Emote Swap mode.");
             return;
         }
 

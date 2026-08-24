@@ -1,3 +1,4 @@
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
 using BypassEmote.Models;
 using Dalamud.Interface.ImGuiNotification;
@@ -17,18 +18,12 @@ public sealed class PatchApprovalGate : IDisposable
 {
     private const string LogPrefix = "[PatchApprovalGate] ";
 
-    internal const string EmoteReaderHookName = "OnEmote";
-
     internal const string ApprovalListUrl =
         "https://raw.githubusercontent.com/Aspher0/BypassEmote/refs/heads/main/patch-approval.json";
 
     internal static readonly TimeSpan RetryInterval = TimeSpan.FromMinutes(10);
 
     internal static readonly TimeSpan ManualCheckCooldown = TimeSpan.FromSeconds(10);
-
-    internal const string ApprovedNowMessage =
-        "The plugin has been approved for this patch. If you noticed weird behaviors prior to this message, "
-        + "try again and it should be fixed now.";
 
     private static readonly TimeSpan NotificationDuration = TimeSpan.FromSeconds(15);
 
@@ -291,12 +286,15 @@ public sealed class PatchApprovalGate : IDisposable
 
     private static void AnnounceApproval()
     {
-        FeedbackHelper.Success(ApprovedNowMessage);
+        var content = "The plugin has been approved for this patch. If you noticed weird behaviors prior to this message, "
+        + "try again and it should be fixed now.";
+
+        LogHelper.Success(content);
 
         NoireService.NotificationManager.AddNotification(new Notification
         {
             Title = "Bypass Emote",
-            Content = ApprovedNowMessage,
+            Content = content,
             InitialDuration = NotificationDuration,
             Type = NotificationType.Success,
         });
@@ -381,7 +379,7 @@ public sealed class PatchApprovalGate : IDisposable
 
     private static bool IsGated(INoireHook hook)
         => hook.Target.Kind != HookTargetKind.ClientStructs
-            && !string.Equals(hook.Name, EmoteReaderHookName, StringComparison.Ordinal);
+            && !string.Equals(hook.Name, "OnEmote", StringComparison.Ordinal);
 
     public void Dispose()
     {

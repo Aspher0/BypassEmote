@@ -1,5 +1,5 @@
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
-using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;

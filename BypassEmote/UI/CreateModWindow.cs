@@ -1,6 +1,6 @@
 using BypassEmote.EmoteSwap;
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
-using BypassEmote.Models;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
@@ -18,8 +18,6 @@ namespace BypassEmote.UI;
 /// <summary> Turns a pair of emotes into an simple Penumbra mod. </summary>
 public sealed class CreateModWindow : Window, IDisposable
 {
-    private const string PenumbraMissingMessage = "Penumbra is not running.";
-
     private NoireExcelPicker<Emote>? _source;
     private NoireExcelPicker<Emote>? _target;
 
@@ -47,7 +45,7 @@ public sealed class CreateModWindow : Window, IDisposable
     /// <summary> Opens the window with the emote already in the source slot (from the main UI). </summary>
     public void ShowFor(Emote emote)
     {
-        Picker(ref _source, SourcePickerId, SourcePlaceholder).Select(emote.RowId);
+        Picker(ref _source, "BypassEmoteCreateModSource", "Pick the emote to play...").Select(emote.RowId);
 
         _status = string.Empty;
         IsOpen = true;
@@ -66,7 +64,7 @@ public sealed class CreateModWindow : Window, IDisposable
         if (Service.Penumbra is not { Available: true })
         {
             ImGui.TextColored(NoireTheme.Current.Resolve(ThemeColor.Danger),
-                Service.Penumbra?.UnavailableReason is { Length: > 0 } reason ? reason : PenumbraMissingMessage);
+                Service.Penumbra?.UnavailableReason is { Length: > 0 } reason ? reason : "Penumbra is not running.");
             return;
         }
 
@@ -76,7 +74,7 @@ public sealed class CreateModWindow : Window, IDisposable
         ImGui.Separator();
         ImGui.Spacing();
 
-        var names = SettingsLayout.NameColumn(SourceName, TargetName, RacesName, ModNameName, EnableName, PriorityName);
+        var names = SettingsLayout.NameColumn("Emote to play", "Played over", "Races covered", "Mod name", "Enable on creation", "Highest priority");
         var controls = MathF.Max(NoireUI.Scaled(240f), ImGui.GetContentRegionAvail().X - names - NoireUI.Scaled(40f));
 
         RefillRacesWhenThePairChanges();
@@ -85,31 +83,31 @@ public sealed class CreateModWindow : Window, IDisposable
         {
             if (rows)
             {
-                SettingsLayout.Name(SourceName);
-                DrawPicker(ref _source, SourcePickerId, SourcePlaceholder, controls);
+                SettingsLayout.Name("Emote to play");
+                DrawPicker(ref _source, "BypassEmoteCreateModSource", "Pick the emote to play...", controls);
                 SettingsLayout.Help("The animation the mod plays. The one you have not unlocked.");
 
-                SettingsLayout.Name(TargetName);
-                DrawPicker(ref _target, TargetPickerId, TargetPlaceholder, controls);
+                SettingsLayout.Name("Played over");
+                DrawPicker(ref _target, "BypassEmoteCreateModTarget", "Pick the emote to play over...", controls);
                 SettingsLayout.Help("The emote you will actually use in game. The one you have unlocked.");
 
-                SettingsLayout.Name(RacesName);
+                SettingsLayout.Name("Races covered");
                 DrawRaces(controls);
                 SettingsLayout.Help("Which bodies the mod is written for.");
 
-                SettingsLayout.Name(ModNameName);
+                SettingsLayout.Name("Mod name");
                 ImGui.InputTextWithHint("##BypassEmoteCreateModName", "My emote mod", ref _modName,
                     PermanentModBuilder.MaxModNameLength);
                 SettingsLayout.Help("The name of the generated mod.");
 
                 var enableOnCreation = _enableOnCreation;
-                if (SettingsLayout.Check(EnableName, ref enableOnCreation))
+                if (SettingsLayout.Check("Enable on creation", ref enableOnCreation))
                     _enableOnCreation = enableOnCreation;
 
                 SettingsLayout.Help("Switches the mod on in your character's collection as soon as it exists.");
 
                 var highestPriority = _highestPriority;
-                if (SettingsLayout.Check(PriorityName, ref highestPriority))
+                if (SettingsLayout.Check("Highest priority", ref highestPriority))
                     _highestPriority = highestPriority;
 
                 SettingsLayout.Help("Make it highest priority in your collection on creation.");
@@ -133,19 +131,12 @@ public sealed class CreateModWindow : Window, IDisposable
         ImGui.PopTextWrapPos();
     }
 
-    private const string SourceName = "Emote to play";
-    private const string TargetName = "Played over";
-    private const string RacesName = "Races covered";
-    private const string ModNameName = "Mod name";
-    private const string EnableName = "Enable on creation";
-    private const string PriorityName = "Highest priority";
-
     private static readonly string[] AllRaceNames = [.. RaceGenderData.AllRaces.Select(race => race.Name)];
 
-    private static string SkeletonOf(string raceName)
-        => RaceGenderData.AllRaces.First(race => race.Name == raceName).Id;
-
     private readonly Dictionary<string, RacePaths?> _pathsByRace = new(StringComparer.Ordinal);
+
+    private static string SkeletonOf(string raceName)
+    => RaceGenderData.AllRaces.First(race => race.Name == raceName).Id;
 
     private RacePaths? PathsFor(string raceName)
     {
@@ -304,11 +295,6 @@ public sealed class CreateModWindow : Window, IDisposable
         _statusIsGood = good;
         _status = message;
     }
-
-    private const string SourcePickerId = "BypassEmoteCreateModSource";
-    private const string TargetPickerId = "BypassEmoteCreateModTarget";
-    private const string SourcePlaceholder = "Pick the emote to play...";
-    private const string TargetPlaceholder = "Pick the emote it plays over...";
 
     private static void DrawPicker(ref NoireExcelPicker<Emote>? picker, string id, string placeholder, float width)
     {

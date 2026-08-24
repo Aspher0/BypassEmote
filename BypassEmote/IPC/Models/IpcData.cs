@@ -5,7 +5,7 @@ using NoireLib.Helpers;
 using System;
 using System.Collections.Generic;
 
-namespace BypassEmote.Models;
+namespace BypassEmote.IPC.Models;
 
 [Serializable]
 public class IpcData

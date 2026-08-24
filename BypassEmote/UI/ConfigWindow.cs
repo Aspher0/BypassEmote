@@ -1,6 +1,6 @@
 using BypassEmote.EmoteSwap;
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
-using BypassEmote.Models;
 using BypassEmote.Safety;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;

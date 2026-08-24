@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
 using System;
 
-namespace BypassEmote.Models;
+namespace BypassEmote.IPC.Models;
 
 [Serializable]
 public class IpcConfiguration

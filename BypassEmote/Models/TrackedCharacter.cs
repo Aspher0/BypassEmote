@@ -1,4 +1,4 @@
-using BypassEmote.Models;
+using BypassEmote.IPC.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using Lumina.Excel.Sheets;
 using NoireLib.Helpers;
@@ -7,6 +7,7 @@ using System.Numerics;
 
 namespace BypassEmote;
 
+// Direct play only now
 public class TrackedCharacter
 {
     public string UniqueId = Guid.NewGuid().ToString();

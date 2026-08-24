@@ -1,4 +1,5 @@
 using BypassEmote.Helpers;
+using BypassEmote.IPC.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using Lumina.Excel.Sheets;
 using NoireLib.Animations.Timelines;
@@ -22,7 +23,7 @@ public sealed class ActionTimelinePlayer : IDisposable
     }
 
     public void Blend(ICharacter character, ushort actionTimeline, int prio = ActionTimelineDriver.DefaultPriority,
-        Models.CharacterState? characterState = null, bool collapseFade = false)
+        CharacterState? characterState = null, bool collapseFade = false)
         => _driver.Blend(character, actionTimeline, prio,
             CommonHelper.TargetIdFor(character, characterState), collapseFade);
 

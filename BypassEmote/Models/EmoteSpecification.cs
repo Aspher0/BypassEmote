@@ -1,4 +1,6 @@
-﻿namespace BypassEmote.Models;
+using BypassEmote.Enums;
+
+namespace BypassEmote.Models;
 
 public class EmoteSpecification
 {

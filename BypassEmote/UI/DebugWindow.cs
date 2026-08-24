@@ -1,11 +1,12 @@
 #if DEBUG
 using BypassEmote.EmoteSwap;
+using BypassEmote.Enums;
 using BypassEmote.Helpers;
 using BypassEmote.IPC;
+using BypassEmote.IPC.Enums;
 using BypassEmote.Models;
 using BypassEmote.Safety;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
@@ -550,7 +551,7 @@ public class DebugWindow : Window, IDisposable
 
                 foreach (var emote in cachedEmoteList)
                 {
-                    var emoteName = Helpers.CommonHelper.GetEmoteName(emote);
+                    var emoteName = CommonHelper.GetEmoteName(emote);
                     var emoteId = emote.RowId;
 
                     if (!string.IsNullOrWhiteSpace(emoteSearchText) &&
