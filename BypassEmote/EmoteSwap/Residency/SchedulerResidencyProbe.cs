@@ -1,3 +1,4 @@
+using BypassEmote.Enums;
 using FFXIVClientStructs.FFXIV.Client.System.Resource;
 using FFXIVClientStructs.FFXIV.Client.System.Resource.Handle;
 using InteropGenerator.Runtime;
@@ -18,8 +19,6 @@ namespace BypassEmote.EmoteSwap;
 public sealed unsafe partial class SchedulerResidencyProbe
 {
     private const string LogPrefix = "[SchedulerResidencyProbe] ";
-
-    private const string HookGroup = "BypassEmote.Scheduler";
 
     // SchedulerResourceManagement::GetCachedScheduleResource
     private const string GetCachedScheduleResourceSignature = "40 53 48 83 EC ?? 44 8B 4A";
@@ -444,7 +443,7 @@ public sealed unsafe partial class SchedulerResidencyProbe
 #endif
 
         foreach (var hook in AllHooks())
-            hook.Group = HookGroup;
+            hook.Group = "BypassEmote.Scheduler";
 
         ApplyLayerSwitches();
     }

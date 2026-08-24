@@ -1,19 +1,7 @@
+using BypassEmote.Enums;
 using NoireLib.Helpers.Memory;
 
 namespace BypassEmote.EmoteSwap;
-
-internal enum MapperSourceOutcome
-{
-    // A guarded read refused, or the descent ran deeper than a real tree can be.
-    Unreadable,
-
-    // The animation belongs to this skeleton, so nothing needs retargeting.
-    Native,
-
-    Missing,
-
-    Found,
-}
 
 internal readonly struct MapperSource
 {
@@ -35,17 +23,6 @@ internal readonly struct MapperSource
     internal static MapperSource Missing() => new(MapperSourceOutcome.Missing, 0);
 
     internal static MapperSource Found(long value) => new(MapperSourceOutcome.Found, value);
-}
-
-internal enum MapperAction
-{
-    KeepGameAnswer,
-
-    // Hand back the game's answer and stop correcting for the rest of the session.
-    Disarm,
-
-    InstallNone,
-    InstallFound,
 }
 
 // Address arithmetic for the retarget maps a skeleton keeps, and the walk that reads one. A skeleton keeps two

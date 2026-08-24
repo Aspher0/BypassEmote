@@ -140,7 +140,7 @@ public sealed partial class SwapOrchestrator : IDisposable
         if (raceInputs.Count == 0 || raceInputs[0].Race != skeleton)
         {
             NoireLogger.LogDebug($"/{source.Command} and /{target.Command} share no usable posture variant on {skeleton}.", LogPrefix);
-            LogHelper.Error(NoMatchMessage(source, []), NoMatchKind);
+            LogHelper.Error(NoMatchMessage(source, []), "swap.no-match");
             return;
         }
 

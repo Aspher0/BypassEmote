@@ -1,10 +1,8 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NoireLib.Helpers;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace BypassEmote.EmoteSwap;
 

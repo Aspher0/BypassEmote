@@ -1,6 +1,5 @@
 using BypassEmote.Enums;
 using BypassEmote.Helpers;
-using BypassEmote.Models;
 using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Plugin.Services;
 using NoireLib;

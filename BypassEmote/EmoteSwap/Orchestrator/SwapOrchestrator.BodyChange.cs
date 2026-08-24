@@ -1,5 +1,4 @@
 using BypassEmote.Enums;
-using BypassEmote.Models;
 using NoireLib;
 using NoireLib.Animations.Helpers;
 using System;

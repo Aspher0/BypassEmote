@@ -132,7 +132,7 @@ internal static class DebugLogExporter
     private static List<(string FilePath, string? EntryName)> ConfigEntries(string configDirectory, string excluded)
     {
         var entries = new List<(string FilePath, string? EntryName)>();
-        var vanillaCopies = Path.Combine(configDirectory, EmoteSwap.CacheBreaker.VanillaCopyFolder);
+        var vanillaCopies = Path.Combine(configDirectory, "cache-break");
 
         foreach (var file in Directory.EnumerateFiles(configDirectory, "*", SearchOption.AllDirectories))
         {

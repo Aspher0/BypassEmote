@@ -133,7 +133,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, "Could not read the player's off hand; the weapons are left where they are.",
+            NoireLogger.LogError(ex, "Could not read the player's off hand.",
                 LogPrefix);
 
             return null;
@@ -148,7 +148,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, "Could not read the player's weapon motion; the ladder starts at its foot.",
+            NoireLogger.LogError(ex, "Could not read the player's weapon motion.",
                 LogPrefix);
 
             return null;

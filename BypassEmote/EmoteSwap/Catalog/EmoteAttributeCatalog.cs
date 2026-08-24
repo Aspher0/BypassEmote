@@ -29,36 +29,31 @@ internal sealed record RawEmoteData(
 public sealed class EmoteAttributeCatalog
 {
     private const string LogPrefix = "[EmoteAttributeCatalog] ";
-    private const string CacheFileName = "emote_catalog.json";
 
     internal const int RulesVersion = 3;
 
-    private const int ActionTimelineSlotCount = ActionTimelineSlots.SlotCount;
-    private const string SharedFolder = "bt_common";
-
-    // Weapon-motion slots are catalogued against one folder that carries every battle key, and the swap path
-    // moves them onto the right folder for the player's own weapons.
-    internal const string ReferenceMotionFolder = WeaponMotionFolders.ReferenceFolder;
-
-    private const string CatalogProbeSkeleton = "c0101";
-
-    private const string ActionTmbPathFormat = "chara/action/{0}.tmb";
-    private const string FacialPosePrefix = "facial/pose/";
     private const int BuildPacingBatchSize = 8;
     private const int BuildPacingSleepMs = 5;
     private const uint GeneralCategoryRowId = 1;
     private const uint SpecialCategoryRowId = 2;
     private const uint ChangePoseRowId = 90;
-    private static readonly HashSet<uint> PoseFamilyRowIds = new() { ChangePoseRowId, 218, 219, 243, 244, 253 };
     private const int LoadTypePerJob = 1;
     private const int WeaponMotionIdMode = 2;
+    private int _buildState; // 0 = not started, 1 = started
+
+    private const int ActionTimelineSlotCount = ActionTimelineSlots.SlotCount;
+
+    // Weapon-motion slots are catalogued against one folder that carries every battle key, and the swap path
+    // moves them onto the right folder for the player's own weapons.
+    internal const string ReferenceMotionFolder = WeaponMotionFolders.ReferenceFolder;
+
+    private static readonly HashSet<uint> PoseFamilyRowIds = new() { ChangePoseRowId, 218, 219, 243, 244, 253 };
     private static readonly HashSet<uint> PostureLockEmoteModes = new() { 1, 2 };
     private static readonly HashSet<string> ScannedMagics =
         new(StringComparer.Ordinal) { "C053", "C063", "C012", "C173", "TMPP" };
 
     private static readonly Dictionary<string, bool> VfxSoundReadings = new(StringComparer.OrdinalIgnoreCase);
     private static readonly PublishedData EmptyPublished = new(Array.Empty<EmoteAttributes>(), new Dictionary<uint, EmoteAttributes>());
-    private int _buildState; // 0 = not started, 1 = started
     private PublishedData _published = EmptyPublished;
 
     public bool Ready => !ReferenceEquals(Volatile.Read(ref _published), EmptyPublished);
@@ -247,7 +242,7 @@ public sealed class EmoteAttributeCatalog
 
     private static string? UsablePapPathFor(RawSlotData slot)
     {
-        if (string.IsNullOrEmpty(slot.Key) || slot.Key.StartsWith(FacialPosePrefix, StringComparison.Ordinal))
+        if (string.IsNullOrEmpty(slot.Key) || slot.Key.StartsWith("facial/pose/", StringComparison.Ordinal))
             return null;
 
         var weaponMotion = IsWeaponMotionSlot(slot);
@@ -255,14 +250,13 @@ public sealed class EmoteAttributeCatalog
         if (slot.LoadType == LoadTypePerJob && !weaponMotion)
             return null;
 
-        return (weaponMotion ? ReferenceMotionFolder : SharedFolder) + "/" + slot.Key + ".pap";
+        return (weaponMotion ? ReferenceMotionFolder : "bt_common") + "/" + slot.Key + ".pap";
     }
 
     internal static bool IsWeaponMotionSlot(RawSlotData slot) => slot.ActionTimelineIdMode == WeaponMotionIdMode;
 
     private static string CatalogProbePath(RawSlotData slot)
-        => EmotePathHelper.GetSkeletonPath(CatalogProbeSkeleton,
-            UsablePapPathFor(slot) ?? SharedFolder + "/" + slot.Key + ".pap");
+        => EmotePathHelper.GetSkeletonPath("c0101", UsablePapPathFor(slot) ?? "bt_common" + "/" + slot.Key + ".pap");
 
     private static bool IsExcluded(RawEmoteData raw, List<RawSlotData> populatedSlots, bool isPoseFamily)
         => PostureLockEmoteModes.Contains(raw.EmoteModeRowId)
@@ -455,7 +449,7 @@ public sealed class EmoteAttributeCatalog
 
             try
             {
-                var path = string.Format(ActionTmbPathFormat, slot.Key);
+                var path = string.Format("chara/action/{0}.tmb", slot.Key);
                 if (!NoireService.DataManager.FileExists(path))
                     continue;
 
@@ -479,7 +473,7 @@ public sealed class EmoteAttributeCatalog
 
     private static VersionedJsonCache<List<EmoteAttributes>> Cache
         => _cache ??= new VersionedJsonCache<List<EmoteAttributes>>(
-            Path.Combine(NoireService.PluginInterface.GetPluginConfigDirectory(), CacheFileName),
+            Path.Combine(NoireService.PluginInterface.GetPluginConfigDirectory(), "emote_catalog.json"),
             () => typeof(EmoteAttributeCatalog).Assembly.GetName().Version?.ToString() ?? "unknown");
 
     private sealed record PublishedData(IReadOnlyList<EmoteAttributes> All, IReadOnlyDictionary<uint, EmoteAttributes> ByRowId);

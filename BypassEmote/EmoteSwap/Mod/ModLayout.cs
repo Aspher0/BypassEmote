@@ -12,6 +12,8 @@ namespace BypassEmote.EmoteSwap;
 
 internal static class ModLayout
 {
+    private const string LogPrefix = "[ModLayout] ";
+
     internal const int V3 = 3;
     internal const int V4 = 4;
 
@@ -20,7 +22,6 @@ internal static class ModLayout
     internal const string DefaultPropertyName = "DefaultData";
     internal const string GroupsPropertyName = "Groups";
 
-    private const string LogPrefix = "[ModLayout] ";
 
     internal static int OnDisk(string modDirectory)
     {

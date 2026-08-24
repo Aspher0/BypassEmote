@@ -16,30 +16,13 @@ namespace BypassEmote.EmoteSwap;
 
 public sealed partial class SwapOrchestrator
 {
-    private const string IdlePoseFailureKind = "swap.idle-pose.";
-
     internal const uint IdlePoseTargetEmote = 0;
-
-    private const string IdlePoseTargetLabel = "idle pose";
-
-    internal const string IdlePoseFailureMessage = "Could not use your idle pose for this emote.";
-
-    internal const string IdlePoseIntroDroppedMessage =
-        "Your idle 0 pose has no intro, so this emote's intro will not play. Try changing pose.";
-
-    internal const string TargetIntroDroppedMessage =
-        "This emote landed on a loop only target with no intro. You will not see the intro play.";
-
-    internal const string OneShotTargetIntroDroppedMessage =
-        "This emote landed on a one time target with no intro. You will not see the intro play.";
 
     internal static bool TargetDropsSourceIntro(EmoteAttributes source, EmoteAttributes target)
         => source.Intro == IntroKind.Pap && target.Intro != IntroKind.Pap;
 
     internal static string TargetIntroDroppedMessageFor(EmoteAttributes target)
-        => target.LoopKind == EmotePlayType.Looped
-            ? TargetIntroDroppedMessage
-            : OneShotTargetIntroDroppedMessage;
+        => $"This emote landed on a {(target.LoopKind == EmotePlayType.Looped ? "loop only" : "one shot")} target with no intro. You will not see the intro play.";
 
     internal static bool IdlePoseDropsSourceIntro(string? poseStartRelativePapPath, IntroKind sourceIntro,
         string? sourceIntroRequestedPath)
@@ -77,7 +60,7 @@ public sealed partial class SwapOrchestrator
     };
 
     internal static string IdlePoseFailureLine(IdlePoseFailure reason)
-        => $"{IdlePoseFailureMessage} {IdlePoseCauseFor(reason)}";
+        => $"Could not use your idle pose for this emote. {IdlePoseCauseFor(reason)}";
 
     internal static EmoteController.PoseType? StanceFromMode(CharacterModes mode, byte modeParam)
         => IdlePoseData.StanceFromMode(mode, modeParam);
@@ -93,7 +76,7 @@ public sealed partial class SwapOrchestrator
     private static bool IdlePoseFailed(IdlePoseFailure reason, string debugDetail)
     {
         NoireLogger.LogDebug($"Idle-pose fallback failed ({reason}): {debugDetail}", LogPrefix);
-        LogHelper.Error(IdlePoseFailureLine(reason), IdlePoseFailureKind + reason);
+        LogHelper.Error(IdlePoseFailureLine(reason), "swap.idle-pose." + reason);
         return false;
     }
 
@@ -243,10 +226,10 @@ public sealed partial class SwapOrchestrator
 
         var elapsedAtRedraw = swapClock.ElapsedMilliseconds;
 
-        LogHelper.SwapLine(source.Command, IdlePoseTargetLabel);
+        LogHelper.SwapLine(source.Command, "idle pose");
 
         if (IdlePoseDropsSourceIntro(posePaths.StartRelativePapPath, source.Intro, sourceIntroRequestedPath))
-            LogHelper.Notice(IdlePoseIntroDroppedMessage);
+            LogHelper.Notice("Your idle 0 pose has no intro, so this emote's intro will not play. Try changing pose.");
 
         if (ArmsIdlePoseWatch(Configuration.SwapLifetime))
             _endWatcher.ArmIdlePose(entry!, () => _penumbra.RedrawLocalPlayer());

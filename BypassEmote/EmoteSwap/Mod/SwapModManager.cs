@@ -17,22 +17,16 @@ namespace BypassEmote.EmoteSwap;
 
 public sealed class SwapModManager
 {
-    public const string LegacySharedModDirectoryName = "_BypassEmoteGenerated";
-
     private const string LogPrefix = "[SwapModManager] ";
-    private const string RegistryFileName = "swap_registry.json";
-    private const string StaleManifestFileName = "swap_manifest.json";
-    private const string CharactersFolderName = "characters";
     private const string SwapsSubfolderName = "swaps";
     private const string SwapFileSearchPattern = "swap_*.*";
-    private const string SwapFilePrefix = "swap_";
 
     private const int SwapFileTagLength = 8;
     private const int CurrentRegistrySchemaVersion = 2;
     private const int MaxPriorityPasses = 4;
 
     private static readonly ContentAddressedStore Store =
-        new(SwapFilePrefix, SwapFileTagLength, SwapFileSearchPattern);
+        new("swap_", SwapFileTagLength, SwapFileSearchPattern);
 
     private static readonly JsonSerializerSettings IndentedJson = new() { Formatting = Formatting.Indented };
 
@@ -111,7 +105,7 @@ public sealed class SwapModManager
             : null;
 
     internal static string CharacterDirectoryCore(string configDirectory, string characterKey)
-        => Path.Combine(configDirectory, CharactersFolderName, characterKey);
+        => Path.Combine(configDirectory, "characters", characterKey);
 
     private void HandleIdentityChanged(SwapModNames? previous)
     {
@@ -1207,12 +1201,12 @@ public sealed class SwapModManager
 
         if (ModDirectoryFromDiskPath(resolvedDiskPath, modRoot) is { } modDirectory
             && (modDirectory.StartsWith(SwapModIdentity.DirectoryPrefix, StringComparison.OrdinalIgnoreCase)
-                || modDirectory.Equals(LegacySharedModDirectoryName, StringComparison.OrdinalIgnoreCase)))
+                || modDirectory.Equals("_BypassEmoteGenerated", StringComparison.OrdinalIgnoreCase)))
         {
             return true;
         }
 
-        return normalizedPath.StartsWith(OwnPrefix(configDirectory, CharactersFolderName), StringComparison.OrdinalIgnoreCase);
+        return normalizedPath.StartsWith(OwnPrefix(configDirectory, "characters"), StringComparison.OrdinalIgnoreCase);
     }
 
     internal static string? ModDirectoryFromDiskPath(string resolvedDiskPath, string? modRoot)
@@ -1284,7 +1278,7 @@ public sealed class SwapModManager
     }
 
     private string? RegistryPath
-        => CharacterDirectory is { } characterDirectory ? Path.Combine(characterDirectory, RegistryFileName) : null;
+        => CharacterDirectory is { } characterDirectory ? Path.Combine(characterDirectory, "swap_registry.json") : null;
 
     private SwapRegistry EmptyRegistry()
         => new(CurrentRegistrySchemaVersion, _gateway.GetPlayerCollection()?.Id ?? Guid.Empty, null, 0, []);
@@ -1313,7 +1307,7 @@ public sealed class SwapModManager
         if (CharacterDirectory is not { } characterDirectory)
             return;
 
-        var stale = Path.Combine(characterDirectory, StaleManifestFileName);
+        var stale = Path.Combine(characterDirectory, "swap_manifest.json");
 
         try
         {

@@ -192,11 +192,11 @@ public sealed partial class SwapOrchestrator
 
         if (BestMatchResolver.Resolve(source, clean, matchConfig, posture).Target == null)
         {
-            NoireLogger.LogDebug($"Every emote that fits /{source.Command} is changed by another mod; none is avoided.", LogPrefix);
+            NoireLogger.LogDebug($"Every emote that fits /{source.Command} is changed by another mod.", LogPrefix);
             return pool;
         }
 
-        NoireLogger.LogDebug($"{pool.Count - clean.Count} emote(s) left out of the running: another mod changes them.", LogPrefix);
+        NoireLogger.LogDebug($"{pool.Count - clean.Count} emote(s) being changed by annother mod.", LogPrefix);
         return clean;
     }
 

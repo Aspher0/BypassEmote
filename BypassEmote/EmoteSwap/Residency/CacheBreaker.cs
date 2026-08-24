@@ -11,10 +11,7 @@ namespace BypassEmote.EmoteSwap;
 public sealed class CacheBreaker : IDisposable
 {
     private const string LogPrefix = "[CacheBreaker] ";
-
-    private const string TemporaryModTag = "BypassEmote.CacheBreak";
     private const int TemporaryModPriority = int.MaxValue;
-    internal const string VanillaCopyFolder = "cache-break";
     private const int IdentityHexLength = 10;
 
     private readonly IPCCaller_Penumbra _penumbra;
@@ -30,7 +27,7 @@ public sealed class CacheBreaker : IDisposable
     {
         _penumbra = penumbra;
         _residency = residency;
-        _vanillaCopyDirectory = Path.Combine(configDirectory, VanillaCopyFolder);
+        _vanillaCopyDirectory = Path.Combine(configDirectory, "cache-break");
 
         _penumbra.AvailabilityChanged += OnPenumbraAvailabilityChanged;
     }
@@ -42,7 +39,7 @@ public sealed class CacheBreaker : IDisposable
         if (_appliedCollection == Guid.Empty)
             return;
 
-        _penumbra.ClearTemporaryRedirects(TemporaryModTag, _appliedCollection, TemporaryModPriority);
+        _penumbra.ClearTemporaryRedirects("BypassEmote.CacheBreak", _appliedCollection, TemporaryModPriority);
         _appliedCollection = Guid.Empty;
         _appliedRedirects = null;
     }
@@ -207,9 +204,9 @@ public sealed class CacheBreaker : IDisposable
             return true;
 
         if (_appliedCollection != Guid.Empty && _appliedCollection != collectionId)
-            _penumbra.ClearTemporaryRedirects(TemporaryModTag, _appliedCollection, TemporaryModPriority);
+            _penumbra.ClearTemporaryRedirects("BypassEmote.CacheBreak", _appliedCollection, TemporaryModPriority);
 
-        if (!_penumbra.SetTemporaryRedirects(TemporaryModTag, collectionId, redirects, TemporaryModPriority))
+        if (!_penumbra.SetTemporaryRedirects("BypassEmote.CacheBreak", collectionId, redirects, TemporaryModPriority))
         {
             NoireLogger.LogDebug("Penumbra did not take the alias redirects.", LogPrefix);
             return false;

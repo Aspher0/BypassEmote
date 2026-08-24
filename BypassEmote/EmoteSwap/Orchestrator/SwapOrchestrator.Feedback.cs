@@ -9,10 +9,7 @@ namespace BypassEmote.EmoteSwap;
 
 public sealed partial class SwapOrchestrator
 {
-    internal const string NoMatchKind = "swap.no-match";
-
     private static readonly System.Numerics.Vector3 RefusalColor = NoireLib.Helpers.ColorHelper.HexToVector3("#E81313");
-
     private static readonly System.Numerics.Vector3 NoticeColor = NoireLib.Helpers.ColorHelper.HexToVector3("#FF8C1A");
 
     internal static string NoMatchMessage(EmoteAttributes source, IReadOnlyList<NearMiss> diagnostics,
@@ -73,7 +70,7 @@ public sealed partial class SwapOrchestrator
             }
         }
 
-        LogHelper.Error(string.Join('\n', lines), NoMatchKind, chat);
+        LogHelper.Error(string.Join('\n', lines), "swap.no-match", chat);
     }
 
     internal static string NearMissReason(string blockedBy, LoopMatchRule loopRule, TurnMatchRule turnRule,

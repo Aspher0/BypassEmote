@@ -10,7 +10,6 @@ namespace BypassEmote.EmoteSwap;
 public sealed class ClientTriggerMonitor
 {
     private const string LogPrefix = "[PacketTrail] ";
-    private const string HookGroup = "BypassEmote.TriggerTrail";
 
     private static readonly Dictionary<int, string> KnownCommandNames = new()
     {
@@ -27,8 +26,8 @@ public sealed class ClientTriggerMonitor
 
     public unsafe ClientTriggerMonitor()
     {
-        _executeCommand = new(ExecuteCommandDetour, false, "GameMain.ExecuteCommand") { Group = HookGroup };
-        _executeLocationCommand = new(ExecuteLocationCommandDetour, false, "GameMain.ExecuteLocationCommand") { Group = HookGroup };
+        _executeCommand = new(ExecuteCommandDetour, false, "GameMain.ExecuteCommand") { Group = "BypassEmote.TriggerTrail" };
+        _executeLocationCommand = new(ExecuteLocationCommandDetour, false, "GameMain.ExecuteLocationCommand") { Group = "BypassEmote.TriggerTrail" };
     }
 
     private static void LogCommand(int command, string details)

@@ -1,6 +1,5 @@
 using BypassEmote.Enums;
 using BypassEmote.Models;
-using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Animations.Helpers;
 using NoireLib.Enums;
@@ -60,10 +59,10 @@ public sealed partial class SwapOrchestrator
     private string? PipelineBlockedBy()
     {
         if (Configuration.SelfBypassMode != SelfBypassMode.EmoteSwap)
-            return "Emote Swap is off, so no press reaches this pipeline.";
+            return "Emote Swap is off.";
 
         if (NoireService.ClientState.IsGPosing)
-            return "The swap stands down in gpose.";
+            return "Client in gpose.";
 
         if (!_penumbra.Available)
             return PenumbraUnavailableMessage;
@@ -79,7 +78,7 @@ public sealed partial class SwapOrchestrator
         var condition = DirectPlayPlanner.PlayableAsFor(rawCondition);
 
         if (NoireService.ObjectTable.LocalPlayer is not { } localPlayer)
-            return new SwapPreview { Condition = condition, Refusal = "There is no local player to read." };
+            return new SwapPreview { Condition = condition, Refusal = "Local player not found." };
 
         if (!_catalog.Ready)
             return new SwapPreview { Condition = condition, Refusal = CatalogLoadingMessage };
@@ -89,7 +88,7 @@ public sealed partial class SwapOrchestrator
             return new SwapPreview
             {
                 Condition = condition,
-                Refusal = "This emote is not in the catalog, so it can never be swapped.",
+                Refusal = "This emote is not in the catalog.",
             };
         }
 
@@ -212,8 +211,6 @@ public sealed partial class SwapOrchestrator
 
         var spreads = Spreads(staleVulnerable);
 
-        // The tier is what a dispatched repeat picks from. Asking for the pick itself is what must not happen
-        // here: ResolveDispatchedTarget writes the memory the next real swap reads.
         var tier = spreads
             ? BestMatchResolver.ResolveSameTier(source, pool, config, posture,
                 wantedCount: Math.Max(1, Configuration.MaxTargetsPerRank),

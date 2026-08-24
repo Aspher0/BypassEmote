@@ -12,7 +12,6 @@ namespace BypassEmote.EmoteSwap;
 internal static class PermanentModBuilder
 {
     private const string LogPrefix = "[PermanentModBuilder] ";
-    private const string FilesSubfolderName = "files";
     private const string HumanPathPrefix = "chara/human/";
     private const string HumanPathMiddle = "/animation/a0001/";
     internal const int MaxModNameLength = 64;
@@ -151,12 +150,12 @@ internal static class PermanentModBuilder
                 var rest = afterPrefix[(middle + HumanPathMiddle.Length)..];
 
                 if (rest.Length > 0)
-                    return $"{FilesSubfolderName}/{skeleton}/{rest}";
+                    return $"files/{skeleton}/{rest}";
             }
         }
 
         // Anything not shaped like a human animation path keeps its own shape under the same folder.
-        return $"{FilesSubfolderName}/{normalized.TrimStart('/')}";
+        return $"files/{normalized.TrimStart('/')}";
     }
 
     internal static string DescriptionFor(EmoteAttributes source, EmoteAttributes target)

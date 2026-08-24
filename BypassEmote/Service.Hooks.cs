@@ -2,7 +2,6 @@ using BypassEmote.EmoteSwap;
 using BypassEmote.Enums;
 using BypassEmote.Helpers;
 using BypassEmote.Models;
-using BypassEmote.Safety;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;

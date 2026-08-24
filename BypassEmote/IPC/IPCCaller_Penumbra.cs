@@ -1,5 +1,4 @@
 using BypassEmote.EmoteSwap;
-using BypassEmote.Helpers;
 using BypassEmote.Models;
 using Dalamud.Plugin;
 using NoireLib;

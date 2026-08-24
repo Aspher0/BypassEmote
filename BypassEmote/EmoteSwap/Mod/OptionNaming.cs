@@ -1,7 +1,6 @@
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace BypassEmote.EmoteSwap;
@@ -9,8 +8,8 @@ namespace BypassEmote.EmoteSwap;
 internal static class OptionNaming
 {
     internal const string NoneOptionName = "None";
-
-    private const string IdlePoseGroupPrefix = "Idle pose";
+    private const int MaxModNameLength = 31;
+    private static readonly HashSet<char> InvalidFileNameCharacters = [.. Path.GetInvalidFileNameChars()];
 
     internal static string StanceLabelFor(EmoteController.PoseType stance) => stance switch
     {
@@ -22,17 +21,7 @@ internal static class OptionNaming
     };
 
     internal static string IdlePoseGroupNameFor(EmoteController.PoseType stance, byte poseIndex)
-        => $"{IdlePoseGroupPrefix} {poseIndex} - {StanceLabelFor(stance)}";
-
-    private const string GroupPrefix = "On: ";
-
-    private const string VanillaSuffix = "(Vanilla)";
-
-    private static readonly HashSet<char> InvalidFileNameCharacters = [.. Path.GetInvalidFileNameChars()];
-
-    private const int MaxModNameLength = 31;
-
-    private const string Ellipsis = "...";
+        => $"Idle pose {poseIndex} - {StanceLabelFor(stance)}";
 
     internal static string GroupNameFor(string targetEmoteName, string? targetCommand, uint targetRowId,
         IReadOnlySet<string> takenGroupNames)
@@ -40,10 +29,10 @@ internal static class OptionNaming
         var name = targetEmoteName.Trim();
 
         var composed = name.Length == 0
-            ? $"{GroupPrefix}Emote #{targetRowId}"
+            ? $"On: Emote #{targetRowId}"
             : string.IsNullOrWhiteSpace(targetCommand)
-                ? $"{GroupPrefix}{name}"
-                : $"{GroupPrefix}{name} ({targetCommand.Trim()})";
+                ? $"On: {name}"
+                : $"On: {name} ({targetCommand.Trim()})";
 
         return takenGroupNames.Contains(composed) ? $"{composed} (#{targetRowId})" : composed;
     }
@@ -51,7 +40,7 @@ internal static class OptionNaming
     internal static string OptionNameFor(string sourceEmoteName, string? sourceModName, IReadOnlySet<string> takenOptionNames)
     {
         var baseName = string.IsNullOrWhiteSpace(sourceModName)
-            ? $"{sourceEmoteName.Trim()} {VanillaSuffix}"
+            ? $"{sourceEmoteName.Trim()} (Vanilla)"
             : $"{Ellipsize(sourceModName.Trim())} | ({sourceEmoteName.Trim()})";
 
         if (baseName.Length == 0)
@@ -80,5 +69,5 @@ internal static class OptionNaming
     }
 
     private static string Ellipsize(string value)
-        => value.Length <= MaxModNameLength ? value : value[..MaxModNameLength] + Ellipsis;
+        => value.Length <= MaxModNameLength ? value : value[..MaxModNameLength] + "...";
 }

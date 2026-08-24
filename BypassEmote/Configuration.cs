@@ -1,5 +1,4 @@
 using BypassEmote.Enums;
-using BypassEmote.Models;
 using Newtonsoft.Json.Linq;
 using NoireLib.Configuration;
 using NoireLib.Configuration.Migrations;
