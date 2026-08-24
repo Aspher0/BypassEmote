@@ -27,6 +27,7 @@ public partial class Service
     public static SwapModManager? SwapMods;
     public static SwapEndWatcher? EndWatcher;
     public static SkeletonWatcher? BodyWatcher;
+    public static CollectionWatcher? CollectionWatcher;
     public static SchedulerResidencyProbe? ResidencyProbe;
     public static CacheBreaker? Breaker;
 #if DEBUG
@@ -60,6 +61,7 @@ public partial class Service
         Breaker = new CacheBreaker(Penumbra, ResidencyProbe, NoireService.PluginInterface.GetPluginConfigDirectory());
 
         BodyWatcher = new SkeletonWatcher(SwapMods);
+        CollectionWatcher = new CollectionWatcher(Penumbra, SwapMods);
 
         SwapIdentity.Changed += OnSwapIdentityChanged;
 
@@ -112,6 +114,7 @@ public partial class Service
             NoireService.ClientState.Login -= Catalog.StartBuild;
 
         BodyWatcher?.Dispose();
+        CollectionWatcher?.Dispose();
         Orchestrator?.Dispose();
         Breaker?.Dispose();
 

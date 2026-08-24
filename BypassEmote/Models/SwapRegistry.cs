@@ -14,6 +14,8 @@ public sealed record SwapOptionEntry(
     // Skeleton id -> game path -> mod-relative file. Every race the build covered, so a body change is a rewrite.
     IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> FilesByRace,
     IReadOnlyDictionary<string, string>? UniqueNameByKey = null,
+    // Alias maps per skeleton.
+    IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? UniqueNamesByRace = null,
     IReadOnlyList<string>? InternalNames = null,
     bool FadeProtectedIntro = false,
     bool ClampedIntro = false,

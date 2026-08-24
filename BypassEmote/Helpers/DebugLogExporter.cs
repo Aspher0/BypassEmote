@@ -451,6 +451,21 @@ internal static class DebugLogExporter
 
         report.AppendLine($"Matches the registry collection: "
             + $"{Service.SwapMods?.Registry.CollectionId == collection.Id}");
+
+        if (Service.SwapIdentity?.Names is not { } names || penumbra.GetAllCollections() is not { } collections)
+            return;
+
+        foreach (var (id, name) in collections)
+        {
+            if (penumbra.DescribeTempSettings(id, names.Directory) is { } temp)
+                report.AppendLine($"Temporary settings in '{name}': {temp}");
+
+            if (penumbra.GetSelectedOptions(id, names.Directory) is { Count: > 0 } selected)
+            {
+                report.AppendLine($"Own selections in '{name}': "
+                    + string.Join("; ", selected.Select(pair => $"'{pair.Key}' -> '{pair.Value}'")));
+            }
+        }
     }
 
     private static void AppendCharacter(StringBuilder report)

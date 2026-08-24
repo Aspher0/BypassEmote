@@ -50,7 +50,9 @@ public sealed partial class SwapOrchestrator
         IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> FilesByRace,
         long ElapsedAtRetarget, long ElapsedAtPrepare,
         bool FadeProtectedIntro, bool ClampedIntro, bool UniqueNamesApplied,
-        IReadOnlyDictionary<string, string>? UniqueNameByKey, bool InternalUniqueNamesApplied,
+        IReadOnlyDictionary<string, string>? UniqueNameByKey,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? UniqueNamesByRace,
+        bool InternalUniqueNamesApplied,
         IReadOnlyList<string>? InternalNames);
 
     private const string BackgroundOperationName = "Emote Swap byte pipeline";
@@ -81,8 +83,7 @@ public sealed partial class SwapOrchestrator
     private SwapBuildOutcome? BuildSwapFiles(SwapBuildRequest request)
     {
         var retargeted = new Dictionary<string, GroupOutput?>(StringComparer.Ordinal);
-        var allFiles = new Dictionary<string, byte[]>(StringComparer.Ordinal);
-        var gamePathsByRace = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+        var byRace = new Dictionary<string, GroupedSwapFiles>(StringComparer.Ordinal);
 
         GroupedSwapFiles? drawnFiles = null;
         IReadOnlyList<ResolvedVariantPair> drawnPairs = [];
@@ -113,10 +114,7 @@ public sealed partial class SwapOrchestrator
                 drawnPairs = race.Pairs;
             }
 
-            foreach (var (gamePath, bytes) in grouped.Files)
-                allFiles.TryAdd(gamePath, bytes);
-
-            gamePathsByRace[race.Race] = [.. grouped.Files.Keys];
+            byRace[race.Race] = grouped;
         }
 
         var elapsedAtRetarget = request.Timings.Clock.ElapsedMilliseconds;
@@ -127,40 +125,54 @@ public sealed partial class SwapOrchestrator
             return null;
         }
 
-        if (_swapMods.PrepareFiles(request.Plan, allFiles) is not { } prepared)
+        var assembled = AssembleRaceFiles(byRace);
+
+        if (_swapMods.PrepareFiles(request.Plan, assembled.WriteSet) == null)
             return null;
 
-        return new SwapBuildOutcome(allFiles, FilesByRace(gamePathsByRace, prepared.RedirectedPaths),
+        return new SwapBuildOutcome(assembled.WriteSet, assembled.FilesByRace,
             elapsedAtRetarget, request.Timings.Clock.ElapsedMilliseconds,
             FadeProtectedIntro: OutputFadeProtected(drawnPairs, drawn),
             ClampedIntro: drawn.ClampedIntro,
             UniqueNamesApplied: drawn.UniqueNames,
             UniqueNameByKey: drawn.UniqueNameByKey,
+            UniqueNamesByRace: assembled.UniqueNamesByRace,
             InternalUniqueNamesApplied: drawn.InternalUniqueNames,
             InternalNames: drawn.InternalNames);
     }
 
-    private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> FilesByRace(
-        IReadOnlyDictionary<string, IReadOnlyList<string>> gamePathsByRace,
-        IReadOnlyDictionary<string, string> redirectedPaths)
+    internal sealed record AssembledRaceFiles(
+        IReadOnlyDictionary<string, byte[]> WriteSet,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> FilesByRace,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? UniqueNamesByRace);
+
+    internal static AssembledRaceFiles AssembleRaceFiles(IReadOnlyDictionary<string, GroupedSwapFiles> byRace)
     {
-        var byRace = new Dictionary<string, IReadOnlyDictionary<string, string>>(
-            gamePathsByRace.Count, StringComparer.Ordinal);
+        var writeSet = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+        var filesByRace = new Dictionary<string, IReadOnlyDictionary<string, string>>(byRace.Count, StringComparer.Ordinal);
+        var uniqueNamesByRace = new Dictionary<string, IReadOnlyDictionary<string, string>>(byRace.Count, StringComparer.Ordinal);
 
-        foreach (var (race, gamePaths) in gamePathsByRace)
+        foreach (var (race, grouped) in byRace)
         {
-            var redirects = new Dictionary<string, string>(gamePaths.Count, StringComparer.Ordinal);
+            var redirects = new Dictionary<string, string>(grouped.Files.Count, StringComparer.Ordinal);
 
-            foreach (var gamePath in gamePaths)
+            foreach (var (gamePath, bytes) in grouped.Files)
             {
-                if (redirectedPaths.TryGetValue(gamePath, out var relativePath))
-                    redirects[gamePath] = relativePath;
+                var relativePath = SwapModManager.RedirectedPathValue(
+                    SwapModManager.DeriveFileName(bytes, SwapModManager.FileExtensionFor(gamePath)));
+
+                redirects[gamePath] = relativePath;
+                writeSet[relativePath] = bytes;
             }
 
-            byRace[race] = redirects;
+            filesByRace[race] = redirects;
+
+            if (grouped.UniqueNameByKey is { } uniqueNames)
+                uniqueNamesByRace[race] = uniqueNames;
         }
 
-        return byRace;
+        return new AssembledRaceFiles(writeSet, filesByRace,
+            uniqueNamesByRace.Count > 0 ? uniqueNamesByRace : null);
     }
 
     private void FinishSwapOnFrameworkThread(SwapBuildRequest request, SwapBuildOutcome? outcome)
@@ -249,6 +261,7 @@ public sealed partial class SwapOrchestrator
         return new SwapOptionEntry(request.ContentKey, groupName, optionName, request.Source.RowId,
             request.Target.RowId, IsIdlePoseSwap: false, built.FilesByRace,
             UniqueNameByKey: built.UniqueNameByKey,
+            UniqueNamesByRace: built.UniqueNamesByRace,
             InternalNames: built.InternalNames,
             FadeProtectedIntro: built.FadeProtectedIntro,
             ClampedIntro: built.ClampedIntro,

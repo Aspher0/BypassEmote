@@ -27,7 +27,7 @@ public sealed class SwapModManager
     private const string SwapFilePrefix = "swap_";
 
     private const int SwapFileTagLength = 8;
-    private const int CurrentRegistrySchemaVersion = 1;
+    private const int CurrentRegistrySchemaVersion = 2;
     private const int MaxPriorityPasses = 4;
 
     private static readonly ContentAddressedStore Store =
@@ -245,6 +245,20 @@ public sealed class SwapModManager
 
             if (!IsSuccess(selectEc))
             {
+                NoireLogger.LogDebug(
+                    $"Penumbra refused '{entry.OptionName}' in '{entry.GroupName}' (ec={selectEc}). "
+                    + $"Deleting the mod's settings. rebuilding collection {collection} and retrying.", LogPrefix);
+
+                DropSettingsEverywhere();
+                RebuildSettingsIn(collection);
+                selectEc = _gateway.SelectOption(collection, names.Directory, entry.GroupName, entry.OptionName);
+
+                if (_gateway.RefreshOwnPanel())
+                    NoireLogger.LogDebug("Mod panel refreshed.", LogPrefix);
+            }
+
+            if (!IsSuccess(selectEc))
+            {
                 var version = _gateway.ReportedApiVersion();
 
                 NoireLogger.LogError(
@@ -423,7 +437,7 @@ public sealed class SwapModManager
             + $"registry {atRegistry - atReload}ms, select {clock.ElapsedMilliseconds - atRegistry}ms.", LogPrefix);
 
         if (selected && _gateway.RefreshOwnPanel())
-            NoireLogger.LogDebug("The mod's panel was on screen, so its option list was refreshed.", LogPrefix);
+            NoireLogger.LogDebug("Mod panel refreshed.", LogPrefix);
 
         return selected;
     }
@@ -458,7 +472,7 @@ public sealed class SwapModManager
         PushRedirectScope();
 
         if (_gateway.RefreshOwnPanel())
-            NoireLogger.LogDebug("The mod's panel was on screen, so its option list was refreshed.", LogPrefix);
+            NoireLogger.LogDebug("Mod panel refreshed.", LogPrefix);
 
         return plan.Dropped.Count;
     }
@@ -571,7 +585,8 @@ public sealed class SwapModManager
                 if (File.Exists(fullPath))
                     continue;
 
-                if (!filesToWrite.TryGetValue(gamePath, out var bytes))
+                if (!filesToWrite.TryGetValue(relativePath, out var bytes)
+                    && !filesToWrite.TryGetValue(gamePath, out bytes))
                 {
                     NoireLogger.LogError($"'{relativePath}' is missing and this swap does not carry it.", LogPrefix);
                     return false;
@@ -649,11 +664,23 @@ public sealed class SwapModManager
         }
     }
 
+    internal static SwapRegistry RealignedForSkeleton(SwapRegistry registry, string newSkeleton)
+        => registry with
+        {
+            Skeleton = newSkeleton,
+            Entries = registry.Entries
+                .Select(entry => entry.UniqueNamesByRace is { } byRace
+                    && byRace.TryGetValue(newSkeleton, out var uniqueNames)
+                        ? entry with { UniqueNameByKey = uniqueNames }
+                        : entry)
+                .ToList(),
+        };
+
     internal bool RewriteForSkeleton(SkeletonRewritePlanner.RewritePlan plan, string newSkeleton)
     {
         if (plan.Rewrites.Count == 0)
         {
-            Registry = Registry with { Skeleton = newSkeleton };
+            Registry = RealignedForSkeleton(Registry, newSkeleton);
             PersistRegistry();
 
             PushRedirectScope();
@@ -684,7 +711,7 @@ public sealed class SwapModManager
                 return false;
         }
 
-        Registry = Registry with { Skeleton = newSkeleton };
+        Registry = RealignedForSkeleton(Registry, newSkeleton);
         PersistRegistry();
 
         ReassertSelections();
@@ -698,6 +725,8 @@ public sealed class SwapModManager
         EnsureLayout();
 
         Registry = LoadRegistryFromDisk();
+
+        DropSettingsEverywhere();
 
         DeselectAll();
         ReconcileWithDisk();
@@ -1116,7 +1145,7 @@ public sealed class SwapModManager
     {
         if (isFirstCreation)
         {
-            if (_gateway.AddMod(ModDirectoryName))
+            if (Added())
                 return true;
 
             NoireLogger.LogWarning(
@@ -1133,7 +1162,7 @@ public sealed class SwapModManager
             NoireLogger.LogWarning(
                 $"Penumbra would not reload '{ModDirectoryName}'; trying the other call.", LogPrefix);
 
-            if (_gateway.AddMod(ModDirectoryName))
+            if (Added())
                 return true;
         }
 
@@ -1142,6 +1171,15 @@ public sealed class SwapModManager
             LogPrefix);
 
         return false;
+
+        bool Added()
+        {
+            if (!_gateway.AddMod(ModDirectoryName))
+                return false;
+
+            DropSettingsEverywhere();
+            return true;
+        }
 
         bool Reloaded()
         {
@@ -1184,25 +1222,18 @@ public sealed class SwapModManager
 
     public sealed record SwapFilePlan(string? ModRootDirectory, SwapModNames? Names);
 
-    public sealed record PreparedSwapFiles(string SwapFileDirectory,
-        IReadOnlyDictionary<string, string> RedirectedPaths, bool IsFirstCreation, SwapModNames Names);
+    public sealed record PreparedSwapFiles(string SwapFileDirectory, bool IsFirstCreation, SwapModNames Names);
 
     public SwapFilePlan BeginPrepare()
         => new(_gateway.GetModRootDirectory(), _identity.Names);
 
-    public PreparedSwapFiles? PrepareFiles(SwapFilePlan plan, IReadOnlyDictionary<string, byte[]> gamePathToPapBytes)
-        => PrepareFilesCore(plan, gamePathToPapBytes);
+    public PreparedSwapFiles? PrepareFiles(SwapFilePlan plan, IReadOnlyDictionary<string, byte[]> filesByRelativePath)
+        => PrepareFilesCore(plan, filesByRelativePath);
 
     internal static PreparedSwapFiles? PrepareFilesCore(SwapFilePlan plan,
-        IReadOnlyDictionary<string, byte[]> gamePathToPapBytes)
+        IReadOnlyDictionary<string, byte[]> filesByRelativePath)
     {
         var prepareClock = Stopwatch.StartNew();
-
-        var redirectedPaths = new Dictionary<string, string>(gamePathToPapBytes.Count);
-        foreach (var (gamePath, bytes) in gamePathToPapBytes)
-            redirectedPaths[gamePath] = RedirectedPathValue(DeriveFileName(bytes, FileExtensionFor(gamePath)));
-
-        var elapsedAtNames = prepareClock.ElapsedMilliseconds;
 
         if (plan.Names is not { } names)
         {
@@ -1221,27 +1252,20 @@ public sealed class SwapModManager
 
         var isFirstCreation = !Directory.Exists(modDirectory);
 
-        if (!FileHelper.EnsureDirectoryExists(swapsDirectory) || !WriteNewPapFiles(modDirectory, gamePathToPapBytes, redirectedPaths))
+        if (!FileHelper.EnsureDirectoryExists(swapsDirectory))
             return null;
 
-        NoireLogger.LogDebug(
-            $"Prepare timings: names {elapsedAtNames}ms, files {prepareClock.ElapsedMilliseconds - elapsedAtNames}ms.",
-            LogPrefix);
-
-        return new PreparedSwapFiles(swapsDirectory, redirectedPaths, isFirstCreation, names);
-    }
-
-    internal static bool WriteRealModJsons(PreparedSwapFiles prepared, int layout = ModLayout.V3)
-    {
-        var modDirectory = Path.GetDirectoryName(prepared.SwapFileDirectory);
-
-        if (string.IsNullOrEmpty(modDirectory))
+        foreach (var (relativePath, bytes) in filesByRelativePath)
         {
-            NoireLogger.LogError($"Cannot place the mod jsons: no parent for '{prepared.SwapFileDirectory}'.", LogPrefix);
-            return false;
+            if (!Store.WriteAt(Path.Combine(modDirectory, relativePath), bytes))
+                return null;
         }
 
-        return WriteRealModJsons(modDirectory, prepared.Names.Display, prepared.RedirectedPaths, layout) != null;
+        NoireLogger.LogDebug(
+            $"Prepare timings: {filesByRelativePath.Count} file(s) in {prepareClock.ElapsedMilliseconds}ms.",
+            LogPrefix);
+
+        return new PreparedSwapFiles(swapsDirectory, isFirstCreation, names);
     }
 
     internal static bool? WriteRealModJsons(string modDirectory, string modName,
@@ -1256,18 +1280,6 @@ public sealed class SwapModManager
             NoireLogger.LogError(ex, $"Failed to write the mod files under '{modDirectory}'.", LogPrefix);
             return null;
         }
-    }
-
-    private static bool WriteNewPapFiles(string storageDirectory, IReadOnlyDictionary<string, byte[]> gamePathToPapBytes,
-        Dictionary<string, string> redirectedPaths)
-    {
-        foreach (var (gamePath, bytes) in gamePathToPapBytes)
-        {
-            if (!Store.WriteAt(Path.Combine(storageDirectory, redirectedPaths[gamePath]), bytes))
-                return false;
-        }
-
-        return true;
     }
 
     private string? RegistryPath
@@ -1393,16 +1405,82 @@ public sealed class SwapModManager
 
     private Guid CollectionForSelection()
     {
-        if (Registry.CollectionId != Guid.Empty)
-            return Registry.CollectionId;
+        if (_gateway.GetPlayerCollection() is { } collection && collection.Id != Guid.Empty)
+        {
+            HandleCollectionChanged(collection.Id);
+            return collection.Id;
+        }
 
-        if (_gateway.GetPlayerCollection() is not { } collection)
-            return Guid.Empty;
+        return Registry.CollectionId;
+    }
 
-        Registry = Registry with { CollectionId = collection.Id };
+    public void HandleCollectionChanged(Guid current)
+    {
+        if (_shutDown || current == Guid.Empty || current == Registry.CollectionId
+            || _identity.Names is not { } names)
+        {
+            return;
+        }
+
+        var previous = Registry.CollectionId;
+        var armed = Registry.Entries.Where(entry => entry.SelectedByUs).ToList();
+
+        DropSettingsEverywhere();
+
+        Registry = Registry with { CollectionId = current, AppliedPriority = 0, CompetingMods = null };
         PersistRegistry();
+        ForgetModStates();
 
-        return collection.Id;
+        NoireLogger.LogDebug(
+            $"The player's collection is now {current} (was {(previous == Guid.Empty ? "unbound" : previous.ToString())}), "
+            + (armed.Count == 0 ? "and no armed swap needs to follow." : $"and {armed.Count} armed swap(s) use the new collection."),
+            LogPrefix);
+
+        if (armed.Count == 0)
+            return;
+
+        RebuildSettingsIn(current);
+        ReconcilePriority();
+
+        if (_gateway.RefreshOwnPanel())
+            NoireLogger.LogDebug("Mod panel refreshed.", LogPrefix);
+    }
+
+    private void DropSettingsEverywhere()
+    {
+        if (_identity.Names is not { } names || _gateway.GetAllCollections() is not { } collections)
+            return;
+
+        using (_ownMutations.Enter())
+        {
+            foreach (var id in collections.Keys)
+            {
+                _gateway.TryDropOwnSettings(id, names.Directory);
+                _gateway.TryDropTempSettings(id, names.Directory);
+            }
+        }
+
+        ForgetModStates();
+
+        NoireLogger.LogDebug(
+            $"Settings for '{names.Directory}' were deleted from {collections.Count} collection(s).",
+            LogPrefix);
+    }
+
+    private void RebuildSettingsIn(Guid collection)
+    {
+        if (_identity.Names is not { } names)
+            return;
+
+        using (_ownMutations.Enter())
+        {
+            _gateway.TryDropOwnSettings(collection, names.Directory);
+            _gateway.TryDropTempSettings(collection, names.Directory);
+            _gateway.TrySetModEnabled(collection, names.Directory, true);
+
+            foreach (var entry in Registry.Entries.Where(entry => entry.SelectedByUs))
+                _gateway.TrySelectOption(collection, names.Directory, entry.GroupName, entry.OptionName);
+        }
     }
 
     private void UpdateEntry(SwapOptionEntry entry)

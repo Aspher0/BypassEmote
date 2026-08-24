@@ -9,6 +9,7 @@ using Penumbra.Api.Helpers;
 using Penumbra.Api.IpcSubscribers;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BypassEmote.IPC;
 
@@ -44,12 +45,16 @@ public sealed class IPCCaller_Penumbra : IDisposable
     private readonly ResolvePlayerPath _resolvePlayerPath;
     private readonly ResolvePlayerPaths _resolvePlayerPaths;
     private readonly GetCollectionForObject _getCollectionForObject;
+    private readonly GetCollections _getCollections;
     private readonly GetAllModSettings _getAllModSettings;
     private readonly GetModList _getModList;
     private readonly OpenMainWindow _openMainWindow;
     private readonly TrySetMod _trySetMod;
     private readonly TrySetModPriority _trySetModPriority;
     private readonly TrySetModSettings _trySetModSettings;
+    private readonly TryInheritMod _tryInheritMod;
+    private readonly RemoveTemporaryModSettings _removeTemporaryModSettings;
+    private readonly QueryTemporaryModSettings _queryTemporaryModSettings;
     private readonly GetCurrentModSettings _getCurrentModSettings;
     private readonly GetAvailableModSettings _getAvailableModSettings;
     private readonly AddMod _addMod;
@@ -70,8 +75,6 @@ public sealed class IPCCaller_Penumbra : IDisposable
     private readonly EventSubscriber<string> _preSettingsDraw;
 
     private long _ownPanelDrawnAt;
-
-    private string? _bounceTarget;
 
     private const long PanelFreshnessMilliseconds = 250;
 
@@ -96,12 +99,16 @@ public sealed class IPCCaller_Penumbra : IDisposable
         _resolvePlayerPath = new ResolvePlayerPath(pluginInterface);
         _resolvePlayerPaths = new ResolvePlayerPaths(pluginInterface);
         _getCollectionForObject = new GetCollectionForObject(pluginInterface);
+        _getCollections = new GetCollections(pluginInterface);
         _getAllModSettings = new GetAllModSettings(pluginInterface);
         _getModList = new GetModList(pluginInterface);
         _openMainWindow = new OpenMainWindow(pluginInterface);
         _trySetMod = new TrySetMod(pluginInterface);
         _trySetModPriority = new TrySetModPriority(pluginInterface);
         _trySetModSettings = new TrySetModSettings(pluginInterface);
+        _tryInheritMod = new TryInheritMod(pluginInterface);
+        _removeTemporaryModSettings = new RemoveTemporaryModSettings(pluginInterface);
+        _queryTemporaryModSettings = new QueryTemporaryModSettings(pluginInterface);
         _getCurrentModSettings = new GetCurrentModSettings(pluginInterface);
         _getAvailableModSettings = new GetAvailableModSettings(pluginInterface);
         _addMod = new AddMod(pluginInterface);
@@ -223,71 +230,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
         if (OwnModDirectoryName is not { Length: > 0 } ownDirectory || !OwnPanelOnScreen)
             return false;
 
-        if (BounceTarget(ownDirectory) is not { } other)
-            return false;
-
-        return OpenMod(other, string.Empty) && OpenMod(ownDirectory, string.Empty);
-    }
-
-    private string? BounceTarget(string ownDirectory)
-    {
-        var ownFolder = TreeFolderOf(ownDirectory);
-
-        if (_bounceTarget is { } cached
-            && !string.Equals(cached, ownDirectory, StringComparison.OrdinalIgnoreCase)
-            && SameFolder(TreeFolderOf(cached), ownFolder))
-        {
-            return cached;
-        }
-
-        _bounceTarget = null;
-
-        if (GetModNames() is not { } mods)
-            return null;
-
-        foreach (var directory in mods.Keys)
-        {
-            if (string.Equals(directory, ownDirectory, StringComparison.OrdinalIgnoreCase)
-                || !SameFolder(TreeFolderOf(directory), ownFolder))
-            {
-                continue;
-            }
-
-            _bounceTarget = directory;
-
-            return directory;
-        }
-
-        NoireLogger.LogDebug(
-            $"No other mod in '{(ownFolder.Length == 0 ? "<root>" : ownFolder)}', could not visually refresh the mod.",
-            LogPrefix);
-
-        FeedbackHelper.Notice($"Could not refresh the penumbra mod window, you may have to re-open the mod manually.", kind: "RefreshModWindowFailed");
-
-        return null;
-    }
-
-    private static bool SameFolder(string left, string right)
-        => string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
-
-    private string TreeFolderOf(string modDirectory)
-    {
-        try
-        {
-            var (ec, path, _, _) = _getModPath.Invoke(modDirectory, string.Empty);
-
-            if (ec != PenumbraApiEc.Success || path.Length == 0)
-                return string.Empty;
-
-            var lastSeparator = path.LastIndexOf('/');
-
-            return lastSeparator < 0 ? string.Empty : path[..lastSeparator];
-        }
-        catch (Exception ex)
-        {
-            LogFailureOnce(nameof(TreeFolderOf), ex);
-            return string.Empty;
-        }
+        return OpenMod(ownDirectory, string.Empty);
     }
 
     public bool OpenMod(string modDirectory, string modName)
@@ -385,6 +328,82 @@ public sealed class IPCCaller_Penumbra : IDisposable
         {
             LogFailureOnce(nameof(SelectOption), ex);
             return PenumbraApiEc.UnknownError;
+        }
+    }
+
+    public IReadOnlyDictionary<Guid, string>? GetAllCollections()
+    {
+        try
+        {
+            return _getCollections.Invoke();
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(GetAllCollections), ex);
+            return null;
+        }
+    }
+
+    public bool TryDropOwnSettings(Guid collectionId, string modDirectory)
+    {
+        try
+        {
+            var ec = _tryInheritMod.Invoke(collectionId, modDirectory, inherit: true);
+            return ec is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged;
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(TryDropOwnSettings), ex);
+            return false;
+        }
+    }
+
+    public bool TryDropTempSettings(Guid collectionId, string modDirectory)
+    {
+        try
+        {
+            var ec = _removeTemporaryModSettings.Invoke(collectionId, modDirectory, key: 0);
+
+            if (ec == PenumbraApiEc.TemporarySettingDisallowed)
+            {
+                NoireLogger.LogDebug(
+                    $"Locked temporary settings on '{modDirectory}' in collection {collectionId} "
+                    + $"({DescribeTempSettings(collectionId, modDirectory) ?? "unreadable"}).",
+                    LogPrefix);
+            }
+
+            return ec is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged;
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(TryDropTempSettings), ex);
+            return false;
+        }
+    }
+
+    public string? DescribeTempSettings(Guid collectionId, string modDirectory)
+    {
+        try
+        {
+            var ec = _queryTemporaryModSettings.Invoke(collectionId, modDirectory, out var settings, out var source, key: 0);
+
+            if (ec != PenumbraApiEc.Success)
+                return $"query {ec}, source '{source}'";
+
+            if (settings is not { } held)
+                return null;
+
+            var groups = held.Settings.Count == 0
+                ? "no groups"
+                : string.Join("; ", held.Settings.Select(pair => $"'{pair.Key}' -> [{string.Join(", ", pair.Value)}]"));
+
+            return $"source '{source}', inherit {held.ForceInherit}, enabled {held.Enabled}, "
+                + $"{held.Settings.Count} group(s): {groups}";
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(DescribeTempSettings), ex);
+            return "query threw";
         }
     }
 
