@@ -36,7 +36,7 @@ public sealed class PatchApprovalGate : IDisposable
 
     private Reading _reading;
     private PatchApprovalDocument? _document;
-    private GameClient _seenClient;
+    private NoireLib.Helpers.GameClient _seenClient;
     private int _seenHookVersion = -1;
     private bool _frameworkAttached;
     private bool _seenGoverns;
@@ -68,7 +68,7 @@ public sealed class PatchApprovalGate : IDisposable
 
     public string GameVersion { get; }
 
-    public GameClient Client => GameClientReader.Current();
+    public GameClient Client => GameClientHelper.Current();
 
     public Version? PluginVersion { get; }
 
@@ -112,7 +112,7 @@ public sealed class PatchApprovalGate : IDisposable
         }
         else if (Untested)
         {
-            NoireLogger.LogWarning($"Game build '{GameVersion}' reads as the {GameClientReader.Name(Client)} "
+            NoireLogger.LogWarning($"Game build '{GameVersion}' reads as the {GameClientHelper.Name(Client)} "
                 + $"client. {Reason}", LogPrefix);
         }
         else
@@ -322,7 +322,7 @@ public sealed class PatchApprovalGate : IDisposable
 
         Volatile.Write(ref _reading, reading);
 
-        NoireLogger.LogDebug($"The client now reads as {GameClientReader.Name(Client)}: {reading.Reason}", LogPrefix);
+        NoireLogger.LogDebug($"The client now reads as {GameClientHelper.Name(Client)}: {reading.Reason}", LogPrefix);
 
         Apply();
     }

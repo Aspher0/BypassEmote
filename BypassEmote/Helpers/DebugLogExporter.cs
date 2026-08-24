@@ -357,10 +357,10 @@ internal static class DebugLogExporter
 
     private static void AppendGame(StringBuilder report)
     {
-        var client = GameClientReader.Current();
+        var client = GameClientHelper.Current();
 
         report.AppendLine($"Build: {Service.PatchApproval?.GameVersion ?? "unknown"}");
-        report.AppendLine($"Client: {GameClientReader.Name(client)} ({client})");
+        report.AppendLine($"Client: {GameClientHelper.Name(client)} ({client})");
         report.AppendLine($"UI language: {NoireService.PluginInterface.UiLanguage}");
         report.AppendLine($"Logged in: {NoireService.ClientState.IsLoggedIn}");
     }
@@ -422,7 +422,9 @@ internal static class DebugLogExporter
             return;
         }
 
-        report.AppendLine("Effective collection: detected");
+        report.AppendLine(penumbra.PlayerCollectionFallbackSource is { } fallbackSource
+            ? $"Effective collection: detected (via the '{fallbackSource}' assignment)"
+            : "Effective collection: detected");
 
         report.AppendLine($"Matches the registry collection: "
             + $"{Service.SwapMods?.Registry.CollectionId == collection.Id}");
@@ -433,11 +435,11 @@ internal static class DebugLogExporter
         foreach (var (id, name) in collections)
         {
             if (penumbra.DescribeTempSettings(id, names.Directory) is { } temp)
-                report.AppendLine($"Temporary settings in '{name}': {temp}");
+                report.AppendLine($"Temporary settings in '{id}': {temp}");
 
             if (penumbra.GetSelectedOptions(id, names.Directory) is { Count: > 0 } selected)
             {
-                report.AppendLine($"Own selections in '{name}': "
+                report.AppendLine($"Own selections in '{id}': "
                     + string.Join("; ", selected.Select(pair => $"'{pair.Key}' -> '{pair.Value}'")));
             }
         }

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+    <Target Name="BypassEmotePackagerDebug"
+            AfterTargets="Build"
+            Condition="'$(Configuration)' == 'Debug'">
+        <DalamudPackager ProjectDir="$(ProjectDir)"
+                         OutputPath="$(OutputPath)"
+                         AssemblyName="$(AssemblyName)"
+                         MakeZip="false"
+                         Author="$(Author)"
+                         Name="$(Name)"
+                         MinimumDalamudVersion="$(MinimumDalamudVersion)"
+                         Punchline="$(Punchline)"
+                         Description="$(Description)"
+                         ApplicableVersion="$(ApplicableVersion)"
+                         RepoUrl="$(RepoUrl)"
+                         Tags="$(Tags)"
+                         CategoryTags="$(CategoryTags)"
+                         DalamudApiLevel="$(DalamudApiLevel)"
+                         LoadRequiredState="$(LoadRequiredState)"
+                         LoadSync="$(LoadSync)"
+                         CanUnloadAsync="$(CanUnloadAsync)"
+                         LoadPriority="$(LoadPriority)"
+                         ImageUrls="$(ImageUrls)"
+                         IconUrl="$(IconUrl)"
+                         Changelog="$(Changelog)"
+                         AcceptsFeedback="$(AcceptsFeedback)"
+                         FeedbackMessage="$(FeedbackMessage)" />
+    </Target>
+
+    <Target Name="BypassEmotePackagerZip"
+            AfterTargets="Build"
+            Condition="'$(Configuration)' == 'Release' or '$(Configuration)' == 'Testing'">
+        <DalamudPackager ProjectDir="$(ProjectDir)"
+                         OutputPath="$(OutputPath)"
+                         AssemblyName="$(AssemblyName)"
+                         MakeZip="true"
+                         Author="$(Author)"
+                         Name="$(Name)"
+                         MinimumDalamudVersion="$(MinimumDalamudVersion)"
+                         Punchline="$(Punchline)"
+                         Description="$(Description)"
+                         ApplicableVersion="$(ApplicableVersion)"
+                         RepoUrl="$(RepoUrl)"
+                         Tags="$(Tags)"
+                         CategoryTags="$(CategoryTags)"
+                         DalamudApiLevel="$(DalamudApiLevel)"
+                         LoadRequiredState="$(LoadRequiredState)"
+                         LoadSync="$(LoadSync)"
+                         CanUnloadAsync="$(CanUnloadAsync)"
+                         LoadPriority="$(LoadPriority)"
+                         ImageUrls="$(ImageUrls)"
+                         IconUrl="$(IconUrl)"
+                         Changelog="$(Changelog)"
+                         AcceptsFeedback="$(AcceptsFeedback)"
+                         FeedbackMessage="$(FeedbackMessage)" />
+    </Target>
+</Project>

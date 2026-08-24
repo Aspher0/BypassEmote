@@ -1,5 +1,8 @@
 using BypassEmote.EmoteSwap;
+using BypassEmote.Enums;
 using BypassEmote.Models;
+using BypassEmote.Safety;
+using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Plugin;
 using NoireLib;
 using NoireLib.Helpers;
@@ -44,6 +47,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
     private readonly ResolvePlayerPath _resolvePlayerPath;
     private readonly ResolvePlayerPaths _resolvePlayerPaths;
     private readonly GetCollectionForObject _getCollectionForObject;
+    private readonly GetCollection _getCollection;
     private readonly GetCollections _getCollections;
     private readonly GetAllModSettings _getAllModSettings;
     private readonly GetModList _getModList;
@@ -98,6 +102,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
         _resolvePlayerPath = new ResolvePlayerPath(pluginInterface);
         _resolvePlayerPaths = new ResolvePlayerPaths(pluginInterface);
         _getCollectionForObject = new GetCollectionForObject(pluginInterface);
+        _getCollection = new GetCollection(pluginInterface);
         _getCollections = new GetCollections(pluginInterface);
         _getAllModSettings = new GetAllModSettings(pluginInterface);
         _getModList = new GetModList(pluginInterface);
@@ -201,18 +206,209 @@ public sealed class IPCCaller_Penumbra : IDisposable
         }
     }
 
+    public static bool PretendIdentifierRejected { get; set; }
+
+    public string? PlayerCollectionFallbackSource { get; private set; }
+
+    private string? _announcedFallbackSource;
+
     public (Guid Id, string Name)? GetPlayerCollection()
     {
         try
         {
             var result = _getCollectionForObject.Invoke(LocalPlayerObjectIndex);
-            return result.ObjectValid ? result.EffectiveCollection : null;
+
+            if (result.ObjectValid && !PretendIdentifierRejected)
+            {
+                PlayerCollectionFallbackSource = null;
+                return result.EffectiveCollection;
+            }
+
+            return PlayerAssignmentFallback();
         }
         catch (Exception ex)
         {
             LogFailureOnce(nameof(GetPlayerCollection), ex);
             return null;
         }
+    }
+
+    private (Guid Id, string Name)? PlayerAssignmentFallback()
+    {
+        PlayerCollectionFallbackSource = null;
+
+        if (GameClientHelper.Current() is not (GameClient.Korean or GameClient.Chinese))
+            return null;
+
+        if (NoireService.ObjectTable.LocalPlayer is not { } localPlayer)
+            return null;
+
+        var (source, collection) = ProbeServingCollection() is { } served
+            ? ($"Probe -> '{served.Name}'", ((Guid Id, string Name)?)served)
+            : ReadPlayerAssignments(localPlayer.Customize);
+
+        if (collection is null)
+            return null;
+
+        PlayerCollectionFallbackSource = source;
+
+        if (_announcedFallbackSource != source)
+        {
+            _announcedFallbackSource = source;
+            NoireLogger.LogDebug($"Penumbra rejects the local player identifier on this client, '{source}' assignment used instead.", LogPrefix);
+        }
+
+        return collection;
+    }
+
+    private (string Source, (Guid Id, string Name)? Collection) ReadPlayerAssignments(ReadOnlySpan<byte> customize)
+    {
+        if (_getCollection.Invoke(ApiCollectionType.Yourself) is { } yourself)
+            return ("Your Character", yourself);
+
+        if (customize.Length > (int)CustomizeIndex.Tribe && customize[(int)CustomizeIndex.Race] != 0)
+        {
+            var gender = customize[(int)CustomizeIndex.Gender];
+            var tribe = customize[(int)CustomizeIndex.Tribe];
+
+            if (gender <= 1)
+            {
+                if (tribe is >= 1 and <= 16)
+                {
+                    var racial = (ApiCollectionType)((int)ApiCollectionType.MaleMidlander + 2 * (tribe - 1) + gender);
+
+                    if (_getCollection.Invoke(racial) is { } racialCollection)
+                        return ($"{racial}", racialCollection);
+                }
+
+                var group = gender == 0 ? ApiCollectionType.MalePlayerCharacter : ApiCollectionType.FemalePlayerCharacter;
+
+                if (_getCollection.Invoke(group) is { } genderCollection)
+                    return ($"{group}", genderCollection);
+            }
+        }
+
+        return ("Base", _getCollection.Invoke(ApiCollectionType.Default));
+    }
+
+    private const int ProbePriority = int.MaxValue;
+    private const long ProbeFreshnessMilliseconds = 5000;
+
+    private long _probeStamp;
+    private bool _probeCached;
+    private (Guid Id, string Name)? _probedServing;
+
+    private (Guid Id, string Name)? ProbeServingCollection()
+    {
+        if (_probeCached && Environment.TickCount64 - _probeStamp < ProbeFreshnessMilliseconds)
+            return _probedServing;
+
+        _probedServing = ProbeServingCollectionCore();
+        _probeCached = true;
+        _probeStamp = Environment.TickCount64;
+
+        return _probedServing;
+    }
+
+    private (Guid Id, string Name)? ProbeServingCollectionCore()
+    {
+        if (GetAllCollections() is not { Count: > 0 } collections)
+            return null;
+
+        var marked = new List<Guid>(collections.Count);
+
+        try
+        {
+            foreach (var (id, _) in collections)
+            {
+                var redirect = new Dictionary<string, string> { ["bypassemote/probe/serving_collection.tex"] = $"bypassemoteprobe_{id:N}" };
+
+                if (_addTemporaryMod.Invoke("BypassEmote.ServingCollectionProbe", id, redirect, string.Empty, ProbePriority)
+                    is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged)
+                {
+                    marked.Add(id);
+                }
+            }
+
+            if (marked.Count == 0)
+                return null;
+
+            var resolved = _resolvePlayerPath.Invoke("bypassemote/probe/serving_collection.tex") ?? string.Empty;
+            var markerAt = resolved.IndexOf("bypassemoteprobe_", StringComparison.OrdinalIgnoreCase);
+
+            if (markerAt < 0)
+                return (Guid.Empty, "None");
+
+            var hex = resolved[(markerAt + "bypassemoteprobe_".Length)..];
+
+            if (hex.Length >= 32
+                && Guid.TryParseExact(hex[..32], "N", out var servingId)
+                && collections.TryGetValue(servingId, out var servingName))
+            {
+                return (servingId, servingName);
+            }
+
+            return null;
+        }
+        finally
+        {
+            foreach (var id in marked)
+                _removeTemporaryMod.Invoke("BypassEmote.ServingCollectionProbe", id, ProbePriority);
+        }
+    }
+
+    public string DescribePlayerAssignmentChain()
+    {
+        try
+        {
+            var lines = new List<string>
+            {
+                $"Serving collection (probe): {(ProbeServingCollection() is { } served
+                    ? served.Id == Guid.Empty ? "vanilla, no mods served" : $"'{served.Name}'"
+                    : "probe failed, the chain below decides")}",
+                $"Your Character: {DescribeAssignment(_getCollection.Invoke(ApiCollectionType.Yourself))}",
+            };
+
+            if (NoireService.ObjectTable.LocalPlayer is { } localPlayer)
+            {
+                var customize = localPlayer.Customize;
+
+                if (customize.Length > (int)CustomizeIndex.Tribe)
+                {
+                    var gender = customize[(int)CustomizeIndex.Gender];
+                    var tribe = customize[(int)CustomizeIndex.Tribe];
+
+                    if (gender <= 1 && tribe is >= 1 and <= 16)
+                    {
+                        var racial = (ApiCollectionType)((int)ApiCollectionType.MaleMidlander + 2 * (tribe - 1) + gender);
+                        lines.Add($"{racial}: {DescribeAssignment(_getCollection.Invoke(racial))}");
+
+                        var group = gender == 0 ? ApiCollectionType.MalePlayerCharacter : ApiCollectionType.FemalePlayerCharacter;
+                        lines.Add($"{group}: {DescribeAssignment(_getCollection.Invoke(group))}");
+                    }
+                }
+            }
+            else
+            {
+                lines.Add("No local player to read the racial and gender groups from.");
+            }
+
+            lines.Add($"Base: {DescribeAssignment(_getCollection.Invoke(ApiCollectionType.Default))}");
+
+            return string.Join("\n", lines);
+        }
+        catch (Exception ex)
+        {
+            return $"Assignment probe failed: {ex.Message}";
+        }
+    }
+
+    private static string DescribeAssignment((Guid Id, string Name)? assignment)
+    {
+        if (assignment is not { } value)
+            return "not assigned";
+
+        return value.Id == Guid.Empty ? $"'{value.Name}' (the empty collection, swaps refused)" : $"'{value.Name}'";
     }
 
     private void OnPreSettingsDraw(string modDirectory)

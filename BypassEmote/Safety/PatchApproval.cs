@@ -1,4 +1,5 @@
 using BypassEmote.Enums;
+using NoireLib.Helpers;
 using System;
 using System.Collections.Generic;
 
@@ -90,7 +91,7 @@ public static class PatchApproval
     public static string UntestedReason(GameClient client) => client switch
     {
         GameClient.Korean or GameClient.Chinese
-            => $"The {GameClientReader.Name(client)} client {UntestedTail}",
+            => $"The {GameClientHelper.Name(client)} client {UntestedTail}",
         _ => $"This game client is not the Global one, and {UntestedTail}",
     };
 
@@ -106,7 +107,7 @@ public static class PatchApproval
             if (!string.Equals(Trimmed(entry.GameVersion), gameVersion, StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            if (GameClientReader.Parse(entry.Client) == client)
+            if (GameClientHelper.Parse(entry.Client) == client)
                 return entry;
         }
 

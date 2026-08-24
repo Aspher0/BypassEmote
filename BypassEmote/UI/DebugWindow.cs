@@ -112,14 +112,34 @@ public class DebugWindow : Window, IDisposable
             return;
         }
 
-        ImGui.TextUnformatted($"Probed client: {GameClientReader.Name(GameClientReader.Detected())}");
-        ImGui.TextUnformatted($"Gate reads: {GameClientReader.Name(gate.Client)}");
+        ImGui.TextUnformatted($"Probed client: {GameClientHelper.Name(GameClientHelper.Detected())}");
+        ImGui.TextUnformatted($"Gate reads: {GameClientHelper.Name(gate.Client)}");
 
         ImGui.Separator();
 
         DrawPretendToggle("Pretend this is the Korean client", GameClient.Korean);
         DrawPretendToggle("Pretend this is the Chinese client", GameClient.Chinese);
         DrawPretendToggle("Pretend this client cannot be identified", GameClient.Unknown);
+
+        var rejecting = IPCCaller_Penumbra.PretendIdentifierRejected;
+
+        if (ImGui.Checkbox("Pretend Penumbra rejects the player identifier (KR/CN clients debug)", ref rejecting))
+            IPCCaller_Penumbra.PretendIdentifierRejected = rejecting;
+
+        if (rejecting && GameClientHelper.Current() is not (GameClient.Korean or GameClient.Chinese))
+        {
+            ImGui.TextColored(new Vector4(1f, 0.75f, 0.25f, 1f),
+                "Client is Global. Enable one of the client checkboxes above.");
+        }
+
+        if (Service.Penumbra?.PlayerCollectionFallbackSource is { } fallbackSource)
+            ImGui.TextUnformatted($"Fallback in use: {fallbackSource}");
+
+        if (rejecting && Service.Penumbra is { } penumbraGateway)
+        {
+            ImGui.TextUnformatted("Assignment chain:");
+            ImGui.TextUnformatted(penumbraGateway.DescribePlayerAssignmentChain());
+        }
 
         ImGui.Separator();
 
@@ -144,17 +164,15 @@ public class DebugWindow : Window, IDisposable
             gate.Forget();
 
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker("Clears the approval stored in the config and holds the hooks again, as on a "
-            + $"fresh install. The retry loop waits a full {PatchApprovalGate.RetryInterval.TotalMinutes:0} "
-            + "minutes before its next read, so nothing is fetched on the click.");
+        ImGuiComponents.HelpMarker("Clears the approval stored in the config and at runtime");
     }
 
     private static void DrawPretendToggle(string label, GameClient client)
     {
-        var pretending = GameClientReader.Forced == client;
+        var pretending = GameClientHelper.Forced == client;
 
         if (ImGui.Checkbox(label, ref pretending))
-            GameClientReader.Forced = pretending ? client : null;
+            GameClientHelper.Forced = pretending ? client : null;
     }
 
     private static void DrawKeptSwapsTab()

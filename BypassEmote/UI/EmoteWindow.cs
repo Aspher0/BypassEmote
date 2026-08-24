@@ -524,8 +524,6 @@ public class EmoteWindow : Window, IDisposable
             Configuration.FavoriteEmotes.Remove(emoteId);
         else
             Configuration.FavoriteEmotes.Add(emoteId);
-
-        Configuration.Save(); // Needed until I update NoireLib to auto-save list changes
     }
 
     private void ToggleBlockedTarget(uint emoteId)
@@ -534,8 +532,6 @@ public class EmoteWindow : Window, IDisposable
             Configuration.BlockedTargetEmotesEmoteSwap.Remove(emoteId);
         else
             Configuration.BlockedTargetEmotesEmoteSwap.Add(emoteId);
-
-        Configuration.Save();
     }
 
 #if DEBUG

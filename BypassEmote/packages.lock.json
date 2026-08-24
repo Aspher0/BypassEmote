@@ -16,16 +16,16 @@
       },
       "NoireLib": {
         "type": "Direct",
-        "requested": "[2.0.0, )",
-        "resolved": "2.0.0",
-        "contentHash": "1Ub9dcco1LSxJcbTMrMVfVOs5Eugv2obdT/xr7vHW+NSa3Q6EfaG6Q9SdQUAqP2A0h57mMNs11xHWCzcFfi84w==",
+        "requested": "[2.0.1, )",
+        "resolved": "2.0.1",
+        "contentHash": "urkafST3lssZC2S3BaKz2HnViu/bUHiI5luzkY05/r49WhQMxA0vhDyuDQYzzIEMikAPh45HlD2AQjxvVFAwrA==",
         "dependencies": {
           "BCrypt.Net-Next": "4.2.0",
           "Castle.Core": "5.2.1",
           "Konscious.Security.Cryptography.Argon2": "1.3.1",
           "Newtonsoft.Json": "13.0.4",
           "SharpGLTF.Core": "1.0.6",
-          "System.Data.SQLite": "2.0.3"
+          "System.Data.SQLite": "2.0.4"
         }
       },
       "Penumbra.Api": {
@@ -72,8 +72,8 @@
       },
       "System.Data.SQLite": {
         "type": "Transitive",
-        "resolved": "2.0.3",
-        "contentHash": "5I9dVqmHp1v0dhco21btIRkUE47zHSy4t6bRLwIO6nGZ1mxGIL1f1yp1zWI/AAZFfdUz7n6RrH1hyi/6EhlIeQ=="
+        "resolved": "2.0.4",
+        "contentHash": "iiawN8l6QBzLZTK2BQRyq/1XmvDONghjvXoDhkkQgPTG8bRIsmIxJV1+Lc75fviNgMnjAE3wxReVJAF7P1hkoQ=="
       },
       "System.Diagnostics.EventLog": {
         "type": "Transitive",
