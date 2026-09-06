@@ -23,8 +23,8 @@ public class V2_1_x_x : BaseChangelogVersion
             {
                 Header("New Features", Orange, 0, FontAwesomeIcon.Book),
                 Entry("Added \"Always cache-break\", a new option for Emote Swap.\n" +
-                    "With it on, every emote you play will be cache-broken, especially the ones you own. Play an emote, enable or disable an mod affecting the emote, " +
-                    "play the emote again, the new animation refreshes and shows without needing to redraw nor stopping the emote.", Orange, 1, FontAwesomeIcon.SyncAlt, White),
+                    "With it on, every emote you play will be cache-broken, especially the ones you own. Play an emote, enable or disable any mod affecting that emote, " +
+                    "play the emote again, the new animation refreshes and shows without needing to redraw nor to stop the emote.", Orange, 1, FontAwesomeIcon.SyncAlt, White),
                 EntryBullet("It is off by default, you can enable it in the configuration window.", White, 1),
                 Separator(),
                 EntryBullet("Added /belogs (also available as /be logs), which exports a zip of the plugin logs and settings to send to " +
