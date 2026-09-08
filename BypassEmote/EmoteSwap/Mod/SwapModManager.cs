@@ -50,6 +50,8 @@ public sealed class SwapModManager
 
     private bool _shutDown;
 
+    private SwapModNames? _boundNames;
+
     public SwapModManager(IPCCaller_Penumbra gateway, SwapModIdentity identity, string configDirectory)
     {
         _gateway = gateway;
@@ -65,12 +67,16 @@ public sealed class SwapModManager
 
         identity.Changed += HandleIdentityChanged;
 
+        _boundNames = identity.Names;
+
         Registry = LoadRegistryFromDisk();
     }
 
     public SwapRegistry Registry { get; private set; }
 
     public string ModDirectoryName => _identity.Names?.Directory ?? string.Empty;
+
+    private SwapModNames? ActiveNames => _identity.Names ?? _boundNames;
 
     internal int Layout => _layout.Layout;
 
@@ -112,15 +118,24 @@ public sealed class SwapModManager
         if (_shutDown)
             return;
 
-        if (previous != null && _identity.Names is { } names
-            && string.Equals(previous.Directory, names.Directory, StringComparison.OrdinalIgnoreCase))
+        if (_identity.Names is not { } names)
+            return;
+
+        if (_boundNames is { } bound
+            && string.Equals(bound.Directory, names.Directory, StringComparison.OrdinalIgnoreCase))
         {
-            RenameModInPlace(names.Display);
+            _boundNames = names;
+
+            if (!string.Equals(bound.Display, names.Display, StringComparison.Ordinal))
+                RenameModInPlace(names.Display);
+
             return;
         }
 
-        if (previous != null)
-            DeselectAllUnder(previous);
+        if (_boundNames is { } left)
+            DeselectAllUnder(left);
+
+        _boundNames = names;
 
         Registry = LoadRegistryFromDisk();
         PushRedirectScope();
@@ -288,7 +303,7 @@ public sealed class SwapModManager
 
     public void DeselectEntry(SwapOptionEntry entry)
     {
-        if (_identity.Names is not { } names)
+        if (ActiveNames is not { } names)
             return;
 
         using (_ownMutations.Enter())
@@ -344,7 +359,7 @@ public sealed class SwapModManager
 
     private bool DisableMod()
     {
-        if (_identity.Names is not { } names || CollectionForSelection() is var collection && collection == Guid.Empty)
+        if (ActiveNames is not { } names || CollectionForSelection() is var collection && collection == Guid.Empty)
             return false;
 
         using (_ownMutations.Enter())

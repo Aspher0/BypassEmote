@@ -1,4 +1,5 @@
 using BypassEmote.Enums;
+using BypassEmote.Models;
 using Newtonsoft.Json.Linq;
 using NoireLib.Configuration;
 using NoireLib.Configuration.Migrations;
@@ -24,6 +25,8 @@ public class ConfigurationInstance : NoireConfigBase
     public List<uint> FavoriteEmotes { get; set; } = new List<uint>();
 
     public List<uint> BlockedTargetEmotesEmoteSwap { get; set; } = new List<uint>();
+
+    public List<EmoteOverride> EmoteOverrides { get; set; } = new List<EmoteOverride>();
 
     public bool ShowUpdateNotification { get; set; } = true;
 

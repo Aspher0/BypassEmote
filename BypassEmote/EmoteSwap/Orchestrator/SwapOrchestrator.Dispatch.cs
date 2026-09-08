@@ -82,6 +82,48 @@ public sealed partial class SwapOrchestrator
         return first with { Target = picked };
     }
 
+    private EmoteAttributes ResolveDispatchedOverride(EmoteAttributes source, IReadOnlyList<EmoteAttributes> eligible)
+    {
+        LoadDispatchOnce();
+
+        var budget = RankBudget();
+        var tier = eligible.Count > budget ? eligible.Take(budget).ToList() : eligible;
+
+        var rank = RankOf(source);
+        var stamp = SwapRulesStamp.Current();
+
+        if (_dispatchFor.TryGetValue(source.RowId, out var existing) && existing.RulesStamp == stamp)
+        {
+            foreach (var candidate in tier)
+            {
+                if (candidate.RowId != existing.Target)
+                    continue;
+
+                Remember(source.RowId, candidate.RowId, rank, stamp);
+                return candidate;
+            }
+        }
+
+        _dispatchFor.Remove(source.RowId);
+
+        var heldInRank = TargetsHeldInRank(rank, source.RowId);
+
+        var picked = PickDispatchTarget(tier,
+            targetRowId => heldInRank.TryGetValue(targetRowId, out var lastUse) ? lastUse : null,
+            budget,
+            heldInRank.Keys.ToHashSet());
+
+        if (picked == null)
+            return tier[0];
+
+        Remember(source.RowId, picked.RowId, rank, stamp);
+
+        if (picked.RowId != tier[0].RowId)
+            LogHelper.DebugLine($">   dispatch: /{tier[0].Command} is held by another emote; /{source.Command} gets /{picked.Command}");
+
+        return picked;
+    }
+
     private Dictionary<uint, long> TargetsHeldInRank(DispatchRank rank, uint exceptSource)
     {
         var held = new Dictionary<uint, long>();

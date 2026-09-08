@@ -9,6 +9,7 @@ using Dalamud.Interface.Windowing;
 using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Helpers;
+using NoireLib.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,29 @@ public class EmoteWindow : Window, IDisposable
     private LockedTab currentTab = LockedTab.All;
     private string searchText = string.Empty;
     private Emote? contextMenuEmote = null;
+
+    private EmoteQuickAdd? favoriteAdd;
+    private EmoteQuickAdd? blockedAdd;
+
+    private static readonly ButtonStyle KofiStyle = new()
+    {
+        Color = ColorHelper.HexToVector4("#FF5E5B"),
+        HoveredColor = ColorHelper.HexToVector4("#FF7B79"),
+        ActiveColor = ColorHelper.HexToVector4("#DE4B48"),
+        TextColor = Vector4.One,
+        IconColor = Vector4.One,
+        Icon = FontAwesomeIcon.Heart,
+    };
+
+    private static readonly ButtonStyle DiscordStyle = new()
+    {
+        Color = ColorHelper.HexToVector4("#5865F2"),
+        HoveredColor = ColorHelper.HexToVector4("#727DF5"),
+        ActiveColor = ColorHelper.HexToVector4("#4752C4"),
+        TextColor = Vector4.One,
+        IconColor = Vector4.One,
+        Icon = FontAwesomeIcon.Comments,
+    };
 
     public EmoteWindow() : base("Bypass Emote - Locked Emotes##BypassEmoteMain", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
@@ -53,6 +77,14 @@ public class EmoteWindow : Window, IDisposable
             Icon = FontAwesomeIcon.Book,
             IconOffset = new(2, 2),
             ShowTooltip = () => ImGui.SetTooltip("Show changelogs"),
+        });
+
+        TitleBarButtons.Add(new()
+        {
+            Click = (m) => { if (m == ImGuiMouseButton.Left) Service.OpenDiscord(); },
+            Icon = FontAwesomeIcon.Comments,
+            IconOffset = new(2, 2),
+            ShowTooltip = () => ImGui.SetTooltip("Join the Discord"),
         });
 
         TitleBarButtons.Add(new()
@@ -144,10 +176,17 @@ public class EmoteWindow : Window, IDisposable
         }
 
         var avail = ImGui.GetContentRegionAvail();
+        var footerHeight = ImGui.GetFrameHeight() * 1.25f;
+        var boxHeight = MathF.Max(ImGui.GetFrameHeight(), avail.Y - footerHeight - ImGui.GetStyle().ItemSpacing.Y);
+
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(5f, 5f));
         ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(0.16f, 0.16f, 0.16f, 1f));
 
-        ImGui.BeginChild("##LockedEmotesBox", new Vector2(avail.X, avail.Y), true, ImGuiWindowFlags.None);
+        ImGui.BeginChild("##LockedEmotesBox", new Vector2(avail.X, boxHeight), true, ImGuiWindowFlags.None);
+
+        DrawQuickAdd();
+
+        ImGui.BeginChild("##LockedEmotesList", Vector2.Zero, false, ImGuiWindowFlags.None);
 
         var displayedEmotes = new List<(Emote, NoireLib.Enums.EmoteCategory)>(Service.LockedEmotes);
 
@@ -437,8 +476,65 @@ public class EmoteWindow : Window, IDisposable
         }
 
         ImGui.EndChild();
+
+        ImGui.EndChild();
         ImGui.PopStyleColor();
         ImGui.PopStyleVar();
+
+        DrawSupportBar(footerHeight);
+    }
+
+    private static void DrawSupportBar(float height)
+    {
+        var spacing = ImGui.GetStyle().ItemSpacing.X;
+        var width = ImGui.GetContentRegionAvail().X;
+        var half = MathF.Floor((width - spacing) * 0.5f);
+
+        if (NoireButtons.Button("Support me on Ko-fi##BypassEmoteKofi", KofiStyle, new Vector2(half, height)))
+            Service.OpenKofi();
+
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("This plugin is free and always will be, donations are appreciated.");
+
+        ImGui.SameLine();
+
+        if (NoireButtons.Button("Discord##BypassEmoteDiscord", DiscordStyle, new Vector2(width - half - spacing, height)))
+            Service.OpenDiscord();
+
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("Help, bug reports and updates.");
+    }
+
+    private void DrawQuickAdd()
+    {
+        if (currentTab is not (LockedTab.Favorites or LockedTab.Blocked))
+            return;
+
+        var favorites = currentTab == LockedTab.Favorites;
+
+        var picker = favorites
+            ? favoriteAdd ??= new EmoteQuickAdd("BypassEmoteFavoriteAdd", "Add an emote to your favorites...")
+            {
+                Marked = rowId => Configuration.FavoriteEmotes.Contains(rowId),
+                MarkedColor = new Vector4(1f, 0.9f, 0f, 1f),
+                MarkedNote = "(favorite)",
+            }
+            : blockedAdd ??= new EmoteQuickAdd("BypassEmoteBlockedAdd", "Block an emote as a swap target...")
+            {
+                Marked = rowId => Configuration.BlockedTargetEmotesEmoteSwap.Contains(rowId),
+                MarkedColor = new Vector4(0.9f, 0.2f, 0.2f, 1f),
+                MarkedNote = "(blocked)",
+            };
+
+        if (picker.Draw(ImGui.GetContentRegionAvail().X) is { } rowId)
+        {
+            if (favorites)
+                ToggleFavorite(rowId);
+            else
+                ToggleBlockedTarget(rowId);
+        }
+
+        ImGui.Separator();
     }
 
     private static void DrawToolbar()

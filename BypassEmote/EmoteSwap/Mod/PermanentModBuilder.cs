@@ -4,7 +4,6 @@ using NoireLib;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace BypassEmote.EmoteSwap;
@@ -57,7 +56,11 @@ internal static class PermanentModBuilder
         if (Directory.Exists(modDirectory))
             return new Outcome(false, $"Penumbra already holds a mod folder called '{directoryName}'. Pick another name.");
 
-        if (orchestrator.BuildPlainSwapFiles(source, target, skeletons) is not { Count: > 0 } files)
+        var ownSkeleton = NoireService.ObjectTable.LocalPlayer is { } player
+            ? SwapOrchestrator.SkeletonFor(player)
+            : null;
+
+        if (orchestrator.BuildPlainSwapFiles(source, target, skeletons, ownSkeleton) is not { Count: > 0 } files)
         {
             return new Outcome(false, $"/{source.Command} cannot be played over /{target.Command}: "
                 + "they share no posture to move the animation onto.");
@@ -66,6 +69,12 @@ internal static class PermanentModBuilder
         var redirects = new Dictionary<string, string>(files.Count);
         foreach (var gamePath in files.Keys)
             redirects[gamePath] = RelativeFileFor(gamePath);
+
+        var assigned = penumbra.GetPlayerCollection();
+
+        var priority = assigned is { } ranked && highestPriority
+            ? PriorityOver(penumbra, ranked.Id, [.. files.Keys])
+            : 0;
 
         var layout = Service.SwapMods?.EnsureLayout() ?? ModLayout.V3;
 
@@ -78,10 +87,8 @@ internal static class PermanentModBuilder
                 + "Rediscovering mods in Penumbra should pick it up.");
         }
 
-        var assigned = penumbra.GetPlayerCollection();
-
-        if (assigned is { } ranked)
-            penumbra.TrySetModPriority(ranked.Id, directoryName, PriorityFor(penumbra, ranked.Id, highestPriority));
+        if (assigned is { } collectionToRankIn)
+            penumbra.TrySetModPriority(collectionToRankIn.Id, directoryName, priority);
 
         if (!enable)
             return new Outcome(true, $"'{name}' was created. Enable it in Penumbra when you want it.");
@@ -95,12 +102,19 @@ internal static class PermanentModBuilder
         return new Outcome(true, $"'{name}' was created and switched on in {collection.Name}.");
     }
 
-    private static int PriorityFor(IPCCaller_Penumbra penumbra, Guid collectionId, bool highestPriority)
+    private static int PriorityOver(IPCCaller_Penumbra penumbra, Guid collectionId,
+        IReadOnlyCollection<string> gamePaths)
     {
-        if (!highestPriority || penumbra.GetAllModStates(collectionId) is not { Count: > 0 } states)
-            return 0;
+        var states = penumbra.GetAllModStates(collectionId);
+        var modRoot = penumbra.GetModRootDirectory();
 
-        return Math.Max(0, states.Values.Max(state => state.Priority) + 1);
+        return SwapOrchestrator.ComputeAppliedPriority(gamePaths,
+            penumbra.ResolvePlayerPath,
+            resolved => Service.SwapMods?.IsOwnPath(resolved) == true,
+            resolved => SwapModManager.ModDirectoryFromDiskPath(resolved, modRoot) is { } directory
+                     && states != null && states.TryGetValue(directory, out var state)
+                ? state.Priority
+                : null);
     }
 
     private static bool WriteMod(string modDirectory, string name, EmoteAttributes source, EmoteAttributes target,

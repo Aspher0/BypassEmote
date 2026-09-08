@@ -90,6 +90,12 @@ public sealed partial class SwapOrchestrator : IDisposable
         var pool = BuildPool(localPlayer, source, condition);
         var poolHasLoop = pool.Any(candidate => candidate.LoopKind == EmotePlayType.Looped);
 
+        if (OverrideFor(source.RowId, sourceEmote.RowId) is { } configured
+            && PlayOverride(localPlayer, source, configured, pool, skeleton, fallbackOrder, collectionId, swapClock))
+        {
+            return;
+        }
+
         var matchConfig = new MatchConfig(Configuration.LoopMatching, Configuration.TurnMatching,
             Configuration.SoundMatching, BlockedTargets());
 
@@ -129,6 +135,35 @@ public sealed partial class SwapOrchestrator : IDisposable
         }
 
         BuildAndPlay(localPlayer, source, target, skeleton, swapClock, elapsedAtMatch);
+    }
+
+    private bool PlayOverride(ICharacter localPlayer, EmoteAttributes source, EmoteOverride configured,
+        List<EmoteAttributes> pool, string skeleton, IReadOnlyList<string> fallbackOrder, Guid collectionId,
+        Stopwatch swapClock)
+    {
+        if (ChooseOverrideTarget(source, configured, pool, skeleton, fallbackOrder, collectionId) is { } target)
+        {
+            LogHelper.DebugLine($"> {source.Command} -> {target.Command} | override");
+
+            if (Configuration.ModdedTargets == ModdedTargetRule.LastResort
+                && ChangedByAnotherMod(target, skeleton, fallbackOrder) is { Length: > 0 } changedBy)
+            {
+                ReportChangedTarget(target, changedBy);
+            }
+
+            BuildAndPlay(localPlayer, source, target, skeleton, swapClock, swapClock.ElapsedMilliseconds);
+            return true;
+        }
+
+        if (configured.LimitedToTargets)
+        {
+            ReportNoOverrideTarget(source, configured, pool, skeleton, fallbackOrder);
+            return true;
+        }
+
+        NoireLogger.LogDebug($"No override target of /{source.Command} can be played here. The usual matching is used.", LogPrefix);
+
+        return false;
     }
 
     private void BuildAndPlay(ICharacter localPlayer, EmoteAttributes source, EmoteAttributes target,

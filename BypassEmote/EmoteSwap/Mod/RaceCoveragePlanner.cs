@@ -13,15 +13,22 @@ internal static class RaceCoveragePlanner
 
     public sealed record Plan(IReadOnlyList<SharedFile> Shared, IReadOnlyList<string> AlsoReached);
 
+    public static IReadOnlyList<T> ByCoveragePreference<T>(IReadOnlyList<T> races, Func<T, bool>? servedByAMod,
+        Func<T, bool>? isOwnBody)
+        => [.. races
+            .OrderByDescending(race => servedByAMod?.Invoke(race) == true)
+            .ThenByDescending(race => isOwnBody?.Invoke(race) == true)];
+
     public static Plan For(IReadOnlyList<string> orderedRaces, IReadOnlySet<string> picked,
-        Func<string, RacePaths?> pathsFor)
+        Func<string, RacePaths?> pathsFor, Func<string, bool>? servedByAMod = null,
+        Func<string, bool>? isOwnBody = null)
     {
         var supplierOf = new Dictionary<string, string>(StringComparer.Ordinal);
         var losersByWinner = new Dictionary<string, List<string>>(StringComparer.Ordinal);
         var winnersInOrder = new List<string>();
         var pathsByRace = new Dictionary<string, RacePaths>(StringComparer.Ordinal);
 
-        foreach (var race in orderedRaces)
+        foreach (var race in ByCoveragePreference(orderedRaces, servedByAMod, isOwnBody))
         {
             if (!picked.Contains(race) || pathsFor(race) is not { } paths)
                 continue;

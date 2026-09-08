@@ -1,12 +1,14 @@
 using BypassEmote.EmoteSwap;
 using BypassEmote.Enums;
 using BypassEmote.Helpers;
+using BypassEmote.Models;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Animations.Helpers;
+using NoireLib.Helpers;
 using NoireLib.UI;
 using System;
 using System.Collections.Generic;
@@ -27,7 +29,6 @@ public sealed class CreateModWindow : Window, IDisposable
     private bool _enableOnCreation = true;
     private bool _highestPriority = false;
 
-    // The pair the race picker was last filled for, so it refills when either emote changes.
     private (uint Source, uint Target)? _racesFilledFor;
 
     private string _status = string.Empty;
@@ -47,14 +48,13 @@ public sealed class CreateModWindow : Window, IDisposable
     {
         Picker(ref _source, "BypassEmoteCreateModSource", "Pick the emote to play...").Select(emote.RowId);
 
-        _status = string.Empty;
-        IsOpen = true;
-        BringToFront();
+        Show();
     }
 
     public void Show()
     {
         _status = string.Empty;
+        ForgetPaths();
         IsOpen = true;
         BringToFront();
     }
@@ -110,11 +110,13 @@ public sealed class CreateModWindow : Window, IDisposable
                 if (SettingsLayout.Check("Highest priority", ref highestPriority))
                     _highestPriority = highestPriority;
 
-                SettingsLayout.Help("Make it highest priority in your collection on creation.");
+                SettingsLayout.Help("Makes the mod have the highest priority. When off, it is created at priority 0.");
             }
         }
 
         DrawSourceAnimation();
+
+        DrawMatchWarnings();
 
         DrawCoverageWarnings();
 
@@ -134,6 +136,8 @@ public sealed class CreateModWindow : Window, IDisposable
     private static readonly string[] AllRaceNames = [.. RaceGenderData.AllRaces.Select(race => race.Name)];
 
     private readonly Dictionary<string, RacePaths?> _pathsByRace = new(StringComparer.Ordinal);
+
+    private readonly Dictionary<string, bool> _moddedByRace = new(StringComparer.Ordinal);
 
     private static string SkeletonOf(string raceName)
     => RaceGenderData.AllRaces.First(race => race.Name == raceName).Id;
@@ -159,10 +163,28 @@ public sealed class CreateModWindow : Window, IDisposable
         return paths;
     }
 
-    private void RefillRacesWhenThePairChanges()
+    private void ForgetPaths()
     {
         _pathsByRace.Clear();
+        _moddedByRace.Clear();
+        _racesFilledFor = null;
+    }
 
+    private bool ModdedFor(string raceName)
+    {
+        if (_moddedByRace.TryGetValue(raceName, out var known))
+            return known;
+
+        var modded = Service.Orchestrator is { } orchestrator
+            && PathsFor(raceName) is { } paths
+            && paths.SourcePaths.Any(orchestrator.ForeignModServes);
+
+        _moddedByRace[raceName] = modded;
+        return modded;
+    }
+
+    private void RefillRacesWhenThePairChanges()
+    {
         var pair = _source?.SelectedRowId is { } source && _target?.SelectedRowId is { } target
             ? ((uint, uint)?)(source, target)
             : null;
@@ -170,6 +192,8 @@ public sealed class CreateModWindow : Window, IDisposable
         if (pair == _racesFilledFor)
             return;
 
+        _pathsByRace.Clear();
+        _moddedByRace.Clear();
         _racesFilledFor = pair;
 
         var picker = Races();
@@ -213,6 +237,47 @@ public sealed class CreateModWindow : Window, IDisposable
             ImGui.TextDisabled("Vanilla animation");
     }
 
+    private void DrawMatchWarnings()
+    {
+        if (Service.Catalog is not { Ready: true } catalog
+            || _source?.SelectedRowId is not { } sourceRowId
+            || _target?.SelectedRowId is not { } targetRowId
+            || sourceRowId == targetRowId
+            || catalog.Get(sourceRowId) is not { } source
+            || catalog.Get(targetRowId) is not { } target)
+        {
+            return;
+        }
+
+        var sourceName = SwapOrchestrator.NameOf(sourceRowId);
+        var targetName = SwapOrchestrator.NameOf(targetRowId);
+
+        var lines = new List<SwapAdvice.Line>();
+
+        if (!EmoteHelper.IsEmoteUnlocked(targetRowId))
+        {
+            lines.Add(new SwapAdvice.Line(SwapAdvice.Severity.Warning, $"You have not unlocked {targetName}."));
+        }
+
+        if (ModOnTheTarget(target) is { Length: > 0 } modName)
+        {
+            lines.Add(new SwapAdvice.Line(SwapAdvice.Severity.Warning, $"Your mod \"{modName}\" already changes {targetName}."));
+        }
+
+        lines.AddRange(SwapAdvice.Behaviour(source, sourceName, target, targetName));
+
+        if (lines.Count == 0)
+            return;
+
+        ImGui.Spacing();
+        SwapAdviceView.DrawLines(lines, 0f);
+    }
+
+    private static string? ModOnTheTarget(EmoteAttributes target)
+        => Service.Orchestrator is { } orchestrator && NoireService.ObjectTable.LocalPlayer is { } player
+            ? orchestrator.ModServingAnimation(target, SwapOrchestrator.SkeletonFor(player))
+            : null;
+
     private void DrawCoverageWarnings()
     {
         if (_racesFilledFor == null)
@@ -223,7 +288,12 @@ public sealed class CreateModWindow : Window, IDisposable
         if (picked.Count == 0)
             return;
 
-        var plan = RaceCoveragePlanner.For(AllRaceNames, picked, PathsFor);
+        var ownSkeleton = NoireService.ObjectTable.LocalPlayer is { } player
+            ? SwapOrchestrator.SkeletonFor(player)
+            : null;
+
+        var plan = RaceCoveragePlanner.For(AllRaceNames, picked, PathsFor, ModdedFor,
+            race => string.Equals(SkeletonOf(race), ownSkeleton, StringComparison.OrdinalIgnoreCase));
 
         if (plan.Shared.Count == 0 && plan.AlsoReached.Count == 0)
             return;

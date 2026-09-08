@@ -156,30 +156,46 @@ public sealed partial class SwapOrchestrator
             pairs.Select(pair => pair.TargetRequestedPath).Distinct(StringComparer.Ordinal).ToList());
     }
 
+    internal sealed record PlainRaceFiles(string Skeleton, bool SourceIsModded,
+        IReadOnlyDictionary<string, byte[]> Files);
+
     // The retargeted paps a written-out mod is made of, keyed by the game path each one is served over. Null
     // when the two emotes share no posture, or when nothing could be retargeted.
     internal IReadOnlyDictionary<string, byte[]>? BuildPlainSwapFiles(EmoteAttributes source, EmoteAttributes target,
-        IReadOnlyList<string> skeletons)
+        IReadOnlyList<string> skeletons, string? ownSkeleton = null)
     {
-        var merged = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+        var built = new List<PlainRaceFiles>(skeletons.Count);
 
         foreach (var skeleton in skeletons)
         {
-            if (BuildPlainSwapFilesFor(source, target, skeleton) is not { } files)
-                continue;
-
-            foreach (var (gamePath, bytes) in files)
-            {
-                if (!merged.ContainsKey(gamePath))
-                    merged[gamePath] = bytes;
-            }
+            if (BuildPlainSwapFilesFor(source, target, skeleton) is { } race)
+                built.Add(race);
         }
+
+        var merged = MergePlainRaceFiles(built, ownSkeleton);
 
         return merged.Count > 0 ? merged : null;
     }
 
-    private IReadOnlyDictionary<string, byte[]>? BuildPlainSwapFilesFor(EmoteAttributes source, EmoteAttributes target,
-        string skeleton)
+    internal static IReadOnlyDictionary<string, byte[]> MergePlainRaceFiles(IReadOnlyList<PlainRaceFiles> races,
+        string? ownSkeleton)
+    {
+        var merged = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+
+        var ordered = RaceCoveragePlanner.ByCoveragePreference(races,
+            race => race.SourceIsModded,
+            race => string.Equals(race.Skeleton, ownSkeleton, StringComparison.OrdinalIgnoreCase));
+
+        foreach (var race in ordered)
+        {
+            foreach (var (gamePath, bytes) in race.Files)
+                merged.TryAdd(gamePath, bytes);
+        }
+
+        return merged;
+    }
+
+    private PlainRaceFiles? BuildPlainSwapFilesFor(EmoteAttributes source, EmoteAttributes target, string skeleton)
     {
         var fallbackOrder = EmotePathHelper.GetFallbackOrder(skeleton);
         var pairs = PairVariants(source, target, skeleton);
@@ -194,8 +210,16 @@ public sealed partial class SwapOrchestrator
         var grouped = BuildGroupedFiles(resolvedPairs,
             group => BuildGroupOutput(group, fallbackOrder, composeUniqueNames: false), publishInternalNames: false);
 
-        return grouped.Main == null ? null : grouped.Files;
+        if (grouped.Main == null)
+            return null;
+
+        var modded = resolvedPairs.Any(pair => !string.Equals(pair.ResolvedSourcePath, pair.Pair.SourceRequestedPath,
+            StringComparison.OrdinalIgnoreCase));
+
+        return new PlainRaceFiles(skeleton, modded, grouped.Files);
     }
+
+    internal bool ForeignModServes(string requestedPath) => ForeignModProvides(requestedPath);
 
     // Whether a mod other than our own serves this path. Our own generated mod must not count, or an earlier
     // swap keeps a previous body's chain step alive. Reads only, unlike ResolveOutsideOwnMod.

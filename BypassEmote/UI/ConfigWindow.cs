@@ -130,6 +130,9 @@ public class ConfigWindow : Window, IDisposable
 
     private const string GeneralTabId = "general";
     private const string ModeTabId = "mode";
+    private const string OverridesTabId = "overrides";
+
+    private const float SettingsContentWidth = 485f;
 
     private const float WarningCountdownSeconds = 5f;
 
@@ -190,6 +193,7 @@ public class ConfigWindow : Window, IDisposable
         {
             new UiTab(GeneralTabId, "General settings", () => DrawTabBody("##BypassEmoteGeneralBody", DrawGeneralSettings)),
             new UiTab(ModeTabId, "Bypass Mode", () => DrawTabBody("##BypassEmoteModeBody", DrawBypassMode)),
+            new UiTab(OverridesTabId, "Emote overrides", () => DrawWideTabBody("##BypassEmoteOverridesBody", OverridesTab.Draw)),
         },
     };
 
@@ -295,6 +299,19 @@ public class ConfigWindow : Window, IDisposable
     }
 
     private static void DrawTabBody(string id, Action body)
+    {
+        var avail = ImGui.GetContentRegionAvail();
+        var width = MathF.Min(avail.X, NoireUI.Scaled(SettingsContentWidth));
+
+        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + MathF.Max(0f, (avail.X - width) * 0.5f));
+
+        using var child = ImRaii.Child(id, new Vector2(width, 0f), false);
+
+        if (child)
+            body();
+    }
+
+    private static void DrawWideTabBody(string id, Action body)
     {
         using var child = ImRaii.Child(id, Vector2.Zero, false);
 
@@ -448,9 +465,7 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.IsItemHovered())
         {
             ImGui.BeginTooltip();
-            ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35f);
             ImGui.TextUnformatted(Configuration.DirectPlayUnsafe ? UnsafeDirectPlayTooltip : SafeDirectPlayTooltip);
-            ImGui.PopTextWrapPos();
             ImGui.EndTooltip();
         }
 
