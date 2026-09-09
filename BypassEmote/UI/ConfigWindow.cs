@@ -226,6 +226,14 @@ public class ConfigWindow : Window, IDisposable
         if (gate == null)
             return;
 
+#if DEBUG
+        if (gate.ForcedApproval)
+        {
+            DrawForcedApproval(gate);
+            return;
+        }
+#endif
+
         if (gate.Untested)
         {
             DrawUntestedClient(gate);
@@ -251,8 +259,29 @@ public class ConfigWindow : Window, IDisposable
 
         DrawCheckNowButton(gate);
 
+#if DEBUG
+        ImGui.SameLine();
+
+        if (ImGui.Button("Enable Force Approval##BypassEmoteForceApproval"))
+            gate.ForceApproval(true);
+#endif
+
         ImGui.Separator();
     }
+
+#if DEBUG
+    private static readonly Vector4 ForcedApprovalColor = ColorHelper.HexToVector4("#3FBF7F");
+
+    private static void DrawForcedApproval(PatchApprovalGate gate)
+    {
+        ImGui.TextColoredWrapped(ForcedApprovalColor, "Force approval is on.");
+
+        if (ImGui.Button("Disable Force Approval##BypassEmoteForceApproval"))
+            gate.ForceApproval(false);
+
+        ImGui.Separator();
+    }
+#endif
 
     private static void DrawUntestedClient(PatchApprovalGate gate)
     {

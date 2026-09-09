@@ -80,7 +80,11 @@ public sealed class PatchApprovalGate : IDisposable
 
     public DateTime? LastCheckedUtc => Volatile.Read(ref _reading).CheckedUtc;
 
+#if DEBUG
+    public bool Approved => ForcedApproval || Status == PatchApprovalStatus.Approved;
+#else
     public bool Approved => Status == PatchApprovalStatus.Approved;
+#endif
 
     public bool Untested => Status == PatchApprovalStatus.Untested;
 
@@ -132,6 +136,36 @@ public sealed class PatchApprovalGate : IDisposable
 
         await CheckAsync(_tokens.Token).ConfigureAwait(false);
     }
+
+#if DEBUG
+    private bool _forcedApproval;
+
+    public bool ForcedApproval => _forcedApproval;
+
+    public void ForceApproval(bool forced)
+    {
+        if (_forcedApproval == forced)
+            return;
+
+        _forcedApproval = forced;
+
+        if (forced)
+        {
+            StopPolling();
+
+            NoireLogger.LogDebug($"Game build {GameVersion} and plugin {PluginVersion} approved for the session.", LogPrefix);
+        }
+        else
+        {
+            NoireLogger.LogDebug("Approval removed.", LogPrefix);
+        }
+
+        Apply();
+
+        if (!forced && Governs)
+            Resume();
+    }
+#endif
 
     // Debug only
     public void Forget()

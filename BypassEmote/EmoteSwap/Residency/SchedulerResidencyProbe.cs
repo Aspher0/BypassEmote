@@ -84,9 +84,9 @@ public sealed unsafe partial class SchedulerResidencyProbe
     private const int InnerSlotNameOffset = 0x20;
 
     // The C010 animation-name resolver (container, name, ctxArray, count), through the per-character by-name
-    // map at container+0x928. The leading 0x53 is the real first byte, some disassemblers report it one high.
+    // map at container+0x928.
     private const string ResolveTimelineNameSignature =
-        "53 41 54 41 55 41 56 41 57 48 83 EC 20 48 8B 05";
+        "40 53 41 54 41 55 41 56 41 57 48 83 EC 20 48 8B 05";
 
     private delegate nint ResolveTimelineNameDelegate(nint container, nint name, nint ctxArray, nint count);
 
@@ -112,7 +112,7 @@ public sealed unsafe partial class SchedulerResidencyProbe
     private const string BindingScanSignature =
         "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 48 89 7C 24 20 41 54 41 56 41 57 48 83 EC 20 "
         + "4C 8B F2 4C 8D 61 08 45 33 FF 0F 1F 84 00 00 00 00 00 33 ED 49 8B F4 66 66 66 0F 1F 84 "
-        + "00 00 00 00 00 48 8B 1E 48 8B 7E 08 48 3B DF 74 1D 0F 1F 40 00 48 8B 0B 49 8B D6 E8 85 E9 0F 00";
+        + "00 00 00 00 00 48 8B 1E 48 8B 7E 08 48 3B DF 74 ?? 0F 1F 40 00 48 8B 0B 49 8B D6";
 
     private delegate nint BindingScanDelegate(nint packSet, nint name);
 
