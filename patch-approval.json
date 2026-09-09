@@ -2,10 +2,10 @@
   "notice": "",
   "approved": [
     {
-      "gameVersion": "2026.08.11.0000.0000",
+      "gameVersion": "2026.09.01.0000.0000",
       "client": "Global",
-      "minimumPluginVersion": "2.0.0.0",
-      "notice": ""
+      "minimumPluginVersion": "2.2.0.0",
+      "notice": "Fixed BindingScan signature."
     }
   ]
 }
