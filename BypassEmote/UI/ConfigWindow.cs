@@ -210,6 +210,12 @@ public class ConfigWindow : Window, IDisposable
 
     public static void SwitchToBypassMode() => Tabs.SwitchTab(ModeTabId);
 
+    public static void SwitchToOverrides(uint sourceRowId)
+    {
+        OverridesTab.ShowFor(sourceRowId);
+        Tabs.SwitchTab(OverridesTabId);
+    }
+
     public static void ShowUnsafeToggleAttention() => unsafeAttentionUntil = DateTime.UtcNow + UnsafeAttentionDuration;
 
     private static readonly Vector4 PatchWarningColor = ColorHelper.HexToVector4("#E81313");
@@ -811,38 +817,27 @@ public class ConfigWindow : Window, IDisposable
 
     private static string? AlwaysCacheBreakAlarm()
     {
-        var residency = Service.ResidencyProbe;
-        var intact = residency.IsDefault() || residency.CacheBreakIntact;
-        var approved = Service.PatchApproval is not { } gate || !gate.HoldsHooks;
+        if (Service.PatchApproval is { HoldsHooks: true })
+            return "This game build is not approved yet, this will not work.";
 
-        if (intact && approved && SwapLayers.ReleaseCachedPacks)
-            return null;
-
-        if (!SwapLayers.ReleaseCachedPacks)
-            return "The release layer is switched off.";
-
-        return (approved ? string.Empty
-                : "This game build is not approved yet, this will not work.\n")
-            + (intact || residency.IsDefault() ? string.Empty : $"Not running: {residency.DescribeCacheBreakFault()}.\n");
+        return Service.Rebinder?.Fault is { } fault ? $"Not running: {fault}." : null;
     }
 
     private static string? CachedDispatchAlarm()
     {
-        var residency = Service.ResidencyProbe;
-        var isCacheBreakIntact = residency.IsDefault() || residency.CacheBreakIntact;
+        var fault = Service.Rebinder?.Fault;
         var spreads = Configuration.CachedDispatch != CachedDispatchMode.Off;
 
-        if (spreads && isCacheBreakIntact)
+        if (spreads && fault == null)
             return null;
 
         var message = "Leave this on, otherwise bypassing several animations in a row may look broken.";
 
-        if (isCacheBreakIntact)
+        if (fault == null)
             return message;
 
         return (spreads ? string.Empty : message + "\n\n")
-            + (residency.IsDefault() ? "" : $"Not running: {residency.DescribeCacheBreakFault()}.\n")
-            + "A game patch probably broke those, report it to the dev.";
+            + $"Not running: {fault}.";
     }
 
     private static bool ComboRow(string name, string id, ref int index, string[] options, string help, string? alarm = null)

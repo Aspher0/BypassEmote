@@ -129,8 +129,8 @@ public partial class Service
         if (Configuration.SelfBypassMode != SelfBypassMode.EmoteSwap || NoireService.ClientState.IsGPosing)
             return;
 
-        if (Orchestrator is not { IsExecutingSwap: false } orchestrator || Breaker is not { } breaker
-            || NoireService.ObjectTable.LocalPlayer is not { } localPlayer)
+        if (Orchestrator is not { IsExecutingSwap: false } || Rebinder is not { } rebinder
+            || NoireService.ObjectTable.LocalPlayer == null)
         {
             return;
         }
@@ -140,9 +140,7 @@ public partial class Service
 
         try
         {
-            var fallbackOrder = EmotePathHelper.GetFallbackOrder(SwapOrchestrator.SkeletonFor(localPlayer));
-
-            breaker.BreakFor(emote, fallbackOrder, orchestrator.CacheBreakNamesFor(emote, fallbackOrder));
+            rebinder.Arm(emote);
         }
         catch (Exception ex)
         {
@@ -194,8 +192,8 @@ public partial class Service
         {
             EndWatcher?.StopWatching();
 
-            ResidencyProbe?.ArmRelease(SwapOrchestrator.VanillaTimelineKeysOf(armed), armed.InternalNames ?? [],
-                releasedSource: armed.ContentKey);
+            if (Catalog?.Get(emoteId) is { } released)
+                Rebinder?.Arm(released);
 
             SwapMods.DeselectEntry(armed);
         }

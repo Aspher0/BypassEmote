@@ -70,7 +70,9 @@ public sealed partial class SwapOrchestrator
 
     private bool AttemptExecute(uint targetRowId)
     {
-        _residency.ArmNameSubstitution();
+        if (_catalog.Get(targetRowId) is { } target)
+            Service.Rebinder?.Arm(target);
+
 
         IsExecutingSwap = true;
         try

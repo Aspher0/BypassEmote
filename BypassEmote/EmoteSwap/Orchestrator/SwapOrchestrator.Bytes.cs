@@ -15,19 +15,13 @@ namespace BypassEmote.EmoteSwap;
 
 public sealed partial class SwapOrchestrator
 {
-    internal sealed record GroupOutput(byte[] Bytes, bool ClampedIntro,
-        IReadOnlyList<string>? ExtraOutputPaths = null,
-        IReadOnlyDictionary<string, string>? UniqueNameByKey = null,
-        bool UniqueNamesApplied = false);
+    internal sealed record GroupOutput(byte[] Bytes, bool ClampedIntro);
 
     internal sealed record GroupedSwapFiles(IReadOnlyDictionary<string, byte[]> Files, ResolvedVariantPair? Main,
-        bool ClampedIntro, bool UniqueNames = false,
-        IReadOnlyDictionary<string, string>? UniqueNameByKey = null,
-        bool InternalUniqueNames = false,
-        IReadOnlyList<string>? InternalNames = null);
+        bool ClampedIntro);
 
     internal static GroupedSwapFiles BuildGroupedFiles(IReadOnlyList<ResolvedVariantPair> pairs,
-        Func<IReadOnlyList<ResolvedVariantPair>, GroupOutput?> retargetGroup, bool publishInternalNames = true)
+        Func<IReadOnlyList<ResolvedVariantPair>, GroupOutput?> retargetGroup)
     {
         var groupsBySource = new Dictionary<string, List<ResolvedVariantPair>>(StringComparer.OrdinalIgnoreCase);
         var groupsInOrder = new List<List<ResolvedVariantPair>>();
@@ -47,50 +41,21 @@ public sealed partial class SwapOrchestrator
         var files = new Dictionary<string, byte[]>(pairs.Count);
         ResolvedVariantPair? main = null;
         var clampedIntro = false;
-        var uniqueNames = true;
-        var uniqueNameByKey = new Dictionary<string, string>(StringComparer.Ordinal);
-        var internalNames = new List<string>();
-        var internalNamesSeen = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var members in groupsInOrder)
         {
             if (retargetGroup(members) is not { } output)
                 continue;
 
-            if (!output.UniqueNamesApplied || SwapLayers.PublishVanillaPath)
-            {
-                foreach (var member in members)
-                    files[member.Pair.TargetRequestedPath] = output.Bytes;
-            }
-
-            if (publishInternalNames)
-            {
-                foreach (var internalName in PapAnimationNames.Read(output.Bytes))
-                {
-                    if (internalNamesSeen.Add(internalName))
-                        internalNames.Add(internalName);
-                }
-            }
-
-            foreach (var composedPath in output.ExtraOutputPaths ?? [])
-                files[composedPath] = output.Bytes;
-
-            foreach (var (timelineKey, uniqueName) in output.UniqueNameByKey ?? EmptyUniqueNames)
-                uniqueNameByKey[timelineKey] = uniqueName;
+            foreach (var member in members)
+                files[member.Pair.TargetRequestedPath] = output.Bytes;
 
             main ??= members[0];
             clampedIntro |= output.ClampedIntro;
-            uniqueNames &= output.UniqueNamesApplied;
         }
 
-        return new GroupedSwapFiles(files, main, clampedIntro,
-            UniqueNames: main != null && uniqueNames,
-            UniqueNameByKey: uniqueNameByKey.Count > 0 ? uniqueNameByKey : null,
-            InternalUniqueNames: main != null && internalNames.Count > 0,
-            InternalNames: internalNames.Count > 0 ? internalNames : null);
+        return new GroupedSwapFiles(files, main, clampedIntro);
     }
-
-    private static readonly IReadOnlyDictionary<string, string> EmptyUniqueNames = new Dictionary<string, string>();
 
     internal static bool OutputFadeProtected(IReadOnlyList<ResolvedVariantPair> pairs, GroupedSwapFiles grouped)
     {
@@ -213,19 +178,18 @@ public sealed partial class SwapOrchestrator
     }
 
     internal static Func<IReadOnlyList<ResolvedVariantPair>, GroupOutput?> RetargetingOncePerInput(
-        Dictionary<string, GroupOutput?> built, IReadOnlyList<string> fallbackOrder, bool composeUniqueNames,
-        bool? holdOffHand = null)
+        Dictionary<string, GroupOutput?> built, IReadOnlyList<string> fallbackOrder, bool? holdOffHand = null)
         => group =>
         {
             var key = GroupInputKey(group);
 
             if (!built.TryGetValue(key, out var bare))
             {
-                bare = BuildGroupOutput(group, fallbackOrder, composeUniqueNames: false, holdOffHand);
+                bare = BuildGroupOutput(group, fallbackOrder, holdOffHand);
                 built[key] = bare;
             }
 
-            return bare is { } output ? WithUniqueNames(output, group, fallbackOrder, composeUniqueNames) : null;
+            return bare is { } output ? output : null;
         };
 
     internal static string GroupInputKey(IReadOnlyList<ResolvedVariantPair> group)
@@ -235,74 +199,18 @@ public sealed partial class SwapOrchestrator
             + $">{member.Pair.SourceFaceLibrary}"));
 
     private static GroupOutput? BuildGroupOutput(IReadOnlyList<ResolvedVariantPair> group,
-        IReadOnlyList<string> fallbackOrder, bool composeUniqueNames, bool? holdOffHand = null)
+        IReadOnlyList<string> fallbackOrder, bool? holdOffHand = null)
     {
         if (group.Count == 1)
             return BuildRetargetedPap(group[0].Pair, group[0].ResolvedSourcePath, holdOffHand: holdOffHand) is { } bytes
-                ? WithUniqueNames(new GroupOutput(bytes, ClampedIntro: false), group, fallbackOrder, composeUniqueNames)
+                ? new GroupOutput(bytes, ClampedIntro: false)
                 : null;
 
-        return BuildSharedGroupPap(group, fallbackOrder, composeUniqueNames, holdOffHand);
-    }
-
-    internal static GroupOutput WithUniqueNames(GroupOutput output, IReadOnlyList<ResolvedVariantPair> group,
-        IReadOnlyList<string> fallbackOrder, bool composeUniqueNames = true)
-    {
-        if (!composeUniqueNames)
-            return output;
-
-        var contentTag = UniqueNamePlanner.ContentTagFor(output.Bytes);
-        var uniqueNameByKey = new Dictionary<string, string>(group.Count, StringComparer.Ordinal);
-        var composedPaths = new List<string>();
-        var allCovered = group.Count > 0;
-
-        foreach (var member in group)
-            allCovered &= TryPlanMemberName(member.Pair.TargetRequestedPath, member.Pair.SourceRequestedPath,
-                fallbackOrder, contentTag, uniqueNameByKey, composedPaths);
-
-        return output with
-        {
-            ExtraOutputPaths = composedPaths.Count > 0 ? composedPaths : null,
-            UniqueNameByKey = uniqueNameByKey.Count > 0 ? uniqueNameByKey : null,
-            UniqueNamesApplied = allCovered,
-        };
-    }
-
-    private static bool TryPlanMemberName(string targetRequestedPath, string sourceRequestedPath,
-        IReadOnlyList<string> fallbackOrder, string contentTag, Dictionary<string, string> uniqueNameByKey,
-        List<string> composedPaths)
-    {
-        if (UniqueNamePlanner.TimelineKeyFromPapPath(targetRequestedPath) is not { } timelineKey)
-        {
-            NoireLogger.LogDebug($"No timeline key readable off '{targetRequestedPath}'; leaving it vanilla.", LogPrefix);
-            return false;
-        }
-
-        if (UniqueNamePlanner.UniqueNameFor(timelineKey, contentTag) is not { } uniqueName)
-        {
-            NoireLogger.LogDebug($"No unique name fits for '{timelineKey}'; leaving it vanilla.", LogPrefix);
-            return false;
-        }
-
-        if (UniqueNamePlanner.ComposedPapPath(targetRequestedPath, timelineKey, uniqueName) is not { } composedPath)
-        {
-            NoireLogger.LogDebug($"No composable pap path for '{timelineKey}' under '{targetRequestedPath}'; leaving it vanilla.", LogPrefix);
-            return false;
-        }
-
-        uniqueNameByKey[timelineKey] = uniqueName;
-
-        foreach (var chainPath in UniqueNamePlanner.ComposedPapPathsForChain(composedPath, fallbackOrder))
-        {
-            if (!composedPaths.Contains(chainPath))
-                composedPaths.Add(chainPath);
-        }
-
-        return true;
+        return BuildSharedGroupPap(group, fallbackOrder, holdOffHand);
     }
 
     private static GroupOutput? BuildSharedGroupPap(IReadOnlyList<ResolvedVariantPair> group,
-        IReadOnlyList<string> fallbackOrder, bool composeUniqueNames, bool? holdOffHand = null)
+        IReadOnlyList<string> fallbackOrder, bool? holdOffHand = null)
     {
         var lead = group[0];
 
@@ -339,8 +247,7 @@ public sealed partial class SwapOrchestrator
             LogPrefix);
 
         return ApplyWeaponHold(ApplyFaceLibrary(retargeted, lead.Pair.SourceFaceLibrary, lead.Pair.TargetRequestedPath, PapFaceLibrary.Inject), lead.Pair, holdOffHand, ServedByAMod(lead.Pair, lead.ResolvedSourcePath)) is { } withFace
-            ? WithUniqueNames(new GroupOutput(withFace, ClampedIntro: clampedNames.Count != 0), group, fallbackOrder,
-                composeUniqueNames)
+            ? new GroupOutput(withFace, ClampedIntro: clampedNames.Count != 0)
             : null;
     }
 

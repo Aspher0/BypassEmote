@@ -29,6 +29,19 @@ internal static class OverridesTab
 
     private static readonly Dictionary<uint, UiImageSource> Icons = new();
 
+    internal static void ShowFor(uint sourceRowId)
+    {
+        if (sourceRowId == 0)
+            return;
+
+        var overrides = Configuration.EmoteOverrides;
+
+        if (overrides.FirstOrDefault(entry => entry.SourceEmote == sourceRowId) == null)
+            overrides.Add(new EmoteOverride { SourceEmote = sourceRowId });
+
+        _selectedSource = sourceRowId;
+    }
+
     internal static void Draw()
     {
         var overrides = Configuration.EmoteOverrides;

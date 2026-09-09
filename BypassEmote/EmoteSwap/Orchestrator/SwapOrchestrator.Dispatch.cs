@@ -26,7 +26,7 @@ public sealed partial class SwapOrchestrator
     private bool Spreads(bool staleVulnerable) => Configuration.CachedDispatch switch
     {
         CachedDispatchMode.On => true,
-        CachedDispatchMode.WhenNecessary => staleVulnerable && !_residency.CacheBreakIntact,
+        CachedDispatchMode.WhenNecessary => staleVulnerable && Service.Rebinder is not { Ready: true },
         _ => false,
     };
 

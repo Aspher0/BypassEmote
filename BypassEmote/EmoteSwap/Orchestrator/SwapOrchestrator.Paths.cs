@@ -248,8 +248,7 @@ public sealed partial class SwapOrchestrator
         foreach (var pair in pairs)
             resolvedPairs.Add(new ResolvedVariantPair(pair, ResolveOutsideOwnLiveSwap(pair.SourceRequestedPath)));
 
-        var grouped = BuildGroupedFiles(resolvedPairs,
-            group => BuildGroupOutput(group, fallbackOrder, composeUniqueNames: false), publishInternalNames: false);
+        var grouped = BuildGroupedFiles(resolvedPairs, group => BuildGroupOutput(group, fallbackOrder));
 
         if (grouped.Main == null)
             return null;
@@ -344,47 +343,16 @@ public sealed partial class SwapOrchestrator
         => targetLoopKind == EmotePlayType.Looped
            && !(targetIntro == IntroKind.Pap && sourceCarriesOwnDistinctIntroFile);
 
-    internal static bool OnDiskShapeMatches(SwapOptionEntry? kept, bool composeUniqueNames)
+    internal static bool OnDiskShapeMatches(SwapOptionEntry? kept)
     {
         if (kept == null)
-            return !composeUniqueNames;
-
-        var paths = GamePathsOf(kept).ToList();
-
-        if (paths.Any(UniqueNamePlanner.IsComposedPapPath) != composeUniqueNames)
             return false;
 
-        return !SwapLayers.PublishVanillaPath || paths.Any(path => !UniqueNamePlanner.IsComposedPapPath(path));
+        return GamePathsOf(kept).Any();
     }
 
     internal static IEnumerable<string> GamePathsOf(SwapOptionEntry kept)
         => kept.FilesByRace.Values.SelectMany(files => files.Keys);
-
-    internal static IReadOnlyList<string> VanillaTimelineKeysOf(SwapOptionEntry entry)
-        => [.. GamePathsOf(entry)
-            .Where(path => !UniqueNamePlanner.IsComposedPapPath(path))
-            .Select(UniqueNamePlanner.TimelineKeyFromPapPath)
-            .Where(key => key != null)
-            .Distinct(StringComparer.Ordinal)!];
-
-    internal static IReadOnlyList<string> VanillaTimelineKeysOf(EmoteAttributes emote)
-    {
-        var keys = new List<string>(emote.Variants.Count + 1);
-
-        void Add(string relative)
-        {
-            if (UniqueNamePlanner.TimelineKeyFromPapPath("/" + relative) is { } key && !keys.Contains(key))
-                keys.Add(key);
-        }
-
-        foreach (var variant in emote.Variants)
-            Add(variant.RelativePapPath);
-
-        if (emote.IntroRelativePapPath is { } intro)
-            Add(intro);
-
-        return keys;
-    }
 
     internal IReadOnlyList<string> VanillaNamePathsFor(EmoteAttributes emote, IReadOnlyList<string> fallbackOrder)
     {

@@ -13,14 +13,8 @@ public sealed record SwapOptionEntry(
     bool IsIdlePoseSwap,
     // Skeleton id -> game path -> mod-relative file. Every race the build covered, so a body change is a rewrite.
     IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> FilesByRace,
-    IReadOnlyDictionary<string, string>? UniqueNameByKey = null,
-    // Alias maps per skeleton.
-    IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? UniqueNamesByRace = null,
-    IReadOnlyList<string>? InternalNames = null,
     bool FadeProtectedIntro = false,
     bool ClampedIntro = false,
-    bool UniqueNames = false,
-    bool InternalUniqueNames = false,
     // The plugin selected this option and may deselect it. A hand-made selection is never armed.
     bool SelectedByUs = false,
     long LastUsedStamp = 0,

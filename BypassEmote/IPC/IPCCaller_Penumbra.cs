@@ -828,7 +828,6 @@ public sealed class IPCCaller_Penumbra : IDisposable
             return;
 
         var onLocalPlayer = gameObject != 0 && gameObject == (NoireService.ObjectTable.LocalPlayer?.Address ?? 0);
-        var key = UniqueNamePlanner.IsComposedPapPath(gamePath) ? "composed" : "vanilla path";
 
         var served = string.Equals(gamePath, localPath, StringComparison.Ordinal) ? "vanilla" : $"'{localPath}'";
         var size = "?";
@@ -844,7 +843,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
 
 #if DEBUG
         NoireLogger.LogDebug(
-            $"{(isPap ? "Pap" : "Tmb")} requested by the game: '{gamePath}' [{key}] served {served} "
+            $"{(isPap ? "Pap" : "Tmb")} requested by the game: '{gamePath}' [vanilla path] served {served} "
             + $"({size} bytes, object 0x{gameObject:X} {(onLocalPlayer ? "LOCAL PLAYER" : "other or none")}).",
             LogPrefix);
 #endif

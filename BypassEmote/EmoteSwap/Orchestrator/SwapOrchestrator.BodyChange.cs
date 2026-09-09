@@ -76,12 +76,9 @@ public sealed partial class SwapOrchestrator
 
         NoireLogger.LogDebug($"'{kept.OptionName}' is on, so it is built again for {skeleton}.", LogPrefix);
 
-        const bool publishInternalNames = true;
-
         StartBackgroundBuild(new SwapBuildRequest(source, target, _generations.TakeOwnership(), raceInputs,
             skeleton, kept.ContentKey, kept.SourceKey ?? SourceKeyFor(source, raceInputs),
-            _swapMods.BeginPrepare(), ComposeUniqueNamesFor(target, out _),
-            publishInternalNames, ModServingAnimation(source, skeleton),
+            _swapMods.BeginPrepare(), ModServingAnimation(source, skeleton),
             new SwapTimings(Stopwatch.StartNew(), AtMatch: 0, AtPair: 0, AtRetarget: 0, AtPrepare: 0, AtApply: 0),
             ExecuteAfterApply: false, HoldOffHand: WeaponHoldFor(source, localPlayer)));
     }

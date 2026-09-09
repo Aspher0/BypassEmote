@@ -420,9 +420,8 @@ public class EmoteWindow : Window, IDisposable
             {
                 if (popup)
                 {
-#if DEBUG
                     var inEmoteSwap = Configuration.SelfBypassMode == SelfBypassMode.EmoteSwap;
-
+#if DEBUG
                     if (ImGui.MenuItem("Force swap", string.Empty, false, inEmoteSwap) && contextMenuEmote.HasValue)
                         ForceSwap(contextMenuEmote.Value);
 
@@ -448,6 +447,17 @@ public class EmoteWindow : Window, IDisposable
                     {
                         if (contextMenuEmote.HasValue)
                             ApplyEmoteOnBuddy(contextMenuEmote.Value);
+                    }
+
+                    if (contextMenuEmote.HasValue && inEmoteSwap)
+                    {
+                        ImGui.Separator();
+
+                        if (ImGui.MenuItem("Add an override..."))
+                        {
+                            Service.Plugin.OpenOverrides(contextMenuEmote.Value.RowId);
+                            ImGui.CloseCurrentPopup();
+                        }
                     }
 
                     if (contextMenuEmote.HasValue && CommonHelper.IsEmoteAssignableToHotbar(contextMenuEmote.Value))

@@ -44,17 +44,13 @@ public sealed partial class SwapOrchestrator
 
     private sealed record SwapBuildRequest(EmoteAttributes Source, EmoteAttributes Target, int Generation,
         IReadOnlyList<RaceBuildInput> Races, string Skeleton, string ContentKey, string SourceKey,
-        SwapModManager.SwapFilePlan Plan, bool ComposeUniqueNames, bool PublishInternalNames, string? SourceModName,
+        SwapModManager.SwapFilePlan Plan, string? SourceModName,
         SwapTimings Timings, bool ExecuteAfterApply = true, bool? HoldOffHand = null);
 
     private sealed record SwapBuildOutcome(IReadOnlyDictionary<string, byte[]> Files,
         IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> FilesByRace,
         long ElapsedAtRetarget, long ElapsedAtPrepare,
-        bool FadeProtectedIntro, bool ClampedIntro, bool UniqueNamesApplied,
-        IReadOnlyDictionary<string, string>? UniqueNameByKey,
-        IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? UniqueNamesByRace,
-        bool InternalUniqueNamesApplied,
-        IReadOnlyList<string>? InternalNames);
+        bool FadeProtectedIntro, bool ClampedIntro);
 
     private const string BackgroundOperationName = "Emote Swap byte pipeline";
 
@@ -92,8 +88,7 @@ public sealed partial class SwapOrchestrator
         foreach (var race in request.Races)
         {
             var grouped = BuildGroupedFiles(race.Pairs,
-                RetargetingOncePerInput(retargeted, race.FallbackOrder, request.ComposeUniqueNames, request.HoldOffHand),
-                request.PublishInternalNames);
+                RetargetingOncePerInput(retargeted, race.FallbackOrder, request.HoldOffHand));
 
             var isDrawnBody = race.Race == request.Skeleton;
 
@@ -134,18 +129,12 @@ public sealed partial class SwapOrchestrator
         return new SwapBuildOutcome(assembled.WriteSet, assembled.FilesByRace,
             elapsedAtRetarget, request.Timings.Clock.ElapsedMilliseconds,
             FadeProtectedIntro: OutputFadeProtected(drawnPairs, drawn),
-            ClampedIntro: drawn.ClampedIntro,
-            UniqueNamesApplied: drawn.UniqueNames,
-            UniqueNameByKey: drawn.UniqueNameByKey,
-            UniqueNamesByRace: assembled.UniqueNamesByRace,
-            InternalUniqueNamesApplied: drawn.InternalUniqueNames,
-            InternalNames: drawn.InternalNames);
+            ClampedIntro: drawn.ClampedIntro);
     }
 
     internal sealed record AssembledRaceFiles(
         IReadOnlyDictionary<string, byte[]> WriteSet,
-        IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> FilesByRace,
-        IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? UniqueNamesByRace);
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> FilesByRace);
 
     internal static AssembledRaceFiles AssembleRaceFiles(IReadOnlyDictionary<string, GroupedSwapFiles> byRace)
     {
@@ -167,13 +156,9 @@ public sealed partial class SwapOrchestrator
             }
 
             filesByRace[race] = redirects;
-
-            if (grouped.UniqueNameByKey is { } uniqueNames)
-                uniqueNamesByRace[race] = uniqueNames;
         }
 
-        return new AssembledRaceFiles(writeSet, filesByRace,
-            uniqueNamesByRace.Count > 0 ? uniqueNamesByRace : null);
+        return new AssembledRaceFiles(writeSet, filesByRace);
     }
 
     private void FinishSwapOnFrameworkThread(SwapBuildRequest request, SwapBuildOutcome? outcome)
@@ -261,13 +246,8 @@ public sealed partial class SwapOrchestrator
 
         return new SwapOptionEntry(request.ContentKey, groupName, optionName, request.Source.RowId,
             request.Target.RowId, IsIdlePoseSwap: false, built.FilesByRace,
-            UniqueNameByKey: built.UniqueNameByKey,
-            UniqueNamesByRace: built.UniqueNamesByRace,
-            InternalNames: built.InternalNames,
             FadeProtectedIntro: built.FadeProtectedIntro,
             ClampedIntro: built.ClampedIntro,
-            UniqueNames: built.UniqueNamesApplied,
-            InternalUniqueNames: built.InternalUniqueNamesApplied,
             RulesStamp: SwapRulesStamp.Current(),
             SourceKey: request.SourceKey);
     }

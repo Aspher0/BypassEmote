@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NoireLib;
 using NoireLib.Helpers;
+using NoireLib.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,11 +26,6 @@ namespace BypassEmote.UI;
 
 public class DebugWindow : Window, IDisposable
 {
-    private Vector3 pos1 = Vector3.Zero;
-    private Vector3 pos2 = Vector3.Zero;
-
-    private float rot1 = 0f;
-    private float rot2 = 0f;
 
     private uint selectedEmoteId = 0;
     private string emoteSearchText = string.Empty;
@@ -52,12 +48,6 @@ public class DebugWindow : Window, IDisposable
     {
         using (ImRaii.TabBar("DebugTabs"))
         {
-            using (var tab = ImRaii.TabItem("Position/Rotation"))
-            {
-                if (tab)
-                    DrawPositionRotationTab();
-            }
-
             using (var tab = ImRaii.TabItem("IPC Tests"))
             {
                 if (tab)
@@ -101,6 +91,7 @@ public class DebugWindow : Window, IDisposable
                 if (tab)
                     DrawPatchApprovalTab();
             }
+
         }
     }
 
@@ -395,56 +386,6 @@ public class DebugWindow : Window, IDisposable
 
         LayerSwitch("Weapon travel animation##SwapLayer", SwapLayers.WeaponTravelAnimation,
             value => SwapLayers.WeaponTravelAnimation = value);
-
-        ImGui.Spacing();
-
-        LayerSwitch("Unique pack names##SwapLayer", SwapLayers.UniquePackNames,
-            value => SwapLayers.UniquePackNames = value);
-
-        ImGui.TextUnformatted("Substitution doors");
-
-        LayerSwitch("Loader door##SwapLayer", SwapLayers.DoorLoader,
-            value => SwapLayers.DoorLoader = value);
-
-        ImGui.SameLine();
-        LayerSwitch("Bind door##SwapLayer", SwapLayers.DoorBind,
-            value => SwapLayers.DoorBind = value);
-
-        ImGui.SameLine();
-        LayerSwitch("Request door##SwapLayer", SwapLayers.DoorRequest,
-            value => SwapLayers.DoorRequest = value);
-
-        ImGui.SameLine();
-        LayerSwitch("Match enforcement##SwapLayer", SwapLayers.MatchEnforcement,
-            value => SwapLayers.MatchEnforcement = value);
-
-        ImGui.Spacing();
-
-        LayerSwitch("Prewarm packs##SwapLayer", SwapLayers.PrewarmPacks,
-            value => SwapLayers.PrewarmPacks = value);
-
-        LayerSwitch("Force fresh file loads##SwapLayer", SwapLayers.NoCacheFlip,
-            value => SwapLayers.NoCacheFlip = value);
-
-        LayerSwitch("Binding pack correction##SwapLayer", SwapLayers.BindingPackCorrection,
-            value => SwapLayers.BindingPackCorrection = value);
-
-        LayerSwitch("Mapping pack correction##SwapLayer", SwapLayers.MappingPackCorrection,
-            value => SwapLayers.MappingPackCorrection = value);
-
-        ImGui.Spacing();
-
-        LayerSwitch("Always compose paths##SwapLayer", SwapLayers.AlwaysComposePaths,
-            value => SwapLayers.AlwaysComposePaths = value);
-
-        LayerSwitch("Republish the vanilla path##SwapLayer", SwapLayers.PublishVanillaPath,
-            value => SwapLayers.PublishVanillaPath = value);
-
-        LayerSwitch("Release cached packs##SwapLayer", SwapLayers.ReleaseCachedPacks,
-            value => SwapLayers.ReleaseCachedPacks = value);
-
-        LayerSwitch("Release binds off the old content##SwapLayer", SwapLayers.ReleaseBindNewest,
-            value => SwapLayers.ReleaseBindNewest = value);
     }
 
     private static void LayerSwitch(string label, bool current, Action<bool> write)
@@ -454,82 +395,6 @@ public class DebugWindow : Window, IDisposable
             return;
 
         write(value);
-        Service.ResidencyProbe?.ApplyLayerSwitches();
-    }
-
-    private void DrawPositionRotationTab()
-    {
-        if (NoireService.ObjectTable.LocalPlayer != null)
-        {
-            var player = NoireService.ObjectTable.LocalPlayer;
-
-            if (ImGui.Button("Set Position 1"))
-            {
-                pos1 = player.Position;
-            }
-
-            ImGui.SameLine();
-
-            if (ImGui.Button("Set Position 2"))
-            {
-                pos2 = player.Position;
-            }
-
-            ImGui.Text($"Position 1: X: {pos1.X}, Y: {pos1.Y}, Z: {pos1.Z}");
-            ImGui.Text($"Position 2: X: {pos2.X}, Y: {pos2.Y}, Z: {pos2.Z}");
-            ImGui.Text($"Distance: {Vector3.Distance(pos1, pos2)}");
-
-            ImGui.Separator();
-
-            if (ImGui.Button("Set Rotation 1"))
-            {
-                rot1 = player.Rotation;
-            }
-
-            ImGui.SameLine();
-
-            if (ImGui.Button("Set Rotation 2"))
-            {
-                rot2 = player.Rotation;
-            }
-
-            var normalizedCurrent = MathHelper.NormalizeAngle(MathHelper.ToDegrees(player.Rotation));
-            var normalized1 = MathHelper.NormalizeAngle(MathHelper.ToDegrees(rot1));
-            var normalized2 = MathHelper.NormalizeAngle(MathHelper.ToDegrees(rot2));
-            var difference = Math.Abs(MathHelper.DeltaAngle(normalized1, normalized2));
-
-            ImGui.Text("Current Rotation: " + normalizedCurrent);
-            ImGui.Text($"Rotation 1: {normalized1}");
-            ImGui.Text($"Rotation 2: {normalized2}");
-            ImGui.Text($"Rotation Difference: {difference}");
-
-            ImGui.Separator();
-
-            var groundMaterial = CharacterHelper.GetGroundMaterial(player);
-            var throwResolvesTo = CommonHelper.ResolveTargetedEmote(player, 85);
-
-            ImGui.Text($"Ground material: {(byte)groundMaterial} ({groundMaterial})");
-            ImGui.Text($"Standing in water: {CharacterHelper.IsStandingInWater(player)}"
-                + $" (with fallback: {CharacterHelper.IsStandingInWater(player, includeFallback: true)})");
-            ImGui.Text($"/throw resolves to row: {throwResolvesTo}"
-                + (throwResolvesTo == 85 ? " (throw)" : " (snowball)"));
-            ImGui.Text($"/splash allowed here: {EmoteHelper.MeetsEnvironmentFor(player, 178)}");
-
-            ImGui.Separator();
-
-            ImGui.Text($"Player Address: {player.Address:X}");
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-                ImGui.SetTooltip("Click to copy");
-                if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
-                    ImGui.SetClipboardText($"{player.Address:X}");
-            }
-        }
-        else
-        {
-            ImGui.Text("Player not loaded.");
-        }
     }
 
     private void InitCache()

@@ -28,11 +28,11 @@ public partial class Service
     public static SwapEndWatcher? EndWatcher;
     public static SkeletonWatcher? BodyWatcher;
     public static CollectionWatcher? CollectionWatcher;
-    public static SchedulerResidencyProbe? ResidencyProbe;
-    public static CacheBreaker? Breaker;
 #if DEBUG
     public static ClientTriggerMonitor? TriggerMonitor;
 #endif
+
+    public static AnimationRebinder? Rebinder;
     public static SwapOrchestrator? Orchestrator;
 
     private static string? _sweptFor;
@@ -51,14 +51,12 @@ public partial class Service
 
         SwapMods = new SwapModManager(Penumbra, SwapIdentity, NoireService.PluginInterface.GetPluginConfigDirectory());
         EndWatcher = new SwapEndWatcher(SwapMods);
-        ResidencyProbe = new SchedulerResidencyProbe();
-        SwapMods.ResidencyProbe = ResidencyProbe;
 #if DEBUG
         TriggerMonitor = new ClientTriggerMonitor();
 #endif
-        Orchestrator = new SwapOrchestrator(Penumbra, Catalog, SwapMods, EndWatcher, ResidencyProbe);
+        Rebinder = new AnimationRebinder();
+        Orchestrator = new SwapOrchestrator(Penumbra, Catalog, SwapMods, EndWatcher);
 
-        Breaker = new CacheBreaker(Penumbra, ResidencyProbe, NoireService.PluginInterface.GetPluginConfigDirectory());
 
         BodyWatcher = new SkeletonWatcher(SwapMods);
         CollectionWatcher = new CollectionWatcher(Penumbra, SwapMods);
@@ -116,7 +114,7 @@ public partial class Service
         BodyWatcher?.Dispose();
         CollectionWatcher?.Dispose();
         Orchestrator?.Dispose();
-        Breaker?.Dispose();
+        Rebinder?.Dispose();
 
         EndWatcher?.Disarm();
 

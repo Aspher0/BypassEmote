@@ -138,7 +138,6 @@ public sealed class SwapModManager
         _boundNames = names;
 
         Registry = LoadRegistryFromDisk();
-        PushRedirectScope();
     }
 
     public void SaveDispatch(IReadOnlyList<DispatchRecord> dispatch)
@@ -165,36 +164,6 @@ public sealed class SwapModManager
         catch (Exception ex)
         {
             NoireLogger.LogError(ex, $"Could not rename the generated mod to '{display}'.", LogPrefix);
-        }
-    }
-
-    public SchedulerResidencyProbe? ResidencyProbe
-    {
-        get => _residencyProbe;
-        set
-        {
-            _residencyProbe = value;
-            PushRedirectScope();
-        }
-    }
-
-    private SchedulerResidencyProbe? _residencyProbe;
-
-    private void PushRedirectScope()
-    {
-        try
-        {
-            var selected = Registry.Entries.Where(entry => entry.SelectedByUs).ToList();
-            var paths = selected.SelectMany(ServedPathsOf).ToList();
-
-            var pressed = _pressedKey is { } key ? selected.FirstOrDefault(entry => entry.ContentKey == key) : null;
-
-            _residencyProbe?.SetRedirectedScope(pressed?.TargetEmote ?? 0, paths,
-                pressed?.UniqueNameByKey, pressed?.InternalNames, pressed?.ContentKey);
-        }
-        catch (Exception ex)
-        {
-            NoireLogger.LogError(ex, "Could not push the redirect scope; the probe keeps its previous scope.", LogPrefix);
         }
     }
 
@@ -295,7 +264,6 @@ public sealed class SwapModManager
         if (Configuration.SwapBehavior == SwapBehavior.OneAtATime)
             DeselectAllExcept(entry.GroupName);
 
-        PushRedirectScope();
         ReconcilePriority();
 
         return true;
@@ -315,7 +283,6 @@ public sealed class SwapModManager
         UpdateEntry(entry with { SelectedByUs = false });
 
         DisableModIfNothingSelected();
-        PushRedirectScope();
     }
 
     public void DeselectAll()
@@ -479,7 +446,6 @@ public sealed class SwapModManager
         SweepUnreferencedFiles();
         ReassertSelections();
         DisableModIfNothingSelected();
-        PushRedirectScope();
 
         if (_gateway.RefreshOwnPanel())
             NoireLogger.LogDebug("Mod panel refreshed.", LogPrefix);
@@ -675,16 +641,7 @@ public sealed class SwapModManager
     }
 
     internal static SwapRegistry RealignedForSkeleton(SwapRegistry registry, string newSkeleton)
-        => registry with
-        {
-            Skeleton = newSkeleton,
-            Entries = registry.Entries
-                .Select(entry => entry.UniqueNamesByRace is { } byRace
-                    && byRace.TryGetValue(newSkeleton, out var uniqueNames)
-                        ? entry with { UniqueNameByKey = uniqueNames }
-                        : entry)
-                .ToList(),
-        };
+        => registry with { Skeleton = newSkeleton };
 
     internal bool RewriteForSkeleton(SkeletonRewritePlanner.RewritePlan plan, string newSkeleton)
     {
@@ -693,7 +650,6 @@ public sealed class SwapModManager
             Registry = RealignedForSkeleton(Registry, newSkeleton);
             PersistRegistry();
 
-            PushRedirectScope();
 
             return true;
         }
@@ -725,7 +681,6 @@ public sealed class SwapModManager
         PersistRegistry();
 
         ReassertSelections();
-        PushRedirectScope();
 
         return true;
     }
@@ -767,7 +722,6 @@ public sealed class SwapModManager
                 EnsurePenumbraReadsTheMod(isFirstCreation: false);
         }
 
-        PushRedirectScope();
     }
 
     private void EmptyGroupFiles()
@@ -916,7 +870,6 @@ public sealed class SwapModManager
             return;
 
         ReconcileWithDisk();
-        PushRedirectScope();
     }
 
     private void HandleOwnModDeleted()
@@ -930,7 +883,6 @@ public sealed class SwapModManager
         _pressedKey = null;
 
         PersistRegistry();
-        PushRedirectScope();
     }
 
     public void HandleCompetingModChange(Guid collectionId)

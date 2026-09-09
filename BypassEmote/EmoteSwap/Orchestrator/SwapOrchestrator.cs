@@ -32,19 +32,17 @@ public sealed partial class SwapOrchestrator : IDisposable
     private readonly EmoteAttributeCatalog _catalog;
     private readonly SwapModManager _swapMods;
     private readonly SwapEndWatcher _endWatcher;
-    private readonly SchedulerResidencyProbe _residency;
     private readonly GenerationTracker _generations = new();
 
     private volatile bool _disposed;
 
     public SwapOrchestrator(IPCCaller_Penumbra penumbra, EmoteAttributeCatalog catalog, SwapModManager swapMods,
-        SwapEndWatcher endWatcher, SchedulerResidencyProbe residency)
+        SwapEndWatcher endWatcher)
     {
         _penumbra = penumbra;
         _catalog = catalog;
         _swapMods = swapMods;
         _endWatcher = endWatcher;
-        _residency = residency;
 
         penumbra.ExternalModChanged += ForgetChangedTargets;
     }
@@ -190,12 +188,6 @@ public sealed partial class SwapOrchestrator : IDisposable
             + $"{string.Join(", ", raceInputs.Select(race => race.Race))}.", LogPrefix);
 
         var elapsedAtResolve = swapClock.ElapsedMilliseconds;
-        var composeUniqueNames = ComposeUniqueNamesFor(target, out var reading);
-
-        NoireLogger.LogDebug($"/{target.Command}: {reading}, so this swap "
-            + (composeUniqueNames ? "loads under a composed name." : "is served on its own path."), LogPrefix);
-
-        LogHelper.DebugLine((composeUniqueNames ? ">   composed name" : ">   vanilla path") + $" | {reading}");
 
         var sourceKey = SourceKeyFor(source, raceInputs);
 
@@ -204,18 +196,15 @@ public sealed partial class SwapOrchestrator : IDisposable
         var contentKey = ContentKeyFor(source, target, raceInputs);
 
         if (_swapMods.FindReusable(contentKey) is { } kept
-            && OnDiskShapeMatches(kept, composeUniqueNames)
+            && OnDiskShapeMatches(kept)
             && TryReuseAndExecute(kept, source, target, new SwapTimings(swapClock, elapsedAtMatch, elapsedAtPair,
                 AtRetarget: elapsedAtResolve, AtPrepare: elapsedAtResolve, AtApply: 0)))
         {
             return;
         }
 
-        const bool publishInternalNames = true;
-
         StartBackgroundBuild(new SwapBuildRequest(source, target, _generations.TakeOwnership(), raceInputs,
-            skeleton, contentKey, sourceKey, _swapMods.BeginPrepare(), composeUniqueNames, publishInternalNames,
-            ModServingAnimation(source, skeleton),
+            skeleton, contentKey, sourceKey, _swapMods.BeginPrepare(), ModServingAnimation(source, skeleton),
             new SwapTimings(swapClock, elapsedAtMatch, elapsedAtPair, AtRetarget: 0, AtPrepare: 0, AtApply: 0),
             HoldOffHand: WeaponHoldFor(source, localPlayer)));
     }
@@ -308,19 +297,6 @@ public sealed partial class SwapOrchestrator : IDisposable
         IReadOnlyList<RaceBuildInput> races)
         => SwapContentKey.For(EmoteAttributeCatalog.RulesVersion, target.RowId, source.RowId,
             [.. races.Select(race => race.Source)]);
-
-    private bool ComposeUniqueNamesFor(EmoteAttributes target, out string reading)
-    {
-        var residencyIds = target.AnimationTimelineIds is { Count: > 0 } ids
-            ? ids
-            : EmoteHelper.GetActionTimelineIds(target.RowId);
-
-        var consumers = residencyIds.Select(id => (Id: id, Count: _residency.ConsumersOf(id))).ToList();
-
-        reading = $"timeline [{string.Join(" ", consumers.Select(entry => $"{entry.Id}:{entry.Count}"))}]";
-
-        return SwapLayers.AlwaysComposePaths || consumers.Any(entry => entry.Count > 0);
-    }
 
     private static EmoteAttributes WithConditionVariant(EmoteAttributes source, EmoteCondition condition)
     {

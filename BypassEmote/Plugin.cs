@@ -150,6 +150,12 @@ public sealed partial class Plugin : IDalamudPlugin
     public void OpenAssignHotbar(Emote emote) => _ = AssignHotbarWindow.ShowAsync(emote);
     public void OpenCreateMod() => CreateModWindow.Show();
     public void OpenCreateMod(Emote emote) => CreateModWindow.ShowFor(emote);
+
+    public void OpenOverrides(uint sourceRowId)
+    {
+        ConfigWindow.SwitchToOverrides(sourceRowId);
+        ConfigWindow.IsOpen = true;
+    }
     public void OpenChangelog() => NoireLibMain.GetModule<NoireChangelogManager>()?.ShowWindow();
     public void OpenMessageJournal() => NoireLibMain.GetModule<NoireHistoryLogger>()?.ShowWindow();
 
