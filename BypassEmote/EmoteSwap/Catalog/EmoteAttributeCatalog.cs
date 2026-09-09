@@ -30,7 +30,7 @@ public sealed class EmoteAttributeCatalog
 {
     private const string LogPrefix = "[EmoteAttributeCatalog] ";
 
-    internal const int RulesVersion = 3;
+    internal const int RulesVersion = 4;
 
     private const int BuildPacingBatchSize = 8;
     private const int BuildPacingSleepMs = 5;
@@ -151,6 +151,9 @@ public sealed class EmoteAttributeCatalog
             ? IntroKind.None
             : introRelativePapPath != null && raw.IntroPapExists ? IntroKind.Pap : IntroKind.TmbOnly;
 
+        var adjustSlot = populatedSlots.FirstOrDefault(s => s.SlotIndex == ActionTimelineSlots.Adjust);
+        var adjustRelativePapPath = adjustSlot != null ? UsablePapPathFor(adjustSlot) : null;
+
         var variants = BuildVariants(populatedSlots);
 
         var command = raw.Command.TrimStart('/');
@@ -165,7 +168,7 @@ public sealed class EmoteAttributeCatalog
 
         return new EmoteAttributes(raw.RowId, command, loopKind, sound, turn, postures, hasIntro, introRelativePapPath,
             eligibleTarget, variants, raw.EmoteModeCamera, intro, isPoseFamily, faceLibraries, animationTimelineIds,
-            introSlot != null && IsWeaponMotionSlot(introSlot));
+            introSlot != null && IsWeaponMotionSlot(introSlot), adjustRelativePapPath);
     }
 
     private static IReadOnlyDictionary<string, string>? BuildFaceLibraries(List<RawSlotData> populatedSlots,

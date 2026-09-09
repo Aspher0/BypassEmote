@@ -28,9 +28,6 @@ public sealed partial class SwapOrchestrator
     private List<VariantPair> PairVariants(EmoteAttributes source, EmoteAttributes target, string skeleton)
         => BuildPairs(source, target, EmotePathHelper.GetFallbackOrder(skeleton), ForeignModProvides, VanillaExists);
 
-    // Every posture variant the two emotes share, paired source path -> target path, plus the target's intro
-    // channel when it has a usable intro pap. Required names come from the chain's first vanilla copy, since a
-    // mod would hand back its own. Order matters: the caller stamps identity off the first pair.
     internal static List<VariantPair> BuildPairs(EmoteAttributes source, EmoteAttributes target,
         IReadOnlyList<string> fallbackOrder, Func<string, bool> modProvides, Func<string, bool> vanillaExists)
     {
@@ -52,13 +49,59 @@ public sealed partial class SwapOrchestrator
                 WeaponMotion: sourceVariant.WeaponMotion));
         }
 
-        // Alone, an intro pair is a half-swap: the target's intro redirected while its loop plays raw.
-        if (pairs.Count == 0 || target.IntroRelativePapPath is not { } targetIntro)
+        if (pairs.Count == 0)
             return pairs;
 
-        // Names must come from a vanilla copy of the target's intro, so the mod probe is off here.
+        AppendAdjustPair(source, target, fallbackOrder, modProvides, vanillaExists, pairs);
+        AppendIntroPair(source, target, fallbackOrder, modProvides, vanillaExists, pairs);
+
+        return pairs;
+    }
+
+    private static void AppendAdjustPair(EmoteAttributes source, EmoteAttributes target,
+        IReadOnlyList<string> fallbackOrder, Func<string, bool> modProvides, Func<string, bool> vanillaExists,
+        List<VariantPair> pairs)
+    {
+        if (target.AdjustRelativePapPath is not { } targetAdjust)
+            return;
+
+        if (SelectRequestedPath(targetAdjust, fallbackOrder, static _ => false, vanillaExists) is not { } namesPath)
+            return;
+
+        string? sourcePath = null;
+        string? sourceFaceLibrary = null;
+        var sourceWeaponMotion = false;
+
+        if (source.AdjustRelativePapPath is { } ownAdjust
+            && SelectRequestedPath(ownAdjust, fallbackOrder, modProvides, vanillaExists) is { } ownAdjustPath)
+        {
+            sourcePath = ownAdjustPath;
+            sourceFaceLibrary = source.FaceLibraryFor(ownAdjust);
+        }
+        else if (source.Variants.FirstOrDefault(variant => variant.Posture == PostureFlags.Mounted) is { } upperBody
+            && SelectRequestedPath(upperBody.RelativePapPath, fallbackOrder, modProvides, vanillaExists) is { } upperBodyPath)
+        {
+            sourcePath = upperBodyPath;
+            sourceFaceLibrary = source.FaceLibraryFor(upperBody.RelativePapPath);
+            sourceWeaponMotion = upperBody.WeaponMotion;
+        }
+
+        if (sourcePath == null)
+            return;
+
+        if (SelectRequestedPath(targetAdjust, fallbackOrder, modProvides, vanillaExists) is { } targetPath)
+            pairs.Add(new VariantPair(sourcePath, targetPath, namesPath, sourceFaceLibrary, sourceWeaponMotion));
+    }
+
+    private static void AppendIntroPair(EmoteAttributes source, EmoteAttributes target,
+        IReadOnlyList<string> fallbackOrder, Func<string, bool> modProvides, Func<string, bool> vanillaExists,
+        List<VariantPair> pairs)
+    {
+        if (target.IntroRelativePapPath is not { } targetIntro)
+            return;
+
         if (SelectRequestedPath(targetIntro, fallbackOrder, static _ => false, vanillaExists) is not { } introNamesPath)
-            return pairs;
+            return;
 
         string? introSourcePath = null;
         string? introSourceFaceLibrary = null;
@@ -81,13 +124,11 @@ public sealed partial class SwapOrchestrator
         }
 
         if (introSourcePath == null)
-            return pairs;
+            return;
 
         if (SelectRequestedPath(targetIntro, fallbackOrder, modProvides, vanillaExists) is { } introTargetPath)
             pairs.Add(new VariantPair(introSourcePath, introTargetPath, introNamesPath, introSourceFaceLibrary,
                 introSourceWeaponMotion));
-
-        return pairs;
     }
 
     internal static string PathSignatureFor(IEnumerable<VariantPair> pairs)

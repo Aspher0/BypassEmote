@@ -1,6 +1,7 @@
 using BypassEmote.Enums;
 using BypassEmote.Models;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BypassEmote.EmoteSwap;
 
@@ -84,6 +85,7 @@ public static class SwapAdvice
         AddTurnLine(lines, source, sourceName, target, targetName);
         AddSoundLine(lines, source, sourceName, target, targetName);
         AddIntroLine(lines, source, sourceName, target, targetName);
+        AddAdjustLine(lines, source, sourceName, target, targetName);
 
         if (target.CancelsOnRotate)
         {
@@ -91,6 +93,22 @@ public static class SwapAdvice
         }
 
         return lines;
+    }
+
+    private static void AddAdjustLine(List<Line> lines, EmoteAttributes source, string sourceName,
+        EmoteAttributes target, string targetName)
+    {
+        if (target.AdjustRelativePapPath == null)
+            return;
+
+        if (source.AdjustRelativePapPath != null
+            || source.Variants.Any(variant => variant.Posture == PostureFlags.Mounted))
+        {
+            return;
+        }
+
+        lines.Add(new Line(Severity.Warning, $"{targetName} plays a separate animation when you use it on someone (adjust variant) "
+            + $"but {sourceName} has no adjust variant. Targeting someone will keep {targetName}'s animation."));
     }
 
     private static void AddLoopLine(List<Line> lines, EmoteAttributes source, string sourceName,

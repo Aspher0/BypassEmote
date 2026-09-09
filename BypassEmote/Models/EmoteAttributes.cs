@@ -14,7 +14,9 @@ public sealed record EmoteAttributes(
     // ActionTimeline rows of the slots that carry a real body animation.
     IReadOnlyList<ushort>? AnimationTimelineIds = null,
     // Slot 1 plays from a per-weapon folder rather than the shared one.
-    bool IntroIsWeaponMotion = false)
+    bool IntroIsWeaponMotion = false,
+    // Slot 6, the emote_adjust channel the game plays instead when the emote is used on someone.
+    string? AdjustRelativePapPath = null)
 {
     public string? FaceLibraryFor(string relativePapPath)
         => FaceLibraries != null && FaceLibraries.TryGetValue(relativePapPath, out var faceLibrary) ? faceLibrary : null;
