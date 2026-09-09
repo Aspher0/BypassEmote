@@ -104,6 +104,10 @@ public class DebugWindow : Window, IDisposable
         }
     }
 
+    private static string approvalNote = string.Empty;
+
+    private static string approvalNotice = string.Empty;
+
     private static void DrawPatchApprovalTab()
     {
         if (Service.PatchApproval is not { } gate)
@@ -165,6 +169,15 @@ public class DebugWindow : Window, IDisposable
 
         ImGui.SameLine();
         ImGuiComponents.HelpMarker("Clears the approval stored in the config and at runtime");
+
+        ImGui.InputTextWithHint("##BypassEmoteApprovalNotice", "Notice for this build",
+            ref approvalNotice, 512);
+
+        if (ImGui.Button("Approve this build in the .json file"))
+            approvalNote = ApprovalPublisher.Publish(gate.GameVersion, gate.PluginVersion, gate.Client, approvalNotice);
+
+        if (approvalNote.Length > 0)
+            ImGui.TextWrapped(approvalNote);
     }
 
     private static void DrawPretendToggle(string label, GameClient client)
