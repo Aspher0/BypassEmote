@@ -933,7 +933,7 @@ public sealed class SwapModManager
             if (!moved)
             {
                 Log.Error(
-                    $"Failed to rank '{names.Directory}' at {target} in collection {Registry.CollectionId}.", LogPrefix);
+                    $"Failed to give '{names.Directory}' priority {target} in collection {Registry.CollectionId}.", LogPrefix);
                 return;
             }
 
@@ -1021,11 +1021,11 @@ public sealed class SwapModManager
 
         var states = ModStates();
 
-        return RankAgainst(winners, recorded, unattributable,
+        return PriorityAgainst(winners, recorded, unattributable,
             directory => states != null && states.TryGetValue(directory, out var state) ? state : null, out priority);
     }
 
-    internal static IReadOnlyList<string> RankAgainst(IReadOnlyList<string> winners, IReadOnlyList<string>? recorded,
+    internal static IReadOnlyList<string> PriorityAgainst(IReadOnlyList<string> winners, IReadOnlyList<string>? recorded,
         bool beatsAnUnattributableRedirect, Func<string, ModState?> stateOf, out int priority)
     {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

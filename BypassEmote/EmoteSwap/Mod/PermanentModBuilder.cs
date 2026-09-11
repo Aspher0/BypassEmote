@@ -72,8 +72,8 @@ internal static class PermanentModBuilder
 
         var assigned = penumbra.GetPlayerCollection();
 
-        var priority = assigned is { } ranked && highestPriority
-            ? PriorityOver(penumbra, ranked.Id, [.. files.Keys])
+        var priority = assigned is { } priorityCollection && highestPriority
+            ? PriorityOver(penumbra, priorityCollection.Id, [.. files.Keys])
             : 0;
 
         var layout = Service.SwapMods?.EnsureLayout() ?? ModLayout.V3;
@@ -87,8 +87,8 @@ internal static class PermanentModBuilder
                 + "Rediscovering mods in Penumbra should pick it up.");
         }
 
-        if (assigned is { } collectionToRankIn)
-            penumbra.TrySetModPriority(collectionToRankIn.Id, directoryName, priority);
+        if (assigned is { } collectionToPrioritiseIn)
+            penumbra.TrySetModPriority(collectionToPrioritiseIn.Id, directoryName, priority);
 
         if (!enable)
             return new Outcome(true, $"'{name}' was created. Enable it in Penumbra when you want it.");
