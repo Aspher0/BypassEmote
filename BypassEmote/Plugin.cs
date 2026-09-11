@@ -44,8 +44,6 @@ public sealed partial class Plugin : IDalamudPlugin
             + $" | Dalamud {typeof(IDalamudPluginInterface).Assembly.GetName().Version}"
             + $" | repository {PluginInterface.SourceRepository}");
 
-        OpenDalamudLogLevel();
-
         Service.InitializeService(this);
 
         MainWindow = new EmoteWindow();
@@ -76,18 +74,6 @@ public sealed partial class Plugin : IDalamudPlugin
 
         if (promptPending)
             _ = ShowPromptThenChangelogAsync();
-    }
-
-    private static void OpenDalamudLogLevel()
-    {
-        try
-        {
-            NoireService.PluginLog.MinimumLogLevel = LogEventLevel.Verbose;
-        }
-        catch (Exception ex)
-        {
-            Log.Debug($"Could not change Dalamud log level. ({ex.Message})", "[Plugin] ");
-        }
     }
 
     private async Task ShowPromptThenChangelogAsync()
