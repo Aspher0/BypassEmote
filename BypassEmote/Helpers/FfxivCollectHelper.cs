@@ -145,7 +145,7 @@ internal static class FfxivCollectHelper
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError($"Could not read the cached response at '{path}': {ex.Message}", LogPrefix);
+            Log.Error($"Could not read the cached response at '{path}': {ex.Message}", LogPrefix);
             return null;
         }
     }
@@ -168,7 +168,7 @@ internal static class FfxivCollectHelper
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"The response from '{source}' was not readable as {typeof(T).Name}.", LogPrefix);
+            Log.Error(ex, $"The response from '{source}' was not readable as {typeof(T).Name}.", LogPrefix);
             return null;
         }
     }

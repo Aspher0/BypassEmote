@@ -75,7 +75,7 @@ public sealed partial class SwapOrchestrator
 
     private static bool IdlePoseFailed(IdlePoseFailure reason, string debugDetail)
     {
-        NoireLogger.LogDebug($"Idle-pose fallback failed ({reason}): {debugDetail}", LogPrefix);
+        Log.Debug($"Idle-pose fallback failed ({reason}): {debugDetail}", LogPrefix);
         LogHelper.Error(IdlePoseFailureLine(reason), "swap.idle-pose." + reason);
         return false;
     }
@@ -87,6 +87,11 @@ public sealed partial class SwapOrchestrator
 
     internal static bool IdlePoseNeedsRedrawOnEnd(byte poseIndex)
         => poseIndex == PersistentIdlePoseIndex;
+
+    internal static bool PoolOffersALoop(IReadOnlyList<EmoteAttributes> pool, MatchConfig matchConfig)
+        => pool.Any(candidate => candidate.LoopKind == EmotePlayType.Looped
+            && matchConfig.BlockedTargets?.Contains(candidate.RowId) != true
+            && matchConfig.ModdedTargets?.Contains(candidate.RowId) != true);
 
     internal static bool ShouldAttemptIdlePoseFallback(EmoteAttributes source, MatchResult match,
         IdlePoseFallback mode, bool poolHasLoop)
@@ -215,6 +220,8 @@ public sealed partial class SwapOrchestrator
 
         _generations.TakeOwnership();
 
+        ReportPoseRedirects(files.Keys);
+
         var elapsedAtApply = swapClock.ElapsedMilliseconds;
 
         if (!_penumbra.RedrawLocalPlayer())
@@ -232,16 +239,94 @@ public sealed partial class SwapOrchestrator
             LogHelper.Notice("Your idle 0 pose has no intro, so this emote's intro will not play. Try changing pose.");
 
         if (ArmsIdlePoseWatch(Configuration.SwapLifetime))
-            _endWatcher.ArmIdlePose(entry!, () => _penumbra.RedrawLocalPlayer());
+            _endWatcher.ArmIdlePose(entry!, () => _penumbra.RedrawLocalPlayer(), () => ArmPoseCacheBreak(poseType, poseIndex));
         else
             _endWatcher.StopWatching();
 
-        NoireLogger.LogDebug(
+        Log.Debug(
             $"Swap timings (idle pose): match {elapsedAtMatch}ms, retarget {elapsedAtRetarget - elapsedAtMatch}ms, " +
             $"apply {elapsedAtApply - elapsedAtRetarget}ms, redraw {elapsedAtRedraw - elapsedAtApply}ms, " +
             $"total {elapsedAtRedraw}ms.", LogPrefix);
 
         return true;
+    }
+
+    private static readonly TimeSpan PoseCacheBreakLifetime = TimeSpan.FromMinutes(2);
+
+    private void ArmPoseCacheBreak(EmoteController.PoseType poseType, byte poseIndex)
+    {
+        if (Service.Rebinder is not { Ready: true } rebinder)
+        {
+            Log.Debug($"The animation cache cannot be broken for {poseType} index {poseIndex} "
+                + $"({Service.Rebinder?.Fault ?? "the rebinder is not built"}).", LogPrefix);
+
+            return;
+        }
+
+        if (PoseFamilyEmoteFor(poseType, poseIndex) is not { } pose)
+        {
+            Log.Debug($"No emote row carries {poseType} index {poseIndex}, cache cannot be broken.", LogPrefix);
+
+            return;
+        }
+
+        rebinder.ArmEach(pose, PoseCacheBreakLifetime);
+    }
+
+    private EmoteAttributes? PoseFamilyEmoteFor(EmoteController.PoseType poseType, byte poseIndex)
+    {
+        if (IdlePoseData.IdlePosePathsFor(poseType, poseIndex) is not { } paths)
+            return null;
+
+        foreach (var rowId in IdlePoseData.PoseFamilyRowIds)
+        {
+            if (IdlePoseData.PoseFamilyFor(rowId) is not { } family
+                || family.PoseType != poseType || family.Index != poseIndex)
+            {
+                continue;
+            }
+
+            if (_catalog.Get(rowId) is not { } attributes)
+                continue;
+
+            var servesThePose = attributes.Variants.Any(variant => variant.RelativePapPath == paths.LoopRelativePapPath)
+                || attributes.IntroRelativePapPath == paths.StartRelativePapPath;
+
+            if (servesThePose)
+                return attributes;
+
+            Log.Debug($"Emote {rowId} is mapped to {poseType} index {poseIndex} but carries no paps.", LogPrefix);
+        }
+
+        return null;
+    }
+
+    private void ReportPoseRedirects(IEnumerable<string> gamePaths)
+    {
+        var modRoot = _penumbra.GetModRootDirectory();
+
+        foreach (var gamePath in gamePaths)
+        {
+            var resolved = _penumbra.ResolvePlayerPath(gamePath);
+
+            if (resolved == gamePath)
+            {
+                Log.Debug($"'{gamePath}' resolves to itself, pose plays vanilla.", LogPrefix);
+                continue;
+            }
+
+            if (_swapMods.IsOwnPath(resolved))
+            {
+                Log.Debug($"'{gamePath}' resolves to the generated mod.", LogPrefix);
+                continue;
+            }
+
+            var directory = SwapModManager.ModDirectoryFromDiskPath(resolved, modRoot);
+            var name = ModNameFor(directory) ?? directory ?? resolved;
+
+            Log.Warning($"'{gamePath}' resolves to '{name}' and not the generated mod. " +
+                $"Generated mod priority: {_swapMods.Registry.AppliedPriority}.", LogPrefix);
+        }
     }
 
     private SwapOptionEntry IdlePoseEntryFor(string contentKey, string sourceKey, EmoteAttributes source, string skeleton,
@@ -275,14 +360,14 @@ public sealed partial class SwapOrchestrator
     {
         if (ReadVanillaPap(targetRequestedPath) is not { } targetVanillaBytes)
         {
-            NoireLogger.LogDebug($"No vanilla pose pap at '{targetRequestedPath}' to read required names from.", LogPrefix);
+            Log.Debug($"No vanilla pose pap at '{targetRequestedPath}' to read required names from.", LogPrefix);
             return null;
         }
 
         var requiredNames = IdlePoseData.IdlePoseRequiredNames(targetRelativePapPath, PapAnimationNames.Read(targetVanillaBytes));
         if (requiredNames.Count == 0)
         {
-            NoireLogger.LogDebug($"The vanilla pose pap at '{targetRequestedPath}' declares no usable animation.", LogPrefix);
+            Log.Debug($"The vanilla pose pap at '{targetRequestedPath}' declares no usable animation.", LogPrefix);
             return null;
         }
 

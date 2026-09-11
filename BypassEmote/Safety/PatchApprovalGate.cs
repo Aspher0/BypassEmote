@@ -112,16 +112,16 @@ public sealed class PatchApprovalGate : IDisposable
 
         if (Approved)
         {
-            NoireLogger.LogDebug($"Game build {GameVersion} was approved before.", LogPrefix);
+            Log.Debug($"Game build {GameVersion} was approved before.", LogPrefix);
         }
         else if (Untested)
         {
-            NoireLogger.LogWarning($"Game build '{GameVersion}' reads as the {GameClientHelper.Name(Client)} "
+            Log.Warning($"Game build '{GameVersion}' reads as the {GameClientHelper.Name(Client)} "
                 + $"client. {Reason}", LogPrefix);
         }
         else
         {
-            NoireLogger.LogWarning($"Game build '{GameVersion}' is not approved: {Reason}.", LogPrefix);
+            Log.Warning($"Game build '{GameVersion}' is not approved: {Reason}.", LogPrefix);
         }
 
         Resume();
@@ -153,11 +153,11 @@ public sealed class PatchApprovalGate : IDisposable
         {
             StopPolling();
 
-            NoireLogger.LogDebug($"Game build {GameVersion} and plugin {PluginVersion} approved for the session.", LogPrefix);
+            Log.Debug($"Game build {GameVersion} and plugin {PluginVersion} approved for the session.", LogPrefix);
         }
         else
         {
-            NoireLogger.LogDebug("Approval removed.", LogPrefix);
+            Log.Debug("Approval removed.", LogPrefix);
         }
 
         Apply();
@@ -180,7 +180,7 @@ public sealed class PatchApprovalGate : IDisposable
         Volatile.Write(ref _reading, new Reading(PatchApprovalStatus.Checking,
             $"The approval recorded for game build {GameVersion} was dropped.", null, DateTime.UtcNow));
 
-        NoireLogger.LogDebug($"Dropped the approval recorded for game build {GameVersion}; the list is read "
+        Log.Debug($"Dropped the approval recorded for game build {GameVersion}; the list is read "
             + $"again in {RetryInterval.TotalMinutes:0} minutes.", LogPrefix);
 
         Apply();
@@ -274,7 +274,7 @@ public sealed class PatchApprovalGate : IDisposable
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            NoireLogger.LogDebug($"Could not read the approval list ({ex.Message}).", LogPrefix);
+            Log.Debug($"Could not read the approval list ({ex.Message}).", LogPrefix);
         }
 
         if (token.IsCancellationRequested)
@@ -282,7 +282,7 @@ public sealed class PatchApprovalGate : IDisposable
 
         if (document == null && RememberedApproval())
         {
-            NoireLogger.LogDebug("The approval list could not be reached. The approval already recorded for "
+            Log.Debug("The approval list could not be reached. The approval already recorded for "
                 + $"game build {GameVersion} stands.", LogPrefix);
 
             Volatile.Write(ref _reading, Volatile.Read(ref _reading) with { CheckedUtc = DateTime.UtcNow });
@@ -306,7 +306,7 @@ public sealed class PatchApprovalGate : IDisposable
         RememberAnnouncement(verdict.Status == PatchApprovalStatus.Approved);
 
         if (announce)
-            NoireLogger.LogDebug($"Game build {GameVersion} is now approved.", LogPrefix);
+            Log.Debug($"Game build {GameVersion} is now approved.", LogPrefix);
 
         await AsyncHelper.RunOnFrameworkThreadAsync(() =>
         {
@@ -356,7 +356,7 @@ public sealed class PatchApprovalGate : IDisposable
 
         Volatile.Write(ref _reading, reading);
 
-        NoireLogger.LogDebug($"The client now reads as {GameClientHelper.Name(Client)}: {reading.Reason}", LogPrefix);
+        Log.Debug($"The client now reads as {GameClientHelper.Name(Client)}: {reading.Reason}", LogPrefix);
 
         Apply();
     }
@@ -388,7 +388,7 @@ public sealed class PatchApprovalGate : IDisposable
             if (!_held.Contains(hook))
                 _held.Add(hook);
 
-            NoireLogger.LogDebug($"'{hook.Name}' ({hook.Target.Describe()}) is switched off until the build is "
+            Log.Debug($"'{hook.Name}' ({hook.Target.Describe()}) is switched off until the build is "
                 + "approved.", LogPrefix);
         }
     }
@@ -404,7 +404,7 @@ public sealed class PatchApprovalGate : IDisposable
                 continue;
 
             hook.Enable();
-            NoireLogger.LogDebug($"'{hook.Name}' is switched back on.", LogPrefix);
+            Log.Debug($"'{hook.Name}' is switched back on.", LogPrefix);
         }
 
         _held.Clear();

@@ -26,13 +26,28 @@ public sealed class Logger
     }
 
     public void Record(string message, string category, HistoryLogLevel level)
-        => NoireLibMain.GetModule<NoireHistoryLogger>()?.AddEntry(message, category, level, _source);
+        => Record(message, category, level, null);
+
+    private void Record(string message, string category, HistoryLogLevel level, string? note)
+    {
+        SessionLog.Write(LevelTag(level),
+            $"{_source} chat {category}: {message}" + (note == null ? string.Empty : $" [{note}]"));
+
+        NoireLibMain.GetModule<NoireHistoryLogger>()?.AddEntry(message, category, level, _source);
+    }
+
+    private static string LevelTag(HistoryLogLevel level) => level switch
+    {
+        HistoryLogLevel.Error => "ERR",
+        HistoryLogLevel.Warning => "WRN",
+        _ => "INF",
+    };
 
     public void Say(
         string message, Vector3 color, string category, HistoryLogLevel level,
         bool shown, TimeSpan window, string? kind = null, NoireLogger.ChatMessageBuilder? chat = null)
     {
-        Record(message, category, level);
+        Record(message, category, level, shown ? null : "hidden by the chat settings");
 
         if (!shown)
             return;
@@ -43,7 +58,7 @@ public sealed class Logger
     public void SayAlways(string message, Vector3 color, string category, HistoryLogLevel level = HistoryLogLevel.Info,
         NoireLogger.ChatMessageBuilder? chat = null)
     {
-        Record(message, category, level);
+        Record(message, category, level, null);
         Print(message, color, chat);
     }
 

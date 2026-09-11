@@ -66,7 +66,7 @@ public static class ApprovalPublisher
             var note = $"Game build {gameVersion} is approved for the {GameClientHelper.Name(client)} client from "
                 + $"plugin {minimum}. Backed up as {Path.GetFileName(backup)}.";
 
-            NoireLogger.LogDebug(note, LogPrefix);
+            Log.Debug(note, LogPrefix);
 
             return note;
         }
@@ -74,7 +74,7 @@ public static class ApprovalPublisher
         {
             var note = $"{FileName} could not be written: {ex.Message}";
 
-            NoireLogger.LogWarning(note, LogPrefix);
+            Log.Warning(note, LogPrefix);
 
             return note;
         }

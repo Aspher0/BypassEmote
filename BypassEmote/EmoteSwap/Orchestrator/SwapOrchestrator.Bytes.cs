@@ -76,7 +76,7 @@ public sealed partial class SwapOrchestrator
     {
         if (ReadPap(pair.SourceRequestedPath, resolvedSourcePath) is not { } sourceBytes)
         {
-            NoireLogger.LogDebug($"No readable source pap for '{pair.SourceRequestedPath}' (resolved to '{resolvedSourcePath}').", LogPrefix);
+            Log.Debug($"No readable source pap for '{pair.SourceRequestedPath}' (resolved to '{resolvedSourcePath}').", LogPrefix);
             return null;
         }
 
@@ -86,7 +86,7 @@ public sealed partial class SwapOrchestrator
             var namesPath = pair.RequiredNamesPath ?? pair.TargetRequestedPath;
             if (ReadVanillaPap(namesPath) is not { } targetVanillaBytes)
             {
-                NoireLogger.LogDebug($"No vanilla target pap at '{namesPath}' to read required names from.", LogPrefix);
+                Log.Debug($"No vanilla target pap at '{namesPath}' to read required names from.", LogPrefix);
                 return null;
             }
 
@@ -95,7 +95,7 @@ public sealed partial class SwapOrchestrator
 
         if (requiredNames.Count == 0)
         {
-            NoireLogger.LogDebug($"No animation names to retarget '{pair.SourceRequestedPath}' onto '{pair.TargetRequestedPath}' with.", LogPrefix);
+            Log.Debug($"No animation names to retarget '{pair.SourceRequestedPath}' onto '{pair.TargetRequestedPath}' with.", LogPrefix);
             return null;
         }
 
@@ -106,7 +106,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Retargeting '{pair.SourceRequestedPath}' onto '{pair.TargetRequestedPath}' produced an unusable pap; variant skipped.", LogPrefix);
+            Log.Error(ex, $"Retargeting '{pair.SourceRequestedPath}' onto '{pair.TargetRequestedPath}' produced an unusable pap; variant skipped.", LogPrefix);
             return null;
         }
 
@@ -129,7 +129,7 @@ public sealed partial class SwapOrchestrator
 
         if (sourceIsModded)
         {
-            NoireLogger.LogDebug($"'{pair.SourceRequestedPath}' comes from a mod, so its own timeline decides where "
+            Log.Debug($"'{pair.SourceRequestedPath}' comes from a mod, so its own timeline decides where "
                 + "the weapons go and nothing of ours is written into it.", LogPrefix);
 
             return papBytes;
@@ -141,12 +141,12 @@ public sealed partial class SwapOrchestrator
 
             var statements = EntryCount(held, WeaponPositionMagic);
 
-            NoireLogger.LogDebug($"Weapons put in hand for '{pair.TargetRequestedPath}': {statements} "
+            Log.Debug($"Weapons put in hand for '{pair.TargetRequestedPath}': {statements} "
                 + $"statement(s), {(offHand ? "two weapons" : "one weapon")}.", LogPrefix);
 
             if (statements == 0)
             {
-                NoireLogger.LogWarning($"'{pair.TargetRequestedPath}' came back with no weapon statement at all, "
+                Log.Warning($"'{pair.TargetRequestedPath}' came back with no weapon statement at all, "
                     + "so the weapons stay wherever the game last put them.", LogPrefix);
             }
 
@@ -154,7 +154,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Could not put the weapons in hand for '{pair.TargetRequestedPath}'; "
+            Log.Error(ex, $"Could not put the weapons in hand for '{pair.TargetRequestedPath}'; "
                 + "the swap is served without them.", LogPrefix);
 
             return papBytes;
@@ -216,14 +216,14 @@ public sealed partial class SwapOrchestrator
 
         if (ReadPap(lead.Pair.SourceRequestedPath, lead.ResolvedSourcePath) is not { } sourceBytes)
         {
-            NoireLogger.LogDebug($"No readable source pap for group led by '{lead.Pair.SourceRequestedPath}' (resolved to '{lead.ResolvedSourcePath}').", LogPrefix);
+            Log.Debug($"No readable source pap for group led by '{lead.Pair.SourceRequestedPath}' (resolved to '{lead.ResolvedSourcePath}').", LogPrefix);
             return null;
         }
 
         var union = UnionRequiredNames(group, ReadVanillaNamesForNamesPath);
         if (union.Names.Count == 0)
         {
-            NoireLogger.LogDebug($"No animation names to retarget the group led by '{lead.Pair.SourceRequestedPath}' onto.", LogPrefix);
+            Log.Debug($"No animation names to retarget the group led by '{lead.Pair.SourceRequestedPath}' onto.", LogPrefix);
             return null;
         }
 
@@ -237,11 +237,11 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Retargeting the group led by '{lead.Pair.SourceRequestedPath}' produced an unusable pap; group skipped.", LogPrefix);
+            Log.Error(ex, $"Retargeting the group led by '{lead.Pair.SourceRequestedPath}' produced an unusable pap; group skipped.", LogPrefix);
             return null;
         }
 
-        NoireLogger.LogDebug(
+        Log.Debug(
             $"Served '{lead.Pair.TargetRequestedPath}' from '{lead.ResolvedSourcePath}': "
             + $"{FootstepEntryCount(retargeted)} footstep entr(y/ies), {clampedNames.Count} name(s) clamped.",
             LogPrefix);
@@ -301,7 +301,7 @@ public sealed partial class SwapOrchestrator
             }
             catch (Exception ex)
             {
-                NoireLogger.LogDebug($"Could not read the vanilla names of /{emote.Command} ({ex.Message}).", LogPrefix);
+                Log.Debug($"Could not read the vanilla names of /{emote.Command} ({ex.Message}).", LogPrefix);
                 _cacheBreakNames[emote.RowId] = [];
             }
         });
@@ -357,7 +357,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogDebug($"Injecting face library '{faceLibrary}' into the pap for '{targetRequestedPath}' failed ({ex.Message}); variant skipped.", LogPrefix);
+            Log.Debug($"Injecting face library '{faceLibrary}' into the pap for '{targetRequestedPath}' failed ({ex.Message}); variant skipped.", LogPrefix);
             return null;
         }
     }
@@ -373,7 +373,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Could not read the modded pap at '{resolvedPath}'.", LogPrefix);
+            Log.Error(ex, $"Could not read the modded pap at '{resolvedPath}'.", LogPrefix);
             return null;
         }
     }
@@ -398,7 +398,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogDebug($"Could not stamp '{resolvedPath}' ({ex.Message}); treating this swap as never reusable.", LogPrefix);
+            Log.Debug($"Could not stamp '{resolvedPath}' ({ex.Message}); treating this swap as never reusable.", LogPrefix);
             return DateTime.UtcNow.Ticks;
         }
     }
@@ -424,7 +424,7 @@ public sealed partial class SwapOrchestrator
 
             if (papBytes == null)
             {
-                NoireLogger.LogDebug("No vanilla pap was available to warm the byte pipeline with; skipping.", LogPrefix);
+                Log.Debug("No vanilla pap was available to warm the byte pipeline with; skipping.", LogPrefix);
                 return;
             }
 
@@ -434,7 +434,7 @@ public sealed partial class SwapOrchestrator
 
             if (names.Count == 0)
             {
-                NoireLogger.LogDebug("The warm-up pap declares no animation names; skipping.", LogPrefix);
+                Log.Debug("The warm-up pap declares no animation names; skipping.", LogPrefix);
                 return;
             }
 
@@ -442,13 +442,13 @@ public sealed partial class SwapOrchestrator
             var injected = PapFaceLibrary.Inject(retargeted, WarmUpFaceLibrary);
             var derivedName = SwapModManager.DeriveFileName(injected);
 
-            NoireLogger.LogDebug(
+            Log.Debug(
                 $"Warmed the byte pipeline in {warmUpClock.ElapsedMilliseconds}ms ({injected.Length} bytes, {derivedName}).",
                 LogPrefix);
         }
         catch (Exception ex)
         {
-            NoireLogger.LogDebug($"Warming the byte pipeline failed ({ex.Message}); the first swap pays the JIT instead.", LogPrefix);
+            Log.Debug($"Warming the byte pipeline failed ({ex.Message}); the first swap pays the JIT instead.", LogPrefix);
         }
     }
 

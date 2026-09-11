@@ -64,7 +64,7 @@ public sealed partial class SwapOrchestrator : IDisposable
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Swapping emote {sourceEmote.RowId} failed.", LogPrefix);
+            Log.Error(ex, $"Swapping emote {sourceEmote.RowId} failed.", LogPrefix);
             LogHelper.Error(GenericFailureMessage);
         }
     }
@@ -81,12 +81,11 @@ public sealed partial class SwapOrchestrator : IDisposable
         var posture = PostureForCondition(condition);
         var fallbackOrder = EmotePathHelper.GetFallbackOrder(skeleton);
 
-        NoireLogger.LogDebug($"Serving for the drawn skeleton '{skeleton}', chain [{string.Join(", ", fallbackOrder)}].", LogPrefix);
+        Log.Debug($"Serving for the drawn skeleton '{skeleton}', chain [{string.Join(", ", fallbackOrder)}].", LogPrefix);
 
         source = WithMotionFolder(source, MotionFolderFor(source, localPlayer, fallbackOrder));
 
         var pool = BuildPool(localPlayer, source, condition);
-        var poolHasLoop = pool.Any(candidate => candidate.LoopKind == EmotePlayType.Looped);
 
         if (OverrideFor(source.RowId, sourceEmote.RowId) is { } configured
             && PlayOverride(localPlayer, source, configured, pool, skeleton, fallbackOrder, collectionId, swapClock))
@@ -98,6 +97,8 @@ public sealed partial class SwapOrchestrator : IDisposable
             Configuration.SoundMatching, BlockedTargets());
 
         (matchConfig, pool) = ApplyModdedRule(source, pool, matchConfig, posture, skeleton, fallbackOrder, collectionId);
+
+        var poolHasLoop = PoolOffersALoop(pool, matchConfig);
 
         var loopsFirst = source.LoopKind == EmotePlayType.Looped
             && matchConfig.Loop == LoopMatchRule.AllowLoopOnOneShot;
@@ -159,7 +160,7 @@ public sealed partial class SwapOrchestrator : IDisposable
             return true;
         }
 
-        NoireLogger.LogDebug($"No override target of /{source.Command} can be played here. The usual matching is used.", LogPrefix);
+        Log.Debug($"No override target of /{source.Command} can be played here. The usual matching is used.", LogPrefix);
 
         return false;
     }
@@ -172,19 +173,19 @@ public sealed partial class SwapOrchestrator : IDisposable
 
         if (raceInputs.Count == 0 || raceInputs[0].Race != skeleton)
         {
-            NoireLogger.LogDebug($"/{source.Command} and /{target.Command} share no usable posture variant on {skeleton}.", LogPrefix);
+            Log.Debug($"/{source.Command} and /{target.Command} share no usable posture variant on {skeleton}.", LogPrefix);
             LogHelper.Error(NoMatchMessage(source, []), "swap.no-match");
             return;
         }
 
         var resolvedPairs = raceInputs[0].Pairs;
 
-        NoireLogger.LogDebug($"Reading /{source.Command} onto /{target.Command} on {skeleton}: "
+        Log.Debug($"Reading /{source.Command} onto /{target.Command} on {skeleton}: "
             + string.Join("; ", resolvedPairs.Select(entry =>
                 $"'{entry.Pair.SourceRequestedPath}' -> '{entry.ResolvedSourcePath}' onto '{entry.Pair.TargetRequestedPath}'")),
             LogPrefix);
 
-        NoireLogger.LogDebug($"This swap is built for {raceInputs.Count} bod(y/ies): "
+        Log.Debug($"This swap is built for {raceInputs.Count} bod(y/ies): "
             + $"{string.Join(", ", raceInputs.Select(race => race.Race))}.", LogPrefix);
 
         var elapsedAtResolve = swapClock.ElapsedMilliseconds;
@@ -231,7 +232,7 @@ public sealed partial class SwapOrchestrator : IDisposable
 
         if (source.IsPoseFamily)
         {
-            NoireLogger.LogDebug($"/{source.Command} is a pose-family emote; handing it to the game untouched.", LogPrefix);
+            Log.Debug($"/{source.Command} is a pose-family emote; handing it to the game untouched.", LogPrefix);
             TryExecuteEmote(source.RowId);
             return null;
         }
@@ -250,7 +251,7 @@ public sealed partial class SwapOrchestrator : IDisposable
 
         if (GameEmoteCooldownActive())
         {
-            NoireLogger.LogDebug($"/{source.Command} pressed inside the game's emote cooldown; ignored.", LogPrefix);
+            Log.Debug($"/{source.Command} pressed inside the game's emote cooldown; ignored.", LogPrefix);
             return null;
         }
 

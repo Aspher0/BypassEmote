@@ -46,7 +46,7 @@ internal static class ModLayout
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
-            NoireLogger.LogDebug($"Could not read the meta of '{modDirectory}' ({ex.Message}).", LogPrefix);
+            Log.Debug($"Could not read the meta of '{modDirectory}' ({ex.Message}).", LogPrefix);
             return null;
         }
     }
@@ -94,7 +94,7 @@ internal static class ModLayout
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            NoireLogger.LogDebug($"Could not list the group files of '{modDirectory}' ({ex.Message}).", LogPrefix);
+            Log.Debug($"Could not list the group files of '{modDirectory}' ({ex.Message}).", LogPrefix);
             return [];
         }
     }
@@ -108,7 +108,7 @@ internal static class ModLayout
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            NoireLogger.LogDebug($"Could not remove '{path}' ({ex.Message}).", LogPrefix);
+            Log.Debug($"Could not remove '{path}' ({ex.Message}).", LogPrefix);
         }
     }
 
@@ -145,13 +145,13 @@ internal static class ModLayout
 
             WriteMeta(modDirectory, downgraded);
 
-            NoireLogger.LogDebug($"'{modDirectory}' was rewritten in the V3 layout ({groups.Count} group(s)).", LogPrefix);
+            Log.Debug($"'{modDirectory}' was rewritten in the V3 layout ({groups.Count} group(s)).", LogPrefix);
 
             return true;
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Could not rewrite '{modDirectory}' in the V3 layout.", LogPrefix);
+            Log.Error(ex, $"Could not rewrite '{modDirectory}' in the V3 layout.", LogPrefix);
             return false;
         }
     }

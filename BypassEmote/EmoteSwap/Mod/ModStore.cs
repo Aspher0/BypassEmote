@@ -98,7 +98,7 @@ internal static class ModStore
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Could not drop the emptied groups of '{modDirectory}'.", LogPrefix);
+            Log.Error(ex, $"Could not drop the emptied groups of '{modDirectory}'.", LogPrefix);
         }
     }
 
@@ -147,12 +147,12 @@ internal static class ModStore
             {
                 root[ModLayout.GroupsPropertyName] = array;
 
-                NoireLogger.LogDebug($"{array.Count} group file(s) of '{modDirectory}' were folded into its meta.", LogPrefix);
+                Log.Debug($"{array.Count} group file(s) of '{modDirectory}' were folded into its meta.", LogPrefix);
             }
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Could not fold the V3 files of '{modDirectory}' into its meta.", LogPrefix);
+            Log.Error(ex, $"Could not fold the V3 files of '{modDirectory}' into its meta.", LogPrefix);
         }
     }
 
@@ -169,7 +169,7 @@ internal static class ModStore
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Newtonsoft.Json.JsonException)
         {
-            NoireLogger.LogDebug($"Could not read '{path}' ({ex.Message}).", LogPrefix);
+            Log.Debug($"Could not read '{path}' ({ex.Message}).", LogPrefix);
             return null;
         }
     }
@@ -200,7 +200,7 @@ internal static class ModStore
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                NoireLogger.LogDebug($"Could not read the group file '{path}' ({ex.Message}).", LogPrefix);
+                Log.Debug($"Could not read the group file '{path}' ({ex.Message}).", LogPrefix);
             }
         }
 
@@ -248,7 +248,7 @@ internal static class ModStore
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Failed to write the group file for '{group.Name}'.", LogPrefix);
+            Log.Error(ex, $"Failed to write the group file for '{group.Name}'.", LogPrefix);
             return false;
         }
     }
@@ -282,7 +282,7 @@ internal static class ModStore
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Failed to write the group '{group.Name}' into the mod's meta.", LogPrefix);
+            Log.Error(ex, $"Failed to write the group '{group.Name}' into the mod's meta.", LogPrefix);
             return false;
         }
     }
@@ -302,14 +302,14 @@ internal static class ModStore
                 if (ModGroupFile.Deserialize(File.ReadAllText(path)) is { } rival && rival.Name == groupName)
                 {
                     File.Delete(path);
-                    NoireLogger.LogDebug(keptFileName.Length == 0
+                    Log.Debug(keptFileName.Length == 0
                         ? $"Removed '{Path.GetFileName(path)}', the last file of group '{groupName}'."
                         : $"Removed '{Path.GetFileName(path)}', a second file for group '{groupName}'.", LogPrefix);
                 }
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                NoireLogger.LogDebug($"Could not read or remove '{path}' ({ex.Message}).", LogPrefix);
+                Log.Debug($"Could not read or remove '{path}' ({ex.Message}).", LogPrefix);
             }
         }
     }
@@ -334,7 +334,7 @@ internal static class ModStore
 
             ModLayout.Delete(path);
 
-            NoireLogger.LogDebug($"Removed '{Path.GetFileName(path)}', a second file for group '{groupName}'.", LogPrefix);
+            Log.Debug($"Removed '{Path.GetFileName(path)}', a second file for group '{groupName}'.", LogPrefix);
         }
     }
 

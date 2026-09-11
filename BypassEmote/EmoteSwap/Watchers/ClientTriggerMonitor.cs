@@ -35,7 +35,7 @@ public sealed class ClientTriggerMonitor
         try
         {
             var name = KnownCommandNames.TryGetValue(command, out var known) ? $" {known}" : string.Empty;
-            NoireLogger.LogDebug($"-> 0x{command:X}{name} | {details}", LogPrefix);
+            Log.Debug($"-> 0x{command:X}{name} | {details}", LogPrefix);
         }
         catch
         {

@@ -109,13 +109,13 @@ public sealed partial class SwapOrchestrator
                 continue;
             }
 
-            NoireLogger.LogWarning($"/{source.Command}: weapon motion '{own ?? "<unreadable>"}' "
+            Log.Warning($"/{source.Command}: weapon motion '{own ?? "<unreadable>"}' "
                 + $"served from '{candidate}'.", LogPrefix);
 
             return candidate;
         }
 
-        NoireLogger.LogWarning($"/{source.Command}: weapon motion '{own ?? "<unreadable>"}' has no folder holding "
+        Log.Warning($"/{source.Command}: weapon motion '{own ?? "<unreadable>"}' has no folder holding "
             + $"[{string.Join(", ", tails)}]; falling back to '{EmoteAttributeCatalog.ReferenceMotionFolder}'.",
             LogPrefix);
 
@@ -133,7 +133,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, "Could not read the player's off hand.",
+            Log.Error(ex, "Could not read the player's off hand.",
                 LogPrefix);
 
             return null;
@@ -148,7 +148,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, "Could not read the player's weapon motion.",
+            Log.Error(ex, "Could not read the player's weapon motion.",
                 LogPrefix);
 
             return null;

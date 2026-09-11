@@ -333,7 +333,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Could not read /{source.Command}'s intro shape; treating it as lent.", LogPrefix);
+            Log.Error(ex, $"Could not read /{source.Command}'s intro shape; treating it as lent.", LogPrefix);
             return false;
         }
     }

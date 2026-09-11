@@ -255,7 +255,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
         if (_announcedFallbackSource != source)
         {
             _announcedFallbackSource = source;
-            NoireLogger.LogDebug($"Penumbra rejects the local player identifier on this client, '{source}' assignment used instead.", LogPrefix);
+            Log.Debug($"Penumbra rejects the local player identifier on this client, '{source}' assignment used instead.", LogPrefix);
         }
 
         return collection;
@@ -561,7 +561,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
 
             if (ec == PenumbraApiEc.TemporarySettingDisallowed)
             {
-                NoireLogger.LogDebug(
+                Log.Debug(
                     $"Locked temporary settings on '{modDirectory}' in collection {collectionId} "
                     + $"({DescribeTempSettings(collectionId, modDirectory) ?? "unreadable"}).",
                     LogPrefix);
@@ -697,6 +697,25 @@ public sealed class IPCCaller_Penumbra : IDisposable
         }
     }
 
+    public ModState? GetModState(Guid collectionId, string modDirectory)
+    {
+        try
+        {
+            var (ec, settings) = _getCurrentModSettings.Invoke(collectionId, modDirectory, modName: string.Empty,
+                ignoreInheritance: false);
+
+            if (ec != PenumbraApiEc.Success || settings is not { } current)
+                return null;
+
+            return new ModState(current.Item1, current.Item2);
+        }
+        catch (Exception ex)
+        {
+            LogFailureOnce(nameof(GetModState), ex);
+            return null;
+        }
+    }
+
     public bool AddMod(string modDirectory)
     {
         try
@@ -791,7 +810,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
         _available = _readiness == PenumbraReadiness.Ready;
 
         if (_readiness != wasReadiness)
-            NoireLogger.LogDebug($"Penumbra reads as {_readiness}.", LogPrefix);
+            Log.Debug($"Penumbra reads as {_readiness}.", LogPrefix);
 
         if (_available != wasAvailable)
             RaiseAvailabilityChanged();
@@ -842,7 +861,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
         }
 
 #if DEBUG
-        NoireLogger.LogDebug(
+        Log.Debug(
             $"{(isPap ? "Pap" : "Tmb")} requested by the game: '{gamePath}' [vanilla path] served {served} "
             + $"({size} bytes, object 0x{gameObject:X} {(onLocalPlayer ? "LOCAL PLAYER" : "other or none")}).",
             LogPrefix);
@@ -871,7 +890,7 @@ public sealed class IPCCaller_Penumbra : IDisposable
         => AsyncHelper.RunOnFramework(handler, value);
 
     private void LogFailureOnce(string kind, Exception ex)
-        => NoireLogger.LogErrorOnce($"{LogOnceScope}{kind}", ex,
+        => Log.ErrorOnce($"{LogOnceScope}{kind}", ex,
             $"Penumbra IPC call failed ({kind}). Further failures of this kind are not logged again this session.",
             LogPrefix);
 

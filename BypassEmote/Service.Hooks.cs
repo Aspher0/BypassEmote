@@ -40,7 +40,7 @@ public partial class Service
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, "OnEmote Hook error");
+            Log.Error(ex, "OnEmote Hook error");
         }
     }
 
@@ -144,7 +144,7 @@ public partial class Service
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Cache break for emote {emoteId} failed; the press is left to the game.");
+            Log.Error(ex, $"Cache break for emote {emoteId} failed; the press is left to the game.");
         }
     }
 
@@ -237,7 +237,7 @@ public partial class Service
         var redrawn = SwapOrchestrator.IdlePoseNeedsRedrawOnEnd(idlePose.IdlePoseIndex)
             && Penumbra?.RedrawLocalPlayer() == true;
 
-        NoireLogger.LogDebug($"Emote {emoteId} is being played, dropping swapped idle pose. "
+        Log.Debug($"Emote {emoteId} is being played, dropping swapped idle pose. "
             + (redrawn ? "Character redrawn." : ""));
     }
 

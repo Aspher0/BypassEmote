@@ -154,8 +154,6 @@ public sealed partial class SwapOrchestrator
                 pool.Add(candidate);
         }
 
-        var poolHasLoop = pool.Any(candidate => candidate.LoopKind == EmotePlayType.Looped);
-
         var matchConfig = new MatchConfig(Configuration.LoopMatching, Configuration.TurnMatching,
             Configuration.SoundMatching, BlockedTargets());
 
@@ -188,6 +186,8 @@ public sealed partial class SwapOrchestrator
                 }
             }
         }
+
+        var poolHasLoop = PoolOffersALoop(pool, matchConfig);
 
         var loopsFirst = source.LoopKind == EmotePlayType.Looped
             && matchConfig.Loop == LoopMatchRule.AllowLoopOnOneShot;

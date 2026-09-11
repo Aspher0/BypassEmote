@@ -63,12 +63,12 @@ public sealed unsafe class AnimationRebinder : IDisposable
                 Group = HookGroup,
             };
 
-            NoireLogger.LogDebug("Resolved the motion pack unbind entry", LogPrefix);
+            Log.Debug("Resolved the motion pack unbind entry", LogPrefix);
         }
         catch (Exception ex)
         {
             UnbindHook = null;
-            NoireLogger.LogWarning($"Could not resolve the motion pack unbind entry ({ex.Message}).", LogPrefix);
+            Log.Warning($"Could not resolve the motion pack unbind entry ({ex.Message}).", LogPrefix);
         }
 
         try
@@ -79,12 +79,12 @@ public sealed unsafe class AnimationRebinder : IDisposable
                 Group = HookGroup,
             };
 
-            NoireLogger.LogDebug("Hooked the pack-request get-or-create", LogPrefix);
+            Log.Debug("Hooked the pack-request get-or-create", LogPrefix);
         }
         catch (Exception ex)
         {
             PackRequestHook = null;
-            NoireLogger.LogWarning($"Could not hook the pack-request get-or-create ({ex.Message})", LogPrefix);
+            Log.Warning($"Could not hook the pack-request get-or-create ({ex.Message})", LogPrefix);
         }
     }
 
@@ -138,8 +138,30 @@ public sealed unsafe class AnimationRebinder : IDisposable
                 _armed[timelineId] = group;
         }
 
-        NoireLogger.LogDebug($"Armed a fresh bind for /{emote.Command} ({string.Join(", ", timelineIds)}).",
+        Log.Debug($"Armed a fresh bind for {NameOf(emote)} ({string.Join(", ", timelineIds)}).",
             LogPrefix);
+    }
+
+    private static string NameOf(EmoteAttributes emote)
+        => string.IsNullOrEmpty(emote.Command) ? $"emote {emote.RowId}" : $"/{emote.Command}";
+
+    public void ArmEach(EmoteAttributes emote, TimeSpan lifetime)
+    {
+        if (!Ready || emote.AnimationTimelineIds is not { Count: > 0 } timelineIds)
+            return;
+
+        var expiresUtc = DateTime.UtcNow + lifetime;
+
+        lock (_gate)
+        {
+            DropExpired();
+
+            foreach (var timelineId in timelineIds)
+                _armed[timelineId] = new ArmedGroup(emote.RowId, [timelineId], expiresUtc);
+        }
+
+        Log.Debug($"Armed a fresh bind for each of {NameOf(emote)}'s timelines "
+            + $"({string.Join(", ", timelineIds)}), for {lifetime.TotalSeconds:0}s.", LogPrefix);
     }
 
     public bool TakeFresh(nint owner, int timelineId)
@@ -175,11 +197,11 @@ public sealed unsafe class AnimationRebinder : IDisposable
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Could not evict timeline {timelineId}.", LogPrefix);
+            Log.Error(ex, $"Could not evict timeline {timelineId}.", LogPrefix);
             return false;
         }
 
-        NoireLogger.LogDebug($"Timeline {timelineId}: evicted {evicted} bound "
+        Log.Debug($"Timeline {timelineId}: evicted {evicted} bound "
             + $"entr{(evicted == 1 ? "y" : "ies")}. Pack cache skipped once.", LogPrefix);
 
         return true;

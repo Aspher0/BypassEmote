@@ -81,7 +81,7 @@ internal sealed class ModLayoutDetector
 
             if (!File.Exists(Path.Combine(modDirectory, ModLayout.MetaFileName)))
             {
-                NoireLogger.LogDebug("No generated mod to probe with yet. writing V3.", LogPrefix);
+                Log.Debug("No generated mod to probe with yet. writing V3.", LogPrefix);
                 return;
             }
 
@@ -95,7 +95,7 @@ internal sealed class ModLayoutDetector
 
             if (_gateway.ReloadMod(modDirectoryName) is ModReadResult.NotHeld or ModReadResult.Refused)
             {
-                NoireLogger.LogDebug($"Penumbra would not read '{modDirectoryName}', its layout stays unknown.", LogPrefix);
+                Log.Debug($"Penumbra would not read '{modDirectoryName}', its layout stays unknown.", LogPrefix);
                 return;
             }
 
@@ -110,7 +110,7 @@ internal sealed class ModLayoutDetector
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, "Could not work out Penumbra's mod layout.", LogPrefix);
+            Log.Error(ex, "Could not work out Penumbra's mod layout.", LogPrefix);
         }
     }
 
@@ -122,6 +122,6 @@ internal sealed class ModLayoutDetector
         _settled = true;
 
         if (changed)
-            NoireLogger.LogDebug($"Penumbra writes mods in the V{_layout} layout: {because}.", LogPrefix);
+            Log.Debug($"Penumbra writes mods in the V{_layout} layout: {because}.", LogPrefix);
     }
 }

@@ -43,17 +43,20 @@ public static class LogHelper
 
     public static void SwapLine(string sourceCommand, string targetCommand)
     {
-        Channel.Record($"{sourceCommand} -> {targetCommand}", "Swap", HistoryLogLevel.Info);
+        var line = $"{sourceCommand} -> {targetCommand}";
 
         if (!Configuration.ShowSwapMessages || !ShouldShowSwapLine(sourceCommand, targetCommand))
+        {
+            Channel.Record(line, "Swap", HistoryLogLevel.Info);
             return;
+        }
 
-        Channel.SayAlways($"{sourceCommand} -> {targetCommand}", SwapLineColor, "Swap");
+        Channel.SayAlways(line, SwapLineColor, "Swap");
     }
 
     public static void DebugLine(string message)
     {
-        NoireLogger.LogDebug(message, "[SwapTrail] ");
+        Log.Debug(message, "[SwapTrail] ");
     }
 
     internal static bool ShouldShowSwapLine(string sourceCommand, string targetCommand)

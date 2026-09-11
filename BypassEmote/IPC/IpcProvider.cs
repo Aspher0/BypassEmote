@@ -99,7 +99,7 @@ public static class IpcProvider
 
         Service.Networker.On<NetworkRelayIpcMessage>((_, data) =>
         {
-            NoireLogger.LogDebug($"Received IPC event, should cache: {data.CacheData != null}, data: ({data.ContentId}, {data.LiveData}, {data.CacheData}, {data.IsLocalPlayer})");
+            Log.Debug($"Received IPC event, should cache: {data.CacheData != null}, data: ({data.ContentId}, {data.LiveData}, {data.CacheData}, {data.IsLocalPlayer})");
             var character = CharacterHelper.GetCharacterFromCID(data.ContentId);
             if (character != null)
             {
@@ -231,7 +231,7 @@ public static class IpcProvider
             || characterAddress != localPlayer.Address)
             return false;
 
-        NoireLogger.LogDebug($"{entryPoint}: local player state skipped, Emote Swap mode plays their emotes as real game emotes.");
+        Log.Debug($"{entryPoint}: local player state skipped, Emote Swap mode plays their emotes as real game emotes.");
         return true;
     }
 

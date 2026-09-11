@@ -16,7 +16,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Could not correct the swap for {skeleton}.", LogPrefix);
+            Log.Error(ex, $"Could not correct the swap for {skeleton}.", LogPrefix);
         }
     }
 
@@ -30,7 +30,7 @@ public sealed partial class SwapOrchestrator
 
         var plan = SkeletonRewritePlanner.For(_swapMods.Registry, skeleton);
 
-        NoireLogger.LogDebug(
+        Log.Debug(
             $"The drawn body became {skeleton}; {plan.Rewrites.Count} option(s) are rewritten for it.", LogPrefix);
 
         _swapMods.RewriteForSkeleton(plan, skeleton);
@@ -38,7 +38,7 @@ public sealed partial class SwapOrchestrator
         if (plan.UncoveredKeys.Count == 0)
             return;
 
-        NoireLogger.LogDebug(
+        Log.Debug(
             $"{plan.UncoveredKeys.Count} kept swap(s) hold no file for {skeleton}; the live ones are built again.",
             LogPrefix);
 
@@ -67,14 +67,14 @@ public sealed partial class SwapOrchestrator
 
         if (raceInputs.Count == 0 || raceInputs[0].Race != skeleton)
         {
-            NoireLogger.LogDebug(
+            Log.Debug(
                 $"/{source.Command} and /{target.Command} share no usable posture variant on {skeleton}, "
                 + $"so '{kept.OptionName}' is left as it was.", LogPrefix);
 
             return;
         }
 
-        NoireLogger.LogDebug($"'{kept.OptionName}' is on, so it is built again for {skeleton}.", LogPrefix);
+        Log.Debug($"'{kept.OptionName}' is on, so it is built again for {skeleton}.", LogPrefix);
 
         StartBackgroundBuild(new SwapBuildRequest(source, target, _generations.TakeOwnership(), raceInputs,
             skeleton, kept.ContentKey, kept.SourceKey ?? SourceKeyFor(source, raceInputs),

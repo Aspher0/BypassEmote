@@ -1,3 +1,4 @@
+using BypassEmote.Helpers;
 using BypassEmote.IPC;
 using BypassEmote.UI;
 using Dalamud.Bindings.ImGui;
@@ -13,6 +14,8 @@ using NoireLib.Helpers;
 using NoireLib.Helpers.ObjectExtensions;
 using NoireLib.HistoryLogger;
 using NoireLib.UpdateTracker;
+using Serilog.Events;
+using System;
 using System.Threading.Tasks;
 
 namespace BypassEmote;
@@ -35,6 +38,13 @@ public sealed partial class Plugin : IDalamudPlugin
     public Plugin()
     {
         NoireLibMain.Initialize(PluginInterface, this);
+
+        SessionLog.Start($"BypassEmote {typeof(Plugin).Assembly.GetName().Version} loading"
+            + $" | NoireLib {typeof(NoireService).Assembly.GetName().Version}"
+            + $" | Dalamud {typeof(IDalamudPluginInterface).Assembly.GetName().Version}"
+            + $" | repository {PluginInterface.SourceRepository}");
+
+        OpenDalamudLogLevel();
 
         Service.InitializeService(this);
 
@@ -66,6 +76,18 @@ public sealed partial class Plugin : IDalamudPlugin
 
         if (promptPending)
             _ = ShowPromptThenChangelogAsync();
+    }
+
+    private static void OpenDalamudLogLevel()
+    {
+        try
+        {
+            NoireService.PluginLog.MinimumLogLevel = LogEventLevel.Verbose;
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"Could not change Dalamud log level. ({ex.Message})", "[Plugin] ");
+        }
     }
 
     private async Task ShowPromptThenChangelogAsync()

@@ -1,7 +1,9 @@
+using BypassEmote.EmoteSwap;
 using BypassEmote.Safety;
 using Dalamud.Plugin;
 using Lumina.Excel.Sheets;
 using NoireLib;
+using NoireLib.Animations.Helpers;
 using NoireLib.Helpers;
 using NoireLib.Hooking;
 using System;
@@ -58,7 +60,7 @@ internal static class DebugLogExporter
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, "Exporting the debug logs failed.", LogPrefix);
+            Log.Error(ex, "Exporting the debug logs failed.", LogPrefix);
             LogHelper.Error("Debug logs could not be exported. The Dalamud log has the reason.");
         }
         finally
@@ -105,17 +107,21 @@ internal static class DebugLogExporter
         try
         {
             var logPath = Path.Combine(staging, "bypassemote.log");
-            var extract = WriteLog(logPath);
+            var session = SessionLog.WriteTo(logPath);
+
+            var dalamudPath = Path.Combine(staging, "dalamud-extract.log");
+            var extract = WriteLog(dalamudPath);
 
             var reportPath = Path.Combine(staging, "report.txt");
 
-            File.WriteAllText(reportPath, live.Report + EmoteSection(live) + ArchiveSection(extract),
+            File.WriteAllText(reportPath, live.Report + EmoteSection(live) + ArchiveSection(session, extract),
                 new UTF8Encoding(false));
 
             var files = new List<(string FilePath, string? EntryName)>
             {
                 (reportPath, "report.txt"),
                 (logPath, "bypassemote.log"),
+                (dalamudPath, "dalamud-extract.log"),
             };
 
             files.AddRange(ConfigEntries(configDirectory, destination));
@@ -158,7 +164,7 @@ internal static class DebugLogExporter
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            NoireLogger.LogDebug($"Could not remove the staging folder '{directory}' ({ex.Message}).", LogPrefix);
+            Log.Debug($"Could not remove the staging folder '{directory}' ({ex.Message}).", LogPrefix);
         }
     }
 
@@ -168,6 +174,14 @@ internal static class DebugLogExporter
         var sources = LogFiles(cutoff).ToList();
 
         using var writer = new StreamWriter(outputPath, false, new UTF8Encoding(false));
+
+        var described = sources.Count == 0 ? "none found" : string.Join(", ", sources.Select(Describe));
+
+        writer.WriteLine($"BypassEmote lines from the Dalamud log, from "
+            + $"{cutoff.ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.InvariantCulture)}.");
+
+        writer.WriteLine($"Sources: {described}");
+        writer.WriteLine();
 
         var tail = new Queue<string>();
         var head = 0;
@@ -205,9 +219,26 @@ internal static class DebugLogExporter
         foreach (var line in tail)
             writer.WriteLine(line);
 
-        var names = sources.Select(Path.GetFileName).ToList();
+        if (kept == 0)
+        {
+            writer.WriteLine("No line matched.");
+        }
 
-        return new LogExtract(kept, dropped, names.Count == 0 ? "none found" : string.Join(", ", names));
+        return new LogExtract(kept, dropped, described);
+    }
+
+    private static string Describe(string path)
+    {
+        try
+        {
+            return $"{Path.GetFileName(path)} (last written "
+                + $"{File.GetLastWriteTime(path).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)}, "
+                + $"{new FileInfo(path).Length / (1024 * 1024)} MB)";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return Path.GetFileName(path);
+        }
     }
 
     private static IEnumerable<string> SelectedLines(IReadOnlyList<string> sources, DateTimeOffset cutoff)
@@ -274,15 +305,19 @@ internal static class DebugLogExporter
         return loaded;
     }
 
-    private static string ArchiveSection(LogExtract extract)
+    private static string ArchiveSection(SessionLog.Dump session, LogExtract extract)
     {
         var section = new StringBuilder();
 
         section.AppendLine("== Archive ==");
-        section.AppendLine($"Log sources: {extract.Sources}");
-        section.AppendLine($"Log lines kept: {extract.Kept}");
-        section.AppendLine($"Log lines dropped: {extract.Dropped}");
-        section.AppendLine($"Contents: report.txt, bypassemote.log, config/");
+        section.AppendLine($"Session log started: {SessionLog.StartedAt:yyyy-MM-dd HH:mm:ss zzz}");
+        section.AppendLine($"Session log lines recorded: {session.Total}");
+        section.AppendLine($"Session log lines written: {session.Kept}");
+        section.AppendLine($"Session log lines dropped: {session.Dropped}");
+        section.AppendLine($"Dalamud log sources: {extract.Sources}");
+        section.AppendLine($"Dalamud log lines kept: {extract.Kept}");
+        section.AppendLine($"Dalamud log lines dropped: {extract.Dropped}");
+        section.AppendLine($"Contents: report.txt, bypassemote.log, dalamud-extract.log, config/");
 
         return section.ToString();
     }
@@ -301,6 +336,7 @@ internal static class DebugLogExporter
         Section(report, "Settings", AppendSettings);
         Section(report, "Penumbra", AppendPenumbra);
         Section(report, "Character", AppendCharacter);
+        Section(report, "Idle pose", AppendIdlePose);
         Section(report, "Emote catalog", AppendCatalog);
         Section(report, "Hooks", AppendHooks);
 
@@ -318,7 +354,7 @@ internal static class DebugLogExporter
             }
             catch (Exception ex)
             {
-                NoireLogger.LogError(ex, "The emote unlock state could not be read.", LogPrefix);
+                Log.Error(ex, "The emote unlock state could not be read.", LogPrefix);
             }
         }
 
@@ -468,9 +504,20 @@ internal static class DebugLogExporter
         report.AppendLine($"Competing mods: {(registry.CompetingMods is { Count: > 0 } competing ? string.Join(", ", competing) : "none")}");
         report.AppendLine($"Dispatch records: {registry.Dispatch?.Count ?? 0}");
 
-        report.AppendLine(swapMods.PenumbraState() is { } state
-            ? $"Generated mod state: enabled {state.Enabled}, priority {state.Priority}"
-            : "Generated mod state: unknown to Penumbra");
+        if (swapMods.PenumbraState() is { } state)
+        {
+            report.AppendLine($"Generated mod state: enabled {state.Enabled}, priority {state.Priority}");
+
+            if (state.Priority != registry.AppliedPriority)
+            {
+                report.AppendLine($"  priority mismatch: Penumbra has priority {state.Priority} and the registry has priority "
+                    + $"{registry.AppliedPriority}.");
+            }
+        }
+        else
+        {
+            report.AppendLine("Generated mod state: unknown to Penumbra");
+        }
 
         foreach (var entry in armed)
         {
@@ -478,6 +525,74 @@ internal static class DebugLogExporter
                 + $" | source {entry.SourceEmote} -> target {entry.TargetEmote}"
                 + $"{(entry.IsIdlePoseSwap ? $" | idle pose {entry.IdlePoseIndex}" : string.Empty)}");
         }
+    }
+
+    private static void AppendIdlePose(StringBuilder report)
+    {
+        if (NoireService.ObjectTable.LocalPlayer is not { } localPlayer)
+        {
+            report.AppendLine("No character is loaded.");
+            return;
+        }
+
+        var poseState = CharacterPoseState.Read(localPlayer);
+
+        report.AppendLine($"Mode: {poseState.Mode}({(byte)poseState.Mode}), mode param {poseState.ModeParam}");
+        report.AppendLine($"Stance in effect: {(poseState.Stance is { } stance ? stance.ToString() : "none")}"
+            + $", index {poseState.Index}");
+        report.AppendLine($"Emote controller reports: {poseState.ReportedPoseType}, index {poseState.ReportedPoseIndex}");
+
+        if (poseState.Stance is not { } poseType)
+        {
+            report.AppendLine("There is no stance available right now.");
+            return;
+        }
+
+        if (IdlePoseData.IdlePosePathsFor(poseType, poseState.Index) is not { } paths)
+        {
+            report.AppendLine("This pose has no redirectable pap.");
+            return;
+        }
+
+        var skeleton = SwapOrchestrator.SkeletonFor(localPlayer);
+
+        AppendPoseServer(report, skeleton, paths.LoopRelativePapPath, "loop");
+
+        if (paths.StartRelativePapPath is { } start)
+            AppendPoseServer(report, skeleton, start, "start");
+        else
+            report.AppendLine("This pose has no start pap.");
+    }
+
+    private static void AppendPoseServer(StringBuilder report, string skeleton, string relativePath, string role)
+    {
+        var gamePath = EmotePathHelper.GetSkeletonPath(skeleton, relativePath);
+
+        if (Service.Penumbra is not { Available: true } penumbra)
+        {
+            report.AppendLine($"{role}: {gamePath} (Penumbra is unavailable)");
+            return;
+        }
+
+        var resolved = penumbra.ResolvePlayerPath(gamePath);
+
+        if (resolved == gamePath)
+        {
+            report.AppendLine($"{role}: {gamePath} -> vanilla");
+            return;
+        }
+
+        if (Service.SwapMods?.IsOwnPath(resolved) == true)
+        {
+            report.AppendLine($"{role}: {gamePath} -> the generated mod");
+            return;
+        }
+
+        var directory = SwapModManager.ModDirectoryFromDiskPath(resolved, penumbra.GetModRootDirectory());
+        var name = directory is { Length: > 0 } && penumbra.GetModNames() is { } names
+            && names.TryGetValue(directory, out var modName) && modName.Length > 0 ? modName : directory;
+
+        report.AppendLine($"{role}: {gamePath} -> {name ?? resolved}");
     }
 
     private static void AppendCatalog(StringBuilder report)

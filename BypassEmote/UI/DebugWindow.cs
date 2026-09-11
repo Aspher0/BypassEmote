@@ -619,11 +619,11 @@ public class DebugWindow : Window, IDisposable
     }
 
     private void LogReady()
-        => NoireLogger.LogDebug(this, "BypassEmote IPC is ready");
+        => Log.Debug("BypassEmote IPC is ready");
     private void LogStateChanged(string liveData, string? cacheData, bool isLocalPlayer)
-        => NoireLogger.LogDebug(this, $"BypassEmote IPC sent state changed message. IsLocalPlayer: {isLocalPlayer}, LiveData: {liveData}, CacheData: {cacheData ?? "<null>"}");
+        => Log.Debug($"BypassEmote IPC sent state changed message. IsLocalPlayer: {isLocalPlayer}, LiveData: {liveData}, CacheData: {cacheData ?? "<null>"}");
     private void LogStateChangedImmediate(string liveData, string? cacheData, bool isLocalPlayer)
-        => NoireLogger.LogDebug(this, $"BypassEmote IPC sent immediate state changed message. IsLocalPlayer: {isLocalPlayer}, LiveData: {liveData}, CacheData: {cacheData ?? "<null>"}");
+        => Log.Debug($"BypassEmote IPC sent immediate state changed message. IsLocalPlayer: {isLocalPlayer}, LiveData: {liveData}, CacheData: {cacheData ?? "<null>"}");
 
     public void Dispose()
     {

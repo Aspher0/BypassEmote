@@ -50,7 +50,7 @@ public sealed class CollectionWatcher : IDisposable
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, "Could not find the player's collection.", LogPrefix);
+            Log.Error(ex, "Could not find the player's collection.", LogPrefix);
         }
     }
 

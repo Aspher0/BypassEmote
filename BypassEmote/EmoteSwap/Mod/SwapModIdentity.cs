@@ -54,7 +54,7 @@ public sealed class SwapModIdentity : IDisposable
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, "Could not read who the generated mod belongs to.", LogPrefix);
+            Log.Error(ex, "Could not read who the generated mod belongs to.", LogPrefix);
         }
     }
 
@@ -72,7 +72,7 @@ public sealed class SwapModIdentity : IDisposable
         _anonymous = anonymous;
         Names = contentId == 0 ? null : BuildNames(contentId, anonymous);
 
-        NoireLogger.LogDebug(Names is { } names
+        Log.Debug(Names is { } names
             ? $"The generated mod for this character is '{names.Directory}'."
             : "No character is loaded, so no generated mod is named.", LogPrefix);
 
@@ -135,7 +135,7 @@ public sealed class SwapModIdentity : IDisposable
         }
         catch (Exception ex)
         {
-            NoireLogger.LogDebug($"Could not read the home world for the mod name ({ex.Message}).", LogPrefix);
+            Log.Debug($"Could not read the home world for the mod name ({ex.Message}).", LogPrefix);
             return string.Empty;
         }
     }

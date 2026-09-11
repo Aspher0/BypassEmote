@@ -59,7 +59,7 @@ public sealed partial class SwapOrchestrator
         _ = AsyncHelper.RunBackgroundThenFrameworkSafeAsync(
             () => BuildSwapFilesOrNull(request),
             outcome => FinishSwapOnFrameworkThread(request, outcome),
-            ex => NoireLogger.LogDebug(
+            ex => Log.Debug(
                 $"Could not hand a finished swap build back to the framework thread ({ex.Message}); dropping it.", LogPrefix),
             BackgroundOperationName);
     }
@@ -72,7 +72,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Building the swap of /{request.Source.Command} onto /{request.Target.Command} failed.", LogPrefix);
+            Log.Error(ex, $"Building the swap of /{request.Source.Command} onto /{request.Target.Command} failed.", LogPrefix);
             return null;
         }
     }
@@ -96,11 +96,11 @@ public sealed partial class SwapOrchestrator
             {
                 if (isDrawnBody)
                 {
-                    NoireLogger.LogError($"No variant of /{request.Source.Command} could be retargeted onto /{request.Target.Command}.", LogPrefix);
+                    Log.Error($"No variant of /{request.Source.Command} could be retargeted onto /{request.Target.Command}.", LogPrefix);
                     return null;
                 }
 
-                NoireLogger.LogDebug($"Nothing retargeted for {race.Race}; that body is left out of this swap.", LogPrefix);
+                Log.Debug($"Nothing retargeted for {race.Race}; that body is left out of this swap.", LogPrefix);
                 continue;
             }
 
@@ -117,7 +117,7 @@ public sealed partial class SwapOrchestrator
 
         if (drawnFiles is not { } drawn)
         {
-            NoireLogger.LogError($"The swap of /{request.Source.Command} covers no body to play it on.", LogPrefix);
+            Log.Error($"The swap of /{request.Source.Command} covers no body to play it on.", LogPrefix);
             return null;
         }
 
@@ -169,7 +169,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Finishing the swap of /{request.Source.Command} failed.", LogPrefix);
+            Log.Error(ex, $"Finishing the swap of /{request.Source.Command} failed.", LogPrefix);
             ReportFailure(request, GenericFailureMessage);
         }
     }
@@ -221,7 +221,7 @@ public sealed partial class SwapOrchestrator
 
         if (!request.ExecuteAfterApply)
         {
-            NoireLogger.LogDebug(
+            Log.Debug(
                 $"The swap of /{request.Source.Command} onto /{request.Target.Command} now serves {request.Skeleton}"
                 + $" ({timings.AtApply}ms).", LogPrefix);
 
@@ -257,7 +257,7 @@ public sealed partial class SwapOrchestrator
         if (ShouldRelinquishClaim(verdict))
             _generations.Relinquish(request.Generation);
 
-        NoireLogger.LogDebug(
+        Log.Debug(
             $"{BackgroundRefusalDetail(verdict)} (/{request.Source.Command} onto /{request.Target.Command}).", LogPrefix);
 
         if (ShouldWarnOnRefusal(verdict))

@@ -22,7 +22,7 @@ public partial class Service
 
         if (entries.Count == 0)
         {
-            NoireLogger.LogError<Service>("FFXIVCollect emotes API returned no results.");
+            Log.Error("FFXIVCollect emotes API returned no results.");
             return;
         }
 
@@ -46,7 +46,7 @@ public partial class Service
                 MergeEmoteSources(byId.RowId, entry);
         }
 
-        NoireLogger.LogInfo<Service>($"Built EmoteSources for {EmoteSources.Count} emotes from FFXIVCollect.");
+        Log.Info($"Built EmoteSources for {EmoteSources.Count} emotes from FFXIVCollect.");
     }
 
     private static void MergeEmoteSources(uint rowId, FfxivCollectEntry entry)

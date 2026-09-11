@@ -43,7 +43,7 @@ public sealed class SkeletonWatcher : IDisposable
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, "Could not read the drawn body; this frame is skipped.", LogPrefix);
+            Log.Error(ex, "Could not read the drawn body; this frame is skipped.", LogPrefix);
         }
     }
 
@@ -92,7 +92,7 @@ public sealed class SkeletonWatcher : IDisposable
 
         _requestedFor = skeleton;
 
-        NoireLogger.LogDebug(
+        Log.Debug(
             $"The local player is drawn as {skeleton}, and the kept swaps serve {servedSkeleton ?? "an unrecorded body"}.",
             LogPrefix);
 

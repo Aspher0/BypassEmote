@@ -68,7 +68,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Could not tell whether /{candidate.Command} is already modded; treating it as clean.", LogPrefix);
+            Log.Error(ex, $"Could not tell whether /{candidate.Command} is already modded; treating it as clean.", LogPrefix);
             return null;
         }
 
@@ -192,11 +192,11 @@ public sealed partial class SwapOrchestrator
 
         if (BestMatchResolver.Resolve(source, clean, matchConfig, posture).Target == null)
         {
-            NoireLogger.LogDebug($"Every emote that fits /{source.Command} is changed by another mod.", LogPrefix);
+            Log.Debug($"Every emote that fits /{source.Command} is changed by another mod.", LogPrefix);
             return pool;
         }
 
-        NoireLogger.LogDebug($"{pool.Count - clean.Count} emote(s) being changed by annother mod.", LogPrefix);
+        Log.Debug($"{pool.Count - clean.Count} emote(s) being changed by annother mod.", LogPrefix);
         return clean;
     }
 

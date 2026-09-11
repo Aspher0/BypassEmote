@@ -44,7 +44,7 @@ public sealed class ContentAddressedStore
         if (FileHelper.ReplaceFileAtomically(filePath, bytes))
             return true;
 
-        NoireLogger.LogError($"Failed to write '{filePath}'.", LogPrefix);
+        Log.Error($"Failed to write '{filePath}'.", LogPrefix);
         return false;
     }
 
@@ -65,7 +65,7 @@ public sealed class ContentAddressedStore
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Failed to list files under '{directory}' for cleanup.", LogPrefix);
+            Log.Error(ex, $"Failed to list files under '{directory}' for cleanup.", LogPrefix);
             return 0;
         }
 
@@ -84,7 +84,7 @@ public sealed class ContentAddressedStore
             catch (Exception ex)
             {
                 // One undeletable file does not stop the rest of the sweep.
-                NoireLogger.LogError(ex, $"Failed to delete stale file '{path}'.", LogPrefix);
+                Log.Error(ex, $"Failed to delete stale file '{path}'.", LogPrefix);
             }
         }
 

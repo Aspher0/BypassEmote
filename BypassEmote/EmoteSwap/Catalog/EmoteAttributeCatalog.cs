@@ -79,7 +79,7 @@ public sealed class EmoteAttributeCatalog
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, "Build failed; the catalog stays empty for this session.", LogPrefix);
+            Log.Error(ex, "Build failed; the catalog stays empty for this session.", LogPrefix);
         }
     }
 
@@ -94,7 +94,7 @@ public sealed class EmoteAttributeCatalog
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, "Could not pre-load the game's Excel sheets.", LogPrefix);
+            Log.Error(ex, "Could not pre-load the game's Excel sheets.", LogPrefix);
         }
     }
 
@@ -109,7 +109,7 @@ public sealed class EmoteAttributeCatalog
         if (Cache.Read(RulesVersion) is { Count: > 0 } cachedRows)
         {
             Publish(cachedRows);
-            NoireLogger.LogDebug($"Loaded {cachedRows.Count} rows from cache in {buildClock.ElapsedMilliseconds}ms.", LogPrefix);
+            Log.Debug($"Loaded {cachedRows.Count} rows from cache in {buildClock.ElapsedMilliseconds}ms.", LogPrefix);
             return;
         }
 
@@ -117,13 +117,13 @@ public sealed class EmoteAttributeCatalog
 
         if (rows.Count == 0)
         {
-            NoireLogger.LogError("Emote catalog build produced no rows, will retry next start.", LogPrefix);
+            Log.Error("Emote catalog build produced no rows, will retry next start.", LogPrefix);
             return;
         }
 
         Publish(rows);
         Cache.Write(rows, RulesVersion);
-        NoireLogger.LogDebug($"Built {rows.Count} rows from game data in {buildClock.ElapsedMilliseconds}ms.", LogPrefix);
+        Log.Debug($"Built {rows.Count} rows from game data in {buildClock.ElapsedMilliseconds}ms.", LogPrefix);
     }
 
     private void Publish(List<EmoteAttributes> rows)
@@ -280,7 +280,7 @@ public sealed class EmoteAttributeCatalog
         var sheet = ExcelSheetHelper.GetSheet<Emote>();
         if (sheet == null)
         {
-            NoireLogger.LogError("Could not load the Emote sheet; the catalog stays empty for this session.", LogPrefix);
+            Log.Error("Could not load the Emote sheet; the catalog stays empty for this session.", LogPrefix);
             return rows;
         }
 
@@ -298,7 +298,7 @@ public sealed class EmoteAttributeCatalog
             }
             catch (Exception ex)
             {
-                NoireLogger.LogError(ex, $"Failed to process emote {emote.RowId}; skipped.", LogPrefix);
+                Log.Error(ex, $"Failed to process emote {emote.RowId}; skipped.", LogPrefix);
             }
 
             if (++processed % BuildPacingBatchSize == 0)
@@ -339,7 +339,7 @@ public sealed class EmoteAttributeCatalog
         }
         catch (Exception ex)
         {
-            NoireLogger.LogDebug($"Intro pap existence probe failed for key '{introSlot.Key}': {ex.Message}", LogPrefix);
+            Log.Debug($"Intro pap existence probe failed for key '{introSlot.Key}': {ex.Message}", LogPrefix);
             return false;
         }
     }
@@ -408,7 +408,7 @@ public sealed class EmoteAttributeCatalog
             }
             catch (Exception ex)
             {
-                NoireLogger.LogDebug($"Embedded TMB scan skipped for emote {emoteRowId} key '{slot.Key}': {ex.Message}", LogPrefix);
+                Log.Debug($"Embedded TMB scan skipped for emote {emoteRowId} key '{slot.Key}': {ex.Message}", LogPrefix);
             }
         }
 
@@ -432,7 +432,7 @@ public sealed class EmoteAttributeCatalog
         }
         catch (Exception ex)
         {
-            NoireLogger.LogDebug($"Vfx sound read skipped for '{vfxPath}': {ex.Message}", LogPrefix);
+            Log.Debug($"Vfx sound read skipped for '{vfxPath}': {ex.Message}", LogPrefix);
         }
 
         VfxSoundReadings[vfxPath] = plays;
@@ -465,7 +465,7 @@ public sealed class EmoteAttributeCatalog
             }
             catch (Exception ex)
             {
-                NoireLogger.LogDebug($"Action tmb face scan skipped for emote {emoteRowId} key '{slot.Key}': {ex.Message}", LogPrefix);
+                Log.Debug($"Action tmb face scan skipped for emote {emoteRowId} key '{slot.Key}': {ex.Message}", LogPrefix);
             }
         }
 

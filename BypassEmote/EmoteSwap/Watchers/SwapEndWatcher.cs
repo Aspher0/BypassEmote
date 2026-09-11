@@ -24,6 +24,7 @@ public sealed class SwapEndWatcher
     private bool _playerAway;
     private bool _idlePoseRedrawsOnEnd;
     private Action? _idlePoseRedraw;
+    private Action? _idlePoseCacheBreak;
 
     public SwapEndWatcher(SwapModManager swapMods)
         => _swapMods = swapMods;
@@ -36,6 +37,7 @@ public sealed class SwapEndWatcher
         _playerAway = false;
         _idlePoseRedrawsOnEnd = false;
         _idlePoseRedraw = null;
+        _idlePoseCacheBreak = null;
         _armedPosition = Vector3.Zero;
         _watchedEmote = 0;
 
@@ -47,12 +49,12 @@ public sealed class SwapEndWatcher
         }
 
         if (_watchedEmote == 0)
-            NoireLogger.LogDebug("Armed while the character is playing nothing; this watch ends next frame.", LogPrefix);
+            Log.Debug("Armed while the character is playing nothing; this watch ends next frame.", LogPrefix);
 
         EnsureSubscribed();
     }
 
-    public void ArmIdlePose(SwapOptionEntry entry, Action redrawLocalPlayer)
+    public void ArmIdlePose(SwapOptionEntry entry, Action redrawLocalPlayer, Action breakPoseAnimationCache)
     {
         _armed = true;
         _armedEntry = entry;
@@ -60,6 +62,7 @@ public sealed class SwapEndWatcher
         _playerAway = false;
         _idlePoseRedrawsOnEnd = SwapOrchestrator.IdlePoseNeedsRedrawOnEnd(entry.IdlePoseIndex);
         _idlePoseRedraw = redrawLocalPlayer;
+        _idlePoseCacheBreak = breakPoseAnimationCache;
         _armedPosition = Vector3.Zero;
         _watchedEmote = 0;
 
@@ -77,9 +80,10 @@ public sealed class SwapEndWatcher
         var wasArmed = _armed;
         var armedEntry = _armedEntry;
 
-        var idlePoseRedraw = _isIdlePoseWatch && (forceIdlePoseRedraw || _idlePoseRedrawsOnEnd)
-            ? _idlePoseRedraw
-            : null;
+        var redraws = _isIdlePoseWatch && (forceIdlePoseRedraw || _idlePoseRedrawsOnEnd);
+
+        var idlePoseRedraw = redraws ? _idlePoseRedraw : null;
+        var idlePoseCacheBreak = _isIdlePoseWatch && !redraws ? _idlePoseCacheBreak : null;
 
         StopWatching();
 
@@ -89,6 +93,7 @@ public sealed class SwapEndWatcher
         if (armedEntry != null)
             _swapMods.DeselectEntry(armedEntry);
 
+        idlePoseCacheBreak?.Invoke();
         idlePoseRedraw?.Invoke();
     }
 
@@ -113,6 +118,7 @@ public sealed class SwapEndWatcher
         _playerAway = false;
         _idlePoseRedrawsOnEnd = false;
         _idlePoseRedraw = null;
+        _idlePoseCacheBreak = null;
     }
 
     private void EnsureSubscribed()
@@ -141,7 +147,7 @@ public sealed class SwapEndWatcher
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, "Could not evaluate the swap end conditions; ending the swap.", LogPrefix);
+            Log.Error(ex, "Could not evaluate the swap end conditions; ending the swap.", LogPrefix);
             Disarm();
         }
     }
@@ -165,7 +171,7 @@ public sealed class SwapEndWatcher
             _playerAway = false;
             _armedPosition = localPlayer.Position;
 
-            NoireLogger.LogDebug("The character was redrawn. Watcher picking up where it left off.",
+            Log.Debug("The character was redrawn. Watcher picking up where it left off.",
                 LogPrefix);
 
             return;
@@ -192,9 +198,9 @@ public sealed class SwapEndWatcher
 
     private void End(string reason)
     {
-        NoireLogger.LogDebug($"Ending the swap: {reason}"
+        Log.Debug($"Ending the swap: {reason}"
             + (_isIdlePoseWatch
-                ? _idlePoseRedrawsOnEnd ? ", with a redraw." : ", leaving the character as it is."
+                ? _idlePoseRedrawsOnEnd ? ", with a redraw." : ", breaking the pose animation cache instead."
                 : "."),
             LogPrefix);
 

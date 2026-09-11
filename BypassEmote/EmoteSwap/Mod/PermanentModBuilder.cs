@@ -26,7 +26,7 @@ internal static class PermanentModBuilder
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Creating a mod for /{source.Command} over /{target.Command} failed.", LogPrefix);
+            Log.Error(ex, $"Creating a mod for /{source.Command} over /{target.Command} failed.", LogPrefix);
             return new Outcome(false, "Something went wrong. Nothing was created; the log has the details.");
         }
     }
@@ -137,14 +137,14 @@ internal static class PermanentModBuilder
 
             ModStore.WriteMeta(layout, modDirectory, meta, redirects);
 
-            NoireLogger.LogDebug($"Wrote '{name}' to '{modDirectory}': /{source.Command} over /{target.Command}, "
+            Log.Debug($"Wrote '{name}' to '{modDirectory}': /{source.Command} over /{target.Command}, "
                 + $"{files.Count} file(s).", LogPrefix);
 
             return true;
         }
         catch (Exception ex)
         {
-            NoireLogger.LogError(ex, $"Failed to write the mod under '{modDirectory}'.", LogPrefix);
+            Log.Error(ex, $"Failed to write the mod under '{modDirectory}'.", LogPrefix);
             return false;
         }
     }
