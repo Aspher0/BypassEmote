@@ -73,6 +73,8 @@ public class ConfigWindow : Window, IDisposable
 
     private const string PluginEnabledName = "Enable the plugin";
     private const string HotbarBypassName = "Bypass emotes from locked hotbar slots";
+    private const string LockedEmotesInWindowName = "Show locked emotes in the game's Emote window";
+    private const string LockedEmotesName = "Do not grey out locked emotes";
     private const string StopOnMoveName = "Stop companion emotes when they move";
     private const string UpdateNotificationName = "Show update notifications";
     private const string ChangelogName = "Show the changelog after an update";
@@ -80,7 +82,9 @@ public class ConfigWindow : Window, IDisposable
     private const string HiddenUiWindowsName = "Show windows while the game UI is hidden";
 
     private static readonly string[] GeneralNames =
-        [PluginEnabledName, HotbarBypassName, StopOnMoveName, UpdateNotificationName, ChangelogName, GposeWindowsName, HiddenUiWindowsName];
+        [PluginEnabledName, HotbarBypassName, LockedEmotesInWindowName, LockedEmotesName, StopOnMoveName,
+            UpdateNotificationName, ChangelogName,
+            GposeWindowsName, HiddenUiWindowsName];
 
     private static readonly DurationStyle WarningThrottleStyle = new()
     {
@@ -379,6 +383,22 @@ public class ConfigWindow : Window, IDisposable
                     + "\nRight-click an emote in the main window to assign it to a slot."))
                 {
                     Configuration.BypassOnHotbarSlotTriggered = bypassOnHotbarSlotTriggered;
+                }
+
+                var showLockedEmotesInGameWindow = Configuration.ShowLockedEmotesInGameWindow;
+                if (CheckRow(LockedEmotesInWindowName, ref showLockedEmotesInGameWindow,
+                    "Lists the emotes you have not unlocked in the game's own emote window."
+                    + "\nClose and reopen the emote window for changes to appear."))
+                {
+                    Configuration.ShowLockedEmotesInGameWindow = showLockedEmotesInGameWindow;
+                }
+
+                var showLockedEmotesAsUsable = Configuration.ShowLockedEmotesAsUsable;
+                if (CheckRow(LockedEmotesName, ref showLockedEmotesAsUsable,
+                    "Keeps the emotes you have not unlocked lit in the game's emote window and on your hotbars."
+                    + "\nPurely cosmetic."))
+                {
+                    Configuration.ShowLockedEmotesAsUsable = showLockedEmotesAsUsable;
                 }
 
                 var stopCompanionEmoteOnCompanionMove = Configuration.StopOwnedObjectEmoteOnMove;

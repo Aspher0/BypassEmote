@@ -85,10 +85,14 @@ public sealed partial class SwapOrchestrator : IDisposable
 
         source = WithMotionFolder(source, MotionFolderFor(source, localPlayer, fallbackOrder));
 
-        var pool = BuildPool(localPlayer, source, condition);
+        var leftOut = new Dictionary<string, int>(StringComparer.Ordinal);
+        var pool = BuildPool(localPlayer, source, condition, leftOut);
+        var character = CharacterLine(localPlayer, condition);
 
         if (OverrideFor(source.RowId, sourceEmote.RowId) is { } configured
-            && PlayOverride(localPlayer, source, configured, pool, skeleton, fallbackOrder, collectionId, swapClock))
+            && PlayOverride(localPlayer, source, configured, pool, skeleton, fallbackOrder, collectionId, swapClock,
+                new SwapContext($"override, {configured.Targets.Count} target(s) configured",
+                    PoolLine(_catalog.All.Count, leftOut, pool, BlockedTargets(), null), character)))
         {
             return;
         }
@@ -96,7 +100,12 @@ public sealed partial class SwapOrchestrator : IDisposable
         var matchConfig = new MatchConfig(Configuration.LoopMatching, Configuration.TurnMatching,
             Configuration.SoundMatching, BlockedTargets());
 
+        var fullPool = pool;
+
         (matchConfig, pool) = ApplyModdedRule(source, pool, matchConfig, posture, skeleton, fallbackOrder, collectionId);
+
+        var poolLine = PoolLine(_catalog.All.Count, leftOut, pool, matchConfig.BlockedTargets,
+            ModdedLine(fullPool, pool, matchConfig, skeleton, fallbackOrder));
 
         var poolHasLoop = PoolOffersALoop(pool, matchConfig);
 
@@ -109,7 +118,8 @@ public sealed partial class SwapOrchestrator : IDisposable
         var elapsedAtMatch = swapClock.ElapsedMilliseconds;
 
         if (ShouldAttemptIdlePoseFallback(source, choice.Match, Configuration.IdlePoseLoops, poolHasLoop)
-            && TryIdlePoseSwap(source, localPlayer, skeleton, swapClock, elapsedAtMatch))
+            && TryIdlePoseSwap(source, localPlayer, skeleton, swapClock, elapsedAtMatch,
+                new SwapContext(IdlePoseRoute(choice.Match, poolHasLoop), poolLine, character)))
         {
             return;
         }
@@ -133,12 +143,13 @@ public sealed partial class SwapOrchestrator : IDisposable
             ReportChangedTarget(target, changedBy);
         }
 
-        BuildAndPlay(localPlayer, source, target, skeleton, swapClock, elapsedAtMatch);
+        BuildAndPlay(localPlayer, source, target, skeleton, swapClock, elapsedAtMatch,
+            new SwapContext(MatchRoute(choice.Match, choice.PlainBest, _catalog.Get), poolLine, character));
     }
 
     private bool PlayOverride(ICharacter localPlayer, EmoteAttributes source, EmoteOverride configured,
         List<EmoteAttributes> pool, string skeleton, IReadOnlyList<string> fallbackOrder, Guid collectionId,
-        Stopwatch swapClock)
+        Stopwatch swapClock, SwapContext context)
     {
         if (ChooseOverrideTarget(source, configured, pool, skeleton, fallbackOrder, collectionId) is { } target)
         {
@@ -150,7 +161,7 @@ public sealed partial class SwapOrchestrator : IDisposable
                 ReportChangedTarget(target, changedBy);
             }
 
-            BuildAndPlay(localPlayer, source, target, skeleton, swapClock, swapClock.ElapsedMilliseconds);
+            BuildAndPlay(localPlayer, source, target, skeleton, swapClock, swapClock.ElapsedMilliseconds, context);
             return true;
         }
 
@@ -166,7 +177,7 @@ public sealed partial class SwapOrchestrator : IDisposable
     }
 
     private void BuildAndPlay(ICharacter localPlayer, EmoteAttributes source, EmoteAttributes target,
-        string skeleton, Stopwatch swapClock, long elapsedAtMatch)
+        string skeleton, Stopwatch swapClock, long elapsedAtMatch, SwapContext context)
     {
         var raceInputs = RaceInputsFor(source, target, skeleton);
         var elapsedAtPair = swapClock.ElapsedMilliseconds;
@@ -190,6 +201,8 @@ public sealed partial class SwapOrchestrator : IDisposable
 
         var elapsedAtResolve = swapClock.ElapsedMilliseconds;
 
+        var trace = TraceFor(target, skeleton, context, resolvedPairs, raceInputs[0].FallbackOrder);
+
         var sourceKey = SourceKeyFor(source, raceInputs);
 
         DropSwapsTheRulesNoLongerMake(source, sourceKey, target.RowId);
@@ -198,8 +211,9 @@ public sealed partial class SwapOrchestrator : IDisposable
 
         if (_swapMods.FindReusable(contentKey) is { } kept
             && OnDiskShapeMatches(kept)
+            && kept.FilesByRace.ContainsKey(skeleton)
             && TryReuseAndExecute(kept, source, target, new SwapTimings(swapClock, elapsedAtMatch, elapsedAtPair,
-                AtRetarget: elapsedAtResolve, AtPrepare: elapsedAtResolve, AtApply: 0)))
+                AtRetarget: elapsedAtResolve, AtPrepare: elapsedAtResolve, AtApply: 0), trace with { Reused = true }))
         {
             return;
         }
@@ -207,7 +221,7 @@ public sealed partial class SwapOrchestrator : IDisposable
         StartBackgroundBuild(new SwapBuildRequest(source, target, _generations.TakeOwnership(), raceInputs,
             skeleton, contentKey, sourceKey, _swapMods.BeginPrepare(), ModServingAnimation(source, skeleton),
             new SwapTimings(swapClock, elapsedAtMatch, elapsedAtPair, AtRetarget: 0, AtPrepare: 0, AtApply: 0),
-            HoldOffHand: WeaponHoldFor(source, localPlayer)));
+            HoldOffHand: WeaponHoldFor(source, localPlayer), Trace: trace));
     }
 
     private readonly record struct PipelineStart(
@@ -270,13 +284,24 @@ public sealed partial class SwapOrchestrator : IDisposable
         }
     }
 
-    private List<EmoteAttributes> BuildPool(ICharacter localPlayer, EmoteAttributes source, EmoteCondition condition)
-        => _catalog.All
-            .Where(candidate => candidate.EligibleTarget
-                             && candidate.RowId != source.RowId
-                             && EmoteHelper.IsEmoteUnlocked(candidate.RowId)
-                             && PoolExclusionFor(localPlayer, candidate, condition, askTheGame: true) is null)
-            .ToList();
+    private List<EmoteAttributes> BuildPool(ICharacter localPlayer, EmoteAttributes source, EmoteCondition condition,
+        Dictionary<string, int> leftOut)
+    {
+        var pool = new List<EmoteAttributes>();
+
+        foreach (var candidate in _catalog.All)
+        {
+            if (candidate.RowId == source.RowId)
+                continue;
+
+            if (TargetRefusal(localPlayer, candidate, condition) is { } reason)
+                leftOut[reason] = leftOut.GetValueOrDefault(reason) + 1;
+            else
+                pool.Add(candidate);
+        }
+
+        return pool;
+    }
 
     private (MatchConfig Config, List<EmoteAttributes> Pool) ApplyModdedRule(EmoteAttributes source,
         List<EmoteAttributes> pool, MatchConfig config, PostureFlags posture, string skeleton,

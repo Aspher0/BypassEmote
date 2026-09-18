@@ -1,4 +1,6 @@
 using BypassEmote.EmoteSwap;
+using BypassEmote.Enums;
+using BypassEmote.Models;
 using BypassEmote.Safety;
 using Dalamud.Plugin;
 using Lumina.Excel.Sheets;
@@ -32,7 +34,21 @@ internal static class DebugLogExporter
     private readonly record struct LogExtract(int Kept, int Dropped, string Sources);
 
     private sealed record LiveSnapshot(string Report, bool LoggedIn, IReadOnlyList<Emote> Unlocked,
-        IReadOnlyList<Emote> Locked);
+        IReadOnlyList<Emote> Locked, Serving Serving, TargetReading TargetNow);
+
+    private sealed record TargetReading(string? Condition, IReadOnlyDictionary<uint, string> ByEmote)
+    {
+        internal static readonly TargetReading None = new(null, new Dictionary<uint, string>());
+
+        internal string? For(uint emoteRowId) => ByEmote.TryGetValue(emoteRowId, out var reading) ? reading : null;
+    }
+
+    private sealed record Serving(string? Chain, IReadOnlyDictionary<uint, string> ByEmote)
+    {
+        internal static readonly Serving None = new(null, new Dictionary<uint, string>());
+
+        internal string? For(uint emoteRowId) => ByEmote.TryGetValue(emoteRowId, out var served) ? served : null;
+    }
 
     private static int _running;
 
@@ -324,22 +340,6 @@ internal static class DebugLogExporter
 
     private static LiveSnapshot ReadLive()
     {
-        var report = new StringBuilder();
-
-        report.AppendLine("BypassEmote debug report");
-        report.AppendLine($"Generated: {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}");
-        report.AppendLine();
-
-        Section(report, "Plugin", AppendPlugin);
-        Section(report, "Game", AppendGame);
-        Section(report, "Patch approval", AppendPatchApproval);
-        Section(report, "Settings", AppendSettings);
-        Section(report, "Penumbra", AppendPenumbra);
-        Section(report, "Character", AppendCharacter);
-        Section(report, "Idle pose", AppendIdlePose);
-        Section(report, "Emote catalog", AppendCatalog);
-        Section(report, "Hooks", AppendHooks);
-
         var loggedIn = NoireService.ClientState.IsLoggedIn;
 
         IReadOnlyList<Emote> unlocked = [];
@@ -358,7 +358,251 @@ internal static class DebugLogExporter
             }
         }
 
-        return new LiveSnapshot(report.ToString(), loggedIn, unlocked, locked);
+        var serving = ReadServing([
+            .. locked.Select(emote => emote.RowId),
+            .. unlocked.Select(emote => emote.RowId),
+            .. Service.SwapMods?.Registry.Entries.Select(entry => entry.SourceEmote) ?? [],
+        ]);
+
+        var targetNow = ReadTargetNow(unlocked);
+
+        var report = new StringBuilder();
+
+        report.AppendLine("BypassEmote debug report");
+        report.AppendLine($"Generated: {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}");
+        report.AppendLine();
+
+        Section(report, "Plugin", AppendPlugin);
+        Section(report, "Game", AppendGame);
+        Section(report, "Patch approval", AppendPatchApproval);
+        Section(report, "Settings", AppendSettings);
+        Section(report, "Penumbra", AppendPenumbra);
+        Section(report, "Character", AppendCharacter);
+        Section(report, "Generated mod", section => AppendGeneratedMod(section, serving));
+        Section(report, "Idle pose", AppendIdlePose);
+        Section(report, "Emote catalog", AppendCatalog);
+        Section(report, "Hooks", AppendHooks);
+
+        return new LiveSnapshot(report.ToString(), loggedIn, unlocked, locked, serving, targetNow);
+    }
+
+    private static TargetReading ReadTargetNow(IReadOnlyList<Emote> unlocked)
+    {
+        if (Service.Catalog is not { Ready: true } catalog || NoireService.ObjectTable.LocalPlayer is not { } localPlayer)
+            return TargetReading.None;
+
+        try
+        {
+            var condition = DirectPlayPlanner.ReadState(localPlayer).Condition;
+            var playedAs = DirectPlayPlanner.PlayableAsFor(condition);
+            var blocked = Configuration.BlockedTargetEmotesEmoteSwap;
+            var byEmote = new Dictionary<uint, string>();
+
+            foreach (var emote in unlocked)
+            {
+                if (catalog.Get(emote.RowId) is not { } attributes)
+                    continue;
+
+                var refusal = SwapOrchestrator.TargetRefusal(localPlayer, attributes, playedAs)
+                    ?? (blocked.Contains(emote.RowId) ? "blocked" : null);
+
+                byEmote[emote.RowId] = refusal == null ? "target now: yes" : $"target now: no, {refusal}";
+            }
+
+            return new TargetReading(condition == playedAs ? $"{condition}" : $"{condition} played as {playedAs}",
+                byEmote);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Could not read which emotes can be swap targets.", LogPrefix);
+            return TargetReading.None;
+        }
+    }
+
+    private static Serving ReadServing(IReadOnlyCollection<uint> emoteRowIds)
+    {
+        if (Service.Penumbra is not { Available: true } penumbra || Service.Catalog is not { Ready: true } catalog
+            || NoireService.ObjectTable.LocalPlayer is not { } localPlayer)
+        {
+            return Serving.None;
+        }
+
+        try
+        {
+            var skeleton = SwapOrchestrator.SkeletonFor(localPlayer);
+            var chain = EmotePathHelper.GetFallbackOrder(skeleton);
+            var slots = new List<(uint RowId, string Role, int Start)>();
+            var requested = new List<string>();
+
+            foreach (var rowId in emoteRowIds.Distinct())
+            {
+                if (catalog.Get(rowId) is not { } emote)
+                    continue;
+
+                foreach (var (role, relativePath) in PapRolesOf(emote))
+                {
+                    slots.Add((rowId, role, requested.Count));
+
+                    foreach (var step in chain)
+                        requested.Add(EmotePathHelper.GetSkeletonPath(step, relativePath));
+                }
+            }
+
+            if (penumbra.ResolvePlayerPaths(requested) is not { } resolved)
+                return Serving.None;
+
+            var modRoot = penumbra.GetModRootDirectory();
+            var modNames = penumbra.GetModNames();
+            Func<string, bool> isOwnPath = Service.SwapMods is { } swapMods ? swapMods.IsOwnPath : _ => false;
+            var changedRoles = new Dictionary<uint, List<string>>();
+
+            foreach (var (rowId, role, start) in slots)
+            {
+                if (!changedRoles.TryGetValue(rowId, out var changed))
+                    changedRoles[rowId] = changed = [];
+
+                for (var step = 0; step < chain.Count; step++)
+                {
+                    var index = start + step;
+
+                    if (resolved[index] == requested[index])
+                    {
+                        if (NoireService.DataManager.FileExists(requested[index]))
+                            break;
+
+                        continue;
+                    }
+
+                    changed.Add($"{role} on {chain[step]} -> "
+                        + ServedPath.Describe(requested[index], resolved[index], modRoot, isOwnPath,
+                            directory => modNames != null && modNames.TryGetValue(directory, out var name) ? name : null));
+
+                    break;
+                }
+            }
+
+            var byEmote = changedRoles.ToDictionary(pair => pair.Key,
+                pair => pair.Value.Count == 0 ? ServedPath.Vanilla : string.Join("; ", pair.Value));
+
+            return new Serving($"{skeleton}, chain [{string.Join(", ", chain)}]", byEmote);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Could not read which mods serve the emotes.", LogPrefix);
+            return Serving.None;
+        }
+    }
+
+    private static IEnumerable<(string Role, string RelativePath)> PapRolesOf(EmoteAttributes emote)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var variant in emote.Variants)
+        {
+            if (seen.Add(variant.RelativePapPath))
+                yield return (variant.Posture.ToString(), variant.RelativePapPath);
+        }
+
+        if (emote.IntroRelativePapPath is { } intro && seen.Add(intro))
+            yield return ("intro", intro);
+
+        if (emote.AdjustRelativePapPath is { } adjust && seen.Add(adjust))
+            yield return ("adjust", adjust);
+    }
+
+    private static string EmoteLabel(uint emoteRowId)
+        => EmoteHelper.GetEmoteById(emoteRowId) is { } row ? $"{Describe(row)} #{emoteRowId}" : $"#{emoteRowId}";
+
+    private static void AppendGeneratedMod(StringBuilder report, Serving serving)
+    {
+        if (Service.SwapIdentity?.Names is not { } names || Service.SwapMods is not { } swapMods)
+        {
+            report.AppendLine("No character is loaded.");
+            return;
+        }
+
+        var registry = swapMods.Registry;
+        var penumbra = Service.Penumbra is { Available: true } available ? available : null;
+        var collectionId = penumbra?.GetPlayerCollection()?.Id ?? registry.CollectionId;
+        var selected = penumbra?.GetSelectedOptions(collectionId, names.Directory);
+        var onDisk = penumbra?.GetAvailableOptions(names.Directory);
+        var rulesStamp = SwapRulesStamp.Current();
+
+        report.AppendLine($"Directory: {names.Directory}");
+        report.AppendLine($"Read in collection: {collectionId}");
+
+        report.AppendLine(onDisk == null
+            ? "Penumbra's copy: unreadable"
+            : $"Penumbra's copy: {onDisk.Count} group(s), {onDisk.Values.Sum(options => options.Count)} option(s)");
+
+        report.AppendLine(selected == null
+            ? "Enabled options: unreadable"
+            : $"Enabled options: {selected.Count(pair => pair.Value != OptionNaming.NoneOptionName)}");
+
+        if (serving.Chain != null)
+            report.AppendLine($"Sources read on {serving.Chain}");
+
+        foreach (var group in registry.Entries.GroupBy(entry => entry.GroupName))
+        {
+            var groupSelection = selected != null && selected.TryGetValue(group.Key, out var option) ? option : null;
+
+            report.AppendLine();
+            report.AppendLine($"[{group.Key}] enabled: {groupSelection ?? "nothing"}");
+
+            foreach (var entry in group.OrderByDescending(entry => entry.LastUsedStamp))
+            {
+                var enabled = groupSelection == entry.OptionName;
+
+                var line = new StringBuilder($"  {(enabled ? "[on]" : "[  ]")} {entry.OptionName}"
+                    + $" | {EmoteLabel(entry.SourceEmote)} -> "
+                    + (entry.IsIdlePoseSwap ? $"idle pose {entry.IdlePoseIndex}" : EmoteLabel(entry.TargetEmote))
+                    + $" | last used #{entry.LastUsedStamp}");
+
+                if (entry.SelectedByUs)
+                    line.Append(" | armed by the plugin");
+
+                if (selected != null && entry.SelectedByUs != enabled)
+                    line.Append(enabled ? " | enabled by hand" : " | armed but not enabled in Penumbra");
+
+                if (onDisk != null && !(onDisk.TryGetValue(entry.GroupName, out var options) && options.Contains(entry.OptionName)))
+                    line.Append(" | missing from Penumbra's copy");
+
+                if (entry.FadeProtectedIntro)
+                    line.Append(" | fade-protected intro");
+
+                if (entry.ClampedIntro)
+                    line.Append(" | clamped intro");
+
+                if (entry.RulesStamp != rulesStamp)
+                    line.Append($" | built under other rules ({entry.RulesStamp ?? "none"})");
+
+                line.Append($" | built from: {entry.SourceServedBy ?? "not recorded"}");
+                line.Append($" | source now: {serving.For(entry.SourceEmote) ?? "unknown"}");
+
+                report.AppendLine(line.ToString());
+
+                if (!enabled)
+                    continue;
+
+                foreach (var (race, files) in entry.FilesByRace.Where(race => race.Key == registry.Skeleton))
+                {
+                    foreach (var (gamePath, file) in files)
+                        report.AppendLine($"       {race}: {gamePath} -> {file}");
+                }
+            }
+        }
+
+        if (selected == null)
+            return;
+
+        foreach (var (groupName, optionName) in selected)
+        {
+            if (optionName != OptionNaming.NoneOptionName
+                && !registry.Entries.Any(entry => entry.GroupName == groupName && entry.OptionName == optionName))
+            {
+                report.AppendLine($"Enabled in Penumbra but unknown to the registry: [{groupName}] {optionName}");
+            }
+        }
     }
 
     private static void Section(StringBuilder report, string title, Action<StringBuilder> body)
@@ -428,11 +672,40 @@ internal static class DebugLogExporter
         report.AppendLine($"Idle pose loops: {Configuration.IdlePoseLoops}");
         report.AppendLine($"Modded targets: {Configuration.ModdedTargets}");
         report.AppendLine($"Cached dispatch: {Configuration.CachedDispatch}, fidelity {Configuration.DispatchFidelity}, max targets per rank {Configuration.MaxTargetsPerRank}");
+        report.AppendLine($"Rules stamp: {SwapRulesStamp.Current()}");
         report.AppendLine($"Anonymize mod name: {Configuration.AnonymizeModName}");
         report.AppendLine($"Always cache break: {Configuration.AlwaysCacheBreak}");
-        report.AppendLine($"Direct play unsafe: {Configuration.DirectPlayUnsafe}");
-        report.AppendLine($"Blocked targets: {Configuration.BlockedTargetEmotesEmoteSwap.Count}");
-        report.AppendLine($"Chat: swap {Configuration.ShowSwapMessages}, warnings {Configuration.ShowWarningMessages}, errors {Configuration.ShowErrorMessages}");
+        report.AppendLine($"Direct play: auto face target {Configuration.AutoFaceTargetDirectPlay}, unsafe {Configuration.DirectPlayUnsafe}"
+            + $", stop owned object emote on move {Configuration.StopOwnedObjectEmoteOnMove}");
+        report.AppendLine($"Bypass on hotbar slot: {Configuration.BypassOnHotbarSlotTriggered}");
+        report.AppendLine($"Game emote window: show locked {Configuration.ShowLockedEmotesInGameWindow}"
+            + $", locked as usable {Configuration.ShowLockedEmotesAsUsable}");
+        report.AppendLine($"Plugin emote window: all emotes {Configuration.ShowAllEmotes}, ids {Configuration.ShowEmoteIds}"
+            + $", invalid emotes {Configuration.ShowInvalidEmotes}");
+        report.AppendLine($"Windows: in gpose {Configuration.ShowWindowsInGpose}, with the UI hidden {Configuration.ShowWindowsWhenUiHidden}");
+        report.AppendLine($"Chat: swap {Configuration.ShowSwapMessages}, warnings {Configuration.ShowWarningMessages}"
+            + $" (throttle {Configuration.ThrottleTimeWarnings}), errors {Configuration.ShowErrorMessages}"
+            + $" (throttle {Configuration.ThrottleTimeErrors})");
+        report.AppendLine($"Update notification: {Configuration.ShowUpdateNotification}, changelog on update {Configuration.ShowChangelogOnUpdate}");
+        report.AppendLine($"Swap prompt pending: {Configuration.SwapPromptPending}");
+
+        var blocked = Configuration.BlockedTargetEmotesEmoteSwap;
+
+        report.AppendLine($"Blocked targets: {blocked.Count}");
+
+        foreach (var rowId in blocked)
+            report.AppendLine($"  blocked: {EmoteLabel(rowId)}");
+
+        var overrides = Configuration.EmoteOverrides;
+
+        report.AppendLine($"Overrides: {overrides.Count}");
+
+        foreach (var configured in overrides)
+        {
+            report.AppendLine($"  override: {EmoteLabel(configured.SourceEmote)} -> "
+                + (configured.Targets.Count == 0 ? "no target" : string.Join(", ", configured.Targets.Select(EmoteLabel)))
+                + (configured.LimitedToTargets ? " | limited to these targets" : " | falls back to the usual matching"));
+        }
     }
 
     private static void AppendPenumbra(StringBuilder report)
@@ -504,6 +777,13 @@ internal static class DebugLogExporter
         report.AppendLine($"Competing mods: {(registry.CompetingMods is { Count: > 0 } competing ? string.Join(", ", competing) : "none")}");
         report.AppendLine($"Dispatch records: {registry.Dispatch?.Count ?? 0}");
 
+        foreach (var record in (registry.Dispatch ?? []).OrderByDescending(record => record.LastUseStamp))
+        {
+            report.AppendLine($"  dispatch: {EmoteLabel(record.SourceEmote)} -> {EmoteLabel(record.TargetEmote)}"
+                + $" | last used #{record.LastUseStamp}"
+                + (record.RulesStamp != SwapRulesStamp.Current() ? $" | chosen under other rules ({record.RulesStamp ?? "none"})" : string.Empty));
+        }
+
         if (swapMods.PenumbraState() is { } state)
         {
             report.AppendLine($"Generated mod state: enabled {state.Enabled}, priority {state.Priority}");
@@ -574,25 +854,11 @@ internal static class DebugLogExporter
             return;
         }
 
-        var resolved = penumbra.ResolvePlayerPath(gamePath);
+        var served = ServedPath.Describe(gamePath, penumbra.ResolvePlayerPath(gamePath), penumbra.GetModRootDirectory(),
+            path => Service.SwapMods?.IsOwnPath(path) == true,
+            directory => penumbra.GetModNames() is { } names && names.TryGetValue(directory, out var name) ? name : null);
 
-        if (resolved == gamePath)
-        {
-            report.AppendLine($"{role}: {gamePath} -> vanilla");
-            return;
-        }
-
-        if (Service.SwapMods?.IsOwnPath(resolved) == true)
-        {
-            report.AppendLine($"{role}: {gamePath} -> the generated mod");
-            return;
-        }
-
-        var directory = SwapModManager.ModDirectoryFromDiskPath(resolved, penumbra.GetModRootDirectory());
-        var name = directory is { Length: > 0 } && penumbra.GetModNames() is { } names
-            && names.TryGetValue(directory, out var modName) && modName.Length > 0 ? modName : directory;
-
-        report.AppendLine($"{role}: {gamePath} -> {name ?? resolved}");
+        report.AppendLine($"{role}: {gamePath} -> {served}");
     }
 
     private static void AppendCatalog(StringBuilder report)
@@ -628,17 +894,40 @@ internal static class DebugLogExporter
         report.AppendLine($"Blocked as swap targets: {blocked.Count}"
             + (blocked.Count > 0 ? $" (ids {string.Join(", ", blocked)})" : string.Empty));
 
-        AppendEmoteList(report, "locked", live.Locked);
-        AppendEmoteList(report, "unlocked", live.Unlocked);
+        var unlockedLoops = live.Unlocked
+            .Where(emote => Service.Catalog?.Get(emote.RowId) is { LoopKind: EmotePlayType.Looped })
+            .ToList();
+
+        var loopTargets = unlockedLoops.Count(emote => Service.Catalog?.Get(emote.RowId) is
+            { EligibleTarget: true, IsPoseFamily: false } && !blocked.Contains(emote.RowId));
+
+        report.AppendLine($"Unlocked loops: {unlockedLoops.Count}, {loopTargets} of them eligible and not blocked as swap targets");
+
+        report.AppendLine(live.Serving.Chain is { } chain
+            ? $"Served by: read on {chain}"
+            : "Served by: unreadable (Penumbra, the catalog or the character is unavailable)");
+
+        report.AppendLine(live.TargetNow.Condition is { } condition
+            ? $"Target now: read while {condition}, before the modded targets rule"
+            : "Target now: unreadable (the catalog or the character is unavailable)");
+
+        AppendEmoteList(report, "unlocked loops", unlockedLoops, live.Serving, live.TargetNow);
+        AppendEmoteList(report, "locked", live.Locked, live.Serving, null);
+        AppendEmoteList(report, "unlocked", live.Unlocked, live.Serving, live.TargetNow);
     }
 
-    private static void AppendEmoteList(StringBuilder report, string title, IReadOnlyList<Emote> emotes)
+    private static void AppendEmoteList(StringBuilder report, string title, IReadOnlyList<Emote> emotes,
+        Serving serving, TargetReading? targetNow)
     {
         report.AppendLine();
         report.AppendLine($"-- {title} ({emotes.Count}) --");
 
         foreach (var emote in emotes)
-            report.AppendLine($"{emote.RowId} {Describe(emote)} | {CatalogReading(emote.RowId)}");
+        {
+            report.AppendLine($"{emote.RowId} {Describe(emote)} | {CatalogReading(emote.RowId)}"
+                + (serving.For(emote.RowId) is { } served ? $" | {served}" : string.Empty)
+                + (targetNow?.For(emote.RowId) is { } reading ? $" | {reading}" : string.Empty));
+        }
     }
 
     private static string Describe(Emote emote)

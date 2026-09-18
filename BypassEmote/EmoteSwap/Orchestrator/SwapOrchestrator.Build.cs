@@ -5,6 +5,8 @@ using NoireLib;
 using NoireLib.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace BypassEmote.EmoteSwap;
 
@@ -45,14 +47,17 @@ public sealed partial class SwapOrchestrator
     private sealed record SwapBuildRequest(EmoteAttributes Source, EmoteAttributes Target, int Generation,
         IReadOnlyList<RaceBuildInput> Races, string Skeleton, string ContentKey, string SourceKey,
         SwapModManager.SwapFilePlan Plan, string? SourceModName,
-        SwapTimings Timings, bool ExecuteAfterApply = true, bool? HoldOffHand = null);
+        SwapTimings Timings, bool ExecuteAfterApply = true, bool? HoldOffHand = null, SwapTrace? Trace = null);
 
     private sealed record SwapBuildOutcome(IReadOnlyDictionary<string, byte[]> Files,
         IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> FilesByRace,
         long ElapsedAtRetarget, long ElapsedAtPrepare,
-        bool FadeProtectedIntro, bool ClampedIntro);
+        bool FadeProtectedIntro, bool ClampedIntro,
+        Dictionary<string, GroupOutput?> Retargeted);
 
     private const string BackgroundOperationName = "Emote Swap byte pipeline";
+
+    private const string CoverageOperationName = "Emote Swap other bodies";
 
     private void StartBackgroundBuild(SwapBuildRequest request)
     {
@@ -80,56 +85,106 @@ public sealed partial class SwapOrchestrator
     private SwapBuildOutcome? BuildSwapFiles(SwapBuildRequest request)
     {
         var retargeted = new Dictionary<string, GroupOutput?>(StringComparer.Ordinal);
-        var byRace = new Dictionary<string, GroupedSwapFiles>(StringComparer.Ordinal);
 
-        GroupedSwapFiles? drawnFiles = null;
-        IReadOnlyList<ResolvedVariantPair> drawnPairs = [];
-
-        foreach (var race in request.Races)
-        {
-            var grouped = BuildGroupedFiles(race.Pairs,
-                RetargetingOncePerInput(retargeted, race.FallbackOrder, request.HoldOffHand));
-
-            var isDrawnBody = race.Race == request.Skeleton;
-
-            if (grouped.Main == null)
-            {
-                if (isDrawnBody)
-                {
-                    Log.Error($"No variant of /{request.Source.Command} could be retargeted onto /{request.Target.Command}.", LogPrefix);
-                    return null;
-                }
-
-                Log.Debug($"Nothing retargeted for {race.Race}; that body is left out of this swap.", LogPrefix);
-                continue;
-            }
-
-            if (isDrawnBody)
-            {
-                drawnFiles = grouped;
-                drawnPairs = race.Pairs;
-            }
-
-            byRace[race.Race] = grouped;
-        }
-
-        var elapsedAtRetarget = request.Timings.Clock.ElapsedMilliseconds;
-
-        if (drawnFiles is not { } drawn)
+        if (request.Races.FirstOrDefault(race => race.Race == request.Skeleton) is not { } drawnRace)
         {
             Log.Error($"The swap of /{request.Source.Command} covers no body to play it on.", LogPrefix);
             return null;
         }
 
-        var assembled = AssembleRaceFiles(byRace);
+        var drawn = BuildGroupedFiles(drawnRace.Pairs,
+            RetargetingOncePerInput(retargeted, drawnRace.FallbackOrder, request.HoldOffHand));
+
+        var elapsedAtRetarget = request.Timings.Clock.ElapsedMilliseconds;
+
+        if (drawn.Main == null)
+        {
+            Log.Error($"No variant of /{request.Source.Command} could be retargeted onto /{request.Target.Command}.", LogPrefix);
+            return null;
+        }
+
+        var assembled = AssembleRaceFiles(
+            new Dictionary<string, GroupedSwapFiles>(StringComparer.Ordinal) { [drawnRace.Race] = drawn });
 
         if (_swapMods.PrepareFiles(request.Plan, assembled.WriteSet) == null)
             return null;
 
         return new SwapBuildOutcome(assembled.WriteSet, assembled.FilesByRace,
             elapsedAtRetarget, request.Timings.Clock.ElapsedMilliseconds,
-            FadeProtectedIntro: OutputFadeProtected(drawnPairs, drawn),
-            ClampedIntro: drawn.ClampedIntro);
+            FadeProtectedIntro: OutputFadeProtected(drawnRace.Pairs, drawn),
+            ClampedIntro: drawn.ClampedIntro,
+            retargeted);
+    }
+
+    private void StartCoverageBuild(SwapBuildRequest request, Dictionary<string, GroupOutput?> retargeted)
+    {
+        if (request.Races.All(race => race.Race == request.Skeleton))
+            return;
+
+        _ = AsyncHelper.RunBackgroundThenFrameworkSafeAsync(
+            () => BuildCoverageOrNull(request, retargeted),
+            coverage =>
+            {
+                if (coverage == null || _disposed)
+                    return;
+
+                if (!_swapMods.AddCoverage(request.ContentKey, request.Skeleton, coverage))
+                {
+                    Log.Debug($"The other bodies of /{request.Source.Command} onto /{request.Target.Command} were "
+                        + "not kept: the swap or the drawn body changed while they were built.", LogPrefix);
+                }
+            },
+            ex => Log.Debug(
+                $"Could not hand the other bodies of a swap back to the framework thread ({ex.Message}); dropping them.",
+                LogPrefix),
+            CoverageOperationName);
+    }
+
+    private IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? BuildCoverageOrNull(
+        SwapBuildRequest request, Dictionary<string, GroupOutput?> retargeted)
+    {
+        try
+        {
+            var clock = Stopwatch.StartNew();
+            var byRace = new Dictionary<string, GroupedSwapFiles>(StringComparer.Ordinal);
+
+            foreach (var race in request.Races)
+            {
+                if (race.Race == request.Skeleton)
+                    continue;
+
+                var grouped = BuildGroupedFiles(race.Pairs,
+                    RetargetingOncePerInput(retargeted, race.FallbackOrder, request.HoldOffHand));
+
+                if (grouped.Main == null)
+                {
+                    Log.Debug($"Nothing retargeted for {race.Race}; that body is left out of this swap.", LogPrefix);
+                    continue;
+                }
+
+                byRace[race.Race] = grouped;
+            }
+
+            if (byRace.Count == 0)
+                return null;
+
+            var assembled = AssembleRaceFiles(byRace);
+
+            if (_swapMods.PrepareFiles(request.Plan, assembled.WriteSet) == null)
+                return null;
+
+            Log.Debug($"Built the other {byRace.Count} bod(y/ies) of /{request.Source.Command} onto "
+                + $"/{request.Target.Command} in {clock.ElapsedMilliseconds}ms.", LogPrefix);
+
+            return assembled.FilesByRace;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Building the other bodies of /{request.Source.Command} onto /{request.Target.Command} failed.",
+                LogPrefix);
+
+            return null;
+        }
     }
 
     internal sealed record AssembledRaceFiles(
@@ -140,7 +195,7 @@ public sealed partial class SwapOrchestrator
     {
         var writeSet = new Dictionary<string, byte[]>(StringComparer.Ordinal);
         var filesByRace = new Dictionary<string, IReadOnlyDictionary<string, string>>(byRace.Count, StringComparer.Ordinal);
-        var uniqueNamesByRace = new Dictionary<string, IReadOnlyDictionary<string, string>>(byRace.Count, StringComparer.Ordinal);
+        var fileNames = new Dictionary<byte[], string>(ReferenceEqualityComparer.Instance);
 
         foreach (var (race, grouped) in byRace)
         {
@@ -148,8 +203,10 @@ public sealed partial class SwapOrchestrator
 
             foreach (var (gamePath, bytes) in grouped.Files)
             {
-                var relativePath = SwapModManager.RedirectedPathValue(
-                    SwapModManager.DeriveFileName(bytes, SwapModManager.FileExtensionFor(gamePath)));
+                if (!fileNames.TryGetValue(bytes, out var fileName))
+                    fileNames[bytes] = fileName = SwapModManager.DeriveFileName(bytes, string.Empty);
+
+                var relativePath = SwapModManager.RedirectedPathValue(fileName + SwapModManager.FileExtensionFor(gamePath));
 
                 redirects[gamePath] = relativePath;
                 writeSet[relativePath] = bytes;
@@ -206,6 +263,7 @@ public sealed partial class SwapOrchestrator
         if (!_swapMods.AddAndSelect(newEntry, built.Files, request.Skeleton))
         {
             _generations.Relinquish(request.Generation);
+            LogSwapNotPlayed(request.Source, request.Target, request.Trace, "the generated mod could not be applied");
             ReportFailure(request, GenericFailureMessage);
             return;
         }
@@ -225,10 +283,13 @@ public sealed partial class SwapOrchestrator
                 $"The swap of /{request.Source.Command} onto /{request.Target.Command} now serves {request.Skeleton}"
                 + $" ({timings.AtApply}ms).", LogPrefix);
 
+            StartCoverageBuild(request, built.Retargeted);
             return;
         }
 
-        ExecuteSwapTail(request.Source, request.Target, request.Generation, timings);
+        ExecuteSwapTail(request.Source, request.Target, request.Generation, timings, request.Trace);
+
+        StartCoverageBuild(request, built.Retargeted);
     }
 
     private SwapOptionEntry EntryFor(SwapBuildRequest request, SwapBuildOutcome built)
@@ -244,12 +305,15 @@ public sealed partial class SwapOrchestrator
             ?? OptionNaming.OptionNameFor(DisplayNameFor(request.Source), request.SourceModName,
                 _swapMods.TakenOptionNames(groupName));
 
+        var drawnPairs = request.Races.FirstOrDefault(race => race.Race == request.Skeleton)?.Pairs ?? [];
+
         return new SwapOptionEntry(request.ContentKey, groupName, optionName, request.Source.RowId,
             request.Target.RowId, IsIdlePoseSwap: false, built.FilesByRace,
             FadeProtectedIntro: built.FadeProtectedIntro,
             ClampedIntro: built.ClampedIntro,
             RulesStamp: SwapRulesStamp.Current(),
-            SourceKey: request.SourceKey);
+            SourceKey: request.SourceKey,
+            SourceServedBy: SourceServedByFor(request.Target, drawnPairs));
     }
 
     private void RefuseBackgroundReturn(SwapBuildRequest request, BackgroundVerdict verdict)
@@ -261,7 +325,10 @@ public sealed partial class SwapOrchestrator
             $"{BackgroundRefusalDetail(verdict)} (/{request.Source.Command} onto /{request.Target.Command}).", LogPrefix);
 
         if (ShouldWarnOnRefusal(verdict))
+        {
+            LogSwapNotPlayed(request.Source, request.Target, request.Trace, "the swap files could not be built");
             ReportFailure(request, GenericFailureMessage);
+        }
     }
 
     private static void ReportFailure(SwapBuildRequest request, string message)

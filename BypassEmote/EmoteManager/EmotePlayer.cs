@@ -31,6 +31,8 @@ internal static unsafe class EmotePlayer
         if (chara == null)
             return;
 
+        var requestedRowId = emote.RowId;
+
         // Throw/dote/splash/all saints charm and the photograph ones have a second row for the animation
         // played with no target, or one picked by the target's height
         var resolvedRowId = CommonHelper.ResolveTargetedEmote(chara, emote.RowId, characterState);
@@ -167,6 +169,9 @@ internal static unsafe class EmotePlayer
 
         if (receivedIpcData == null)
             IpcHelper.NotifyEmoteStart(chara, emote);
+
+        if (isLocalPlayer && receivedIpcData == null)
+            Service.RecordEmoteHistory(requestedRowId);
     }
 
     public static void ProcessCharacterState(ICharacter chara, CharacterState characterState, IpcData? receivedIpcData = null)

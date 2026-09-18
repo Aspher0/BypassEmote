@@ -51,6 +51,7 @@ public partial class Service
 
         InstallHooks();
         InitializeSwap();
+        StartEmoteUi();
 
         PatchApproval.Start();
     }
@@ -69,11 +70,14 @@ public partial class Service
             built.Add((emote, EmoteHelper.GetEmoteCategory(emote)));
 
         LockedEmotes = built;
+
+        RefreshLockedEmoteIds();
     }
 
     public static void ClearLockedEmotes()
     {
         LockedEmotes = [];
+        ClearEmoteUiState();
     }
 
     private static void OnLogout(int type, int code)
@@ -96,6 +100,8 @@ public partial class Service
 
         NoireService.ClientState.Login -= RefreshLockedEmotes;
         NoireService.ClientState.Logout -= OnLogout;
+
+        StopEmoteUi();
 
         DisposeSwap();
 

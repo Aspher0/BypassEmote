@@ -21,7 +21,8 @@ public sealed record SwapOptionEntry(
     // The settings this target was chosen under. Anything else means the rules moved, so the next swap judges it.
     string? RulesStamp = null,
     string? SourceKey = null,
-    byte IdlePoseIndex = 0);
+    byte IdlePoseIndex = 0,
+    string? SourceServedBy = null);
 
 /// <summary> The target emote one source was handed, saved so it stays after restarts. </summary>
 public sealed record DispatchRecord(uint SourceEmote, uint TargetEmote, long LastUseStamp,

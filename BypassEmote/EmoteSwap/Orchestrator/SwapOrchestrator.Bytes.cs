@@ -194,7 +194,7 @@ public sealed partial class SwapOrchestrator
 
     internal static string GroupInputKey(IReadOnlyList<ResolvedVariantPair> group)
         => string.Join("|", group.Select(member =>
-            $"{member.Pair.SourceRequestedPath}>{member.ResolvedSourcePath}"
+            $"{member.ResolvedSourcePath}{(ServedByAMod(member.Pair, member.ResolvedSourcePath) ? " (mod)" : string.Empty)}"
             + $">{member.Pair.RequiredNamesPath ?? member.Pair.TargetRequestedPath}"
             + $">{member.Pair.SourceFaceLibrary}"));
 

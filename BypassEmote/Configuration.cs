@@ -43,6 +43,10 @@ public class ConfigurationInstance : NoireConfigBase
 
     public bool BypassOnHotbarSlotTriggered { get; set; } = true;
 
+    public bool ShowLockedEmotesInGameWindow { get; set; } = true;
+
+    public bool ShowLockedEmotesAsUsable { get; set; } = false;
+
     public bool AutoFaceTargetDirectPlay { get; set; } = true;
 
     public bool DirectPlayUnsafe { get; set; } = false;

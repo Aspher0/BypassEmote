@@ -160,6 +160,8 @@ public partial class Service
         // A hotbar press already went through the slot hook
         var emote = inHotbarSlot ? null : ResolveSelfEmote(emoteId);
 
+        CloseContextMenu();
+
         if (emote.HasValue && Configuration.SelfBypassMode == SelfBypassMode.EmoteSwap
             && !IsPoseFamilySource(emote.Value.RowId))
         {

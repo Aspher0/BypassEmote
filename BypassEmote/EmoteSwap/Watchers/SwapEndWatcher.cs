@@ -198,7 +198,12 @@ public sealed class SwapEndWatcher
 
     private void End(string reason)
     {
-        Log.Debug($"Ending the swap: {reason}"
+        var ending = _armedEntry is { } entry
+            ? $" '{entry.GroupName}' / '{entry.OptionName}' (emote {entry.SourceEmote} onto "
+                + (entry.IsIdlePoseSwap ? $"idle pose {entry.IdlePoseIndex}" : $"emote {entry.TargetEmote}") + ")"
+            : string.Empty;
+
+        Log.Debug($"Ending the swap{ending}: {reason}"
             + (_isIdlePoseWatch
                 ? _idlePoseRedrawsOnEnd ? ", with a redraw." : ", breaking the pose animation cache instead."
                 : "."),

@@ -140,13 +140,13 @@ public sealed partial class SwapOrchestrator
     internal IReadOnlyList<RaceBuildInput> RaceInputsFor(EmoteAttributes source, EmoteAttributes target,
         string drawnSkeleton)
     {
-        var modProvides = Memoized(ForeignModProvides);
+        var races = RaceOrderFrom(drawnSkeleton);
+        var (modProvides, resolve) = BatchedResolvers([source, target], races);
         var vanillaExists = Memoized(VanillaExists);
-        var resolve = Memoized(ResolveOutsideOwnMod);
 
         var inputs = new List<RaceBuildInput>();
 
-        foreach (var race in RaceOrderFrom(drawnSkeleton))
+        foreach (var race in races)
         {
             var fallbackOrder = EmotePathHelper.GetFallbackOrder(race);
             var pairs = BuildPairs(source, target, fallbackOrder, modProvides, vanillaExists);
@@ -176,6 +176,51 @@ public sealed partial class SwapOrchestrator
             race => !string.Equals(race, drawnSkeleton, StringComparison.OrdinalIgnoreCase)));
 
         return order;
+    }
+
+    private (Func<string, bool> ModProvides, Func<string, string> Resolve) BatchedResolvers(
+        IReadOnlyList<EmoteAttributes> emotes, IReadOnlyList<string> races)
+    {
+        var relativePaths = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var emote in emotes)
+        {
+            foreach (var variant in emote.Variants)
+                relativePaths.Add(variant.RelativePapPath);
+
+            if (emote.IntroRelativePapPath is { } intro)
+                relativePaths.Add(intro);
+
+            if (emote.AdjustRelativePapPath is { } adjust)
+                relativePaths.Add(adjust);
+        }
+
+        var paths = races
+            .SelectMany(race => EmotePathHelper.GetFallbackOrder(race))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .SelectMany(step => relativePaths.Select(relative => EmotePathHelper.GetSkeletonPath(step, relative)))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        if (_penumbra.ResolvePlayerPaths(paths) is not { } resolved)
+            return (Memoized(ForeignModProvides), Memoized(ResolveOutsideOwnMod));
+
+        var resolvedByPath = new Dictionary<string, string>(paths.Count, StringComparer.Ordinal);
+
+        for (var index = 0; index < paths.Count; index++)
+            resolvedByPath[paths[index]] = resolved[index];
+
+        bool ModProvides(string path)
+            => resolvedByPath.TryGetValue(path, out var served)
+                ? served != path && !_swapMods.IsOwnPath(served)
+                : ForeignModProvides(path);
+
+        string Resolve(string path)
+            => resolvedByPath.TryGetValue(path, out var served) && (served == path || !_swapMods.IsOwnPath(served))
+                ? served
+                : ResolveOutsideOwnMod(path);
+
+        return (Memoized(ModProvides), Memoized(Resolve));
     }
 
     private static Func<string, T> Memoized<T>(Func<string, T> probe)

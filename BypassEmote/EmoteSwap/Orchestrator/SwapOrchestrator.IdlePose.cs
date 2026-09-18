@@ -102,7 +102,7 @@ public sealed partial class SwapOrchestrator
         && (match.Target == null || match.Target.LoopKind != EmotePlayType.Looped);
 
     private bool TryIdlePoseSwap(EmoteAttributes source, ICharacter localPlayer, string skeleton,
-        Stopwatch swapClock, long elapsedAtMatch)
+        Stopwatch swapClock, long elapsedAtMatch, SwapContext context)
     {
         var poseState = CharacterPoseState.Read(localPlayer);
 
@@ -165,6 +165,15 @@ public sealed partial class SwapOrchestrator
 
         files[loopTargetPath] = loopBytes;
 
+        var loopServedBy = ServedBy(sourceRequestedPath, resolvedSourcePath);
+        string? startServedBy = null;
+
+        var startLine = posePaths.StartRelativePapPath == null
+            ? IdlePoseDropsSourceIntro(null, source.Intro, sourceIntroRequestedPath)
+                ? $"start: this pose has none, so {sourceIntroRequestedPath} does not play"
+                : "start: this pose has none"
+            : $"start: '{posePaths.StartRelativePapPath}' resolves on no skeleton in the chain";
+
         if (posePaths.StartRelativePapPath is { } startRelativePath
             && SelectRequestedPath(startRelativePath, fallbackOrder, ForeignModProvides, VanillaExists) is { } startTargetPath)
         {
@@ -180,7 +189,14 @@ public sealed partial class SwapOrchestrator
             }
 
             if (BuildIdlePosePap(startSourceRequestedPath, startResolvedSourcePath, startTargetPath, startRelativePath, startSourceFaceLibrary) is { } startBytes)
+            {
                 files[startTargetPath] = startBytes;
+                startServedBy = ServedBy(startSourceRequestedPath, startResolvedSourcePath);
+            }
+
+            startLine = startServedBy != null
+                ? $"start: {startSourceRequestedPath} -> {startServedBy}, onto {startTargetPath}"
+                : $"start: could not be built onto {startTargetPath}, the pose keeps its own";
         }
 
         var elapsedAtRetarget = swapClock.ElapsedMilliseconds;
@@ -209,7 +225,9 @@ public sealed partial class SwapOrchestrator
 
         if (!reused)
         {
-            entry = IdlePoseEntryFor(contentKey, sourceKey, source, skeleton, files, poseType, poseIndex);
+            entry = IdlePoseEntryFor(contentKey, sourceKey, source, skeleton, files, poseType, poseIndex,
+                ModNameServing(sourceRequestedPath, resolvedSourcePath),
+                $"loop: {loopServedBy}" + (startServedBy != null ? $"; start: {startServedBy}" : string.Empty));
 
             if (!_swapMods.AddAndSelect(entry, files, skeleton))
             {
@@ -247,6 +265,15 @@ public sealed partial class SwapOrchestrator
             $"Swap timings (idle pose): match {elapsedAtMatch}ms, retarget {elapsedAtRetarget - elapsedAtMatch}ms, " +
             $"apply {elapsedAtApply - elapsedAtRetarget}ms, redraw {elapsedAtRedraw - elapsedAtApply}ms, " +
             $"total {elapsedAtRedraw}ms.", LogPrefix);
+
+        Log.Info(TraceText(
+            $"Swap played: {LabelFor(source)} -> idle pose '{entry!.GroupName}' on {skeleton} in {elapsedAtRedraw}ms",
+            [
+                .. ContextLines(context, reused),
+                $"option: '{entry.GroupName}' / '{entry.OptionName}'",
+                $"loop ({sourceVariant.Posture}): {sourceRequestedPath} -> {loopServedBy}, onto {loopTargetPath}",
+                startLine,
+            ]), LogPrefix);
 
         return true;
     }
@@ -330,7 +357,8 @@ public sealed partial class SwapOrchestrator
     }
 
     private SwapOptionEntry IdlePoseEntryFor(string contentKey, string sourceKey, EmoteAttributes source, string skeleton,
-        IReadOnlyDictionary<string, byte[]> files, EmoteController.PoseType poseType, byte poseIndex)
+        IReadOnlyDictionary<string, byte[]> files, EmoteController.PoseType poseType, byte poseIndex,
+        string? sourceModName, string sourceServedBy)
     {
         var redirectedPaths = new Dictionary<string, string>(files.Count, StringComparer.Ordinal);
 
@@ -348,11 +376,12 @@ public sealed partial class SwapOrchestrator
         };
 
         return new SwapOptionEntry(contentKey, groupName,
-            OptionNaming.OptionNameFor(source.Command, null, _swapMods.TakenOptionNames(groupName)),
+            OptionNaming.OptionNameFor(source.Command, sourceModName, _swapMods.TakenOptionNames(groupName)),
             source.RowId, IdlePoseTargetEmote, IsIdlePoseSwap: true, filesByRace,
             RulesStamp: SwapRulesStamp.Current(),
             SourceKey: sourceKey,
-            IdlePoseIndex: poseIndex);
+            IdlePoseIndex: poseIndex,
+            SourceServedBy: sourceServedBy);
     }
 
     private static byte[]? BuildIdlePosePap(string sourceRequestedPath, string resolvedSourcePath,

@@ -419,6 +419,36 @@ public sealed class SwapModManager
         return selected;
     }
 
+    public bool AddCoverage(string contentKey, string builtFor,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> coverage)
+    {
+        if (Registry.Skeleton != builtFor || KeptWithKey(contentKey) is not { } entry || ModDirectory is not { } modDirectory)
+            return false;
+
+        var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var merged = new Dictionary<string, IReadOnlyDictionary<string, string>>(entry.FilesByRace, StringComparer.Ordinal);
+
+        foreach (var (race, files) in coverage)
+        {
+            if (merged.ContainsKey(race))
+                continue;
+
+            if (!files.Values.All(relativePath => existing.Contains(relativePath)
+                    || (File.Exists(Path.Combine(modDirectory, relativePath)) && existing.Add(relativePath))))
+            {
+                continue;
+            }
+
+            merged[race] = files;
+        }
+
+        if (merged.Count == entry.FilesByRace.Count)
+            return false;
+
+        UpdateEntry(entry with { FilesByRace = merged });
+        return true;
+    }
+
     internal int ApplyRulesPlan(string stamp, string sourceKey, uint sourceEmote, uint keptTarget)
     {
         var plan = RegistryDecisions.PlanForSwap(Registry, stamp, sourceKey, sourceEmote, keptTarget, _pressedKey,

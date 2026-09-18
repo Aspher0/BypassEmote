@@ -16,7 +16,7 @@ public sealed partial class SwapOrchestrator
         long AtApply, long AtFrame = 0, long AtEntry = 0);
 
     private bool TryReuseAndExecute(SwapOptionEntry kept, EmoteAttributes source, EmoteAttributes target,
-        SwapTimings timings)
+        SwapTimings timings, SwapTrace trace)
     {
         Log.Debug($"Reuse route for /{source.Command} onto /{target.Command}.", LogPrefix);
 
@@ -31,11 +31,12 @@ public sealed partial class SwapOrchestrator
 
         var generation = _generations.TakeOwnership();
 
-        ExecuteSwapTail(source, target, generation, timings with { AtApply = timings.Clock.ElapsedMilliseconds });
+        ExecuteSwapTail(source, target, generation, timings with { AtApply = timings.Clock.ElapsedMilliseconds }, trace);
         return true;
     }
 
-    private void ExecuteSwapTail(EmoteAttributes source, EmoteAttributes target, int generation, SwapTimings timings)
+    private void ExecuteSwapTail(EmoteAttributes source, EmoteAttributes target, int generation, SwapTimings timings,
+        SwapTrace? trace)
     {
         var elapsedAtTail = timings.Clock.ElapsedMilliseconds;
 
@@ -55,11 +56,11 @@ public sealed partial class SwapOrchestrator
 
         if (AttemptExecute(target.RowId))
         {
-            CompleteSwapTail(source, target, timings, elapsedAtTail);
+            CompleteSwapTail(source, target, timings, elapsedAtTail, trace);
             return;
         }
 
-        _pendingExecute = new PendingExecute(source, target, generation, timings, elapsedAtTail);
+        _pendingExecute = new PendingExecute(source, target, generation, timings, elapsedAtTail, trace);
 
         SubscribeExecuteRetry();
 
@@ -85,11 +86,16 @@ public sealed partial class SwapOrchestrator
         }
     }
 
-    private void CompleteSwapTail(EmoteAttributes source, EmoteAttributes target, SwapTimings timings, long elapsedAtTail)
+    private void CompleteSwapTail(EmoteAttributes source, EmoteAttributes target, SwapTimings timings, long elapsedAtTail,
+        SwapTrace? trace)
     {
         var elapsedAtExecute = timings.Clock.ElapsedMilliseconds;
 
         LogHelper.SwapLine(source.Command, target.Command);
+
+        LogSwapPlayed(source, target, trace, elapsedAtExecute);
+
+        Service.RecordEmoteHistory(source.RowId);
 
         if (TargetDropsSourceIntro(source, target))
             LogHelper.Notice(TargetIntroDroppedMessageFor(target));
@@ -120,12 +126,15 @@ public sealed partial class SwapOrchestrator
         => $"{(emote.Intro == IntroKind.Pap ? "intro" : "no intro")}"
         + $" + {(emote.LoopKind == EmotePlayType.Looped ? "loop" : "one shot")}";
 
-    private void FailSwapTail(int generation, uint targetRowId, string debugDetail)
+    private void FailSwapTail(PendingExecute pending, string debugDetail)
     {
         Log.Debug(debugDetail, LogPrefix);
 
-        if (_generations.IsCurrent(generation))
-            DeselectArmed(targetRowId);
+        LogSwapNotPlayed(pending.Source, pending.Target, pending.Trace,
+            $"the game kept refusing the target for {pending.RetryClock.ElapsedMilliseconds}ms");
+
+        if (_generations.IsCurrent(pending.Generation))
+            DeselectArmed(pending.Target.RowId);
         else
             Log.Debug("The failed execute's swap was already superseded; the mod is left to its new owner.", LogPrefix);
 
@@ -133,7 +142,7 @@ public sealed partial class SwapOrchestrator
     }
 
     private sealed record PendingExecute(EmoteAttributes Source, EmoteAttributes Target, int Generation,
-        SwapTimings Timings, long ElapsedAtTail)
+        SwapTimings Timings, long ElapsedAtTail, SwapTrace? Trace)
     {
         public Stopwatch RetryClock { get; } = Stopwatch.StartNew();
 
@@ -216,7 +225,7 @@ public sealed partial class SwapOrchestrator
                 if (!ExecuteRetryPolicy.ShouldKeepTrying(elapsed))
                 {
                     ClearExecuteRetry();
-                    FailSwapTail(pending.Generation, pending.Target.RowId,
+                    FailSwapTail(pending,
                         $"The game kept refusing /{pending.Target.Command} for {elapsed}ms; the swap did not play.");
                 }
 
@@ -228,14 +237,14 @@ public sealed partial class SwapOrchestrator
             if (AttemptExecute(pending.Target.RowId))
             {
                 ClearExecuteRetry();
-                CompleteSwapTail(pending.Source, pending.Target, pending.Timings, pending.ElapsedAtTail);
+                CompleteSwapTail(pending.Source, pending.Target, pending.Timings, pending.ElapsedAtTail, pending.Trace);
                 return;
             }
 
             if (!ExecuteRetryPolicy.ShouldKeepTrying(pending.RetryClock.ElapsedMilliseconds))
             {
                 ClearExecuteRetry();
-                FailSwapTail(pending.Generation, pending.Target.RowId,
+                FailSwapTail(pending,
                     $"The game kept refusing /{pending.Target.Command} for {pending.RetryClock.ElapsedMilliseconds}ms; the swap did not play.");
             }
         }
