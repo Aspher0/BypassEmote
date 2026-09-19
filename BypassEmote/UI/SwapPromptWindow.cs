@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 
 namespace BypassEmote.UI;
 
-/// <summary> One-time popup to pick a bypass mode. </summary>
 public class SwapPromptWindow : IDisposable
 {
     private const float DialogWidth = 520f;
@@ -72,10 +71,6 @@ public class SwapPromptWindow : IDisposable
 
     private static NoireContent BuildMessage()
     {
-        var theme = NoireTheme.Current;
-
-        var ok = ColorHelper.HexToVector4("#009DFF");
-        var warning = ColorHelper.HexToVector4("#FF9800");
         var muted = ColorHelper.HexToVector4("#9E9E9E");
 
         return new NoireContent()
@@ -89,7 +84,7 @@ public class SwapPromptWindow : IDisposable
             .AddNewLine()
             .AddNewLine()
             .AddText("The new mode uses Penumbra to swap locked emotes onto unlocked ones. "
-                + "The game itself does the playing, and nothing mismatches between the game and the server anymore.")
+                + "The game plays the emote itself. Nothing mismatches between the game and the server anymore.")
             .AddNewLine()
             .AddNewLine()
             .AddText("You can change this at any time in the settings.", muted);

@@ -26,20 +26,23 @@ public sealed partial class Plugin
             .AddFallbackCommand("emote_command", fallback => fallback
                 .WithHelp("Bypasses any emote (including locked ones) on yourself, by command name or ID.")
                 .WithDisplayOrder(0)
-                .Handle(args => PlayEmoteFromArg(ResolveLocalPlayer(), args.RawTokens[0], "Usage: /be <emote_command> or /be stop")))
+                .Handle(args => PlayEmoteFromArg(ResolveLocalPlayer(), args.RawTokens[0],
+                    () => commandRouter.PrintHelp("/bypassemote"))))
             .AddSubCommand("config", sub => sub
                 .WithHelp("Opens the configuration window.")
                 .AddAlias("c")
                 .WithDisplayOrder(0)
                 .Handle(ToggleSettings))
             .AddSubCommand("sync", sub => sub
-                .WithHelp("Syncs only players that are bypassing an emote.")
+                .AddAlias("syncall")
+                .WithHelp("Restarts the emotes of every player and NPC around you, with their sounds.")
                 .WithDisplayOrder(1)
-                .Handle(() => EmotePlayer.SyncEmotes(false)))
-            .AddSubCommand("syncall", sub => sub
-                .WithHelp("Syncs everyone playing an emote.")
-                .WithDisplayOrder(2)
                 .Handle(() => EmotePlayer.SyncEmotes(true)))
+            .AddSubCommand("syncdirect", sub => sub
+                .WithHelp("Restarts only the emotes played with Direct Play.")
+                .AddAlias("syncd")
+                .WithDisplayOrder(2)
+                .Handle(() => EmotePlayer.SyncEmotes(false)))
             .AddSubCommand("changelog", sub => sub
                 .WithHelp("Opens the changelog window.")
                 .WithDisplayOrder(3)
@@ -82,7 +85,8 @@ public sealed partial class Plugin
             .AddFallbackCommand("emote_command", fallback => fallback
                 .WithHelp("Plays the emote on your target, by command name or ID.")
                 .WithDisplayOrder(0)
-                .Handle(args => PlayEmoteFromArg(ResolveTargetedNpc(), args.RawTokens[0], "Usage: /bet <emote_command> or /bet stop")));
+                .Handle(args => PlayEmoteFromArg(ResolveTargetedNpc(), args.RawTokens[0],
+                    () => commandRouter.PrintHelp("/bet"))));
 
         commandRouter.Map("/bem")
             .WithHelp("Applies any emote to your own minion if summoned, without needing to target it. Use /bem <emote_command> or /bem stop.")
@@ -94,7 +98,8 @@ public sealed partial class Plugin
             .AddFallbackCommand("emote_command", fallback => fallback
                 .WithHelp("Plays the emote on your minion, by command name or ID.")
                 .WithDisplayOrder(0)
-                .Handle(args => PlayEmoteFromArg(ResolveMinion(), args.RawTokens[0], "Usage: /bem <emote_command> or /bem stop")));
+                .Handle(args => PlayEmoteFromArg(ResolveMinion(), args.RawTokens[0],
+                    () => commandRouter.PrintHelp("/bem"))));
 
         commandRouter.Map("/bep")
             .WithHelp("Applies any emote to your own pet (carbuncle/eos) if summoned, without needing to target it. Use /bep <emote_command> or /bep stop.")
@@ -106,7 +111,8 @@ public sealed partial class Plugin
             .AddFallbackCommand("emote_command", fallback => fallback
                 .WithHelp("Plays the emote on your pet, by command name or ID.")
                 .WithDisplayOrder(0)
-                .Handle(args => PlayEmoteFromArg(ResolvePet(), args.RawTokens[0], "Usage: /bep <emote_command> or /bep stop")));
+                .Handle(args => PlayEmoteFromArg(ResolvePet(), args.RawTokens[0],
+                    () => commandRouter.PrintHelp("/bep"))));
 
         commandRouter.Map("/bec")
             .WithHelp("Applies any emote to your own chocobo if summoned, without needing to target it. Use /bec <emote_command> or /bec stop.")
@@ -118,7 +124,8 @@ public sealed partial class Plugin
             .AddFallbackCommand("emote_command", fallback => fallback
                 .WithHelp("Plays the emote on your chocobo, by command name or ID.")
                 .WithDisplayOrder(0)
-                .Handle(args => PlayEmoteFromArg(ResolveChocobo(), args.RawTokens[0], "Usage: /bec <emote_command> or /bec stop")));
+                .Handle(args => PlayEmoteFromArg(ResolveChocobo(), args.RawTokens[0],
+                    () => commandRouter.PrintHelp("/bec"))));
     }
 
     private static ICharacter? ResolveLocalPlayer()
@@ -170,7 +177,6 @@ public sealed partial class Plugin
         return null;
     }
 
-    // The swap mode only affects the player character
     private static bool IsSwappedSelfPlay(ICharacter character)
         => Configuration.SelfBypassMode == SelfBypassMode.EmoteSwap && IsLocalPlayer(character);
 
@@ -188,7 +194,7 @@ public sealed partial class Plugin
             EmotePlayer.StopLoop(character, true);
     }
 
-    private static void PlayEmoteFromArg(ICharacter? character, string arg, string usage)
+    private static void PlayEmoteFromArg(ICharacter? character, string arg, System.Action printHelp)
     {
         if (character == null)
             return;
@@ -200,7 +206,8 @@ public sealed partial class Plugin
 
         if (!emote.HasValue)
         {
-            LogHelper.Info($"Emote not found: {arg}\n{usage}");
+            LogHelper.Info($"Emote or command not found: {arg}");
+            printHelp();
             return;
         }
 

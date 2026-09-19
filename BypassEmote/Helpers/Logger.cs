@@ -8,7 +8,6 @@ using System.Numerics;
 
 namespace BypassEmote.Helpers;
 
-
 public sealed class Logger
 {
     private readonly string _tag;

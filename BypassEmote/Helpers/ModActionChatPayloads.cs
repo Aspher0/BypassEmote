@@ -4,7 +4,6 @@ using System.Numerics;
 
 namespace BypassEmote.Helpers;
 
-// Chat payloads (links) to look at a mod that prevented a swap or to switch it off
 internal static class ModActionChatPayloads
 {
     private static readonly Vector3 LinkColor = ColorHelper.HexToVector3("#4FA3FF");

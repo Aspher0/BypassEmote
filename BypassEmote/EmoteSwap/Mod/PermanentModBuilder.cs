@@ -27,7 +27,7 @@ internal static class PermanentModBuilder
         catch (Exception ex)
         {
             Log.Error(ex, $"Creating a mod for /{source.Command} over /{target.Command} failed.", LogPrefix);
-            return new Outcome(false, "Something went wrong. Nothing was created; the log has the details.");
+            return new Outcome(false, "Something went wrong. Nothing was created. The log has the details.");
         }
     }
 
@@ -62,8 +62,8 @@ internal static class PermanentModBuilder
 
         if (orchestrator.BuildPlainSwapFiles(source, target, skeletons, ownSkeleton) is not { Count: > 0 } files)
         {
-            return new Outcome(false, $"/{source.Command} cannot be played over /{target.Command}: "
-                + "they share no posture to move the animation onto.");
+            return new Outcome(false, $"/{source.Command} cannot be played over /{target.Command}. "
+                + "They share no posture.");
         }
 
         var redirects = new Dictionary<string, string>(files.Count);
@@ -76,15 +76,13 @@ internal static class PermanentModBuilder
             ? PriorityOver(penumbra, priorityCollection.Id, [.. files.Keys])
             : 0;
 
-        var layout = Service.SwapMods?.EnsureLayout() ?? ModLayout.V3;
-
-        if (!WriteMod(modDirectory, name, source, target, files, redirects, layout))
+        if (!WriteMod(modDirectory, name, source, target, files, redirects))
             return new Outcome(false, "The mod's files could not be written. The log has the details.");
 
         if (!penumbra.AddMod(directoryName))
         {
-            return new Outcome(false, $"'{name}' was written to '{directoryName}' but Penumbra would not take it. "
-                + "Rediscovering mods in Penumbra should pick it up.");
+            return new Outcome(false, $"'{name}' was written to '{directoryName}'. Penumbra did not load it. "
+                + "Rediscover mods in Penumbra to pick it up.");
         }
 
         if (assigned is { } collectionToPrioritiseIn)
@@ -94,10 +92,10 @@ internal static class PermanentModBuilder
             return new Outcome(true, $"'{name}' was created. Enable it in Penumbra when you want it.");
 
         if (assigned is not { } collection)
-            return new Outcome(true, $"'{name}' was created, but no collection is assigned to your character, so it is off.");
+            return new Outcome(true, $"'{name}' was created. No collection is assigned to your character. The mod is off.");
 
         if (!penumbra.TrySetModEnabled(collection.Id, directoryName, true))
-            return new Outcome(true, $"'{name}' was created, but Penumbra would not switch it on in {collection.Name}.");
+            return new Outcome(true, $"'{name}' was created. Penumbra could not enable it in {collection.Name}.");
 
         return new Outcome(true, $"'{name}' was created and switched on in {collection.Name}.");
     }
@@ -118,7 +116,7 @@ internal static class PermanentModBuilder
     }
 
     private static bool WriteMod(string modDirectory, string name, EmoteAttributes source, EmoteAttributes target,
-        IReadOnlyDictionary<string, byte[]> files, IReadOnlyDictionary<string, string> redirects, int layout)
+        IReadOnlyDictionary<string, byte[]> files, IReadOnlyDictionary<string, string> redirects)
     {
         try
         {
@@ -135,7 +133,7 @@ internal static class PermanentModBuilder
             var meta = new ModMeta(name, Service.PenumbraModAuthor, DescriptionFor(source, target),
                 Service.PenumbraModVersion, Service.PenumbraModWebsite);
 
-            ModStore.WriteMeta(layout, modDirectory, meta, redirects);
+            ModStore.WriteMeta(modDirectory, meta, redirects);
 
             Log.Debug($"Wrote '{name}' to '{modDirectory}': /{source.Command} over /{target.Command}, "
                 + $"{files.Count} file(s).", LogPrefix);
@@ -168,7 +166,6 @@ internal static class PermanentModBuilder
             }
         }
 
-        // Anything not shaped like a human animation path keeps its own shape under the same folder.
         return $"files/{normalized.TrimStart('/')}";
     }
 

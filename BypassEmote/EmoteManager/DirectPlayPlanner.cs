@@ -12,10 +12,7 @@ using System.Collections.Generic;
 
 namespace BypassEmote;
 
-internal sealed record DirectPlayPlan(int SlotIndex, ushort TimelineId, ushort IntroTimelineId = 0)
-{
-    public bool PlaysIntro => IntroTimelineId != 0;
-}
+internal sealed record DirectPlayPlan(int SlotIndex, ushort TimelineId, ushort IntroTimelineId = 0);
 
 internal readonly record struct PlayerState(EmoteCondition Condition, string? OrnamentName, byte? OrnamentKind);
 
@@ -74,9 +71,6 @@ internal static class DirectPlayPlanner
         return playType != EmotePlayType.OneShot;
     }
 
-    internal static EmoteCondition ConditionForOrnamentKind(byte ornamentKind)
-        => OrnamentHelper.ConditionForOrnamentKind(ornamentKind);
-
     internal static DirectPlayPlan? TryPlanFor(
         ICharacter character, Emote emote, EmotePlayType playType, out PlayerState state)
     {
@@ -89,7 +83,6 @@ internal static class DirectPlayPlanner
             state.Condition,
             EmoteHelper.GetEmoteConditions(emote),
             SlotTimelineIds(emote),
-            playType,
             OverrideSlotFor(emote, playType),
             conditionTimelines == default ? null : conditionTimelines);
 
@@ -165,7 +158,6 @@ internal static class DirectPlayPlanner
         EmoteCondition condition,
         EmoteCondition allowedConditions,
         IReadOnlyList<ushort> slotTimelineIds,
-        EmotePlayType playType,
         int? overrideSlot = null,
         (ushort Intro, ushort Loop)? conditionTimelines = null)
     {

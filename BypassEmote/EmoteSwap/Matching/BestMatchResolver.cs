@@ -8,25 +8,23 @@ namespace BypassEmote.EmoteSwap;
 
 public static class BestMatchResolver
 {
-    private const int CurrentPostureFit = 400;   // candidate.Postures contains currentPosture
-    private const int SameKindWhenLenient = 300; // only under AllowLoopOnOneShot: candidate.LoopKind == source.LoopKind
-    private const int IntroBothMatch = 250;      // candidate.HasIntro == source.HasIntro
-    private const int TurnExact = 200;           // candidate.Turn == source.Turn (both known)
-    private const int SoundSilent = 150;         // candidate.Sound == Silent
-    private const int TurnEyesNone = 100;        // turn pair {Eyes,None}: nearly identical on screen
-    private const int PostureSetEqual = 100;     // candidate.Postures == source.Postures
-    private const int SoundSfx = 50;             // candidate.Sound == Sfx
-    private const int TurnHeadEyes = 50;         // turn pair {Head,Eyes}
-    private const int TurnHeadNone = 35;         // turn pair {Head,None}
-    private const int IntroSourceOnly = 25;      // source.HasIntro && !candidate.HasIntro
-    private const int TurnBodyHead = 25;         // turn pair {Body,Head}
-    private const int TurnBodyEyes = 10;         // turn pair {Body,Eyes}
-    private const int PostureShared = 10;        // per shared posture flag (only when sets not equal)
-    private const int TurnBodyNone = 0;          // turn pair {Body,None}
-    private const int SoundVoiceline = 0;        // candidate.Sound == Voiceline
-    private const int TurnUnknownPenalty = -50;  // turn: either side Unknown (worst rank)
-
-    // Deliberately large negative scores to keep the tiering separate from the soft scores above.
+    private const int CurrentPostureFit = 400;
+    private const int SameKindWhenLenient = 300;
+    private const int IntroBothMatch = 250;
+    private const int TurnExact = 200;
+    private const int SoundSilent = 150;
+    private const int TurnEyesNone = 100;
+    private const int PostureSetEqual = 100;
+    private const int SoundSfx = 50;
+    private const int TurnHeadEyes = 50;
+    private const int TurnHeadNone = 35;
+    private const int IntroSourceOnly = 25;
+    private const int TurnBodyHead = 25;
+    private const int TurnBodyEyes = 10;
+    private const int PostureShared = 10;
+    private const int TurnBodyNone = 0;
+    private const int SoundVoiceline = 0;
+    private const int TurnUnknownPenalty = -50;
 
     private const int SoundingTargetTierPenalty = -10_000;
 
@@ -34,11 +32,10 @@ public static class BestMatchResolver
 
     private const int SourceIntroDroppedTierPenalty = -50_000;
 
-    // Slot 1 populated with no pap behind it, so its windup plays over any swap.
+    // A TMB-only intro still plays its windup over any swap.
     // Might be unncessary
     private const int TmbOnlyIntroTierPenalty = -75_000;
 
-    // Needs the shared-pap machinery, so it goes last of the intro cases.
     private const int PapIntroOnPaplessSourceTierPenalty = -25_000;
 
     public static MatchResult Resolve(
@@ -190,10 +187,8 @@ public static class BestMatchResolver
         return (first, tier);
     }
 
-    // Sits above the soft scores (+/-1200) and below the smallest tier step (25k)
     internal const int SameTierScoreBand = 10_000;
 
-    // What one rank is worth
     internal const int RankStep = 25_000;
 
     internal static int DistanceFor(DispatchFidelity fidelity) => fidelity switch

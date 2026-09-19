@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace BypassEmote.EmoteSwap;
 
-// A body change moves every option onto the newly drawn race's files
 internal static class SkeletonRewritePlanner
 {
     internal sealed record OptionRewrite(string GroupName, string OptionName, IReadOnlyDictionary<string, string> Files);

@@ -33,6 +33,7 @@ public sealed partial class SwapOrchestrator : IDisposable
     private readonly SwapModManager _swapMods;
     private readonly SwapEndWatcher _endWatcher;
     private readonly GenerationTracker _generations = new();
+    private readonly RedrawTimelineRestart _redrawRestart = new();
 
     private volatile bool _disposed;
 
@@ -52,6 +53,7 @@ public sealed partial class SwapOrchestrator : IDisposable
         _disposed = true;
         _penumbra.ExternalModChanged -= ForgetChangedTargets;
         ClearExecuteRetry();
+        _redrawRestart.Dispose();
     }
 
     public bool IsExecutingSwap { get; private set; }
@@ -246,7 +248,7 @@ public sealed partial class SwapOrchestrator : IDisposable
 
         if (source.IsPoseFamily)
         {
-            Log.Debug($"/{source.Command} is a pose-family emote; handing it to the game untouched.", LogPrefix);
+            Log.Debug($"/{source.Command} is a pose-family emote. Handed to the game untouched.", LogPrefix);
             TryExecuteEmote(source.RowId);
             return null;
         }
@@ -265,7 +267,7 @@ public sealed partial class SwapOrchestrator : IDisposable
 
         if (GameEmoteCooldownActive())
         {
-            Log.Debug($"/{source.Command} pressed inside the game's emote cooldown; ignored.", LogPrefix);
+            Log.Debug($"/{source.Command} pressed during the game's emote cooldown. Ignored.", LogPrefix);
             return null;
         }
 
@@ -392,8 +394,7 @@ public sealed partial class SwapOrchestrator : IDisposable
         return new TargetChoice(match, plainBest, staleVulnerable);
     }
 
-    // For /dote and its like the game plays a second row when nothing is targeted. The swap has to serve the
-    // animation that row would have played. Null when the row is in no catalog at all.
+    // /dote and other similar emotes play a second row when nothing is targeted.
     private EmoteAttributes? ResolveSource(ICharacter localPlayer, uint sourceRowId)
     {
         var asked = _catalog.Get(sourceRowId);

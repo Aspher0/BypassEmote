@@ -201,7 +201,7 @@ internal static class EmotePoolTab
 
         if (Service.Orchestrator is not { } orchestrator)
         {
-            ImGui.TextColored(Blocked, "Emote Swap is not running, so there is nothing to preview.");
+            ImGui.TextColored(Blocked, "Emote Swap is not running.");
             return;
         }
 
@@ -303,13 +303,13 @@ internal static class EmotePoolTab
 
         if (preview.LoopsFirstFailed)
         {
-            ImGui.TextColored(Notice, "No owned loop fitted. This is the lenient pass, where a one-shot "
+            ImGui.TextColored(Notice, "No owned loop fitted. Lenient pass: a one-shot "
                 + "can be used for a loop.");
         }
 
         if (preview.Match?.Target == null)
         {
-            ImGui.TextColored(Blocked, "Nothing passes the filters, so this emote cannot be bypassed here.");
+            ImGui.TextColored(Blocked, "Nothing passes the filters. This emote cannot be bypassed here.");
             return;
         }
 

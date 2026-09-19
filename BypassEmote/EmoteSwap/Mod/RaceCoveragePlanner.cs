@@ -6,7 +6,6 @@ namespace BypassEmote.EmoteSwap;
 
 public sealed record RacePaths(string Skeleton, IReadOnlyList<string> SourcePaths, IReadOnlyList<string> TargetPaths);
 
-// Determines who a written-out mod actually reaches.
 internal static class RaceCoveragePlanner
 {
     public sealed record SharedFile(string Winner, IReadOnlyList<string> Losers);

@@ -75,8 +75,8 @@ public sealed partial class SwapOrchestrator
         if (picked.RowId != first.Target.RowId)
         {
             LogHelper.DebugLine(heldInRank.ContainsKey(picked.RowId)
-                ? $">   dispatch: every target of this rank is taken; /{source.Command} shares /{picked.Command}"
-                : $">   dispatch: /{first.Target.Command} is held by another emote; /{source.Command} gets /{picked.Command}");
+                ? $">   dispatch: every target of this rank is taken. /{source.Command} shares /{picked.Command}"
+                : $">   dispatch: /{first.Target.Command} is held by another emote. /{source.Command} gets /{picked.Command}");
         }
 
         return first with { Target = picked };
@@ -119,7 +119,7 @@ public sealed partial class SwapOrchestrator
         Remember(source.RowId, picked.RowId, rank, stamp);
 
         if (picked.RowId != tier[0].RowId)
-            LogHelper.DebugLine($">   dispatch: /{tier[0].Command} is held by another emote; /{source.Command} gets /{picked.Command}");
+            LogHelper.DebugLine($">   dispatch: /{tier[0].Command} is held by another emote. /{source.Command} gets /{picked.Command}");
 
         return picked;
     }

@@ -1,4 +1,3 @@
-using NoireLib;
 using NoireLib.Helpers;
 using System;
 using System.Collections.Generic;
@@ -27,14 +26,7 @@ public sealed class ContentAddressedStore
     public string SearchPattern { get; }
 
     public string NameFor(byte[] bytes, string extension = "")
-        => $"{_prefix}{EncryptionHelper.ShortTag(bytes, _tagLength)}{extension}";
-
-    public bool Write(string directory, byte[] bytes, string extension, out string fileName)
-    {
-        fileName = NameFor(bytes, extension);
-
-        return WriteAt(Path.Combine(directory, fileName), bytes);
-    }
+        => $"{_prefix}{EncryptionHelper.ShortTag(bytes, _tagLength, EncryptionHelper.HashAlgorithmType.Sha256)}{extension}";
 
     public bool WriteAt(string filePath, byte[] bytes)
     {
@@ -83,7 +75,6 @@ public sealed class ContentAddressedStore
             }
             catch (Exception ex)
             {
-                // One undeletable file does not stop the rest of the sweep.
                 Log.Error(ex, $"Failed to delete stale file '{path}'.", LogPrefix);
             }
         }

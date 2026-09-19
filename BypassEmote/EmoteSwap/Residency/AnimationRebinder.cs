@@ -1,13 +1,10 @@
 using BypassEmote.Models;
-using NoireLib;
 using NoireLib.Hooking;
 using System;
 using System.Collections.Generic;
 
 namespace BypassEmote.EmoteSwap;
 
-// Breaks the game's animation cache. The character keeps its animation bound in two
-// trees on its draw object, keyed by a hash of the animation name
 public sealed unsafe class AnimationRebinder : IDisposable
 {
     private const string LogPrefix = "[AnimationRebinder] ";
@@ -26,7 +23,6 @@ public sealed unsafe class AnimationRebinder : IDisposable
     private const int NodeNextOffset = 0x10;
     private const int NodeBindingOffset = 0x18;
     private const int NodeStateOffset = 0x28;
-    private const int BindingTypeOffset = 0x18;
     private const int BindingBoundOffset = 0x58;
     private const int BindingRowIdOffset = 0x5C;
 
@@ -49,7 +45,7 @@ public sealed unsafe class AnimationRebinder : IDisposable
 
     private sealed record ArmedGroup(uint EmoteRowId, IReadOnlyList<ushort> TimelineIds, DateTime ExpiresUtc);
 
-    public readonly record struct BoundView(nint Node, nint Binding, int Type, int RowId, bool Bound);
+    public readonly record struct BoundView(nint Binding, int RowId, bool Bound);
 
     public AnimationRebinder()
     {
@@ -242,8 +238,8 @@ public sealed unsafe class AnimationRebinder : IDisposable
 
             if (binding > 0x10000 && *(int*)(node + NodeStateOffset) == 1)
             {
-                bound.Add(new BoundView(node, binding, *(int*)(binding + BindingTypeOffset),
-                    *(int*)(binding + BindingRowIdOffset), *(byte*)(binding + BindingBoundOffset) != 0));
+                bound.Add(new BoundView(binding, *(int*)(binding + BindingRowIdOffset),
+                    *(byte*)(binding + BindingBoundOffset) != 0));
             }
 
             node = *(nint*)(node + NodeNextOffset);

@@ -37,6 +37,8 @@ public partial class Service
 
     private static IDisposable? emoteAddonSetup;
     private static IDisposable? emoteAddonRefresh;
+    private static IDisposable? contextMenuSetup;
+    private static IDisposable? contextMenuRefresh;
 
     private static void StartEmoteUi()
     {
@@ -47,6 +49,12 @@ public partial class Service
 
         emoteAddonRefresh = AddonHelper.RegisterLifecycleListener(
             AddonEvent.PreRefresh, EmoteAddonName, OnEmoteAddonValues);
+
+        contextMenuSetup = AddonHelper.RegisterLifecycleListener(
+            AddonEvent.PreSetup, ContextMenuAddonName, OnContextMenuValues);
+
+        contextMenuRefresh = AddonHelper.RegisterLifecycleListener(
+            AddonEvent.PreRefresh, ContextMenuAddonName, OnContextMenuValues);
     }
 
     private static void StopEmoteUi()
@@ -59,10 +67,16 @@ public partial class Service
         emoteAddonRefresh?.Dispose();
         emoteAddonRefresh = null;
 
+        contextMenuSetup?.Dispose();
+        contextMenuSetup = null;
+
+        contextMenuRefresh?.Dispose();
+        contextMenuRefresh = null;
+
         if (hotbarSlotsLit)
             PaintHotbarSlots(lightUp: false);
 
-        if (!EmoteWindowIsOpen())
+        if (!EmoteWindowExists())
             ReleaseLockedEmoteCommands();
     }
 
@@ -114,62 +128,40 @@ public partial class Service
         if (values == null)
             return;
 
-        var showAsAvailable = Configuration.ShowLockedEmotesAsUsable;
-
         if (Configuration.ShowLockedEmotesInGameWindow)
         {
-            EmoteAddonValues.AddMissingEmotes(
-                values, count, LockedEmotesByOrder, LockedEmoteCommands, showAsAvailable);
+            EmoteAddonValues.AddMissingEmotes(values, count, LockedEmotesByOrder, LockedEmoteCommands);
 
-            if (SearchTextOf((AtkUnitBase*)args.Addon.Address) is { Length: > 0 } search)
+            if (type == AddonEvent.PreRefresh
+                && AddonHelper.TryGetAddon(args, out var addon)
+                && AddonHelper.TryReadTextInput(addon, out var search)
+                && search.Trim() is { Length: > 0 } trimmed)
             {
-                EmoteAddonValues.AddSearchMatches(
-                    values, count, MatchLockedEmotes(search), LockedEmoteCommands, showAsAvailable);
+                EmoteAddonValues.AddSearchMatches(values, count, MatchLockedEmotes(trimmed), LockedEmoteCommands);
             }
         }
 
-        if (showAsAvailable)
-            EmoteAddonValues.ShowLockedRowsAsAvailable(values, count);
+        EmoteAddonValues.ClearLockedRowFlags(values, count);
     }
 
-    private static unsafe string SearchTextOf(AtkUnitBase* addon)
-        => addon == null ? string.Empty : SearchTextIn(&addon->UldManager, 0);
-
-    private static unsafe string SearchTextIn(AtkUldManager* manager, int depth)
+    private static unsafe void OnContextMenuValues(AddonEvent type, AddonArgs args)
     {
-        if (depth > 3)
-            return string.Empty;
+        if (!Configuration.PluginEnabled)
+            return;
 
-        for (var index = 0; index < manager->NodeListCount; index++)
+        switch (args)
         {
-            var node = manager->NodeList[index];
+            case AddonSetupArgs setup:
+                ContextMenuValues.EnableExecute((AtkValue*)setup.AtkValues, setup.AtkValueCount);
+                break;
 
-            if (node == null || (ushort)node->Type < 1000)
-                continue;
-
-            var component = ((AtkComponentNode*)node)->Component;
-
-            if (component == null)
-                continue;
-
-            if ((ushort)node->Type == 1007)
-            {
-                var input = (AtkComponentTextInput*)component;
-                var text = input->AtkComponentInputBase.RawString.ToString().Trim();
-
-                return text.Length > 0 ? text : input->AtkComponentInputBase.EvaluatedString.ToString().Trim();
-            }
-
-            var nested = SearchTextIn(&component->UldManager, depth + 1);
-
-            if (nested.Length > 0)
-                return nested;
+            case AddonRefreshArgs refresh:
+                ContextMenuValues.EnableExecute((AtkValue*)refresh.AtkValues, refresh.AtkValueCount);
+                break;
         }
-
-        return string.Empty;
     }
 
-    private static List<uint> MatchLockedEmotes(string search)
+    internal static List<uint> MatchLockedEmotes(string search)
     {
         var matches = new List<uint>();
 
@@ -198,12 +190,8 @@ public partial class Service
 
     internal static unsafe void CloseContextMenu()
     {
-        var menu = (AtkUnitBase*)NoireService.GameGui.GetAddonByName(ContextMenuAddonName).Address;
-
-        if (menu == null || !menu->IsVisible)
-            return;
-
-        menu->FireCallbackInt(-1);
+        if (AddonHelper.TryGetReadyAddon(ContextMenuAddonName, out var menu))
+            menu->FireCallbackInt(-1);
     }
 
     private static unsafe void PaintEmoteWindowRows()
@@ -211,25 +199,21 @@ public partial class Service
         if (!Configuration.PluginEnabled || LockedEmoteIds.Count == 0)
             return;
 
-        var addon = (AtkUnitBase*)NoireService.GameGui.GetAddonByName(EmoteAddonName).Address;
-
-        if (addon == null)
-            return;
-
-        EmoteListDimmer.Paint(addon, Configuration.ShowLockedEmotesAsUsable);
+        if (AddonHelper.TryGetReadyAddon(EmoteAddonName, out var addon))
+            EmoteListDimmer.Paint(addon, Configuration.ShowLockedEmotesAsUsable);
     }
 
     private static unsafe void EnableContextMenuExecute()
     {
-        if (!Configuration.PluginEnabled || !EmoteWindowIsOpen())
-            return;
-
-        ContextMenuValues.EnableExecute(
-            (AtkUnitBase*)NoireService.GameGui.GetAddonByName(ContextMenuAddonName).Address);
+        if (Configuration.PluginEnabled && AddonHelper.TryGetReadyAddon(ContextMenuAddonName, out var menu))
+            ContextMenuValues.EnableExecute(menu);
     }
 
     private static bool EmoteWindowIsOpen()
-        => NoireService.GameGui.GetAddonByName(EmoteAddonName).IsAddonLoaded();
+        => AddonHelper.IsAddonReady(EmoteAddonName);
+
+    private static unsafe bool EmoteWindowExists()
+        => AddonHelper.TryGetAddon(EmoteAddonName, out _);
 
     private static unsafe void PaintHotbarSlots(bool lightUp)
     {
@@ -246,9 +230,7 @@ public partial class Service
 
         foreach (var addonName in ActionBarAddons)
         {
-            var addon = (AddonActionBarBase*)NoireService.GameGui.GetAddonByName(addonName).Address;
-
-            if (addon == null || !addon->AtkUnitBase.IsVisible)
+            if (!AddonHelper.TryGetReadyAddon<AddonActionBarBase>(addonName, out var addon))
                 continue;
 
             var slots = addon->ActionBarSlotVector;
@@ -276,10 +258,10 @@ public partial class Service
 
     private static unsafe void PaintSlotIcon(AtkComponentNode* iconNode, byte multiply)
     {
-        if (iconNode == null || iconNode->Component == null)
+        if (iconNode == null || !AddonHelper.TryGetComponent(&iconNode->AtkResNode, ComponentType.Icon, out var component))
             return;
 
-        var icon = (AtkComponentIcon*)iconNode->Component;
+        var icon = (AtkComponentIcon*)component;
 
         if (icon->IconImage == null)
             return;
@@ -368,9 +350,6 @@ public partial class Service
 
     private static nint AllocateCommandText(List<string> commands)
     {
-        if (commands.Count == 0)
-            return 0;
-
         var bytes = Encoding.UTF8.GetBytes(string.Join(" ", commands));
         var buffer = Marshal.AllocHGlobal(bytes.Length + 1);
 

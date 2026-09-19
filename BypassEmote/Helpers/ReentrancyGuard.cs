@@ -9,8 +9,6 @@ public sealed class ReentrancyGuard
 
     public bool IsInside => Volatile.Read(ref _depth) > 0;
 
-    public int Depth => Volatile.Read(ref _depth);
-
     public IDisposable Enter()
     {
         Interlocked.Increment(ref _depth);

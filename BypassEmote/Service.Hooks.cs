@@ -7,7 +7,6 @@ using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using Lumina.Excel.Sheets;
 using NoireLib;
-using NoireLib.Animations.Helpers;
 using NoireLib.Helpers;
 using NoireLib.Hooking;
 using System;
@@ -144,7 +143,7 @@ public partial class Service
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Cache break for emote {emoteId} failed; the press is left to the game.");
+            Log.Error(ex, $"Cache break for emote {emoteId} failed.");
         }
     }
 
@@ -152,8 +151,7 @@ public partial class Service
     private static bool IsPoseFamilySource(uint emoteRowId)
         => Catalog?.Get(emoteRowId)?.IsPoseFamily == true;
 
-    // Every emote source (chat command, game macro line, emote window) lands here
-    // It also lands here before any unlock check, so this is better than hooking the ExecuteCommand function
+    // Every emote source (chat command, macro line, emote window) lands here, before any unlock check
     private static unsafe void DetourAgentExecuteEmote(
         AgentEmote* agent, ushort emoteId, PlayEmoteOption* playEmoteOption, bool addToHistory, bool liveUpdateHistory)
     {
@@ -174,7 +172,6 @@ public partial class Service
 
         AgentExecuteEmoteHook.Original(agent, emoteId, playEmoteOption, addToHistory, liveUpdateHistory);
 
-        // Direct Play
         if (emote.HasValue && Configuration.SelfBypassMode != SelfBypassMode.EmoteSwap)
             HandleEmote(emote.Value);
     }
@@ -239,8 +236,7 @@ public partial class Service
         var redrawn = SwapOrchestrator.IdlePoseNeedsRedrawOnEnd(idlePose.IdlePoseIndex)
             && Penumbra?.RedrawLocalPlayer() == true;
 
-        Log.Debug($"Emote {emoteId} is being played, dropping swapped idle pose. "
-            + (redrawn ? "Character redrawn." : ""));
+        Log.Debug($"Swapped idle pose dropped for emote {emoteId}." + (redrawn ? " Character redrawn." : ""));
     }
 
     internal static bool ShouldEndSwapBeforeExecuting(SelfBypassMode mode, bool isExecutingSwap,

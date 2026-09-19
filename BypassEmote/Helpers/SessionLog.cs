@@ -101,7 +101,7 @@ internal static class SessionLog
         writer.WriteLine();
 
         if (dropped > 0)
-            writer.WriteLine($"... the first {dropped} line(s) of this session were dropped to keep this file small ...");
+            writer.WriteLine($"... the first {dropped} line(s) of this session were dropped ...");
 
         foreach (var entry in snapshot)
         {

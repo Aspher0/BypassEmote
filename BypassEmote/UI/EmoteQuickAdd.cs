@@ -17,13 +17,13 @@ internal sealed class EmoteQuickAdd
     private readonly NoireExcelPicker<Emote> _picker;
     private readonly Dictionary<uint, UiImageSource> _icons = new();
 
-    internal EmoteQuickAdd(string id, string placeholder, Func<Emote, bool>? include = null)
+    internal EmoteQuickAdd(string id, string placeholder)
     {
         _picker = new NoireExcelPicker<Emote>(id, CommonHelper.GetEmoteName)
         {
             Icon = CommonHelper.GetEmoteIcon,
             IconSize = IconSize,
-            Include = include ?? (emote => CommonHelper.GetEmotePlayType(emote) != EmotePlayType.DoNotPlay),
+            Include = emote => CommonHelper.GetEmotePlayType(emote) != EmotePlayType.DoNotPlay,
             FilterHint = "Search emotes...",
             PreviewPlaceholder = placeholder,
         };

@@ -53,7 +53,8 @@ public sealed partial class SwapOrchestrator
         IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> FilesByRace,
         long ElapsedAtRetarget, long ElapsedAtPrepare,
         bool FadeProtectedIntro, bool ClampedIntro,
-        Dictionary<string, GroupOutput?> Retargeted);
+        Dictionary<string, GroupOutput?> Retargeted,
+        Dictionary<byte[], string> FileNames);
 
     private const string BackgroundOperationName = "Emote Swap byte pipeline";
 
@@ -65,7 +66,7 @@ public sealed partial class SwapOrchestrator
             () => BuildSwapFilesOrNull(request),
             outcome => FinishSwapOnFrameworkThread(request, outcome),
             ex => Log.Debug(
-                $"Could not hand a finished swap build back to the framework thread ({ex.Message}); dropping it.", LogPrefix),
+                $"Could not hand a finished swap build back to the framework thread ({ex.Message}). Dropped.", LogPrefix),
             BackgroundOperationName);
     }
 
@@ -84,7 +85,11 @@ public sealed partial class SwapOrchestrator
 
     private SwapBuildOutcome? BuildSwapFiles(SwapBuildRequest request)
     {
+        var atStart = request.Timings.Clock.ElapsedMilliseconds;
+        var pausedBefore = GC.GetTotalPauseDuration();
+
         var retargeted = new Dictionary<string, GroupOutput?>(StringComparer.Ordinal);
+        var fileNames = new Dictionary<byte[], string>(ReferenceEqualityComparer.Instance);
 
         if (request.Races.FirstOrDefault(race => race.Race == request.Skeleton) is not { } drawnRace)
         {
@@ -92,8 +97,7 @@ public sealed partial class SwapOrchestrator
             return null;
         }
 
-        var drawn = BuildGroupedFiles(drawnRace.Pairs,
-            RetargetingOncePerInput(retargeted, drawnRace.FallbackOrder, request.HoldOffHand));
+        var drawn = BuildGroupedFiles(drawnRace.Pairs, RetargetingOncePerInput(retargeted, request.HoldOffHand));
 
         var elapsedAtRetarget = request.Timings.Clock.ElapsedMilliseconds;
 
@@ -104,25 +108,32 @@ public sealed partial class SwapOrchestrator
         }
 
         var assembled = AssembleRaceFiles(
-            new Dictionary<string, GroupedSwapFiles>(StringComparer.Ordinal) { [drawnRace.Race] = drawn });
+            new Dictionary<string, GroupedSwapFiles>(StringComparer.Ordinal) { [drawnRace.Race] = drawn }, fileNames);
 
-        if (_swapMods.PrepareFiles(request.Plan, assembled.WriteSet) == null)
+        if (!_swapMods.PrepareFiles(request.Plan, assembled.WriteSet))
             return null;
 
+        var elapsedAtPrepare = request.Timings.Clock.ElapsedMilliseconds;
+
+        Log.Debug($"Background build of /{request.Source.Command} onto /{request.Target.Command}: started at "
+            + $"{atStart}ms, {retargeted.Count} retarget(s), {assembled.WriteSet.Count} file(s), GC paused "
+            + $"{(GC.GetTotalPauseDuration() - pausedBefore).TotalMilliseconds:0}ms.", LogPrefix);
+
         return new SwapBuildOutcome(assembled.WriteSet, assembled.FilesByRace,
-            elapsedAtRetarget, request.Timings.Clock.ElapsedMilliseconds,
+            elapsedAtRetarget, elapsedAtPrepare,
             FadeProtectedIntro: OutputFadeProtected(drawnRace.Pairs, drawn),
             ClampedIntro: drawn.ClampedIntro,
-            retargeted);
+            retargeted, fileNames);
     }
 
-    private void StartCoverageBuild(SwapBuildRequest request, Dictionary<string, GroupOutput?> retargeted)
+    private void StartCoverageBuild(SwapBuildRequest request, Dictionary<string, GroupOutput?> retargeted,
+        Dictionary<byte[], string> fileNames)
     {
         if (request.Races.All(race => race.Race == request.Skeleton))
             return;
 
         _ = AsyncHelper.RunBackgroundThenFrameworkSafeAsync(
-            () => BuildCoverageOrNull(request, retargeted),
+            () => BuildCoverageOrNull(request, retargeted, fileNames),
             coverage =>
             {
                 if (coverage == null || _disposed)
@@ -131,17 +142,17 @@ public sealed partial class SwapOrchestrator
                 if (!_swapMods.AddCoverage(request.ContentKey, request.Skeleton, coverage))
                 {
                     Log.Debug($"The other bodies of /{request.Source.Command} onto /{request.Target.Command} were "
-                        + "not kept: the swap or the drawn body changed while they were built.", LogPrefix);
+                        + "not kept. The swap or the drawn body changed during the build.", LogPrefix);
                 }
             },
             ex => Log.Debug(
-                $"Could not hand the other bodies of a swap back to the framework thread ({ex.Message}); dropping them.",
+                $"Could not hand the other bodies of a swap back to the framework thread ({ex.Message}). Dropped.",
                 LogPrefix),
             CoverageOperationName);
     }
 
     private IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? BuildCoverageOrNull(
-        SwapBuildRequest request, Dictionary<string, GroupOutput?> retargeted)
+        SwapBuildRequest request, Dictionary<string, GroupOutput?> retargeted, Dictionary<byte[], string> fileNames)
     {
         try
         {
@@ -153,12 +164,11 @@ public sealed partial class SwapOrchestrator
                 if (race.Race == request.Skeleton)
                     continue;
 
-                var grouped = BuildGroupedFiles(race.Pairs,
-                    RetargetingOncePerInput(retargeted, race.FallbackOrder, request.HoldOffHand));
+                var grouped = BuildGroupedFiles(race.Pairs, RetargetingOncePerInput(retargeted, request.HoldOffHand));
 
                 if (grouped.Main == null)
                 {
-                    Log.Debug($"Nothing retargeted for {race.Race}; that body is left out of this swap.", LogPrefix);
+                    Log.Debug($"Nothing retargeted for {race.Race}. Body left out of this swap.", LogPrefix);
                     continue;
                 }
 
@@ -168,9 +178,9 @@ public sealed partial class SwapOrchestrator
             if (byRace.Count == 0)
                 return null;
 
-            var assembled = AssembleRaceFiles(byRace);
+            var assembled = AssembleRaceFiles(byRace, fileNames);
 
-            if (_swapMods.PrepareFiles(request.Plan, assembled.WriteSet) == null)
+            if (!_swapMods.PrepareFiles(request.Plan, assembled.WriteSet))
                 return null;
 
             Log.Debug($"Built the other {byRace.Count} bod(y/ies) of /{request.Source.Command} onto "
@@ -191,11 +201,12 @@ public sealed partial class SwapOrchestrator
         IReadOnlyDictionary<string, byte[]> WriteSet,
         IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> FilesByRace);
 
-    internal static AssembledRaceFiles AssembleRaceFiles(IReadOnlyDictionary<string, GroupedSwapFiles> byRace)
+    internal static AssembledRaceFiles AssembleRaceFiles(IReadOnlyDictionary<string, GroupedSwapFiles> byRace,
+        Dictionary<byte[], string>? fileNames = null)
     {
         var writeSet = new Dictionary<string, byte[]>(StringComparer.Ordinal);
         var filesByRace = new Dictionary<string, IReadOnlyDictionary<string, string>>(byRace.Count, StringComparer.Ordinal);
-        var fileNames = new Dictionary<byte[], string>(ReferenceEqualityComparer.Instance);
+        fileNames ??= new Dictionary<byte[], string>(ReferenceEqualityComparer.Instance);
 
         foreach (var (race, grouped) in byRace)
         {
@@ -283,13 +294,13 @@ public sealed partial class SwapOrchestrator
                 $"The swap of /{request.Source.Command} onto /{request.Target.Command} now serves {request.Skeleton}"
                 + $" ({timings.AtApply}ms).", LogPrefix);
 
-            StartCoverageBuild(request, built.Retargeted);
+            StartCoverageBuild(request, built.Retargeted, built.FileNames);
             return;
         }
 
         ExecuteSwapTail(request.Source, request.Target, request.Generation, timings, request.Trace);
 
-        StartCoverageBuild(request, built.Retargeted);
+        StartCoverageBuild(request, built.Retargeted, built.FileNames);
     }
 
     private SwapOptionEntry EntryFor(SwapBuildRequest request, SwapBuildOutcome built)
@@ -378,11 +389,11 @@ public sealed partial class SwapOrchestrator
 
     internal static string BackgroundRefusalDetail(BackgroundVerdict verdict) => verdict switch
     {
-        BackgroundVerdict.Disposed => "A swap finished building while the plugin was unloading; it was dropped",
-        BackgroundVerdict.Superseded => "A superseded swap finished building; a newer swap owns the mod",
-        BackgroundVerdict.ModeLeft => "A swap finished building after the player left Emote Swap mode; it was dropped",
-        BackgroundVerdict.PlayerGone => "A swap finished building with no local player left to play it; it was dropped",
-        BackgroundVerdict.BuildFailed => "A swap could not be built; nothing was applied",
-        _ => "A swap was dropped",
+        BackgroundVerdict.Disposed => "Dropped a swap built while the plugin was unloading",
+        BackgroundVerdict.Superseded => "Dropped a superseded swap",
+        BackgroundVerdict.ModeLeft => "Dropped a swap built after leaving Emote Swap mode",
+        BackgroundVerdict.PlayerGone => "Dropped a swap built with no local player",
+        BackgroundVerdict.BuildFailed => "Could not build a swap",
+        _ => "Dropped a swap",
     };
 }

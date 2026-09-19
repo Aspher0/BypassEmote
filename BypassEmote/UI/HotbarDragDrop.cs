@@ -12,10 +12,8 @@ using System.Numerics;
 
 namespace BypassEmote.UI;
 
-/// <summary> Drag-and-drop from the emote window onto the game's mouse hotbars. </summary>
 public static class HotbarDragDrop
 {
-    // Hotbars 1-10. cross hotbars not supported
     private static readonly string[] BarAddonNames =
     [
         "_ActionBar", "_ActionBar01", "_ActionBar02", "_ActionBar03", "_ActionBar04",
@@ -75,7 +73,6 @@ public static class HotbarDragDrop
 
         var mousePos = ImGui.GetMousePos();
 
-        // A hotbar behind one of the plugin's windows must not light up nor catch the drop
         HotbarSlotCandidate? hovered = null;
         if (!ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow))
         {
@@ -98,7 +95,6 @@ public static class HotbarDragDrop
         DrawDragGhost(emote, mousePos);
     }
 
-    /// <summary> Screen rects of every droppable slot on the visible mouse hotbars. </summary>
     private static unsafe void CollectSlotCandidates(List<HotbarSlotCandidate> into)
     {
         into.Clear();
@@ -142,7 +138,7 @@ public static class HotbarDragDrop
             }
             catch
             {
-                // A faulting read skips this bar
+                // no-op
             }
         }
     }
@@ -171,7 +167,7 @@ public static class HotbarDragDrop
         }
         catch
         {
-            // Icon lookup failed
+            // no-op
         }
 
         ImGui.SetTooltip(CommonHelper.GetEmoteName(emote));

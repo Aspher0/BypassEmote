@@ -31,7 +31,7 @@ public sealed partial class SwapOrchestrator
         var plan = SkeletonRewritePlanner.For(_swapMods.Registry, skeleton);
 
         Log.Debug(
-            $"The drawn body became {skeleton}; {plan.Rewrites.Count} option(s) are rewritten for it.", LogPrefix);
+            $"The drawn body became {skeleton}. Rewriting {plan.Rewrites.Count} option(s).", LogPrefix);
 
         _swapMods.RewriteForSkeleton(plan, skeleton);
 
@@ -39,7 +39,7 @@ public sealed partial class SwapOrchestrator
             return;
 
         Log.Debug(
-            $"{plan.UncoveredKeys.Count} kept swap(s) hold no file for {skeleton}; the live ones are built again.",
+            $"{plan.UncoveredKeys.Count} kept swap(s) hold no file for {skeleton}. Rebuilding the live ones.",
             LogPrefix);
 
         foreach (var key in plan.UncoveredKeys)
@@ -68,13 +68,13 @@ public sealed partial class SwapOrchestrator
         if (raceInputs.Count == 0 || raceInputs[0].Race != skeleton)
         {
             Log.Debug(
-                $"/{source.Command} and /{target.Command} share no usable posture variant on {skeleton}, "
-                + $"so '{kept.OptionName}' is left as it was.", LogPrefix);
+                $"/{source.Command} and /{target.Command} share no usable posture variant on {skeleton}. "
+                + $"'{kept.OptionName}' left as it was.", LogPrefix);
 
             return;
         }
 
-        Log.Debug($"'{kept.OptionName}' is on, so it is built again for {skeleton}.", LogPrefix);
+        Log.Debug($"Rebuilding '{kept.OptionName}' for {skeleton}.", LogPrefix);
 
         StartBackgroundBuild(new SwapBuildRequest(source, target, _generations.TakeOwnership(), raceInputs,
             skeleton, kept.ContentKey, kept.SourceKey ?? SourceKeyFor(source, raceInputs),

@@ -43,12 +43,9 @@ public static class CatalogRules
         _ => TurnClass.Unknown,
     };
 
-    // An emote loops when any populated slot has Pause set. Slot 0 alone is not enough: /waterfloat carries its
-    // flag in slot 4.
+    // /waterfloat carries its Pause flag in slot 4, not slot 0.
     public static EmotePlayType ClassifyLoop(IEnumerable<bool> populatedSlotPauseFlags) =>
         populatedSlotPauseFlags.Any(flag => flag) ? EmotePlayType.Looped : EmotePlayType.OneShot;
 
     public static PostureFlags PostureForSlot(int slotIndex) => ActionTimelineSlots.PostureForSlot(slotIndex);
-
-    public static IReadOnlyList<uint> SideEffectToggleEmotes { get; } = Array.Empty<uint>();
 }

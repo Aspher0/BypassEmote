@@ -188,8 +188,8 @@ internal static class OverridesTab
 
         ImGui.SameLine();
 
-        SettingsLayout.Marker("On, this emote lands on one of these targets or it does not play at all."
-            + "\nOff, the usual configuration takes over whenever none of them can be used as targets during a swap.");
+        SettingsLayout.Marker("On: this emote plays on one of these targets, or not at all."
+            + "\nOff: your usual settings take over when none of these targets can be used.");
     }
 
     private static NoireReorderableList<uint> BoundList(EmoteOverride configured)

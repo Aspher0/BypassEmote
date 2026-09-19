@@ -49,7 +49,7 @@ public sealed class SwapEndWatcher
         }
 
         if (_watchedEmote == 0)
-            Log.Debug("Armed while the character is playing nothing; this watch ends next frame.", LogPrefix);
+            Log.Debug("Armed with no emote playing. Watch ends next frame.", LogPrefix);
 
         EnsureSubscribed();
     }
@@ -72,7 +72,6 @@ public sealed class SwapEndWatcher
         EnsureSubscribed();
     }
 
-    // Stops watching and turns the swap off.
     public void Disarm() => Disarm(forceIdlePoseRedraw: true);
 
     private void Disarm(bool forceIdlePoseRedraw)
@@ -106,7 +105,6 @@ public sealed class SwapEndWatcher
         return true;
     }
 
-    // Stops watching without touching the swap, for lingering swaps
     public void StopWatching()
     {
         Unsubscribe();
@@ -147,7 +145,7 @@ public sealed class SwapEndWatcher
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Could not evaluate the swap end conditions; ending the swap.", LogPrefix);
+            Log.Error(ex, "Could not evaluate the swap end conditions. Ending the swap.", LogPrefix);
             Disarm();
         }
     }
@@ -171,8 +169,7 @@ public sealed class SwapEndWatcher
             _playerAway = false;
             _armedPosition = localPlayer.Position;
 
-            Log.Debug("The character was redrawn. Watcher picking up where it left off.",
-                LogPrefix);
+            Log.Debug("The character was redrawn. Watcher picking up where it left off.", LogPrefix);
 
             return;
         }

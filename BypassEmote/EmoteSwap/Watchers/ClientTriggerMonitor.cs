@@ -1,6 +1,5 @@
 #if DEBUG
 using FFXIVClientStructs.FFXIV.Client.Game;
-using NoireLib;
 using NoireLib.Hooking;
 using System.Collections.Generic;
 using System.Numerics;

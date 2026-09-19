@@ -1,6 +1,7 @@
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using NoireLib.Helpers;
 using System;
 
 namespace BypassEmote.Helpers;
@@ -9,25 +10,32 @@ internal static unsafe class EmoteListDimmer
 {
     internal static void Paint(AtkUnitBase* addon, bool lit)
     {
-        if (addon == null || !addon->IsVisible)
-            return;
-
         var agent = AgentEmote.Instance();
 
         if (agent == null)
             return;
 
-        if (*((byte*)agent + 0x31) == 0)
-            PaintSlotLists(addon, lit);
-        else
-            PaintCategoryList(addon, lit);
+        switch (*((byte*)agent + 0x31))
+        {
+            case 0:
+                PaintSlotLists(addon, lit);
+                break;
+
+            case 4:
+                if (AddonHelper.TryGetComponent(addon, 47u, ComponentType.TreeList, out var searchList))
+                    PaintNamedRows((AtkComponentList*)searchList, lit);
+                break;
+
+            default:
+                if (AddonHelper.TryGetComponentList(addon, 4u, out var categoryList))
+                    PaintNamedRows(categoryList, lit);
+                break;
+        }
     }
 
-    private static void PaintCategoryList(AtkUnitBase* addon, bool lit)
+    private static void PaintNamedRows(AtkComponentList* list, bool lit)
     {
-        var list = FindList(addon, 4);
-
-        if (list == null || list->ListLength <= 0)
+        if (list->ListLength <= 0)
             return;
 
         var multiply = lit ? (byte)100 : (byte)50;
@@ -36,17 +44,12 @@ internal static unsafe class EmoteListDimmer
         {
             var renderer = list->GetItemRenderer(row);
 
-            if (renderer == null)
+            if (renderer == null || renderer->AtkComponentButton.AtkComponentBase.OwnerNode == null)
                 continue;
 
-            var owner = renderer->AtkComponentButton.AtkComponentBase.OwnerNode;
+            var locked = ShowsLockedEmote(&renderer->AtkComponentButton.AtkComponentBase);
 
-            if (owner == null)
-                continue;
-
-            var locked = ShowsLockedEmote(&renderer->AtkComponentButton.AtkComponentBase, 0);
-
-            Paint(&owner->AtkResNode, locked ? multiply : (byte)100);
+            Paint(&renderer->AtkComponentButton.AtkComponentBase.OwnerNode->AtkResNode, locked ? multiply : (byte)100);
         }
     }
 
@@ -57,83 +60,41 @@ internal static unsafe class EmoteListDimmer
         if (module == null)
             return;
 
-        PaintSlotList(addon, 20, module->History, lit);
-        PaintSlotList(addon, 25, module->Favorites, lit);
+        PaintSlotList(addon, 20u, module->History, lit);
+        PaintSlotList(addon, 25u, module->Favorites, lit);
     }
 
     private static void PaintSlotList(AtkUnitBase* addon, uint nodeId, Span<ushort> slots, bool lit)
     {
-        if (!lit)
+        if (!AddonHelper.TryGetComponentList(addon, nodeId, out var list))
             return;
 
-        var list = FindList(addon, nodeId);
-
-        if (list == null)
-            return;
-
+        var multiply = lit ? (byte)100 : (byte)50;
         var rows = Math.Min(list->ListLength, slots.Length);
 
         for (var row = 0; row < rows; row++)
         {
             var renderer = list->GetItemRenderer(row);
 
-            if (renderer == null)
-                continue;
-
-            var owner = renderer->AtkComponentButton.AtkComponentBase.OwnerNode;
-
-            if (owner == null)
+            if (renderer == null || renderer->AtkComponentButton.AtkComponentBase.OwnerNode == null)
                 continue;
 
             var emoteId = (uint)(slots[row] & 0xFFF);
+            var locked = emoteId != 0 && Service.IsEmoteLocked(emoteId);
 
-            if (emoteId != 0 && Service.IsEmoteLocked(emoteId))
-                Paint(&owner->AtkResNode, 100);
+            Paint(&renderer->AtkComponentButton.AtkComponentBase.OwnerNode->AtkResNode, locked ? multiply : (byte)100);
         }
     }
 
-    private static bool ShowsLockedEmote(AtkComponentBase* component, int depth)
+    private static bool ShowsLockedEmote(AtkComponentBase* renderer)
     {
-        if (component == null || depth > 3)
-            return false;
-
-        for (var index = 0; index < component->UldManager.NodeListCount; index++)
+        foreach (var text in AddonHelper.ReadComponentTexts(renderer))
         {
-            var node = component->UldManager.NodeList[index];
-
-            if (node == null)
-                continue;
-
-            if (node->Type == NodeType.Text)
-            {
-                if (Service.IsLockedEmoteName(((AtkTextNode*)node)->NodeText.ToString()))
-                    return true;
-
-                continue;
-            }
-
-            if ((ushort)node->Type >= 1000 && ShowsLockedEmote(((AtkComponentNode*)node)->Component, depth + 1))
+            if (Service.IsLockedEmoteName(text))
                 return true;
         }
 
         return false;
-    }
-
-    private static AtkComponentList* FindList(AtkUnitBase* addon, uint nodeId)
-    {
-        for (var index = 0; index < addon->UldManager.NodeListCount; index++)
-        {
-            var node = addon->UldManager.NodeList[index];
-
-            if (node == null || node->NodeId != nodeId || (ushort)node->Type < 1000)
-                continue;
-
-            var component = ((AtkComponentNode*)node)->Component;
-
-            return component == null ? null : (AtkComponentList*)component;
-        }
-
-        return null;
     }
 
     private static void Paint(AtkResNode* node, byte multiply)

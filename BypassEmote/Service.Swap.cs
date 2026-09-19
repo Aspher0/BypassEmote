@@ -7,8 +7,7 @@ namespace BypassEmote;
 
 public partial class Service
 {
-    // Name of the generated Penumbra mod. Tags in braces are replaced per character:
-    // {playerFullName}, {playerName}, {playerWorld}
+    // Tags replaced per character: {playerFullName}, {playerName}, {playerWorld}
     public static string PenumbraModNameTemplate { get; set; } = "BypassEmote [{playerFullName}]";
 
     public static string PenumbraModAuthor { get; set; } = "Aspher_XIV - BypassEmote";
@@ -57,7 +56,6 @@ public partial class Service
         Rebinder = new AnimationRebinder();
         Orchestrator = new SwapOrchestrator(Penumbra, Catalog, SwapMods, EndWatcher);
 
-
         BodyWatcher = new SkeletonWatcher(SwapMods);
         CollectionWatcher = new CollectionWatcher(Penumbra, SwapMods);
 
@@ -88,7 +86,7 @@ public partial class Service
             RunStartupSweep();
     }
 
-    private static void OnSwapIdentityChanged(SwapModNames? previous)
+    private static void OnSwapIdentityChanged()
     {
         if (SwapIdentity?.Names != null && Penumbra?.Available == true)
             RunStartupSweep();

@@ -167,7 +167,6 @@ public sealed class PatchApprovalGate : IDisposable
     }
 #endif
 
-    // Debug only
     public void Forget()
     {
         StopPolling();
@@ -180,8 +179,8 @@ public sealed class PatchApprovalGate : IDisposable
         Volatile.Write(ref _reading, new Reading(PatchApprovalStatus.Checking,
             $"The approval recorded for game build {GameVersion} was dropped.", null, DateTime.UtcNow));
 
-        Log.Debug($"Dropped the approval recorded for game build {GameVersion}; the list is read "
-            + $"again in {RetryInterval.TotalMinutes:0} minutes.", LogPrefix);
+        Log.Debug($"Dropped the approval recorded for game build {GameVersion}. Next check in "
+            + $"{RetryInterval.TotalMinutes:0} minutes.", LogPrefix);
 
         Apply();
 

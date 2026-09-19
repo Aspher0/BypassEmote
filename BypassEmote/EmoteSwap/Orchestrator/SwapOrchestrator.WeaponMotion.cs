@@ -1,6 +1,5 @@
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
-using NoireLib;
 using NoireLib.Animations.Helpers;
 using NoireLib.Helpers;
 using System;
@@ -116,7 +115,7 @@ public sealed partial class SwapOrchestrator
         }
 
         Log.Warning($"/{source.Command}: weapon motion '{own ?? "<unreadable>"}' has no folder holding "
-            + $"[{string.Join(", ", tails)}]; falling back to '{EmoteAttributeCatalog.ReferenceMotionFolder}'.",
+            + $"[{string.Join(", ", tails)}]. Falling back to '{EmoteAttributeCatalog.ReferenceMotionFolder}'.",
             LogPrefix);
 
         return EmoteAttributeCatalog.ReferenceMotionFolder;
@@ -133,8 +132,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Could not read the player's off hand.",
-                LogPrefix);
+            Log.Error(ex, "Could not read the player's off hand.", LogPrefix);
 
             return null;
         }
@@ -148,8 +146,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Could not read the player's weapon motion.",
-                LogPrefix);
+            Log.Error(ex, "Could not read the player's weapon motion.", LogPrefix);
 
             return null;
         }

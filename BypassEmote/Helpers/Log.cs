@@ -50,9 +50,6 @@ internal static class Log
         return true;
     }
 
-    internal static bool ErrorOnce(string key, string message, string? prefix = null)
-        => ErrorOnce(key, null, message, prefix);
-
     private static string Compose(string message, string? prefix)
         => string.IsNullOrEmpty(prefix) ? message : prefix + message;
 }

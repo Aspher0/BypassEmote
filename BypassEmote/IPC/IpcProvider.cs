@@ -150,7 +150,6 @@ public static class IpcProvider
         {
             if (IgnoresIncomingState(ipcData.PlayerData.CharacterAddress, nameof(SetState)))
             {
-                // Only the player half is refused; companion, pet and buddy states still apply.
                 ipcData.ApplyAll(applyOwnedObjects, includePlayer: false);
                 return;
             }
@@ -220,8 +219,6 @@ public static class IpcProvider
         });
     }
 
-    // In Emote Swap mode the local player's emotes are real game emotes, so applying a received state to them
-    // would force the client-side animation the mode avoids. Only the local player is ever refused.
     private static bool IgnoresIncomingState(nint characterAddress, string entryPoint)
     {
         if (Configuration.SelfBypassMode != SelfBypassMode.EmoteSwap)
@@ -231,7 +228,7 @@ public static class IpcProvider
             || characterAddress != localPlayer.Address)
             return false;
 
-        Log.Debug($"{entryPoint}: local player state skipped, Emote Swap mode plays their emotes as real game emotes.");
+        Log.Debug($"{entryPoint}: local player state skipped in Emote Swap mode.");
         return true;
     }
 

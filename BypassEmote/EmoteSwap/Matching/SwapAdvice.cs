@@ -41,8 +41,8 @@ public static class SwapAdvice
 
         if (!target.EligibleTarget)
         {
-            lines.Add(new Line(Severity.Error, $"{targetName} can never be a swap target: it is a pose, a facial "
-                + "expression, a per-job emote, or it draws your weapon. It is always skipped."));
+            lines.Add(new Line(Severity.Error, $"{targetName} can never be a swap target (pose, facial expression, "
+                + "per-job emote or weapon drawn). It is always skipped."));
         }
 
         if (!facts.Unlocked)
@@ -57,8 +57,8 @@ public static class SwapAdvice
 
         if (facts.ChangedByMod is { Length: > 0 } modName)
         {
-            lines.Add(new Line(Severity.Warning, $"Your mod \"{modName}\" already changes {targetName}. What your "
-                + "\"Emotes your mods change\" setting is set to still applies here."));
+            lines.Add(new Line(Severity.Warning, $"Your mod \"{modName}\" already changes {targetName}. Your "
+                + "\"Emotes your mods change\" setting still applies."));
         }
 
         lines.AddRange(Behaviour(source, sourceName, target, targetName));
@@ -107,8 +107,8 @@ public static class SwapAdvice
             return;
         }
 
-        lines.Add(new Line(Severity.Warning, $"{targetName} plays a separate animation when you use it on someone (adjust variant) "
-            + $"but {sourceName} has no adjust variant. Targeting someone will keep {targetName}'s animation."));
+        lines.Add(new Line(Severity.Warning, $"{targetName} has an adjust variant for use on someone. {sourceName} has none. "
+            + $"Targeting someone keeps {targetName}'s animation."));
     }
 
     private static void AddLoopLine(List<Line> lines, EmoteAttributes source, string sourceName,
@@ -129,8 +129,8 @@ public static class SwapAdvice
         if (source.Turn == target.Turn)
             return;
 
-        lines.Add(new Line(Severity.Warning, $"{targetName} does not behave like {sourceName} when you target "
-            + $"someone: {targetName} {TurnText(target.Turn)} while {sourceName} {TurnText(source.Turn)}."));
+        lines.Add(new Line(Severity.Warning, $"When you target someone, {targetName} {TurnText(target.Turn)} "
+            + $"while {sourceName} {TurnText(source.Turn)}."));
     }
 
     private static void AddSoundLine(List<Line> lines, EmoteAttributes source, string sourceName,
@@ -155,7 +155,7 @@ public static class SwapAdvice
 
         if (sourceHasIntro && target.Intro == IntroKind.None || target.Intro == IntroKind.TmbOnly)
         {
-            lines.Add(new Line(Severity.Warning, $"{targetName} has no intro meanwhile {sourceName} has one, meaning the intro will not play."));
+            lines.Add(new Line(Severity.Warning, $"{targetName} has no intro and {sourceName} has one. The intro will not play."));
             return;
         }
 

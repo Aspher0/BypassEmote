@@ -1,6 +1,5 @@
 using BypassEmote.Helpers;
 using Dalamud.Utility;
-using NoireLib;
 using NoireLib.Helpers;
 using System.Collections.Generic;
 using System.Threading;

@@ -12,7 +12,6 @@ public sealed class SkeletonWatcher : IDisposable
     private readonly SwapModManager _swapMods;
 
     private bool _subscribed;
-    private nint _readFrom;
     private string? _drawnSkeleton;
     private string? _requestedFor;
 
@@ -23,8 +22,6 @@ public sealed class SkeletonWatcher : IDisposable
         NoireService.Framework.Update += OnFrameworkUpdate;
         _subscribed = true;
     }
-
-    public string? DrawnSkeleton => _drawnSkeleton;
 
     public void Dispose()
     {
@@ -43,7 +40,7 @@ public sealed class SkeletonWatcher : IDisposable
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Could not read the drawn body; this frame is skipped.", LogPrefix);
+            Log.Error(ex, "Could not read the drawn body. Frame skipped.", LogPrefix);
         }
     }
 
@@ -58,17 +55,9 @@ public sealed class SkeletonWatcher : IDisposable
             return;
         }
 
-        // Nothing human is drawn
         if (SwapOrchestrator.DrawnBodyFor(localPlayer) is not { } body)
             return;
 
-        if (body.DrawObject == _readFrom && body.SkeletonId == _drawnSkeleton)
-        {
-            ReportIfChanged();
-            return;
-        }
-
-        _readFrom = body.DrawObject;
         _drawnSkeleton = body.SkeletonId;
 
         ReportIfChanged();
@@ -93,7 +82,7 @@ public sealed class SkeletonWatcher : IDisposable
         _requestedFor = skeleton;
 
         Log.Debug(
-            $"The local player is drawn as {skeleton}, and the kept swaps serve {servedSkeleton ?? "an unrecorded body"}.",
+            $"The local player is drawn as {skeleton}. Kept swaps serve {servedSkeleton ?? "no recorded body"}.",
             LogPrefix);
 
         Service.Orchestrator?.CorrectForDrawnSkeleton(skeleton);
@@ -101,7 +90,6 @@ public sealed class SkeletonWatcher : IDisposable
 
     private void Forget()
     {
-        _readFrom = 0;
         _drawnSkeleton = null;
         _requestedFor = null;
     }

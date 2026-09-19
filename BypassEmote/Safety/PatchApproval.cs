@@ -50,7 +50,7 @@ public static class PatchApproval
             if (pluginVersion == null || pluginVersion < minimum)
             {
                 return new(PatchApprovalStatus.Blocked,
-                    $"Game build {gameVersion} needs Bypass Emote {minimum} or newer; this is "
+                    $"Game build {gameVersion} needs Bypass Emote {minimum} or newer. Installed: "
                     + $"{pluginVersion?.ToString() ?? "unknown"}.", notice);
             }
         }

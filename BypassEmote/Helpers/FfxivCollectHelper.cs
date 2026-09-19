@@ -26,9 +26,6 @@ public sealed class FfxivCollectEntry
     [JsonProperty("id")]
     public int? Id { get; set; }
 
-    [JsonProperty("name")]
-    public string? Name { get; set; }
-
     [JsonProperty("command")]
     public string? Command { get; set; }
 
@@ -60,9 +57,6 @@ public sealed class FfxivCollectEntry
 
 public sealed class FfxivCollectResponse<T>
 {
-    [JsonProperty("count")]
-    public int Count { get; set; }
-
     [JsonProperty("results")]
     public List<T> Results { get; set; } = [];
 }
@@ -75,8 +69,8 @@ internal static class FfxivCollectHelper
 
     private static readonly TimeSpan CacheLifetime = TimeSpan.FromDays(1);
 
-    internal static string LocaleParam(ClientLanguage? language = null)
-        => (language ?? NoireService.ClientState.ClientLanguage) switch
+    internal static string LocaleParam()
+        => NoireService.ClientState.ClientLanguage switch
         {
             ClientLanguage.French => "fr",
             ClientLanguage.German => "de",

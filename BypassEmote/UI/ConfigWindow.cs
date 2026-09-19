@@ -9,7 +9,6 @@ using Dalamud.Interface.Windowing;
 using NoireLib;
 using NoireLib.Changelog;
 using NoireLib.Helpers;
-using NoireLib.Helpers.ObjectExtensions;
 using NoireLib.UI;
 using NoireLib.UpdateTracker;
 using System;
@@ -46,7 +45,7 @@ public class ConfigWindow : Window, IDisposable
     private const string BehaviorName = "Swaps at the same time";
     private const string KeptSwapsName = "Kept swaps per emote";
     private const string AnonymizeModName = "Hide your name on the mod";
-    private const string AlwaysCacheBreakName = "Always cache-break (experimental)";
+    private const string AlwaysCacheBreakName = "Always cache-break";
     private const string LoopMatchingName = "Loop matching";
     private const string TurnMatchingName = "Turn matching";
     private const string SoundMatchingName = "Sound matching";
@@ -159,8 +158,8 @@ public class ConfigWindow : Window, IDisposable
         + "which people have used for years without trouble. Go back to safe mode, or even better, to emote swap, if you are uncomfy with this.";
 
     private const string UnsafeToggleHelp =
-        "Lets Direct Play bypass an emote whatever pose you are in."
-        + "\n\nLeave it off unless you know what you are doing: off, the plugin only plays emotes from states where "
+        "Lets Direct Play bypass an emote in any pose."
+        + "\n\nLeave it off unless you know what you are doing. When off, the plugin only plays emotes from states where "
         + "nothing can be noticed.";
 
     private const string SafeDirectPlayTooltip = "Not all sync services support it. " + SafeModeLimitLine;
@@ -169,9 +168,9 @@ public class ConfigWindow : Window, IDisposable
         "Not recommended. Not all sync services support it. Emote Swap is safer and works over any sync service.";
 
     private const string ModeHelp =
-        "\"Emote Swap plays\" your emote over one your character owns, through a Penumbra mod. Other players see it "
+        "\"Emote Swap\" plays your emote over one your character owns, through a Penumbra mod. Other players see it "
         + "over any sync service."
-        + "\n\"Direct Play\" sends the emote to the game itself, which not every sync service supports.";
+        + "\n\"Direct Play\" sends the emote to the game itself. Not every sync service supports it.";
 
     public ConfigWindow() : base("Bypass Emote##BypassEmoteConfig",
         ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
@@ -659,14 +658,11 @@ public class ConfigWindow : Window, IDisposable
                     Configuration.SoundMatching = (SoundMatchRule)soundMatching;
                 }
 
-                // Asked every frame: a hook can stop resolving mid-session.
                 var cachedDispatch = (int)Configuration.CachedDispatch;
                 if (ComboRow(CachedDispatchName, "##BypassEmoteCachedDispatch", ref cachedDispatch, CachedDispatchOptions,
                     "Gives each bypassed emote a target emote of its own. This is useful when you want to bypass multiple emotes quickly."
-                    + "\n\n\"Off\" would make it so other people "
-                    + "on your sync service would see you redraw constantly."
-                    + "\n\"Only when necessary\" spreads nothing while the game plays fresh content on its own, and "
-                    + "steps in for the emotes that would show a stale frame once a game patch breaks that."
+                    + "\n\n\"Off\" would make it so other people on your sync service would see you redraw constantly."
+                    + "\n\"Only when necessary\" spreads emotes only after a game patch breaks the cache-breaker feature."
                     + "\n\"On\" always spreads emotes."
                     + "\n\nRecommended: \"On\" if you want other people on your sync service to always see you properly without "
                     + "redrawing all the time, otherwise highly recommended to leave it on \"Only when necessary\" and not \"Off\".",

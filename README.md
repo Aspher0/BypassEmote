@@ -35,9 +35,9 @@ Direct Play is 100% safe to apply on other characters such as minions, NPCs or o
 - By adding the "c" or "config" argument (`/be c`, `/be config`), you will open the configuration window.<br/>
 - By adding an emote argument (`/be /tea`, `/be tdance`, etc.), the emote will play. This will force the game into using BypassEmote.<br/>
 - Alternatively, you can simply type the emote command in chat (`/tea`, `/tdance`, etc) and it will let the game handle it if you have unlocked that emote, otherwise it will use BypassEmote.<br/>
-A good use case of using `/be <emote>` while having unlocked the emote is if you want to play an animation with enabled sound with Direct Play mode. By using `/be sync` or `/be syncall` (provided that players you want to sync with are using BypassEmote Direct Play to play emotes), the sound associated to the emote will also reset.<br/>
-- Using `/be sync` or `/be syncall` will allow to reset every players animations to 0, hence "syncing" duo emotes, for example. Using `/be sync` will only sync players bypassing emotes in Direct Play, meanwhile `/be syncall` will sync every player on the map.<br/>
-Moreover, sync commands will reset any sound associated to the emote, but please note that those two commands will only reset sounds if the owning player is using BypassEmote Direct Play to play the emote. It will not reset sounds if the player is emoting normally or through Emote Swap.<br/>
+A good use case of using `/be <emote>` while having unlocked the emote is if you want to play an animation with enabled sound with Direct Play mode. By using `/be sync`, the sound associated to the emote will also reset.<br/>
+- Using `/be sync` will reset the animations of every player and NPC on the map to 0, hence "syncing" duo emotes, for example. Using `/be syncdirect` (or `/be syncd`) will only sync players bypassing emotes in Direct Play.<br/>
+Both commands will also reset the sounds and music of the emotes.<br/>
 - By targetting an NPC and typing `/bet <emote_command>` or `/bet stop`, it will apply the provided animation to the targetted NPC, or completely stop it.
 - By typing `/bem <emote_command>` or `/bem stop`, it will apply the provided animation to your minion if summoned, or completely stop it. You do not need to target your minion.<br/>
 The same goes for `/bep` with your pet, and `/bec` with your chocobo.

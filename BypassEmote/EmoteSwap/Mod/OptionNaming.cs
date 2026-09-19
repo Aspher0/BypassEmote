@@ -1,7 +1,5 @@
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 
 namespace BypassEmote.EmoteSwap;
 
@@ -9,7 +7,6 @@ internal static class OptionNaming
 {
     internal const string NoneOptionName = "None";
     private const int MaxModNameLength = 31;
-    private static readonly HashSet<char> InvalidFileNameCharacters = [.. Path.GetInvalidFileNameChars()];
 
     internal static string StanceLabelFor(EmoteController.PoseType stance) => stance switch
     {
@@ -56,16 +53,6 @@ internal static class OptionNaming
             if (!takenOptionNames.Contains(candidate))
                 return candidate;
         }
-    }
-
-    internal static string FileNamePartFor(string groupName)
-    {
-        var folded = new StringBuilder(groupName.Length);
-
-        foreach (var character in groupName.ToLowerInvariant())
-            folded.Append(InvalidFileNameCharacters.Contains(character) ? '_' : character);
-
-        return folded.ToString();
     }
 
     private static string Ellipsize(string value)

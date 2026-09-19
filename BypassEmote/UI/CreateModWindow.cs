@@ -17,7 +17,6 @@ using System.Numerics;
 
 namespace BypassEmote.UI;
 
-/// <summary> Turns a pair of emotes into an simple Penumbra mod. </summary>
 public sealed class CreateModWindow : Window, IDisposable
 {
     private NoireExcelPicker<Emote>? _source;
@@ -312,7 +311,7 @@ public sealed class CreateModWindow : Window, IDisposable
         if (plan.AlsoReached.Count > 0)
         {
             ImGui.TextColored(warning, "This also changes the emote for "
-                + $"{string.Join(", ", plan.AlsoReached)}: they read a file the mod writes.");
+                + $"{string.Join(", ", plan.AlsoReached)}. They read a file the mod writes.");
         }
 
         ImGui.PopTextWrapPos();

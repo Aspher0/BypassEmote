@@ -1,6 +1,5 @@
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using NoireLib.Helpers;
 using System.Collections.Generic;
@@ -13,7 +12,7 @@ internal static class EmoteAddonValues
     private const int FirstRow = 21;
     private const int ValuesPerRow = 6;
 
-    internal static unsafe void ShowLockedRowsAsAvailable(AtkValue* values, uint valueCount)
+    internal static unsafe void ClearLockedRowFlags(AtkValue* values, uint valueCount)
     {
         if (values == null)
             return;
@@ -23,12 +22,12 @@ internal static class EmoteAddonValues
             if (!IsRow(values, at) || !Service.IsEmoteLocked(values[at + 0].UInt))
                 continue;
 
-            values[at + 2].UInt &= ~1u << 10;
+            values[at + 2].UInt &= ~(1u << 10 | 1u << 11);
         }
     }
 
     internal static unsafe void AddMissingEmotes(AtkValue* values, uint valueCount, IReadOnlyList<uint> lockedByOrder,
-        IReadOnlyDictionary<uint, nint> searchText, bool showAsAvailable)
+        IReadOnlyDictionary<uint, nint> searchText)
     {
         if (values == null || valueCount <= CountIndex || values[CountIndex].Type != AtkValueType.UInt)
             return;
@@ -89,8 +88,6 @@ internal static class EmoteAddonValues
 
         ShiftRows(values, listRows, totalRows - listRows, missing.Count);
 
-        var history = EmoteHistoryModule.Instance();
-
         for (var row = 0; row < plan.Count; row++)
         {
             var target = FirstRow + row * ValuesPerRow;
@@ -98,7 +95,7 @@ internal static class EmoteAddonValues
 
             if (source < 0)
             {
-                WriteRow(values, target, plan[row].Emote, history, searchText, showAsAvailable);
+                WriteRow(values, target, plan[row].Emote, searchText);
                 continue;
             }
 
@@ -113,7 +110,7 @@ internal static class EmoteAddonValues
     }
 
     internal static unsafe void AddSearchMatches(AtkValue* values, uint valueCount, IReadOnlyList<uint> matches,
-        IReadOnlyDictionary<uint, nint> searchText, bool showAsAvailable)
+        IReadOnlyDictionary<uint, nint> searchText)
     {
         if (values == null || matches.Count == 0 || valueCount <= CountIndex)
             return;
@@ -167,7 +164,6 @@ internal static class EmoteAddonValues
         for (var value = 0; value < saved.Length; value++)
             saved[value] = values[first + value];
 
-        var history = EmoteHistoryModule.Instance();
         var rows = System.Math.Min(shown.Count, 10);
         var moved = new HashSet<int>();
 
@@ -193,7 +189,7 @@ internal static class EmoteAddonValues
 
             if (source < 0)
             {
-                WriteRow(values, target, shown[row].Emote, history, searchText, showAsAvailable, inSearch: true);
+                WriteRow(values, target, shown[row].Emote, searchText, inSearch: true);
                 continue;
             }
 
@@ -309,11 +305,7 @@ internal static class EmoteAddonValues
     }
 
     private static unsafe string NameAt(AtkValue* values, int at)
-    {
-        var value = values[at + 4];
-
-        return value.String.Value == null ? string.Empty : value.String.ToString();
-    }
+        => AddonHelper.TryReadValue(values + at + 4, out var name) && name is string text ? text : string.Empty;
 
     private static string NameOf(uint emoteId)
         => EmoteHelper.GetEmoteById(emoteId) is { } emote ? emote.Name.ExtractText() ?? string.Empty : string.Empty;
@@ -353,8 +345,8 @@ internal static class EmoteAddonValues
         }
     }
 
-    private static unsafe void WriteRow(AtkValue* values, int at, uint emoteId, EmoteHistoryModule* history,
-        IReadOnlyDictionary<uint, nint> searchText, bool showAsAvailable, bool inSearch = false)
+    private static unsafe void WriteRow(AtkValue* values, int at, uint emoteId, IReadOnlyDictionary<uint, nint> searchText,
+        bool inSearch = false)
     {
         EmoteController.EmoteDetails details;
 
@@ -365,19 +357,10 @@ internal static class EmoteAddonValues
         }
 
         var name = details.Name.Value;
-        var trailer = name;
-
-        while (*trailer != 0)
-            trailer++;
-
-        if (searchText.TryGetValue(emoteId, out var commands) && commands != 0)
-            trailer = (byte*)commands;
+        var trailer = searchText.TryGetValue(emoteId, out var commands) && commands != 0 ? (byte*)commands : name;
 
         var conditions = details.EmoteCategory == 3 ? 0x3FF : ConditionFlags(&details);
-        var flags = showAsAvailable || inSearch ? conditions : conditions | 1u << 10;
-
-        if (history != null && history->IsUnseen((ushort)emoteId))
-            flags |= 1u << 11;
+        var flags = conditions;
 
         var kind = inSearch ? 6 | ((uint)details.EmoteCategory << 8) : details.EmoteCategory;
 

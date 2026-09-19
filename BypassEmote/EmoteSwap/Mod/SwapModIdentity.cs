@@ -29,7 +29,7 @@ public sealed class SwapModIdentity : IDisposable
         _subscribed = true;
     }
 
-    public event Action<SwapModNames?>? Changed;
+    public event Action? Changed;
 
     public SwapModNames? Names { get; private set; }
 
@@ -66,17 +66,15 @@ public sealed class SwapModIdentity : IDisposable
         if (contentId == _contentId && anonymous == _anonymous)
             return;
 
-        var previous = Names;
-
         _contentId = contentId;
         _anonymous = anonymous;
         Names = contentId == 0 ? null : BuildNames(contentId, anonymous);
 
         Log.Debug(Names is { } names
             ? $"The generated mod for this character is '{names.Directory}'."
-            : "No character is loaded, so no generated mod is named.", LogPrefix);
+            : "No character is loaded. The generated mod has no name.", LogPrefix);
 
-        Changed?.Invoke(previous);
+        Changed?.Invoke();
     }
 
     private static SwapModNames BuildNames(ulong contentId, bool anonymous)

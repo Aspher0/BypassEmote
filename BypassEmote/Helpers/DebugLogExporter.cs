@@ -1,7 +1,6 @@
 using BypassEmote.EmoteSwap;
 using BypassEmote.Enums;
 using BypassEmote.Models;
-using BypassEmote.Safety;
 using Dalamud.Plugin;
 using Lumina.Excel.Sheets;
 using NoireLib;
@@ -228,7 +227,7 @@ internal static class DebugLogExporter
 
         if (dropped > 0)
         {
-            writer.WriteLine($"... {dropped} line(s) dropped here to keep this file under "
+            writer.WriteLine($"... {dropped} line(s) dropped, file capped at "
                 + $"{(MaxHeadChars + MaxTailChars) / (1024 * 1024)} MB ...");
         }
 
@@ -881,7 +880,7 @@ internal static class DebugLogExporter
     {
         if (!live.LoggedIn)
         {
-            report.AppendLine("No character is loaded, so no unlock state can be read.");
+            report.AppendLine("No character is loaded.");
             return;
         }
 

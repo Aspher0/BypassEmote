@@ -30,7 +30,7 @@ public sealed class EmoteAttributeCatalog
 {
     private const string LogPrefix = "[EmoteAttributeCatalog] ";
 
-    internal const int RulesVersion = 4;
+    internal const int RulesVersion = 5;
 
     private const int BuildPacingBatchSize = 8;
     private const int BuildPacingSleepMs = 5;
@@ -39,12 +39,10 @@ public sealed class EmoteAttributeCatalog
     private const uint ChangePoseRowId = 90;
     private const int LoadTypePerJob = 1;
     private const int WeaponMotionIdMode = 2;
-    private int _buildState; // 0 = not started, 1 = started
+    private int _buildState;
 
     private const int ActionTimelineSlotCount = ActionTimelineSlots.SlotCount;
 
-    // Weapon-motion slots are catalogued against one folder that carries every battle key, and the swap path
-    // moves them onto the right folder for the player's own weapons.
     internal const string ReferenceMotionFolder = WeaponMotionFolders.ReferenceFolder;
 
     private static readonly HashSet<uint> PoseFamilyRowIds = new() { ChangePoseRowId, 218, 219, 243, 244, 253 };
@@ -79,7 +77,7 @@ public sealed class EmoteAttributeCatalog
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Build failed; the catalog stays empty for this session.", LogPrefix);
+            Log.Error(ex, "Build failed. The catalog stays empty for this session.", LogPrefix);
         }
     }
 
@@ -270,7 +268,6 @@ public sealed class EmoteAttributeCatalog
         || populatedSlots.Any(IsWeaponMotionSlot)
         || raw.DrawsWeapon
         || raw.DoNotPlay
-        || CatalogRules.SideEffectToggleEmotes.Contains(raw.RowId)
         || isPoseFamily;
 
     private static List<EmoteAttributes> BuildFromGameData()
@@ -280,7 +277,7 @@ public sealed class EmoteAttributeCatalog
         var sheet = ExcelSheetHelper.GetSheet<Emote>();
         if (sheet == null)
         {
-            Log.Error("Could not load the Emote sheet; the catalog stays empty for this session.", LogPrefix);
+            Log.Error("Could not load the Emote sheet. The catalog stays empty for this session.", LogPrefix);
             return rows;
         }
 
@@ -298,7 +295,7 @@ public sealed class EmoteAttributeCatalog
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Failed to process emote {emote.RowId}; skipped.", LogPrefix);
+                Log.Error(ex, $"Failed to process emote {emote.RowId}. Skipped.", LogPrefix);
             }
 
             if (++processed % BuildPacingBatchSize == 0)

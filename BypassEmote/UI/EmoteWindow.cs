@@ -244,7 +244,6 @@ public class EmoteWindow : Window, IDisposable
                 var displayedName = Configuration.ShowEmoteIds ? $"[{emote.Item1.RowId}] " : "";
                 displayedName += CommonHelper.GetEmoteName(emote.Item1);
 
-                // Every text command the emote answers to
                 var commands = new List<string>(4);
                 var tc = emote.Item1.TextCommand.ValueNullable;
                 void AddCmd(string? s)
@@ -605,7 +604,7 @@ public class EmoteWindow : Window, IDisposable
     {
         var directPlay = Configuration.SelfBypassMode == SelfBypassMode.DirectPlay;
 
-        if (ToolbarButton(FontAwesomeIcon.PeopleArrows, directPlay ? "Sync..." : "Sync All (/be syncall)", "##BypassEmoteSync", width, height))
+        if (ToolbarButton(FontAwesomeIcon.PeopleArrows, directPlay ? "Sync..." : "Sync everyone (/be sync)", "##BypassEmoteSync", width, height))
         {
             if (directPlay)
                 ImGui.OpenPopup("##BypassEmoteSyncMenu");
@@ -617,11 +616,11 @@ public class EmoteWindow : Window, IDisposable
         if (!popup)
             return;
 
-        if (ImGui.MenuItem("Sync BE users (/be sync)"))
-            EmotePlayer.SyncEmotes(false);
-
-        if (ImGui.MenuItem("Sync all (/be syncall)"))
+        if (ImGui.MenuItem("Sync everyone (/be sync)"))
             EmotePlayer.SyncEmotes(true);
+
+        if (ImGui.MenuItem("Sync Direct Play only (/be syncdirect)"))
+            EmotePlayer.SyncEmotes(false);
     }
 
     private void ToggleFavorite(uint emoteId)

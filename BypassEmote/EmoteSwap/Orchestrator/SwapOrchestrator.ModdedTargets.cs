@@ -68,7 +68,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Could not tell whether /{candidate.Command} is already modded; treating it as clean.", LogPrefix);
+            Log.Error(ex, $"Could not tell whether /{candidate.Command} is already modded. Treated as clean.", LogPrefix);
             return null;
         }
 

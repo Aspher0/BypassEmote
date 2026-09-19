@@ -22,7 +22,7 @@ public sealed partial class SwapOrchestrator
 
         if (!_swapMods.SelectExisting(kept))
         {
-            Log.Debug($"The existing swap could not be put back, so /{source.Command} is built again.", LogPrefix);
+            Log.Debug($"The existing swap could not be put back. Rebuilding /{source.Command}.", LogPrefix);
             LogHelper.DebugLine(">   reuse refused, rebuilding");
             return false;
         }
@@ -42,7 +42,7 @@ public sealed partial class SwapOrchestrator
 
         if (!_generations.IsCurrent(generation))
         {
-            Log.Debug("A superseded swap's deferred execute was dropped; a newer swap owns the mod.", LogPrefix);
+            Log.Debug("Dropped the deferred execute of a superseded swap.", LogPrefix);
             return;
         }
 
@@ -65,7 +65,7 @@ public sealed partial class SwapOrchestrator
         SubscribeExecuteRetry();
 
         Log.Debug(
-            $"The game refused /{target.Command} for the /{source.Command} swap; retrying for up to " +
+            $"The game refused /{target.Command} for the /{source.Command} swap. Retrying for up to " +
             $"{ExecuteRetryPolicy.MaxWaitMilliseconds}ms.", LogPrefix);
     }
 
@@ -73,7 +73,6 @@ public sealed partial class SwapOrchestrator
     {
         if (_catalog.Get(targetRowId) is { } target)
             Service.Rebinder?.Arm(target);
-
 
         IsExecutingSwap = true;
         try
@@ -136,7 +135,7 @@ public sealed partial class SwapOrchestrator
         if (_generations.IsCurrent(pending.Generation))
             DeselectArmed(pending.Target.RowId);
         else
-            Log.Debug("The failed execute's swap was already superseded; the mod is left to its new owner.", LogPrefix);
+            Log.Debug("The failed execute's swap was already superseded. Mod left to the newer swap.", LogPrefix);
 
         LogHelper.Error(GenericFailureMessage);
     }
@@ -206,7 +205,7 @@ public sealed partial class SwapOrchestrator
         {
             if (!_generations.IsCurrent(pending.Generation))
             {
-                Log.Debug("A superseded swap's refused execute stopped retrying; a newer swap owns the mod.", LogPrefix);
+                Log.Debug("Stopped retrying the refused execute of a superseded swap.", LogPrefix);
                 ClearExecuteRetry();
                 return;
             }
@@ -226,7 +225,7 @@ public sealed partial class SwapOrchestrator
                 {
                     ClearExecuteRetry();
                     FailSwapTail(pending,
-                        $"The game kept refusing /{pending.Target.Command} for {elapsed}ms; the swap did not play.");
+                        $"The game kept refusing /{pending.Target.Command} for {elapsed}ms. Swap not played.");
                 }
 
                 return;
@@ -245,12 +244,12 @@ public sealed partial class SwapOrchestrator
             {
                 ClearExecuteRetry();
                 FailSwapTail(pending,
-                    $"The game kept refusing /{pending.Target.Command} for {pending.RetryClock.ElapsedMilliseconds}ms; the swap did not play.");
+                    $"The game kept refusing /{pending.Target.Command} for {pending.RetryClock.ElapsedMilliseconds}ms. Swap not played.");
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "The refused-execute retry failed; dropping it.", LogPrefix);
+            Log.Error(ex, "The refused-execute retry failed. Dropped.", LogPrefix);
             ClearExecuteRetry();
         }
     }
@@ -259,11 +258,11 @@ public sealed partial class SwapOrchestrator
     {
         if (!_generations.IsCurrent(generation))
         {
-            Log.Debug("The execute never ran, but a newer swap owns the mod; leaving it untouched.", LogPrefix);
+            Log.Debug("The execute never ran. The mod belongs to a newer swap.", LogPrefix);
             return;
         }
 
-        Log.Debug("The execute never ran; turning off the swap that was selected for it.", LogPrefix);
+        Log.Debug("The execute never ran. Deselecting its swap.", LogPrefix);
         DeselectArmed(targetRowId);
     }
 
@@ -281,7 +280,7 @@ public sealed partial class SwapOrchestrator
         var manager = EmoteManager.Instance();
         if (manager == null)
         {
-            Log.Error("EmoteManager is unavailable; the target emote cannot be executed.", LogPrefix);
+            Log.Error("EmoteManager is unavailable. Target emote not executed.", LogPrefix);
             return ExecuteSucceeded(managerAvailable: false, gameAccepted: false);
         }
 

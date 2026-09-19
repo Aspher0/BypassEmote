@@ -1,7 +1,6 @@
 using BypassEmote.Enums;
 using BypassEmote.Helpers;
 using BypassEmote.Models;
-using NoireLib;
 using NoireLib.Helpers;
 using System;
 using System.Collections.Generic;
@@ -78,7 +77,7 @@ public sealed partial class SwapOrchestrator
     {
         var lines = new List<string>(refusals.Count + 2)
         {
-            $"Could not swap /{source.Command}: none of the target override emotes can be played right now.",
+            $"Could not swap /{source.Command}. None of its override targets can be played right now.",
         };
 
         foreach (var (rowId, refusal) in refusals.Take(MaxRefusalsReported))

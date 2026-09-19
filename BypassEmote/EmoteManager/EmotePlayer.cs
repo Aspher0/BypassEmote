@@ -33,8 +33,7 @@ internal static unsafe class EmotePlayer
 
         var requestedRowId = emote.RowId;
 
-        // Throw/dote/splash/all saints charm and the photograph ones have a second row for the animation
-        // played with no target, or one picked by the target's height
+        // Throw, dote, splash, all saints charm and photograph have a second row for no target or target height
         var resolvedRowId = CommonHelper.ResolveTargetedEmote(chara, emote.RowId, characterState);
 
         if (resolvedRowId != emote.RowId && ExcelSheetHelper.GetRow<Emote>(resolvedRowId) is { } resolvedEmote)
@@ -60,7 +59,6 @@ internal static unsafe class EmotePlayer
         var isLocalPlayer = NoireService.ObjectTable.LocalPlayer is { } localPlayer
             && chara.Address == localPlayer.Address;
 
-        // Prevents direct play when migration prompt is shown
         if (isLocalPlayer && SwapPromptWindow.IsShowing)
         {
             LogHelper.Error(
@@ -122,7 +120,7 @@ internal static unsafe class EmotePlayer
             case EmotePlayType.Looped:
                 {
                     if (plan != null)
-                        PlayPlannedLoop(chara, emote, plan);
+                        PlayPlannedLoop(chara, plan);
                     else
                         PlayEmote(Service.ActionTimelinePlayer, chara, emote);
 
@@ -190,13 +188,13 @@ internal static unsafe class EmotePlayer
         PlayEmote(chara, emote.Value, characterState, receivedIpcData);
     }
 
-    private static void PlayPlannedLoop(ICharacter chara, Emote emote, DirectPlayPlan plan)
+    private static void PlayPlannedLoop(ICharacter chara, DirectPlayPlan plan)
     {
         if (plan.IntroTimelineId != 0)
             Service.ActionTimelinePlayer.Blend(chara, plan.IntroTimelineId, 1);
 
         if (plan.TimelineId != 0)
-            Service.ActionTimelinePlayer.Play(chara, emote, plan.TimelineId, false);
+            Service.ActionTimelinePlayer.Play(chara, plan.TimelineId, false);
     }
 
     public static void PlayEmote(ActionTimelinePlayer player, ICharacter actor, Emote emote, bool blendIntro = true)
@@ -216,7 +214,7 @@ internal static unsafe class EmotePlayer
 
         if (loop != 0)
         {
-            player.Play(actor, emote, loop, false);
+            player.Play(actor, loop, false);
             return;
         }
     }
@@ -224,8 +222,6 @@ internal static unsafe class EmotePlayer
     public static void PlayOneShotEmote(ICharacter? chara, ushort timelineId, CharacterState? characterState = null)
     {
         if (chara == null) return;
-
-        var native = CharacterHelper.GetCharacterAddress(chara);
 
         if (CharacterHelper.IsCharacterSleeping(chara))
             return;
@@ -318,7 +314,6 @@ internal static unsafe class EmotePlayer
             var isNpc = character is INpc || character is IBattleNpc;
 
             // Determine the character type and ownership
-            bool isTrueNpc = isNpc && !isLocalPlayerOwned && !isOtherPlayerOwned;
             bool isOtherPlayer = character is IPlayerCharacter && !isLocalPlayerOwned;
             bool isLocallyOwnedObject = isNpc && isLocalPlayerOwned;
             bool isRemotelyOwnedObject = isNpc && isOtherPlayerOwned;
@@ -334,7 +329,7 @@ internal static unsafe class EmotePlayer
             var pos = character.Position;
             var deltaPosDistance = Vector3.Distance(pos, trackedCharacter.LastPosition);
 
-            bool positionChanged = false;
+            bool positionChanged;
             if (useMarginOfError)
             {
                 // Other players: use margin of error
@@ -368,7 +363,7 @@ internal static unsafe class EmotePlayer
             var normalizedLastObservedRotation = MathHelper.NormalizeAngle(MathHelper.ToDegrees(trackedCharacter.LastRotation));
             var difference = Math.Abs(MathHelper.DeltaAngle(normalizedCurrentRotation, normalizedLastObservedRotation));
 
-            bool rotationChanged = false;
+            bool rotationChanged;
             if (useMarginOfError)
             {
                 // Other players: use margin of error
@@ -448,6 +443,12 @@ internal static unsafe class EmotePlayer
         // If the player is a tracked character, restart their emote directly to trigger the sound again
         // If it's just a player, do it the simple heels way
 
+        var emoteTimelines = shouldSyncAll ? EmoteTimelineIds() : null;
+        var localAddress = NoireService.ObjectTable.LocalPlayer?.Address ?? 0;
+        var localIdlePoseSwapped = Service.SwapMods?.ArmedIdlePose() != null;
+        var restartedCount = 0;
+        var rewoundCount = 0;
+
         foreach (var characterToSync in charactersToSync)
         {
             if (characterToSync.IsTracked && characterToSync.TrackedCharacter != null && characterToSync.TrackedCharacter.PlayingEmoteId != null)
@@ -455,15 +456,60 @@ internal static unsafe class EmotePlayer
                 var emote = EmoteHelper.GetEmoteById(characterToSync.TrackedCharacter.PlayingEmoteId.Value);
                 if (emote.HasValue)
                 {
-                    //PlayEmote(Service.ActionTimelinePlayer, characterToSync.Character, emote.Value); // Causes slight desync on looped emotes with intro
                     ushort loop = (ushort)emote.Value.ActionTimeline[0].RowId;
                     Service.ActionTimelinePlayer.Blend(characterToSync.Character, loop); // Seems to work better for loop anims with an intro, otherwise there will be a slight desync
                     continue;
                 }
             }
 
+            if (emoteTimelines != null && !characterToSync.IsTracked)
+            {
+                var idlePoseSwap = localIdlePoseSwapped && characterToSync.Character.Address == localAddress;
+
+                var restarts = TimelineRestarter.Restart(characterToSync.Character,
+                    (slot, timelineId, _) => emoteTimelines.Contains(timelineId) || (idlePoseSwap && slot == 0));
+
+                if (restarts.Any(restart => restart.Restarted))
+                {
+                    restartedCount++;
+
+                    Log.Warning($"Sync restarted {characterToSync.Character.Name.TextValue}: "
+                        + $"{TimelineRestarter.Describe(restarts)}.", "[EmotePlayer] ");
+
+                    continue;
+                }
+            }
+
             SkeletonAnimationHelper.ResetAnimationTime(characterToSync.Character);
+            rewoundCount++;
         }
+
+        if (shouldSyncAll)
+        {
+            Log.Warning($"Sync: {restartedCount} emote(s) restarted with their sounds, {rewoundCount} character(s) "
+                + "rewound.", "[EmotePlayer] ");
+        }
+    }
+
+    private static HashSet<ushort>? emoteTimelineIds;
+
+    private static HashSet<ushort> EmoteTimelineIds()
+    {
+        if (emoteTimelineIds != null)
+            return emoteTimelineIds;
+
+        var ids = new HashSet<ushort>();
+
+        foreach (var emote in NoireService.DataManager.GetExcelSheet<Emote>())
+        {
+            foreach (var timeline in emote.ActionTimeline)
+            {
+                if (timeline.RowId is > 0 and <= ushort.MaxValue)
+                    ids.Add((ushort)timeline.RowId);
+            }
+        }
+
+        return emoteTimelineIds = ids;
     }
 
     public static void Dispose()

@@ -1,15 +1,14 @@
-﻿using BypassEmote.Models;
-using NoireLib;
+﻿using NoireLib;
 using NoireLib.Animations.Helpers;
 using NoireLib.Animations.PapFormat;
 using NoireLib.Animations.PapFormat.Tmb;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace BypassEmote.EmoteSwap;
 
@@ -84,13 +83,13 @@ public sealed partial class SwapOrchestrator
         if (requiredNames == null)
         {
             var namesPath = pair.RequiredNamesPath ?? pair.TargetRequestedPath;
-            if (ReadVanillaPap(namesPath) is not { } targetVanillaBytes)
+            if (ReadVanillaNamesForNamesPath(namesPath) is not { } targetNames)
             {
                 Log.Debug($"No vanilla target pap at '{namesPath}' to read required names from.", LogPrefix);
                 return null;
             }
 
-            requiredNames = PapAnimationNames.Read(targetVanillaBytes);
+            requiredNames = targetNames;
         }
 
         if (requiredNames.Count == 0)
@@ -106,7 +105,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Retargeting '{pair.SourceRequestedPath}' onto '{pair.TargetRequestedPath}' produced an unusable pap; variant skipped.", LogPrefix);
+            Log.Error(ex, $"Retargeting '{pair.SourceRequestedPath}' onto '{pair.TargetRequestedPath}' produced an unusable pap. Variant skipped.", LogPrefix);
             return null;
         }
 
@@ -129,8 +128,7 @@ public sealed partial class SwapOrchestrator
 
         if (sourceIsModded)
         {
-            Log.Debug($"'{pair.SourceRequestedPath}' comes from a mod, so its own timeline decides where "
-                + "the weapons go and nothing of ours is written into it.", LogPrefix);
+            Log.Debug($"'{pair.SourceRequestedPath}' comes from a mod. Weapon hold left to its own timeline.", LogPrefix);
 
             return papBytes;
         }
@@ -146,16 +144,16 @@ public sealed partial class SwapOrchestrator
 
             if (statements == 0)
             {
-                Log.Warning($"'{pair.TargetRequestedPath}' came back with no weapon statement at all, "
-                    + "so the weapons stay wherever the game last put them.", LogPrefix);
+                Log.Warning($"'{pair.TargetRequestedPath}' came back with no weapon statement. "
+                    + "Weapons stay where the game last put them.", LogPrefix);
             }
 
             return held;
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Could not put the weapons in hand for '{pair.TargetRequestedPath}'; "
-                + "the swap is served without them.", LogPrefix);
+            Log.Error(ex, $"Could not put the weapons in hand for '{pair.TargetRequestedPath}'. "
+                + "Swap served without them.", LogPrefix);
 
             return papBytes;
         }
@@ -178,39 +176,43 @@ public sealed partial class SwapOrchestrator
     }
 
     internal static Func<IReadOnlyList<ResolvedVariantPair>, GroupOutput?> RetargetingOncePerInput(
-        Dictionary<string, GroupOutput?> built, IReadOnlyList<string> fallbackOrder, bool? holdOffHand = null)
+        Dictionary<string, GroupOutput?> built, bool? holdOffHand = null)
         => group =>
         {
-            var key = GroupInputKey(group);
+            var key = GroupInputKey(group, ReadVanillaNamesForNamesPath);
 
             if (!built.TryGetValue(key, out var bare))
             {
-                bare = BuildGroupOutput(group, fallbackOrder, holdOffHand);
+                bare = BuildGroupOutput(group, holdOffHand);
                 built[key] = bare;
             }
 
             return bare is { } output ? output : null;
         };
 
-    internal static string GroupInputKey(IReadOnlyList<ResolvedVariantPair> group)
+    internal static string GroupInputKey(IReadOnlyList<ResolvedVariantPair> group,
+        Func<string, IReadOnlyList<string>?>? namesOf = null)
         => string.Join("|", group.Select(member =>
-            $"{member.ResolvedSourcePath}{(ServedByAMod(member.Pair, member.ResolvedSourcePath) ? " (mod)" : string.Empty)}"
-            + $">{member.Pair.RequiredNamesPath ?? member.Pair.TargetRequestedPath}"
-            + $">{member.Pair.SourceFaceLibrary}"));
+        {
+            var namesPath = member.Pair.RequiredNamesPath ?? member.Pair.TargetRequestedPath;
+            var names = namesOf?.Invoke(namesPath) is { Count: > 0 } read ? string.Join(",", read) : namesPath;
 
-    private static GroupOutput? BuildGroupOutput(IReadOnlyList<ResolvedVariantPair> group,
-        IReadOnlyList<string> fallbackOrder, bool? holdOffHand = null)
+            return $"{member.ResolvedSourcePath}{(ServedByAMod(member.Pair, member.ResolvedSourcePath) ? " (mod)" : string.Empty)}"
+                + $">{(member.Pair.RequiredNamesPath != null ? "lent " : string.Empty)}{names}"
+                + $">{member.Pair.SourceFaceLibrary}{(member.Pair.WeaponMotion ? " (weapon)" : string.Empty)}";
+        }));
+
+    private static GroupOutput? BuildGroupOutput(IReadOnlyList<ResolvedVariantPair> group, bool? holdOffHand = null)
     {
         if (group.Count == 1)
             return BuildRetargetedPap(group[0].Pair, group[0].ResolvedSourcePath, holdOffHand: holdOffHand) is { } bytes
                 ? new GroupOutput(bytes, ClampedIntro: false)
                 : null;
 
-        return BuildSharedGroupPap(group, fallbackOrder, holdOffHand);
+        return BuildSharedGroupPap(group, holdOffHand);
     }
 
-    private static GroupOutput? BuildSharedGroupPap(IReadOnlyList<ResolvedVariantPair> group,
-        IReadOnlyList<string> fallbackOrder, bool? holdOffHand = null)
+    private static GroupOutput? BuildSharedGroupPap(IReadOnlyList<ResolvedVariantPair> group, bool? holdOffHand = null)
     {
         var lead = group[0];
 
@@ -237,7 +239,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Retargeting the group led by '{lead.Pair.SourceRequestedPath}' produced an unusable pap; group skipped.", LogPrefix);
+            Log.Error(ex, $"Retargeting the group led by '{lead.Pair.SourceRequestedPath}' produced an unusable pap. Group skipped.", LogPrefix);
             return null;
         }
 
@@ -251,66 +253,29 @@ public sealed partial class SwapOrchestrator
             : null;
     }
 
+    private static readonly IReadOnlySet<string> FootstepMagic = new HashSet<string>(StringComparer.Ordinal) { "C042" };
+
+    private static readonly IReadOnlySet<string> FaceLibraryMagic = new HashSet<string>(StringComparer.Ordinal) { "TMPP" };
+
     private static int FootstepEntryCount(byte[] papBytes)
-    {
-        try
-        {
-            using var reader = new BinaryReader(new MemoryStream(papBytes));
-            var pap = new PapFile(reader);
+        => TmbEntryScanner.ScanPap(papBytes, FootstepMagic).Count;
 
-            return pap.Animations.Sum(animation =>
-                animation.Tmb?.AllEntries.Count(entry => entry.Magic == "C042") ?? 0);
-        }
-        catch
-        {
-            return -1;
-        }
+    internal static bool EveryTimelineDeclaresAFaceLibrary(byte[] papBytes)
+    {
+        if (papBytes.Length < 26 || BinaryPrimitives.ReadInt32LittleEndian(papBytes) != 0x20706170)
+            return false;
+
+        var timelines = BinaryPrimitives.ReadInt16LittleEndian(papBytes.AsSpan(8, 2));
+
+        return timelines > 0 && TmbEntryScanner.ScanPap(papBytes, FaceLibraryMagic).Count >= timelines;
     }
 
-    private readonly ConcurrentDictionary<uint, IReadOnlyList<string>> _cacheBreakNames = new();
-
-    internal IReadOnlyList<string> CacheBreakNamesFor(EmoteAttributes emote, IReadOnlyList<string> fallbackOrder)
-    {
-        if (_cacheBreakNames.TryGetValue(emote.RowId, out var known))
-            return known;
-
-        var paths = VanillaNamePathsFor(emote, fallbackOrder);
-        if (paths.Count == 0)
-        {
-            _cacheBreakNames[emote.RowId] = [];
-            return [];
-        }
-
-        _ = Task.Run(() =>
-        {
-            try
-            {
-                var names = new List<string>();
-                var seen = new HashSet<string>(StringComparer.Ordinal);
-
-                foreach (var path in paths)
-                {
-                    foreach (var name in ReadVanillaNamesForNamesPath(path) ?? [])
-                    {
-                        if (seen.Add(name))
-                            names.Add(name);
-                    }
-                }
-
-                _cacheBreakNames[emote.RowId] = names;
-            }
-            catch (Exception ex)
-            {
-                Log.Debug($"Could not read the vanilla names of /{emote.Command} ({ex.Message}).", LogPrefix);
-                _cacheBreakNames[emote.RowId] = [];
-            }
-        });
-
-        return [];
-    }
+    private static readonly ConcurrentDictionary<string, IReadOnlyList<string>?> VanillaNamesByPath =
+        new(StringComparer.Ordinal);
 
     private static IReadOnlyList<string>? ReadVanillaNamesForNamesPath(string namesPath)
-        => ReadVanillaPap(namesPath) is { } vanillaBytes ? PapAnimationNames.Read(vanillaBytes) : null;
+        => VanillaNamesByPath.GetOrAdd(namesPath,
+            static path => ReadVanillaPap(path) is { } vanillaBytes ? PapAnimationNames.Read(vanillaBytes) : null);
 
     internal sealed record UnionedNames(List<string> Names, HashSet<string> OneFrameWhenLentNames);
 
@@ -348,7 +313,7 @@ public sealed partial class SwapOrchestrator
     internal static byte[]? ApplyFaceLibrary(byte[] retargetedBytes, string? sourceFaceLibrary,
         string targetRequestedPath, Func<byte[], string, byte[]> inject)
     {
-        if (sourceFaceLibrary is not { } faceLibrary)
+        if (sourceFaceLibrary is not { } faceLibrary || EveryTimelineDeclaresAFaceLibrary(retargetedBytes))
             return retargetedBytes;
 
         try
@@ -357,7 +322,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            Log.Debug($"Injecting face library '{faceLibrary}' into the pap for '{targetRequestedPath}' failed ({ex.Message}); variant skipped.", LogPrefix);
+            Log.Debug($"Injecting face library '{faceLibrary}' into the pap for '{targetRequestedPath}' failed ({ex.Message}). Variant skipped.", LogPrefix);
             return null;
         }
     }
@@ -398,7 +363,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            Log.Debug($"Could not stamp '{resolvedPath}' ({ex.Message}); treating this swap as never reusable.", LogPrefix);
+            Log.Debug($"Could not stamp '{resolvedPath}' ({ex.Message}). This swap will not be reused.", LogPrefix);
             return DateTime.UtcNow.Ticks;
         }
     }
@@ -424,7 +389,7 @@ public sealed partial class SwapOrchestrator
 
             if (papBytes == null)
             {
-                Log.Debug("No vanilla pap was available to warm the byte pipeline with; skipping.", LogPrefix);
+                Log.Debug("No vanilla pap to warm the byte pipeline with. Skipped.", LogPrefix);
                 return;
             }
 
@@ -434,7 +399,7 @@ public sealed partial class SwapOrchestrator
 
             if (names.Count == 0)
             {
-                Log.Debug("The warm-up pap declares no animation names; skipping.", LogPrefix);
+                Log.Debug("The warm-up pap declares no animation names. Skipped.", LogPrefix);
                 return;
             }
 
@@ -448,7 +413,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            Log.Debug($"Warming the byte pipeline failed ({ex.Message}); the first swap pays the JIT instead.", LogPrefix);
+            Log.Debug($"Warming the byte pipeline failed ({ex.Message}).", LogPrefix);
         }
     }
 

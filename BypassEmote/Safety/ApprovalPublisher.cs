@@ -1,7 +1,6 @@
 #if DEBUG
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NoireLib;
 using NoireLib.Helpers;
 using System;
 using System.IO;

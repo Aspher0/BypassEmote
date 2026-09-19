@@ -2,7 +2,6 @@ using BypassEmote.Enums;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using NoireLib;
 using NoireLib.Animations.Helpers;
 using NoireLib.Enums;
 using NoireLib.Helpers;
@@ -16,8 +15,6 @@ public sealed partial class SwapOrchestrator
 {
     internal readonly record struct ResolvedVariantPair(VariantPair Pair, string ResolvedSourcePath);
 
-    // One source pap -> target pap redirect. RequiredNamesPath names the vanilla pap the animation names
-    // must come from.
     internal readonly record struct VariantPair(string SourceRequestedPath, string TargetRequestedPath,
         string? RequiredNamesPath = null, string? SourceFaceLibrary = null, bool WeaponMotion = false);
 
@@ -245,8 +242,6 @@ public sealed partial class SwapOrchestrator
     internal sealed record PlainRaceFiles(string Skeleton, bool SourceIsModded,
         IReadOnlyDictionary<string, byte[]> Files);
 
-    // The retargeted paps a written-out mod is made of, keyed by the game path each one is served over. Null
-    // when the two emotes share no posture, or when nothing could be retargeted.
     internal IReadOnlyDictionary<string, byte[]>? BuildPlainSwapFiles(EmoteAttributes source, EmoteAttributes target,
         IReadOnlyList<string> skeletons, string? ownSkeleton = null)
     {
@@ -283,7 +278,6 @@ public sealed partial class SwapOrchestrator
 
     private PlainRaceFiles? BuildPlainSwapFilesFor(EmoteAttributes source, EmoteAttributes target, string skeleton)
     {
-        var fallbackOrder = EmotePathHelper.GetFallbackOrder(skeleton);
         var pairs = PairVariants(source, target, skeleton);
 
         if (pairs.Count == 0)
@@ -293,7 +287,7 @@ public sealed partial class SwapOrchestrator
         foreach (var pair in pairs)
             resolvedPairs.Add(new ResolvedVariantPair(pair, ResolveOutsideOwnLiveSwap(pair.SourceRequestedPath)));
 
-        var grouped = BuildGroupedFiles(resolvedPairs, group => BuildGroupOutput(group, fallbackOrder));
+        var grouped = BuildGroupedFiles(resolvedPairs, group => BuildGroupOutput(group));
 
         if (grouped.Main == null)
             return null;
@@ -306,8 +300,6 @@ public sealed partial class SwapOrchestrator
 
     internal bool ForeignModServes(string requestedPath) => ForeignModProvides(requestedPath);
 
-    // Whether a mod other than our own serves this path. Our own generated mod must not count, or an earlier
-    // swap keeps a previous body's chain step alive. Reads only, unlike ResolveOutsideOwnMod.
     private bool ForeignModProvides(string requestedPath)
     {
         var resolved = _penumbra.ResolvePlayerPath(requestedPath);
@@ -378,7 +370,7 @@ public sealed partial class SwapOrchestrator
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Could not read /{source.Command}'s intro shape; treating it as lent.", LogPrefix);
+            Log.Error(ex, $"Could not read /{source.Command}'s intro shape. Treated as lent.", LogPrefix);
             return false;
         }
     }
@@ -399,36 +391,11 @@ public sealed partial class SwapOrchestrator
     internal static IEnumerable<string> GamePathsOf(SwapOptionEntry kept)
         => kept.FilesByRace.Values.SelectMany(files => files.Keys);
 
-    internal IReadOnlyList<string> VanillaNamePathsFor(EmoteAttributes emote, IReadOnlyList<string> fallbackOrder)
-    {
-        var paths = new List<string>(emote.Variants.Count + 1);
-
-        void Add(string relative)
-        {
-            if (SelectRequestedPath(relative, fallbackOrder, static _ => false, VanillaExists) is { } path
-                && !paths.Contains(path))
-            {
-                paths.Add(path);
-            }
-        }
-
-        foreach (var variant in emote.Variants)
-            Add(variant.RelativePapPath);
-
-        if (emote.IntroRelativePapPath is { } intro)
-            Add(intro);
-
-        return paths;
-    }
-
     internal static string SkeletonFor(ICharacter character)
         => CharacterHelper.ResolveSkeletonId(character);
 
     internal static CharacterHelper.DrawnBody? DrawnBodyFor(ICharacter character)
         => CharacterHelper.GetDrawnBody(character);
-
-    internal static string? DrawnSkeletonFor(ICharacter character)
-        => CharacterHelper.GetDrawnSkeletonId(character);
 
     internal static PostureFlags PostureForCondition(EmoteCondition condition)
         => ActionTimelineSlots.PostureForCondition(condition);

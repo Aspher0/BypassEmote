@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -10,11 +9,8 @@ public sealed record ModGroupOption(string Name, IReadOnlyDictionary<string, str
 
 public sealed record ModGroup(string Name, IReadOnlyList<ModGroupOption> Options);
 
-// Reads and writes one Penumbra option group. Single selection, option 0 is always the empty "None".
 internal static class ModGroupFile
 {
-    internal const string FileNamePrefix = "group_";
-
     private static readonly IReadOnlyDictionary<string, string> NoFiles = new Dictionary<string, string>();
 
     internal static ModGroup NewGroup(string name)
@@ -44,12 +40,6 @@ internal static class ModGroupFile
                 .Select(option => option.Name == optionName ? option with { Files = files } : option)
                 .ToList(),
         };
-
-    internal static string FileNameFor(string groupName, int index)
-        => $"{FileNamePrefix}{index:D3}_{OptionNaming.FileNamePartFor(groupName)}.json";
-
-    internal static string Serialize(ModGroup group)
-        => ToJson(group).ToString(Formatting.Indented);
 
     internal static JObject ToJson(ModGroup group)
     {
@@ -83,18 +73,6 @@ internal static class ModGroupFile
             ["DefaultSettings"] = 0,
             ["Options"] = options,
         };
-    }
-
-    internal static ModGroup? Deserialize(string json)
-    {
-        try
-        {
-            return FromJson(JObject.Parse(json));
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
     }
 
     internal static ModGroup? FromJson(JObject? root)

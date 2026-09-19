@@ -14,8 +14,6 @@ using NoireLib.Helpers;
 using NoireLib.Helpers.ObjectExtensions;
 using NoireLib.HistoryLogger;
 using NoireLib.UpdateTracker;
-using Serilog.Events;
-using System;
 using System.Threading.Tasks;
 
 namespace BypassEmote;

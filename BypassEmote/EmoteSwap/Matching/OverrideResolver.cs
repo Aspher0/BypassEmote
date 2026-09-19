@@ -21,9 +21,6 @@ public static class OverrideResolver
     public static EmoteOverride? For(IReadOnlyList<EmoteOverride>? overrides, uint sourceRowId)
         => overrides?.FirstOrDefault(entry => entry.SourceEmote == sourceRowId && entry.Targets.Count > 0);
 
-    public static bool Covers(IReadOnlyList<EmoteOverride>? overrides, uint sourceRowId)
-        => For(overrides, sourceRowId) != null;
-
     public static List<EmoteAttributes> Eligible(EmoteOverride configured, IReadOnlyList<EmoteAttributes> pool)
     {
         var byRowId = new Dictionary<uint, EmoteAttributes>(pool.Count);
@@ -83,7 +80,7 @@ public static class OverrideResolver
         Refusal.Locked => "you have not unlocked it",
         Refusal.NeverATarget => "it can never be a swap target",
         Refusal.NotHere => "it cannot be played in your current state",
-        Refusal.ChangedByAMod => "one of your mods changes it, and your settings block those",
+        Refusal.ChangedByAMod => "a mod changes it and your settings block modded emotes",
         Refusal.NotConfigured => "there is no animation data for it",
         _ => "it is available",
     };

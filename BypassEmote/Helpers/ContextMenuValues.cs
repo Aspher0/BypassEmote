@@ -1,86 +1,69 @@
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using Lumina.Excel.Sheets;
 using NoireLib.Helpers;
+using AtkEventInterface = FFXIVClientStructs.FFXIV.Component.GUI.AtkModuleInterface.AtkEventInterface;
 
 namespace BypassEmote.Helpers;
 
 internal static unsafe class ContextMenuValues
 {
+    internal static void EnableExecute(AtkValue* values, uint valueCount)
+    {
+        if (!TryFindExecute(out var item))
+            return;
+
+        ClearFlag(values, valueCount, item);
+
+        AgentContext.Instance()->CurrentContextMenu->ContextItemDisabledMask &= ~(1u << item);
+    }
+
     internal static void EnableExecute(AtkUnitBase* menu)
     {
-        if (menu == null || !menu->IsVisible)
+        if (!TryFindExecute(out var item))
             return;
 
-        var values = menu->AtkValues;
-        var item = FindExecute(values, menu->AtkValuesCount);
+        ClearFlag(menu->AtkValues, menu->AtkValuesCount, item);
 
-        if (item < 0)
-            return;
-
-        var flag = 8 + (int)values[0].UInt + item;
-
-        values[flag].Type = AtkValueType.Int;
-        values[flag].Int = 0;
-
-        var list = FindList(menu);
-
-        if (list == null || item >= list->ListLength)
+        if (!AddonHelper.TryFindComponentList(menu, out var list) || item >= list->ListLength)
             return;
 
         if (list->GetItemDisabledState(item))
             list->SetItemDisabledState(item, false);
     }
 
-    private static int FindExecute(AtkValue* values, uint valueCount)
+    internal static bool TryFindExecute(out int item)
+    {
+        item = -1;
+
+        var agent = AgentEmote.Instance();
+        var context = AgentContext.Instance();
+
+        if (agent == null || context == null || context->CurrentContextMenu == null)
+            return false;
+
+        var menu = context->CurrentContextMenu;
+
+        for (var entry = 0; entry < 26; entry++)
+        {
+            if (menu->EventHandlers[8 + entry].Value != (AtkEventInterface*)agent || menu->EventHandlerParams[8 + entry] != 0x10001)
+                continue;
+
+            item = entry;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static void ClearFlag(AtkValue* values, uint valueCount, int item)
     {
         if (values == null || valueCount <= 8 || values[0].Type != AtkValueType.UInt)
-            return -1;
+            return;
 
         var items = (int)values[0].UInt;
+        var flag = 8 + items + item;
 
-        if (items <= 0 || 8 + items + items > valueCount)
-            return -1;
-
-        if (ExecuteLabel() is not { Length: > 0 } label)
-            return -1;
-
-        for (var item = 0; item < items; item++)
-        {
-            var name = values[8 + item];
-
-            if (!IsText(name.Type) || name.String.Value == null)
-                continue;
-
-            if (name.String.ToString() == label)
-                return item;
-        }
-
-        return -1;
+        if (item < items && flag < valueCount)
+            values[flag].SetInt(0);
     }
-
-    private static AtkComponentList* FindList(AtkUnitBase* menu)
-    {
-        for (var index = 0; index < menu->UldManager.NodeListCount; index++)
-        {
-            var node = menu->UldManager.NodeList[index];
-
-            if (node == null || (ushort)node->Type != 1009)
-                continue;
-
-            var component = ((AtkComponentNode*)node)->Component;
-
-            if (component != null)
-                return (AtkComponentList*)component;
-        }
-
-        return null;
-    }
-
-    private static bool IsText(AtkValueType type)
-        => type is AtkValueType.String or AtkValueType.ConstString or AtkValueType.ManagedString;
-
-    private static string? ExecuteLabel()
-        => ExcelSheetHelper.TryGetRow<Addon>(1167, out var row) && row.HasValue
-        ? row.Value.Text.ExtractText()
-        : null;
 }

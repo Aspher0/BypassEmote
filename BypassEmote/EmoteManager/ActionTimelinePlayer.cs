@@ -1,7 +1,6 @@
 using BypassEmote.Helpers;
 using BypassEmote.IPC.Models;
 using Dalamud.Game.ClientState.Objects.Types;
-using Lumina.Excel.Sheets;
 using NoireLib.Animations.Timelines;
 using System;
 
@@ -14,7 +13,7 @@ public sealed class ActionTimelinePlayer : IDisposable
 
     public void Dispose() => _driver.Dispose();
 
-    public void Play(ICharacter character, Emote emote, ushort actionTimeline, bool interrupt = true)
+    public void Play(ICharacter character, ushort actionTimeline, bool interrupt = true)
     {
         var alreadyTracked = CommonHelper.TryGetTrackedCharacterFromAddress(character.Address) != null;
 
@@ -26,8 +25,6 @@ public sealed class ActionTimelinePlayer : IDisposable
         CharacterState? characterState = null, bool collapseFade = false)
         => _driver.Blend(character, actionTimeline, prio,
             CommonHelper.TargetIdFor(character, characterState), collapseFade);
-
-    public void ResetBase(ICharacter character) => _driver.ResetBase(character);
 
     public void Stop(ICharacter character, bool force)
     {

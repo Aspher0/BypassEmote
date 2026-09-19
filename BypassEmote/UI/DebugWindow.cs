@@ -16,7 +16,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NoireLib;
 using NoireLib.Helpers;
-using NoireLib.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,13 +59,11 @@ public class DebugWindow : Window, IDisposable
                     DrawTrackedCharactersTab();
             }
 
-#if DEBUG
-            using (var tab = ImRaii.TabItem("Network Relay"))
+            using (var tab = ImRaii.TabItem("Networker"))
             {
                 if (tab)
-                    DrawNetworkRelayTab();
+                    DrawNetworkerTab();
             }
-#endif
 
             using (var tab = ImRaii.TabItem("Swap Layers"))
             {
@@ -319,14 +316,13 @@ public class DebugWindow : Window, IDisposable
             : $"#{emoteRowId}";
     }
 
-#if DEBUG
-    private void DrawNetworkRelayTab()
+    private void DrawNetworkerTab()
     {
         var relay = Service.Networker;
 
         if (relay == null)
         {
-            ImGui.Text("Network relay is not initialized.");
+            ImGui.Text("Networker is not initialized.");
             return;
         }
 
@@ -350,7 +346,7 @@ public class DebugWindow : Window, IDisposable
         }
 
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Instances on the same PC find each other with no configuration.\nLAN discovery reaches other PCs, and may need a Windows Firewall inbound allow.");
+            ImGui.SetTooltip("Instances on the same PC find each other with no configuration.\nLAN discovery reaches other PCs. It may need an inbound Windows Firewall rule.");
 
         var localPlayer = NoireService.ObjectTable.LocalPlayer;
         if (localPlayer != null)
@@ -368,7 +364,6 @@ public class DebugWindow : Window, IDisposable
             }
         }
     }
-#endif
 
     private static void DrawSwapLayers()
     {
@@ -376,7 +371,7 @@ public class DebugWindow : Window, IDisposable
             value => SwapLayers.SwapOwnedEmotes = value);
 
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker("Sends emotes you already own through the swap instead of letting the game play them, for debugging only.");
+        ImGuiComponents.HelpMarker("Swaps emotes you already own instead of letting the game play them. Debug only.");
 
         LayerSwitch("Weapon in hand##SwapLayer", SwapLayers.WeaponInHand,
             value => SwapLayers.WeaponInHand = value);
@@ -453,8 +448,6 @@ public class DebugWindow : Window, IDisposable
                     if (!string.IsNullOrWhiteSpace(emoteSearchText) &&
                         !emoteName.Contains(emoteSearchText, StringComparison.OrdinalIgnoreCase))
                         continue;
-
-                    var initialPosY = ImGui.GetCursorPosY();
 
                     var iconSize = 25f;
                     try

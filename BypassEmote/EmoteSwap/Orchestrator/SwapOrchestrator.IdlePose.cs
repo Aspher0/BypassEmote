@@ -4,7 +4,6 @@ using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
-using NoireLib;
 using NoireLib.Animations.Helpers;
 using NoireLib.Animations.PapFormat;
 using System;
@@ -47,7 +46,7 @@ public sealed partial class SwapOrchestrator
     internal static string IdlePoseCauseFor(IdlePoseFailure reason) => reason switch
     {
         IdlePoseFailure.StillInAnotherEmote => "Your character is still in another emote. Move, or change pose, then try again.",
-        IdlePoseFailure.MountedOrRiding => "Your character is mounted, so there is no idle pose to borrow.",
+        IdlePoseFailure.MountedOrRiding => "Your character is mounted. There is no idle pose to borrow.",
         IdlePoseFailure.PoseHasNoRedirectablePap => "This pose cannot be changed.",
         IdlePoseFailure.PosePapNotFound => "Your pose animation could not be found.",
         IdlePoseFailure.SourceHasNoVariant => "That emote has no animation to lend.",
@@ -69,9 +68,6 @@ public sealed partial class SwapOrchestrator
         => mode is CharacterModes.Mounted or CharacterModes.RidingPillion
             ? IdlePoseFailure.MountedOrRiding
             : IdlePoseFailure.StillInAnotherEmote;
-
-    internal static byte PoseIndexFor(EmoteController.PoseType stance, EmoteController.PoseType reportedStance, byte reportedIndex)
-        => IdlePoseData.PoseIndexFor(stance, reportedStance, reportedIndex);
 
     private static bool IdlePoseFailed(IdlePoseFailure reason, string debugDetail)
     {
@@ -170,7 +166,7 @@ public sealed partial class SwapOrchestrator
 
         var startLine = posePaths.StartRelativePapPath == null
             ? IdlePoseDropsSourceIntro(null, source.Intro, sourceIntroRequestedPath)
-                ? $"start: this pose has none, so {sourceIntroRequestedPath} does not play"
+                ? $"start: this pose has none, {sourceIntroRequestedPath} does not play"
                 : "start: this pose has none"
             : $"start: '{posePaths.StartRelativePapPath}' resolves on no skeleton in the chain";
 
@@ -251,10 +247,15 @@ public sealed partial class SwapOrchestrator
 
         var elapsedAtRedraw = swapClock.ElapsedMilliseconds;
 
+        _redrawRestart.Arm($"/{source.Command} on '{entry!.GroupName}'",
+            posePaths.StartRelativePapPath is { } poseStart
+                ? [posePaths.LoopRelativePapPath, poseStart]
+                : [posePaths.LoopRelativePapPath]);
+
         LogHelper.SwapLine(source.Command, "idle pose");
 
         if (IdlePoseDropsSourceIntro(posePaths.StartRelativePapPath, source.Intro, sourceIntroRequestedPath))
-            LogHelper.Notice("Your idle 0 pose has no intro, so this emote's intro will not play. Try changing pose.");
+            LogHelper.Notice("Your idle 0 pose has no intro. This emote's intro will not play. Try changing pose.");
 
         if (ArmsIdlePoseWatch(Configuration.SwapLifetime))
             _endWatcher.ArmIdlePose(entry!, () => _penumbra.RedrawLocalPlayer(), () => ArmPoseCacheBreak(poseType, poseIndex));
