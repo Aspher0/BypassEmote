@@ -153,7 +153,8 @@ public sealed partial class SwapOrchestrator
 
         var files = new Dictionary<string, byte[]>(2);
 
-        if (BuildIdlePosePap(sourceRequestedPath, resolvedSourcePath, loopTargetPath, posePaths.LoopRelativePapPath, sourceFaceLibrary) is not { } loopBytes)
+        if (BuildIdlePosePap(sourceRequestedPath, resolvedSourcePath, loopTargetPath, posePaths.LoopRelativePapPath, sourceFaceLibrary,
+                ResolvedTimelineFor(sourceRequestedPath)) is not { } loopBytes)
         {
             return IdlePoseFailed(IdlePoseFailure.PosePapCouldNotBeBuilt,
                 $"the pose pap for '{loopTargetPath}' could not be built from '{sourceRequestedPath}' (see the line above).");
@@ -184,7 +185,8 @@ public sealed partial class SwapOrchestrator
                 startSourceFaceLibrary = source.FaceLibraryFor(sourceIntroRelativePath);
             }
 
-            if (BuildIdlePosePap(startSourceRequestedPath, startResolvedSourcePath, startTargetPath, startRelativePath, startSourceFaceLibrary) is { } startBytes)
+            if (BuildIdlePosePap(startSourceRequestedPath, startResolvedSourcePath, startTargetPath, startRelativePath,
+                    startSourceFaceLibrary, ResolvedTimelineFor(startSourceRequestedPath)) is { } startBytes)
             {
                 files[startTargetPath] = startBytes;
                 startServedBy = ServedBy(startSourceRequestedPath, startResolvedSourcePath);
@@ -385,8 +387,11 @@ public sealed partial class SwapOrchestrator
             SourceServedBy: sourceServedBy);
     }
 
+    private string? ResolvedTimelineFor(string sourceRequestedPath)
+        => ActionTimelinePathFor(sourceRequestedPath) is { } timeline ? ResolveOutsideOwnMod(timeline) : null;
+
     private static byte[]? BuildIdlePosePap(string sourceRequestedPath, string resolvedSourcePath,
-        string targetRequestedPath, string targetRelativePapPath, string? sourceFaceLibrary)
+        string targetRequestedPath, string targetRelativePapPath, string? sourceFaceLibrary, string? resolvedSourceTimeline)
     {
         if (ReadVanillaPap(targetRequestedPath) is not { } targetVanillaBytes)
         {
@@ -403,6 +408,6 @@ public sealed partial class SwapOrchestrator
 
         return BuildRetargetedPap(
             new VariantPair(sourceRequestedPath, targetRequestedPath, SourceFaceLibrary: sourceFaceLibrary),
-            resolvedSourcePath, requiredNames);
+            resolvedSourcePath, requiredNames, resolvedSourceTimeline: resolvedSourceTimeline);
     }
 }

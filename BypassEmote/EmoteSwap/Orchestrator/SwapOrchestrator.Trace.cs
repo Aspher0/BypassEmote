@@ -125,7 +125,7 @@ public sealed partial class SwapOrchestrator
     {
         var details = new List<string>(pairs.Count + 1);
 
-        foreach (var (pair, resolvedSourcePath) in pairs)
+        foreach (var (pair, resolvedSourcePath, _) in pairs)
         {
             details.Add($"{RoleOf(target, pair.TargetRequestedPath)}: {pair.SourceRequestedPath} -> "
                 + $"{ServedBy(pair.SourceRequestedPath, resolvedSourcePath)}, onto {pair.TargetRequestedPath}");

@@ -13,10 +13,26 @@ namespace BypassEmote.EmoteSwap;
 
 public sealed partial class SwapOrchestrator
 {
-    internal readonly record struct ResolvedVariantPair(VariantPair Pair, string ResolvedSourcePath);
+    internal readonly record struct ResolvedVariantPair(VariantPair Pair, string ResolvedSourcePath,
+        string? ResolvedSourceTimeline = null);
+
+    private const string AnimationFolder = "/animation/a0001/";
+
+    internal static string? ActionTimelinePathFor(string papPath)
+    {
+        var start = papPath.IndexOf(AnimationFolder, StringComparison.OrdinalIgnoreCase);
+        var relative = start < 0 ? papPath : papPath[(start + AnimationFolder.Length)..];
+        var slash = relative.IndexOf('/');
+
+        if (slash < 0 || !relative.EndsWith(".pap", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        return $"chara/action/{relative[(slash + 1)..^4]}.tmb";
+    }
 
     internal readonly record struct VariantPair(string SourceRequestedPath, string TargetRequestedPath,
-        string? RequiredNamesPath = null, string? SourceFaceLibrary = null, bool WeaponMotion = false);
+        string? RequiredNamesPath = null, string? SourceFaceLibrary = null, bool WeaponMotion = false,
+        bool LentSource = false);
 
     internal static string? SelectRequestedPath(string relativePapPath, IReadOnlyList<string> fallbackSkeletons,
         Func<string, bool> modProvides, Func<string, bool> vanillaExists)
@@ -68,6 +84,7 @@ public sealed partial class SwapOrchestrator
         string? sourcePath = null;
         string? sourceFaceLibrary = null;
         var sourceWeaponMotion = false;
+        var lent = false;
 
         if (source.AdjustRelativePapPath is { } ownAdjust
             && SelectRequestedPath(ownAdjust, fallbackOrder, modProvides, vanillaExists) is { } ownAdjustPath)
@@ -81,13 +98,14 @@ public sealed partial class SwapOrchestrator
             sourcePath = upperBodyPath;
             sourceFaceLibrary = source.FaceLibraryFor(upperBody.RelativePapPath);
             sourceWeaponMotion = upperBody.WeaponMotion;
+            lent = true;
         }
 
         if (sourcePath == null)
             return;
 
         if (SelectRequestedPath(targetAdjust, fallbackOrder, modProvides, vanillaExists) is { } targetPath)
-            pairs.Add(new VariantPair(sourcePath, targetPath, namesPath, sourceFaceLibrary, sourceWeaponMotion));
+            pairs.Add(new VariantPair(sourcePath, targetPath, namesPath, sourceFaceLibrary, sourceWeaponMotion, lent));
     }
 
     private static void AppendIntroPair(EmoteAttributes source, EmoteAttributes target,
@@ -103,6 +121,7 @@ public sealed partial class SwapOrchestrator
         string? introSourcePath = null;
         string? introSourceFaceLibrary = null;
         var introSourceWeaponMotion = false;
+        var introLent = false;
 
         if (source.IntroRelativePapPath is { } ownIntro
             && SelectRequestedPath(ownIntro, fallbackOrder, modProvides, vanillaExists) is { } ownIntroPath)
@@ -118,6 +137,7 @@ public sealed partial class SwapOrchestrator
             introSourcePath = lentPath;
             introSourceFaceLibrary = source.FaceLibraryFor(lentVariant.RelativePapPath);
             introSourceWeaponMotion = lentVariant.WeaponMotion;
+            introLent = true;
         }
 
         if (introSourcePath == null)
@@ -125,7 +145,7 @@ public sealed partial class SwapOrchestrator
 
         if (SelectRequestedPath(targetIntro, fallbackOrder, modProvides, vanillaExists) is { } introTargetPath)
             pairs.Add(new VariantPair(introSourcePath, introTargetPath, introNamesPath, introSourceFaceLibrary,
-                introSourceWeaponMotion));
+                introSourceWeaponMotion, introLent));
     }
 
     internal static string PathSignatureFor(IEnumerable<VariantPair> pairs)
@@ -152,18 +172,29 @@ public sealed partial class SwapOrchestrator
                 continue;
 
             var resolved = pairs
-                .Select(pair => new ResolvedVariantPair(pair, resolve(pair.SourceRequestedPath)))
+                .Select(pair => new ResolvedVariantPair(pair, resolve(pair.SourceRequestedPath),
+                    ActionTimelinePathFor(pair.SourceRequestedPath) is { } timeline ? resolve(timeline) : null))
                 .ToList();
 
             var main = resolved[0];
 
             inputs.Add(new RaceBuildInput(race, fallbackOrder, resolved,
                 new RaceSourceInput(race, main.ResolvedSourcePath,
-                    StampFor(main.Pair.SourceRequestedPath, main.ResolvedSourcePath), PathSignatureFor(pairs))));
+                    StampFor(main.Pair.SourceRequestedPath, main.ResolvedSourcePath),
+                    PathSignatureFor(pairs) + TimelineSignatureFor(resolved))));
         }
 
         return inputs;
     }
+
+    internal static string TimelineSignatureFor(IEnumerable<ResolvedVariantPair> pairs)
+        => string.Concat(pairs
+            .Where(pair => pair.ResolvedSourceTimeline is { } resolved
+                && ActionTimelinePathFor(pair.Pair.SourceRequestedPath) is { } requested
+                && !string.Equals(resolved, requested, StringComparison.OrdinalIgnoreCase))
+            .Select(pair => pair.ResolvedSourceTimeline!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(resolved => $"|tmb={resolved}:{StampFor(string.Empty, resolved)}"));
 
     private static List<string> RaceOrderFrom(string drawnSkeleton)
     {
@@ -196,6 +227,7 @@ public sealed partial class SwapOrchestrator
             .SelectMany(race => EmotePathHelper.GetFallbackOrder(race))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .SelectMany(step => relativePaths.Select(relative => EmotePathHelper.GetSkeletonPath(step, relative)))
+            .Concat(relativePaths.Select(ActionTimelinePathFor).OfType<string>())
             .Distinct(StringComparer.Ordinal)
             .ToList();
 
@@ -285,9 +317,11 @@ public sealed partial class SwapOrchestrator
 
         var resolvedPairs = new List<ResolvedVariantPair>(pairs.Count);
         foreach (var pair in pairs)
-            resolvedPairs.Add(new ResolvedVariantPair(pair, ResolveOutsideOwnLiveSwap(pair.SourceRequestedPath)));
+            resolvedPairs.Add(new ResolvedVariantPair(pair, ResolveOutsideOwnLiveSwap(pair.SourceRequestedPath),
+                ActionTimelinePathFor(pair.SourceRequestedPath) is { } timeline ? ResolveOutsideOwnLiveSwap(timeline) : null));
 
-        var grouped = BuildGroupedFiles(resolvedPairs, group => BuildGroupOutput(group));
+        var grouped = BuildGroupedFiles(resolvedPairs, group => BuildGroupOutput(group),
+            ActionTimelinesFor(source, target));
 
         if (grouped.Main == null)
             return null;

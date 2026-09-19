@@ -1,4 +1,4 @@
-﻿using NoireLib;
+using NoireLib;
 using NoireLib.Animations.Helpers;
 using NoireLib.Animations.PapFormat;
 using NoireLib.Animations.PapFormat.Tmb;
@@ -20,7 +20,8 @@ public sealed partial class SwapOrchestrator
         bool ClampedIntro);
 
     internal static GroupedSwapFiles BuildGroupedFiles(IReadOnlyList<ResolvedVariantPair> pairs,
-        Func<IReadOnlyList<ResolvedVariantPair>, GroupOutput?> retargetGroup)
+        Func<IReadOnlyList<ResolvedVariantPair>, GroupOutput?> retargetGroup,
+        Func<ResolvedVariantPair, byte[], ActionTimelineFile?>? actionTimeline = null)
     {
         var groupsBySource = new Dictionary<string, List<ResolvedVariantPair>>(StringComparer.OrdinalIgnoreCase);
         var groupsInOrder = new List<List<ResolvedVariantPair>>();
@@ -47,7 +48,12 @@ public sealed partial class SwapOrchestrator
                 continue;
 
             foreach (var member in members)
+            {
                 files[member.Pair.TargetRequestedPath] = output.Bytes;
+
+                if (actionTimeline?.Invoke(member, output.Bytes) is { } timeline)
+                    files.TryAdd(timeline.GamePath, timeline.Bytes);
+            }
 
             main ??= members[0];
             clampedIntro |= output.ClampedIntro;
@@ -71,12 +77,23 @@ public sealed partial class SwapOrchestrator
     }
 
     private static byte[]? BuildRetargetedPap(VariantPair pair, string resolvedSourcePath,
-        IReadOnlyList<string>? requiredNamesOverride = null, bool? holdOffHand = null)
+        IReadOnlyList<string>? requiredNamesOverride = null, bool? holdOffHand = null,
+        string? resolvedSourceTimeline = null)
     {
         if (ReadPap(pair.SourceRequestedPath, resolvedSourcePath) is not { } sourceBytes)
         {
             Log.Debug($"No readable source pap for '{pair.SourceRequestedPath}' (resolved to '{resolvedSourcePath}').", LogPrefix);
             return null;
+        }
+
+        if (ServedByAMod(pair, resolvedSourcePath)
+            && AnimationsAskedFor(pair.SourceRequestedPath, resolvedSourceTimeline) is { } askedFor
+            && NothingPlaysFrom(PapAnimationNames.Read(sourceBytes), askedFor))
+        {
+            Log.Debug($"Pap served unchanged on '{pair.TargetRequestedPath}': '{resolvedSourcePath}' has none of "
+                + $"{string.Join(", ", askedFor)}", LogPrefix);
+
+            return sourceBytes;
         }
 
         var requiredNames = requiredNamesOverride;
@@ -116,6 +133,51 @@ public sealed partial class SwapOrchestrator
 
     internal static bool ServedByAMod(VariantPair pair, string resolvedSourcePath)
         => !string.Equals(resolvedSourcePath, pair.SourceRequestedPath, StringComparison.Ordinal);
+
+    private static readonly IReadOnlySet<string> AnimationClipMagic =
+        new HashSet<string>(StringComparer.Ordinal) { "C009", "C010" };
+
+    private static readonly ConcurrentDictionary<string, IReadOnlyList<string>?> VanillaAskedByTimeline =
+        new(StringComparer.Ordinal);
+
+    internal static bool NothingPlaysFrom(IReadOnlyList<string> papNames, IReadOnlyList<string> askedFor)
+        => !papNames.Any(name => askedFor.Contains(name, StringComparer.OrdinalIgnoreCase));
+
+    private static IReadOnlyList<string>? AnimationsAskedFor(string sourceRequestedPath, string? resolvedTimeline)
+    {
+        if (resolvedTimeline == null || ActionTimelinePathFor(sourceRequestedPath) is not { } requestedTimeline)
+            return null;
+
+        if (resolvedTimeline == requestedTimeline)
+        {
+            return VanillaAskedByTimeline.GetOrAdd(requestedTimeline, static path =>
+                NoireService.DataManager.FileExists(path) && NoireService.DataManager.GetFile(path)?.Data is { } vanilla
+                    ? AnimationsAskedBy(vanilla)
+                    : null);
+        }
+
+        try
+        {
+            return AnimationsAskedBy(File.ReadAllBytes(resolvedTimeline));
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"Failed to read tmb '{resolvedTimeline}': {ex.Message}", LogPrefix);
+            return null;
+        }
+    }
+
+    private static IReadOnlyList<string>? AnimationsAskedBy(byte[] timelineBytes)
+    {
+        var names = TmbEntryScanner.ScanTmb(timelineBytes, AnimationClipMagic)
+            .Select(entry => entry.Path)
+            .OfType<string>()
+            .Where(name => name.Length > 0)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        return names.Count > 0 ? names : null;
+    }
 
     private static byte[] HoldWeapons(byte[] papBytes, bool offHand)
         => PapWeaponHold.Apply(papBytes, offHand, SwapLayers.WeaponStowAtEnd, SwapLayers.WeaponTravelAnimation);
@@ -205,7 +267,8 @@ public sealed partial class SwapOrchestrator
     private static GroupOutput? BuildGroupOutput(IReadOnlyList<ResolvedVariantPair> group, bool? holdOffHand = null)
     {
         if (group.Count == 1)
-            return BuildRetargetedPap(group[0].Pair, group[0].ResolvedSourcePath, holdOffHand: holdOffHand) is { } bytes
+            return BuildRetargetedPap(group[0].Pair, group[0].ResolvedSourcePath, holdOffHand: holdOffHand,
+                resolvedSourceTimeline: group[0].ResolvedSourceTimeline) is { } bytes
                 ? new GroupOutput(bytes, ClampedIntro: false)
                 : null;
 
@@ -220,6 +283,18 @@ public sealed partial class SwapOrchestrator
         {
             Log.Debug($"No readable source pap for group led by '{lead.Pair.SourceRequestedPath}' (resolved to '{lead.ResolvedSourcePath}').", LogPrefix);
             return null;
+        }
+
+        var sourceNames = PapAnimationNames.Read(sourceBytes);
+
+        if (group.All(member => ServedByAMod(member.Pair, member.ResolvedSourcePath)
+                && AnimationsAskedFor(member.Pair.SourceRequestedPath, member.ResolvedSourceTimeline) is { } askedFor
+                && NothingPlaysFrom(sourceNames, askedFor)))
+        {
+            Log.Debug($"Pap served unchanged on '{lead.Pair.TargetRequestedPath}': '{lead.ResolvedSourcePath}' has "
+                + "none of the animations its tmbs ask for", LogPrefix);
+
+            return new GroupOutput(sourceBytes, ClampedIntro: false);
         }
 
         var union = UnionRequiredNames(group, ReadVanillaNamesForNamesPath);

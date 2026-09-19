@@ -97,7 +97,8 @@ public sealed partial class SwapOrchestrator
             return null;
         }
 
-        var drawn = BuildGroupedFiles(drawnRace.Pairs, RetargetingOncePerInput(retargeted, request.HoldOffHand));
+        var drawn = BuildGroupedFiles(drawnRace.Pairs, RetargetingOncePerInput(retargeted, request.HoldOffHand),
+            ActionTimelinesFor(request.Source, request.Target));
 
         var elapsedAtRetarget = request.Timings.Clock.ElapsedMilliseconds;
 
@@ -164,7 +165,8 @@ public sealed partial class SwapOrchestrator
                 if (race.Race == request.Skeleton)
                     continue;
 
-                var grouped = BuildGroupedFiles(race.Pairs, RetargetingOncePerInput(retargeted, request.HoldOffHand));
+                var grouped = BuildGroupedFiles(race.Pairs, RetargetingOncePerInput(retargeted, request.HoldOffHand),
+                    ActionTimelinesFor(request.Source, request.Target));
 
                 if (grouped.Main == null)
                 {
