@@ -4,7 +4,7 @@
 # Definition and usage
 
 This is a simple plugin allowing you to play any game emote, regardless of whether it has been unlocked or not.<br/>
-It is as simple as typing the usual emote command in chat, such as `/tea` or `\beesknees`.<br/>
+It is as simple as typing the usual emote command in chat, such as `/tea` or `/beesknees`.<br/>
 This is NOT an unlock cheat.
 
 Emotes are played according to your character's condition: sitting on the ground, sitting in a chair, mounted, riding pillion, swimming, diving, holding an umbrella or a torch, wearing a fashion accessory. This was an issue in the first versions, it's now completely fixed!<br/>
