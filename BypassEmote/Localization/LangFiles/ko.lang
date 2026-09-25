@@ -1,0 +1,1994 @@
+# Source: {target} has an adjust variant for use on someone. {source} has none. Targeting someone keeps {target}'s animation.
+advice.adjust = {target}에는 다른 사람에게 사용하는 전용 동작이 있지만 {source}에는 없습니다. 누군가를 대상으로 지정해도 {target}의 동작이 유지됩니다.
+# Source: {target} is the emote being bypassed.
+advice.being_bypassed = {target}은(는) 우회하려는 감정 표현입니다.
+# Source: {target} is on your blocked targets list. This override uses it anyway.
+advice.blocked = {target}은(는) 차단한 대상 목록에 있습니다. 이 재정의에서는 그래도 사용됩니다.
+# Source: {target} has an intro and {source} does not.
+advice.intro_added = {target}에는 시작 동작이 있지만 {source}에는 없습니다.
+# Source: {target} has no intro and {source} has one. The intro will not play.
+advice.intro_dropped = {target}에는 시작 동작이 없지만 {source}에는 있습니다. 시작 동작은 재생되지 않습니다.
+# Source: {target} loops while {source} plays once. Weird behavior might happen.
+advice.loops = {target}은(는) 반복되지만 {source}은(는) 한 번만 재생됩니다. 이상한 동작이 일어날 수 있습니다.
+# Source: {target} has no {posture} animation. The swap will not happen when you play {source} in that posture.
+advice.missing_posture = {target}에는 '{posture}' 동작이 없습니다. 그 자세에서 {source}을(를) 사용하면 교체되지 않습니다.
+# Source: Your mod "{mod}" already changes {target}. Your "Emotes your mods change" setting still applies.
+advice.mod_changes = 모드 "{mod}"이(가) 이미 {target}을(를) 변경합니다. "모드가 변경하는 감정 표현" 설정은 계속 적용됩니다.
+# Source: {target} can never be a swap target (pose, facial expression, per-job emote or weapon drawn). It is always skipped.
+advice.never_target = {target}은(는) 교체 대상이 될 수 없습니다(자세, 표정, 직업 전용 감정 표현 또는 무기를 꺼낸 상태). 항상 건너뜁니다.
+# Source: You have not unlocked {target}. It is skipped.
+advice.not_unlocked = {target}을(를) 습득하지 않았습니다. 건너뜁니다.
+# Source: {target} and {source} share no posture. The swap will not happen.
+advice.no_posture = {target}과(와) {source}에는 공통된 자세가 없습니다. 교체되지 않습니다.
+# Source: {target} plays once while {source} loops. The animation will stop instead of looping.
+advice.plays_once = {target}은(는) 한 번만 재생되지만 {source}은(는) 반복됩니다. 동작이 반복되지 않고 멈춥니다.
+# Source: chair sitting
+advice.posture.chair_sitting = 의자에 앉음
+# Source: ground sitting
+advice.posture.ground_sitting = 바닥에 앉음
+# Source: matching
+advice.posture.matching = 일치하는
+# Source: mounted
+advice.posture.mounted = 탈것 탑승
+# Source: {first} or {second}
+advice.posture.or = {first} 또는 {second}
+# Source: standing
+advice.posture.standing = 서 있음
+# Source: {target} emits a sound that {source} does not. Everyone around you will hear it.
+advice.sound = {target}에는 {source}에 없는 소리가 있습니다. 주변의 모든 사람이 듣게 됩니다.
+# Source: {target} will stop when you turn your character.
+advice.stops_on_turn = 캐릭터의 방향을 바꾸면 {target}이(가) 멈춥니다.
+# Source: When you target someone, {target} {target_turn} while {source} {source_turn}.
+advice.turn = 누군가를 대상으로 지정하면 {target}은(는) {target_turn}, {source}은(는) {source_turn}.
+# Source: turns the whole body
+advice.turn.body = 몸 전체를 돌립니다
+# Source: only follows with the eyes
+advice.turn.eyes = 눈으로만 따라갑니다
+# Source: turns the head
+advice.turn.head = 고개를 돌립니다
+# Source: does not turn at all
+advice.turn.none = 전혀 돌지 않습니다
+# Source: turns in a way the plugin could not read
+advice.turn.unknown = 플러그인이 읽을 수 없는 방식으로 돕니다
+# Source: {target} emits a voice line sound. Everyone around you will hear it.
+advice.voice_line = {target}에는 음성이 있습니다. 주변의 모든 사람이 듣게 됩니다.
+# Source: New settings access button
+changelog.1.4.0.0.0298def8 = 
+# Source: Interactive elements and color-coded entries
+changelog.1.4.0.0.02fed927 = 
+# Source: Versioned changelog entries with structured data
+changelog.1.4.0.0.07adb9f9 = 
+# Source: Last seen changelog version tracking
+changelog.1.4.0.0.1416da5e = 
+# Source: Clean, organized display of version history
+changelog.1.4.0.0.210e33d8 = 
+# Source: Introduced ChangelogWindow UI for viewing updates
+changelog.1.4.0.0.2181daf2 = 
+# Source: Added changelog button in title bar
+changelog.1.4.0.0.255aa248 = 
+# Source: Configuration & Settings
+changelog.1.4.0.0.351650a7 = 
+# Source: Mark/unmark emotes as favorites
+changelog.1.4.0.0.3713c187 = 
+# Source: Show changelog on update
+changelog.1.4.0.0.3c3ec2c5 = 
+# Source: Support for rich formatting and icons
+changelog.1.4.0.0.40b56c74 = 
+# Source: Automatic changelog version tracking
+changelog.1.4.0.0.4523215d = 
+# Source: Enhanced main plugin window with new action buttons in the title bar
+changelog.1.4.0.0.481d2715 = 
+# Source: Added favorited emotes feature
+changelog.1.4.0.0.4c734a26 = 
+# Source: Added an info circle you can hover to see what patch the emote is from, and how to obtain it
+changelog.1.4.0.0.4d016422 = 
+# Source: View all favorited emotes in the "Fav" tab
+changelog.1.4.0.0.6541a8df = 
+# Source: Updated configuration system to track changelog versions
+changelog.1.4.0.0.6e5aab6b = 
+# Source: Accessible via main plugin window book button
+changelog.1.4.0.0.6e5ae035 = 
+# Source: User Interface
+changelog.1.4.0.0.7cc34557 = 
+# Source: Easily access frequently used emotes
+changelog.1.4.0.0.936392be = 
+# Source: Major update introducing a comprehensive changelog system with UI integration, configuration tracking, and enhanced user experience features.
+changelog.1.4.0.0.947b7be1 = 
+# Source: Comprehensive changelog management system
+changelog.1.4.0.0.9a9b8161 = 
+# Source: Added an option to show update notifications
+changelog.1.4.0.0.ac21cbc9 = 
+# Source: Various QoLs and Changelog System
+changelog.1.4.0.0.c163aa85 = 
+# Source: Added which patch the emote is from
+changelog.1.4.0.0.c9e99813 = 
+# Source: Donate
+changelog.1.4.0.0.da0e0147 = 
+# Source: Changelog system
+changelog.1.4.0.0.db290de8 = 
+# Source: Added new emote data collected from FFXIVCollect
+changelog.1.4.0.0.ec5c63bc = 
+# Source: Integrated support button (Ko-Fi)
+changelog.1.4.0.0.ef2d7f93 = 
+# Source: Added the obtention methods to get the emote
+changelog.1.4.0.0.fab46ec1 = 
+# Source: Improved Emote Detection
+changelog.1.4.1.0.034ead2f = 
+# Source: The game will now display Patch 7.35 game emotes.
+changelog.1.4.1.0.1ee5fa0b = 
+# Source: Fixed an incorrect detection of game emotes.
+changelog.1.4.1.0.baa86f40 = 
+# Source: You can now show emote IDs in the emote list.
+changelog.1.5.0.0.01457d86 = 
+# Source: Fixed a bug where Dalamud UI language would be used to get emote commands instead of game language when typing auto-translate emote commands.
+changelog.1.5.0.0.09bf17b8 = 
+# Source: Integrated NoireLib for improved utilities and changelog system.
+changelog.1.5.0.0.1daa9882 = 
+# Source: New Features
+changelog.1.5.0.0.36f4e595 = 
+# Source: Fixed a bug where NPCs emotes would bypass once and then block afterwards.
+changelog.1.5.0.0.551586a3 = 
+# Source: Bugfix, emote handling enhancement, and internal system change
+changelog.1.5.0.0.5c5edc35 = 
+# Source: Bug Fixes
+changelog.1.5.0.0.a199446a = 
+# Source: You can now emote while sitting, groundsitting, mounted or riding pillion.
+changelog.1.5.0.0.bce6580e = 
+# Source: Fixed emote playing capabilities, now allowing to bypass emotes when sitting or on a mount. Integrated NoireLib for improved utilities and features.
+changelog.1.5.0.0.be4c1a4e = 
+# Source: Technical Changes
+changelog.1.5.0.0.d80295d6 = 
+# Source: Refactored emote and character helpers to use NoireLib utilities.
+changelog.1.5.0.0.ed8f44b8 = 
+# Source: Emotes previously in the "Other" tab had disappeared. Those are now back.
+changelog.1.5.1.0.0dbd5cd1 = 
+# Source: New Features
+changelog.1.5.1.0.36f4e595 = 
+# Source: Refactored the code to use the new NoireLib helpers and utilities.
+changelog.1.5.1.0.5d935072 = 
+# Source: Bug Fixes
+changelog.1.5.1.0.a199446a = 
+# Source: Other various bug fixes.
+changelog.1.5.1.0.a977efbe = 
+# Source: Bugfix, new UI option and various internal changes
+changelog.1.5.1.0.bc2f8717 = 
+# Source: Technical Changes
+changelog.1.5.1.0.d80295d6 = 
+# Source: For debug purposes, you can now show absolutely *all* in game emotes, including invalid ones, with an option in the emote window. Look for "Show Invalid Emotes".
+changelog.1.5.1.0.fbc23e10 = 
+# Source: Fixed the settings to show the changelog and print in chat on update that were not enforced anymore.
+changelog.1.5.1.1.0a02634a = 
+# Source: Hotfix
+changelog.1.5.1.1.0b4d6087 = 
+# Source: Bug Hotfix
+changelog.1.5.1.1.6ced686b = 
+# Source: Bug Fixes
+changelog.1.5.1.1.a199446a = 
+# Source: Fixed the changelog that would not show anymore.
+changelog.1.5.1.1.e17c39d6 = 
+# Source: Fixed a bug where bypassing a looped emote would not cancel after mounting-dismounting, interacting with NPCs, casting, etc.
+changelog.1.6.0.0.2c6d1303 = 
+# Source: Emote handling enhancement
+changelog.1.6.0.0.3047865d = 
+# Source: New Features
+changelog.1.6.0.0.36f4e595 = 
+# Source: Fixed emote not being bypassed when you passed the emote command with parameters, such as "/beesknees motion".
+changelog.1.6.0.0.376a53ac = 
+# Source: Bug fixes
+changelog.1.6.0.0.60586b6e = 
+# Source: Enhances the emote handling both locally and while synced.
+changelog.1.6.0.0.6d3b8490 = 
+# Source: Fixed a bug where you could bypass emotes in GPose.
+changelog.1.6.0.0.718fc03b = 
+# Source: Added support for special emotes such as /dote and /allsaintscharm where the target would not be handled properly.
+changelog.1.6.0.0.80335920 = 
+# Source: Improved how the syncing works, and specifically how other players are handled when they stop emoting.
+changelog.1.6.0.0.8d9bcc24 = 
+# Source: Added /be sync and /be syncall which will respectively sync the emotes of bypassed players only, or all players on the map.
+changelog.1.6.0.0.c78311c9 = 
+# Source: Technical Changes
+changelog.1.6.0.0.d80295d6 = 
+# Source: Improved how the syncing works (again), and specifically how other players are handled when they stop emoting.\nA small delay will be added before the emote is sent over IPC.\nFurthermore, movement detections for other players has been improved to add some leeway so that the emote doesnt get stopped when the player is still moving a bit.
+changelog.1.6.1.2.0d00e73a = 
+# Source: Fixed emotes bypassing under some conditions that are not valid (Casting, in cutscene, in GPose, In event ...).
+changelog.1.6.1.2.1590a22e = 
+# Source: Fixes a few bugs with some specific emotes and syncing.
+changelog.1.6.1.2.1da6d7bb = 
+# Source: Bug fixes
+changelog.1.6.1.2.60586b6e = 
+# Source: Various bug fixes
+changelog.1.6.1.2.86e38eb0 = 
+# Source: Fixed some emotes not being bypassed properly, for example /waterfloat and /waterflip.
+changelog.1.6.1.2.d43b4901 = 
+# Source: Fixed a few bugs concerning facial expressions and facing targets.
+changelog.1.6.2.0.0faf04de = 
+# Source: Bug fixes
+changelog.1.6.2.0.60586b6e = 
+# Source: Prevented facial expressions from stopping bypassed looped emotes.
+changelog.1.6.2.0.9176a869 = 
+# Source: Facial expressions
+changelog.1.6.2.0.99905c39 = 
+# Source: Commands /be sync and /be syncall will now better handle syncing emotes that have intro + loop phases, hence improving the "syncing", where a slight delay would occur before for those type of emotes.
+changelog.1.6.2.0.c5a4e3ae = 
+# Source: Facial expression emotes no longer makes the character face its target.
+changelog.1.6.2.0.d115eae3 = 
+# Source: Additionnaly, the character will no longer rotate when emoting to itself (self-targetting).
+changelog.1.6.2.0.dae46f9f = 
+# Source: Revised IPC to support above changes.
+changelog.1.6.6.0.05394470 = 
+# Source: New Features
+changelog.1.6.6.0.36f4e595 = 
+# Source: Fixed a bug with facing targets.
+changelog.1.6.6.0.508e5f22 = 
+# Source: Bug fixes
+changelog.1.6.6.0.60586b6e = 
+# Source: Added the possibility to apply emotes to your owned entities from the emote selector window (/be) via right click.
+changelog.1.6.6.0.9e2cc2d8 = 
+# Source: Added a configuration option to choose whether you want your minion, pet or chocobo to stop emoting when it moves.\nUseful for the Plush Cushion or the Campfire if you're using SimpleHeels' temporary offsets, or for non-static entities.
+changelog.1.6.6.0.a7dd4107 = 
+# Source: Added support for Minions, Pets and Chocobos. You can now apply any emote to your own minions, pets and chocobos provided they have been summoned and turned human.
+changelog.1.6.6.0.a8e14b07 = 
+# Source: Minions, Pets, Chocobos & Battle NPCs support
+changelog.1.6.6.0.c2407df3 = 
+# Source: Technical Changes
+changelog.1.6.6.0.d80295d6 = 
+# Source: Added the /bem command to apply emotes to your minion, provided it's been summoned and turned human.\nYou do not need to target the minion, and just like /bet, you can use an emote argument or the stop argument (/bem stop, /bem beesknees, /bem /tea, ...).\nUseful for untargettable minions such as the cushion or the campfire.
+changelog.1.6.6.0.e16e66c9 = 
+# Source: Added support for Minions, Pets, Chocobos & Battle NPCs. Revised IPC.
+changelog.1.6.6.0.e1d4e40a = 
+# Source: Additionally, added the /bec command to apply emotes to your chocobo, provided it's been summoned and turned human.
+changelog.1.6.6.0.e8a03ffb = 
+# Source: Added support for Battle NPCs. You can now apply any emote Battle NPCs in the world.
+changelog.1.6.6.0.ed40f0c9 = 
+# Source: Additionally, added the /bep command to apply emotes to your pet (carbuncle and eos), provided it's been summoned and turned human.
+changelog.1.6.6.0.fccedc69 = 
+# Source: Enhances the target handling and the emote bypassing.
+changelog.1.7.2.0.0074ff21 = 
+# Source: The soft target is now properly handled. If you have both a target and a soft target, bypassing an emote will prioritize the soft target.
+changelog.1.7.2.0.12b1de73 = 
+# Source: Reworked the IPC Data being sent to consumers.
+changelog.1.7.2.0.288c78ea = 
+# Source: Emote handling enhancement
+changelog.1.7.2.0.3047865d = 
+# Source: New Features
+changelog.1.7.2.0.36f4e595 = 
+# Source: Various bug fixes over the versions.
+changelog.1.7.2.0.39c46762 = 
+# Source: Bug fixes
+changelog.1.7.2.0.60586b6e = 
+# Source: Bypass Emote now handles hotbar emote slots. If you click a locked emote hotbar slot (greyed out), the emote will play.
+changelog.1.7.2.0.6dcec185 = 
+# Source: Technical Changes
+changelog.1.7.2.0.d80295d6 = 
+# Source: Various technical enhancements.
+changelog.1.7.2.0.fe26324e = 
+# Source: New Features
+changelog.1.7.3.1.36f4e595 = 
+# Source: Allows to add emotes to hotbars.
+changelog.1.7.3.1.7c9483aa = 
+# Source: Hotbar integration enhancement
+changelog.1.7.3.1.c9d945ae = 
+# Source: Added a new config option for enabling/disabling bypassing emotes on emote hotbar slot click.
+changelog.1.7.3.1.e8eb4c4e = 
+# Source: Added the possibility to assign emotes to hotbar slots.\nRight click an emote in the main UI, and an option will appear if the emote is assignable.
+changelog.1.7.3.1.ef9d6d57 = 
+# Source: Emotes are now played according to your character's condition.\nSitting on the ground, sitting in a chair, mounted, riding pillion, swimming, diving, holding an umbrella or a torch, wearing a fashion accessory: the plugin plays the variant that matches the state you are in, instead of forcing the standing animation on you.\nIf an emote cannot be played in the state you are in, the plugin will tell you so instead of playing something wrong.
+changelog.2.0.0.0.084e3478 = 
+# Source: Added Emote Swap, a new bypass mode, which is now the default one.\nInstead of applying the animation on your character, the plugin looks for an emote you have unlocked that behaves like the one you asked for, plays that one for real, and swaps its animation with the locked one through a Penumbra mod it manages for you.\nThe game itself plays the emote, so other players see it over any sync service without their plugin having to integrate Bypass Emote.
+changelog.2.0.0.0.16002d22 = 
+# Source: Emote Swap
+changelog.2.0.0.0.1ac4c0e0 = 
+# Source: Emote Swap needs Penumbra installed and enabled.
+changelog.2.0.0.0.25dfbb84 = 
+# Source: Emote Swap follows the same rule, and will only play an emote you own that can be executed in the state you are in.
+changelog.2.0.0.0.308cc96c = 
+# Source: New Features
+changelog.2.0.0.0.36f4e595 = 
+# Source: Various bug fixes over the versions.
+changelog.2.0.0.0.39c46762 = 
+# Source: A prompt will appear on your first launch to let you pick the mode you want. You can change your mind at any time in the configuration window.
+changelog.2.0.0.0.3eec5ede = 
+# Source: The main UI now shows the same condition icons as the game's own emote window, so you can see at a glance where an emote can be played.
+changelog.2.0.0.0.460f6af3 = 
+# Source: Fixed visual effects not playing on some bypassed emotes.
+changelog.2.0.0.0.52167bcc = 
+# Source: Added a safe mode to Direct Play, the original method, which is on by default.\nWhile it is on, you can only bypass emotes from the base pose (pose 0) of your current stance. This is because the game client sends duplicate change pose packets when your character is in any other pose, which is not something the plugin causes, but not something it can prevent either.\nYou can lift that limit in the configuration window if you know what you are doing.
+changelog.2.0.0.0.56f1c59e = 
+# Source: Added drag and drop from the main UI onto your hotbars. Drag an emote onto a slot of hotbars 1 to 10 and it will be assigned to it.
+changelog.2.0.0.0.599120b2 = 
+# Source: Bug fixes
+changelog.2.0.0.0.60586b6e = 
+# Source: Moved a large part of the plugin's internals to NoireLib.
+changelog.2.0.0.0.6641c5cc = 
+# Source: Added a lot of configuration options for Emote Swap, such as how close a match has to be, when the swap is turned off, how many swaps are kept per emote, and whether your name appears on the generated mod.
+changelog.2.0.0.0.6810cb88 = 
+# Source: Adds a new way of bypassing emotes through Penumbra, visible on every sync service.
+changelog.2.0.0.0.68f4781f = 
+# Source: Added configuration options for the messages the plugin prints in chat, and for how often the same one is repeated.
+changelog.2.0.0.0.79695cb4 = 
+# Source: Added Penumbra V4 support.
+changelog.2.0.0.0.922b8a2e = 
+# Source: The default configuration is already set up the way it works best, you do not need to touch any of it.
+changelog.2.0.0.0.96f1b52c = 
+# Source: Safe mode is not a promise either, it only keeps Direct Play to the states where nothing has ever been seen to go wrong. Use Emote Swap if you want to be certain.
+changelog.2.0.0.0.b8c2d147 = 
+# Source: You can now stop Emote Swap from playing one of your own emotes, by clicking the ban icon next to its star.\nBlocked emotes have their own tab in the main UI. Useful if you would rather not have a specific one of yours played, for example one that makes noise.
+changelog.2.0.0.0.c9dbdfee = 
+# Source: Bypass Emote now checks that the game patch you are on has been approved before enabling anything it finds by signature.\nIf a patch breaks something, the plugin turns those parts off by itself and checks every 10 minutes until it is approved again, instead of doing something it should not.
+changelog.2.0.0.0.d7a5d625 = 
+# Source: Technical Changes
+changelog.2.0.0.0.d80295d6 = 
+# Source: Fixed emotes that make your character draw its weapon.
+changelog.2.0.0.0.e7a26549 = 
+# Source: Every swap is kept as an option of the generated mod, so playing the same emote again puts it back without rebuilding anything.
+changelog.2.0.0.0.f2350311 = 
+# Source: Added the possibility to create a permanent Penumbra mod from any emote.\nClick the "Create a mod" button in the main UI, or right click an emote and pick "Create a mod from this emote...".\nUseful if you want to keep an animation over one of your emotes without the plugin having to do anything.
+changelog.2.0.0.0.f33b320b = 
+# Source: Various technical enhancements.
+changelog.2.0.0.0.fe26324e = 
+# Source: New Features
+changelog.2.1.0.0.36f4e595 = 
+# Source: Playing the real emote of a swap while the swap is still playing now refreshes the animation.\nBefore, playing for example /beesknees while a swap was using it kept showing the swapped animation until you stopped emoting.
+changelog.2.1.0.0.5dc54c70 = 
+# Source: Added "Always cache-break" option for Emote Swap, and various bug fixes.
+changelog.2.1.0.0.5e17a8a9 = 
+# Source: Bug fixes
+changelog.2.1.0.0.60586b6e = 
+# Source: Playing an emote while a swapped idle pose is active now stops the idle pose swap.
+changelog.2.1.0.0.895c09e0 = 
+# Source: It is off by default, you can enable it in the configuration window.
+changelog.2.1.0.0.8c074b97 = 
+# Source: The plugin now recognizes the Korean and Chinese game clients.
+changelog.2.1.0.0.96052ffd = 
+# Source: Animation cache breaking
+changelog.2.1.0.0.9cac4b37 = 
+# Source: Reworked how animations are loaded around the game's caches.
+changelog.2.1.0.0.bf6ca6d5 = 
+# Source: Disabling the plugin now disables the generated mod.
+changelog.2.1.0.0.c423c08c = 
+# Source: Added "Always cache-break", a new option for Emote Swap.\nWith it on, every emote you play will be cache-broken, especially the ones you own. Play an emote, enable or disable any mod affecting that emote, play the emote again, the new animation refreshes and shows without needing to redraw nor to stop the emote.
+changelog.2.1.0.0.c92503a0 = 
+# Source: Added /belogs (also available as /be logs), which exports a zip of the plugin logs and settings to send to the developer. Check its content before sending it, it is not meant to be posted publicly.
+changelog.2.1.0.0.ca8e8176 = 
+# Source: Technical Changes
+changelog.2.1.0.0.d80295d6 = 
+# Source: Various technical enhancements.
+changelog.2.1.0.0.fe26324e = 
+# Source: The "Create a mod" window now warns you about mismatches and other potentially unwanted behaviors, such as when you have not unlocked the target emote, when one of your own mods already changes it, or when the two emotes have turn, loop, sound or intro mismatches.
+changelog.2.2.0.0.2323aeb2 = 
+# Source: Fixed one of the signatures the plugin needed for the cache-breaker feature.\nWithout it, a swap could play the emote you played before it.
+changelog.2.2.0.0.31b60c32 = 
+# Source: New Features
+changelog.2.2.0.0.36f4e595 = 
+# Source: Fixed changing world turning off the generated Penumbra mod and its options.
+changelog.2.2.0.0.4aabbfb7 = 
+# Source: Emote overrides
+changelog.2.2.0.0.587c7b7d = 
+# Source: Bug fixes
+changelog.2.2.0.0.60586b6e = 
+# Source: Adds "Emote overrides", and various bug fixes and improvements.
+changelog.2.2.0.0.679d7020 = 
+# Source: Added the "Emote overrides" tab to the configuration window.\nPick a locked emote, then pick the emotes it is allowed to land on. Emote Swap will then use your list instead of finding a best match, in the order you put it in.\nIf none of them can be played, the plugin tells you which ones it skipped and why.
+changelog.2.2.0.0.99ae3ed3 = 
+# Source: Added "Support me on Ko-fi" and "Discord" buttons to the main window.
+changelog.2.2.0.0.ac6010ab = 
+# Source: The "Fav" and "Blocked" tabs of the main window now have their own dropdown, to add an emote to either list without hunting for it in the other tabs.
+changelog.2.2.0.0.d4ad1225 = 
+# Source: Technical Changes
+changelog.2.2.0.0.d80295d6 = 
+# Source: Fixed "Create a mod" sometimes writing the wrong animation instead of the one you asked for.
+changelog.2.2.0.0.f2789edb = 
+# Source: Various technical enhancements.
+changelog.2.2.0.0.fe26324e = 
+# Source: Animation refresh rework
+changelog.2.3.0.0.07d79f01 = 
+# Source: Reworked how the plugin refreshes an animation, it is now way more efficient and optimized. Dropped from 10+ sigs to 2.
+changelog.2.3.0.0.105ef1de = 
+# Source: Added "Add an override..." to the right click menu of the main UI.\nIt opens the "Emote overrides" tab with the emote already picked.
+changelog.2.3.0.0.1284fd82 = 
+# Source: New Features
+changelog.2.3.0.0.36f4e595 = 
+# Source: Bug fixes
+changelog.2.3.0.0.60586b6e = 
+# Source: "Always cache-break" no longer makes other players see you redraw for random emotes.
+changelog.2.3.0.0.790f1b05 = 
+# Source: Reworks how animations are refreshed, and stops other players from seeing you redraw.
+changelog.2.3.0.0.a096b13e = 
+# Source: Technical Changes
+changelog.2.3.0.0.d80295d6 = 
+# Source: Various technical enhancements.
+changelog.2.3.0.0.fe26324e = 
+# Source: Loop emotes no longer play your own idle mod instead of the emote you asked for.\nGenerated bypass mods priority was not correctly set, this is fixed now.
+changelog.2.3.1.0.078d4ca5 = 
+# Source: Idle pose fixes
+changelog.2.3.1.0.0e591faf = 
+# Source: Fixed a bug with "Only when nothing else fits" for "Loops on idle poses" where it ignored blocked emotes.
+changelog.2.3.1.0.3b84d8da = 
+# Source: Bug fixes
+changelog.2.3.1.0.60586b6e = 
+# Source: Fixed a bug where stopping a bypass on an idle animation by moving would not correctly stop the animation.
+changelog.2.3.1.0.7e4e2d96 = 
+# Source: Fixes loop emotes playing your own idle mod instead of the emote you asked for.
+changelog.2.3.1.0.9ff59b49 = 
+# Source: /belogs now exports everything the plugin did since it loaded.\nIt would only partially export logs when the dalamud log level was not properly set.
+changelog.2.3.1.0.b5afd5f1 = 
+# Source: The plugin reads its mod's priority back from Penumbra instead of taking the cached value.
+changelog.2.3.1.0.c3cc6888 = 
+# Source: Technical Changes
+changelog.2.3.1.0.d80295d6 = 
+# Source: Various technical enhancements.
+changelog.2.3.1.0.fe26324e = 
+# Source: Updated to the latest Penumbra API.
+changelog.2.4.0.0.04292ed8 = 
+# Source: Added a translation editor, accessible from the settings. You can translate the plugin in game, see your changes live and save them.\nTranslations or improvements are very much welcome. Please open an issue or a pull request on the plugin's GitHub if you'd like to contribute.
+changelog.2.4.0.0.05c331b1 = 
+# Source: Added Malou. Please take good care of him.
+changelog.2.4.0.0.12192c44 = 
+# Source: Fixed mods that replace an emote's timeline (.tmb) files not being taken into account by Emote Swap.
+changelog.2.4.0.0.1856a1c1 = 
+# Source: /be sync now also restarts the sounds and VFXs of your emotes in Emote Swap mode as well, try it!
+changelog.2.4.0.0.1c445d74 = 
+# Source: Locked emotes are now listed in the game's own emote window.\nYou can search locked emotes and use them from there. Also added an option to grey or un-grey them from your hotbars, and this applies to the Emote game window as well.
+changelog.2.4.0.0.228e7d9a = 
+# Source: /belogs now exports more information, to help figuring out what went wrong.
+changelog.2.4.0.0.29c642fa = 
+# Source: New Features
+changelog.2.4.0.0.36f4e595 = 
+# Source: Various bug fixes over the versions.
+changelog.2.4.0.0.39c46762 = 
+# Source: Fixed swapped animations parsing in VFXEditor.
+changelog.2.4.0.0.52e06c34 = 
+# Source: Swapping an emote is now slightly faster.
+changelog.2.4.0.0.56686f6e = 
+# Source: Bug fixes
+changelog.2.4.0.0.60586b6e = 
+# Source: Added translations.\nThe plugin is now available in French, German, Japanese, Korean and Simplified Chinese.You can pick your language in the settings.
+changelog.2.4.0.0.6afdbd23 = 
+# Source: New interface & translations
+changelog.2.4.0.0.6e05d893 = 
+# Source: Both interfaces are now built on NoireLib's new interface system.
+changelog.2.4.0.0.7700f1ca = 
+# Source: Removed the outdated mod writer.
+changelog.2.4.0.0.973a6508 = 
+# Source: Adds a brand new interface, translations, shows your locked emotes in the game's own emote window and fix some issues with modded animations.
+changelog.2.4.0.0.9f4cc7be = 
+# Source: Fixed bypassing emotes from your hotbars on the Chinese client.
+changelog.2.4.0.0.a57ef1dd = 
+# Source: Added a "Compact rows" option to make the emote list smaller. On by default.
+changelog.2.4.0.0.c0c846f7 = 
+# Source: Technical Changes
+changelog.2.4.0.0.d80295d6 = 
+# Source: Added a brand new interface, which is now the default one.\nEvery window has been redesigned: the main UI, the settings, "Create a mod", the hotbar assignment, the changelog and the logs.\nIf you prefer the old look, you can switch back to the classic interface at any time in the settings.
+changelog.2.4.0.0.da488787 = 
+# Source: The new interface has its own window settings, click the Window Options button next to the close button. It allows you to adjust opacity, text size, make the plugin always on top, click through, lock its position, its width and/or height, and make the windows stay visible in gpose, when the UI is hidden, during cutscenes, or when the game hides its own UI.
+changelog.2.4.0.0.e862aedf = 
+# Source: Added a preview popup next to the main UI. Click an emote to make it appear. In Emote Swap mode, it will show you which of your emotes it will play through, offer you to play it, add it to your favorites, block it, assign it to a hotbar or play it on your minion, pet or chocobo.\nDouble click an emote to play it right away. You can turn the popup off in the settings.
+changelog.2.4.0.0.e94a5ffa = 
+# Source: Various technical enhancements.
+changelog.2.4.0.0.fe26324e = 
+# Source: You cannot bypass this emote right now.
+chat.cannot_bypass_now = 지금은 이 감정 표현을 우회할 수 없습니다.
+# Source: Error trying to process command
+chat.command.failed = 명령어를 처리하는 중 오류가 발생했습니다
+# Source: Emote or command not found: {arg}
+chat.command.not_found = 감정 표현이나 명령어를 찾을 수 없습니다: {arg}
+# Source: This emote cannot be played in Emote Swap mode.
+chat.command.not_in_swap = 이 감정 표현은 Emote Swap 모드에서 사용할 수 없습니다.
+# Source: No chocobo summoned.
+chat.command.no_chocobo = 소환한 초코보가 없습니다.
+# Source: No minion summoned.
+chat.command.no_minion = 소환한 꼬마 친구가 없습니다.
+# Source: No NPC targeted.
+chat.command.no_npc = 대상으로 지정한 NPC가 없습니다.
+# Source: No pet summoned.
+chat.command.no_pet = 소환한 소환수가 없습니다.
+# Source: You can only target your own minion, pet, chocobo.
+chat.command.only_own = 자신의 꼬마 친구, 소환수, 초코보만 대상으로 지정할 수 있습니다.
+# Source: Poses cannot be swapped.
+chat.command.poses = 자세는 교체할 수 없습니다.
+# Source: Ask the developer where to send this file to be extra safe.
+chat.export.ask_where = 더 안전하게 하려면 이 파일을 어디로 보낼지 개발자에게 물어보세요.
+# Source: Debug logs exported to {path}. Send this file to the developer. Feel free to check the content of the zip and if you need to anonymize any information, please do so before sending it.
+chat.export.done = 디버그 로그를 {path}에 내보냈습니다. 이 파일을 개발자에게 보내 주세요. 보내기 전에 zip 내용을 확인하고, 익명화하고 싶은 정보가 있다면 자유롭게 수정하세요.
+# Source: Exporting logs...
+chat.export.exporting = 로그를 내보내는 중...
+# Source: Debug logs could not be exported. The Dalamud log has the reason.
+chat.export.failed = 디버그 로그를 내보낼 수 없습니다. 이유는 Dalamud 로그에 있습니다.
+# Source: [Open folder]
+chat.export.open_folder = [폴더 열기]
+# Source: Personal information appears in it, DO NOT send this in a public channel.
+chat.export.personal = 개인 정보가 포함되어 있습니다. 공개 채널에 절대 보내지 마세요.
+# Source: A debug log export is already running.
+chat.export.running = 디버그 로그 내보내기가 이미 진행 중입니다.
+# Source: The plugin has been approved for this patch. If you noticed weird behaviors prior to this message, try again and it should be fixed now.
+chat.gate.announcement = 이 패치에서 플러그인 사용이 승인되었습니다. 이 메시지 전에 이상한 동작을 겪었다면 다시 시도해 보세요. 이제 해결되었을 것입니다.
+# Source: Could not use your idle pose for this emote. {cause}
+chat.idle.failed = 이 감정 표현에 대기 자세를 사용할 수 없습니다. {cause}
+# Source: The swap mod could not be turned on.
+chat.idle.mod_not_on = 교체용 모드를 켤 수 없습니다.
+# Source: Your character is mounted. There is no idle pose to borrow.
+chat.idle.mounted = 캐릭터가 탈것에 타고 있습니다. 빌릴 대기 자세가 없습니다.
+# Source: That emote has no animation to lend.
+chat.idle.nothing_to_lend = 그 감정 표현에는 빌릴 동작이 없습니다.
+# Source: Your character could not be refreshed.
+chat.idle.not_refreshed = 캐릭터를 새로 고칠 수 없습니다.
+# Source: Penumbra could not say which collection your character uses.
+chat.idle.no_collection = Penumbra가 캐릭터가 사용하는 컬렉션을 알 수 없습니다.
+# Source: Your pose animation could not be found.
+chat.idle.pose_not_found = 자세의 동작을 찾을 수 없습니다.
+# Source: Your pose animation could not be rebuilt.
+chat.idle.pose_not_rebuilt = 자세의 동작을 다시 만들 수 없습니다.
+# Source: This pose cannot be changed.
+chat.idle.pose_unchangeable = 이 자세는 변경할 수 없습니다.
+# Source: Something went wrong.
+chat.idle.something_wrong = 문제가 발생했습니다.
+# Source: That emote's animation could not be found.
+chat.idle.source_not_found = 그 감정 표현의 동작을 찾을 수 없습니다.
+# Source: Your character is still in another emote. Move, or change pose, then try again.
+chat.idle.still_in_emote = 캐릭터가 아직 다른 감정 표현 중입니다. 움직이거나 자세를 바꾼 뒤 다시 시도하세요.
+# Source: idle pose
+chat.idle.swap_target = 대기 자세
+# Source: Your idle 0 pose has no intro. This emote's intro will not play. Try changing pose.
+chat.idle.zero_no_intro = 대기 자세 0에는 시작 동작이 없습니다. 이 감정 표현의 시작 동작은 재생되지 않습니다. 자세를 바꿔 보세요.
+# Source: [Disable]
+chat.mod.disable = [끄기]
+# Source: {reason} Mod not disabled.
+chat.mod.not_disabled = {reason} 모드를 끄지 않았습니다.
+# Source: {reason} Mod not opened.
+chat.mod.not_opened = {reason} 모드를 열지 않았습니다.
+# Source: '{mod}' is now off in {collection}.
+chat.mod.now_off = '{mod}'이(가) 이제 {collection}에서 꺼졌습니다.
+# Source: No Penumbra collection is assigned to your character. Mod not disabled.
+chat.mod.no_collection = 캐릭터에 할당된 Penumbra 컬렉션이 없습니다. 모드를 끄지 않았습니다.
+# Source: [Open]
+chat.mod.open = [열기]
+# Source: Penumbra would not open '{mod}'.
+chat.mod.would_not_open = Penumbra가 '{mod}'을(를) 열지 않았습니다.
+# Source: Penumbra would not switch '{mod}' off in {collection}.
+chat.mod.would_not_switch_off = Penumbra가 {collection}에서 '{mod}'을(를) 끄지 않았습니다.
+# Source: it is on your blocked targets list.
+chat.near.blocked_list = 차단한 대상 목록에 있습니다.
+# Source: the loop kinds do not match.
+chat.near.loop_kinds = 반복 종류가 일치하지 않습니다.
+# Source: your mod "{mod}" targets it. Your configuration blocked it.
+chat.near.named_mod = 모드 "{mod}"이(가) 이 감정 표현을 변경합니다. 설정에 의해 차단되었습니다.
+# Source: another of your mods targets it. Your configuration blocked it.
+chat.near.other_mod = 다른 모드가 이 감정 표현을 변경합니다. 설정에 의해 차단되었습니다.
+# Source: it makes a sound.
+chat.near.sound = 소리가 있습니다.
+# Source: it makes a sound, and your sound rule only allows that for an emote that makes one too.
+chat.near.sound_lenient = 소리가 있고, 소리 규칙은 역시 소리가 있는 감정 표현에만 이를 허용합니다.
+# Source: it makes a sound, and your sound rule avoids every target that does.
+chat.near.sound_strict = 소리가 있고, 소리 규칙은 소리가 있는 대상을 모두 피합니다.
+# Source: {rule} matching is strict.
+chat.near.strict = {rule} 일치 기준이 엄격합니다.
+# Source: turn matching is very strict.
+chat.near.turn_very_strict = 방향 일치 기준이 매우 엄격합니다.
+# Source: Emote Swap was enabled because no choice was made.
+chat.no_choice_made = 선택하지 않았으므로 Emote Swap이 켜졌습니다.
+# Source: Penumbra is not running. Emote Swap needs it installed.
+chat.penumbra.missing = Penumbra가 실행 중이 아닙니다. Emote Swap에는 Penumbra가 필요합니다.
+# Source: Bypass Emote needs Penumbra {version} or newer. Update Penumbra (its interface reads {api}).
+chat.penumbra.too_old = Bypass Emote에는 Penumbra {version} 이상이 필요합니다. Penumbra를 업데이트하세요(인터페이스 버전: {api}).
+# Source: Bypass Emote is waiting for you to choose how it should play locked emotes.
+chat.prompt_pending = Bypass Emote가 잠긴 감정 표현을 재생할 방식을 선택하기를 기다리고 있습니다.
+# Source: it is available
+chat.reason.available = 사용할 수 있습니다
+# Source: a mod changes it and your settings block modded emotes
+chat.reason.changed_by_mod = 모드가 이 감정 표현을 변경하며, 설정에서 모드로 변경된 감정 표현을 차단하고 있습니다
+# Source: you have not unlocked it
+chat.reason.locked = 습득하지 않았습니다
+# Source: it can never be a swap target
+chat.reason.never_a_target = 교체 대상이 될 수 없습니다
+# Source: there is no animation data for it
+chat.reason.not_configured = 동작 데이터가 없습니다
+# Source: it cannot be played in your current state
+chat.reason.not_here = 현재 상태에서는 사용할 수 없습니다
+# Source: /{command} cannot be played while wearing a fashion accessory.
+chat.refused.accessory = 패션 액세서리를 착용한 동안에는 /{command}을(를) 사용할 수 없습니다.
+# Source: /{command} cannot be played while carrying your {ornament}.
+chat.refused.carrying = {ornament}을(를) 들고 있는 동안에는 /{command}을(를) 사용할 수 없습니다.
+# Source: /{command} cannot be played while sitting in a chair.
+chat.refused.chair_sitting = 의자에 앉아 있는 동안에는 /{command}을(를) 사용할 수 없습니다.
+# Source: /{command} cannot be played while diving.
+chat.refused.diving = 잠수 중에는 /{command}을(를) 사용할 수 없습니다.
+# Source: /{command} cannot be played while fishing.
+chat.refused.fishing = 낚시 중에는 /{command}을(를) 사용할 수 없습니다.
+# Source: /{command} cannot be played while sitting on the ground.
+chat.refused.ground_sitting = 바닥에 앉아 있는 동안에는 /{command}을(를) 사용할 수 없습니다.
+# Source: /{command} cannot be played while mounted.
+chat.refused.mounted = 탈것에 탄 동안에는 /{command}을(를) 사용할 수 없습니다.
+# Source: /{command} cannot be played right now.
+chat.refused.right_now = 지금은 /{command}을(를) 사용할 수 없습니다.
+# Source: /{command} cannot be played while standing.
+chat.refused.standing = 서 있는 동안에는 /{command}을(를) 사용할 수 없습니다.
+# Source: /{command} cannot be played while swimming.
+chat.refused.swimming = 수영 중에는 /{command}을(를) 사용할 수 없습니다.
+# Source: /{command} cannot be played while holding a torch.
+chat.refused.torch = 횃불을 들고 있는 동안에는 /{command}을(를) 사용할 수 없습니다.
+# Source: /{command} cannot be played while holding an umbrella.
+chat.refused.umbrella = 우산을 들고 있는 동안에는 /{command}을(를) 사용할 수 없습니다.
+# Source: Due to detectability, you need to be in the base pose (pose 0) of your current stance to bypass emotes in safe mode.
+chat.safe_mode = 감지될 가능성이 있으므로, 안전 모드에서 감정 표현을 우회하려면 현재 자세 유형의 기본 자세(자세 0)여야 합니다.
+# Source: Also found /{command} but {reason}
+chat.swap.also_found_but = /{command}도 찾았지만 {reason}
+# Source: Still loading emote data. Try again in a moment.
+chat.swap.catalog_loading = 감정 표현 데이터를 아직 불러오는 중입니다. 잠시 후 다시 시도하세요.
+# Source: This emote landed on /{command}, which your mod "{mod}" changes. Players around you may briefly see that mod's animation before yours reaches them. If you don't want this to happen, head over to the configuration window and block emotes that are changed by other mods.
+chat.swap.changed_target = 이 감정 표현은 /{command}(으)로 교체되었는데, 모드 "{mod}"이(가) 이를 변경합니다. 당신의 동작이 전달되기 전에 주변 플레이어에게 그 모드의 동작이 잠깐 보일 수 있습니다. 이를 원하지 않으면 설정 창에서 다른 모드가 변경하는 감정 표현을 차단하세요.
+# Source: Could not swap /{command}.
+chat.swap.could_not = /{command}을(를) 교체할 수 없습니다.
+# Source: Emote #{id}
+chat.swap.emote_number = 감정 표현 #{id}
+# Source: Something went wrong. Emote not swapped.
+chat.swap.failed = 문제가 발생했습니다. 감정 표현을 교체하지 않았습니다.
+# Source: Found /{command} but {reason}
+chat.swap.found_but = /{command}을(를) 찾았지만 {reason}
+# Source: This emote landed on a loop only target with no intro. You will not see the intro play.
+chat.swap.intro_dropped.loop = 이 감정 표현은 시작 동작이 없는 반복 전용 대상으로 교체되었습니다. 시작 동작은 재생되지 않습니다.
+# Source: This emote landed on a one shot target with no intro. You will not see the intro play.
+chat.swap.intro_dropped.one_shot = 이 감정 표현은 시작 동작이 없는 1회 재생 대상으로 교체되었습니다. 시작 동작은 재생되지 않습니다.
+# Source: {n} more target(s) were skipped for the same reason.
+chat.swap.more_skipped.other = 대상 {n}개를 같은 이유로 추가로 건너뛰었습니다.
+# Source: /{command} needs {requirement}.
+chat.swap.needs_environment = /{command}에는 {requirement}이(가) 필요합니다.
+# Source: Penumbra could not say which collection your character uses. Emote not swapped.
+chat.swap.no_character = Penumbra가 캐릭터가 사용하는 컬렉션을 알 수 없습니다. 감정 표현을 교체하지 않았습니다.
+# Source: No Penumbra collection is assigned to your character. Emote not swapped.
+chat.swap.no_collection = 캐릭터에 할당된 Penumbra 컬렉션이 없습니다. 감정 표현을 교체하지 않았습니다.
+# Source: Could not swap /{command}. None of its override targets can be played right now.
+chat.swap.no_override_target = /{command}을(를) 교체할 수 없습니다. 재정의 대상 중 지금 사용할 수 있는 것이 없습니다.
+# Source: {emote} was skipped because {reason}.
+chat.swap.override_skipped = {emote}을(를) 건너뛰었습니다. 이유: {reason}.
+# Source: {reason} Emote not swapped.
+chat.swap.penumbra_unavailable = {reason} 감정 표현을 교체하지 않았습니다.
+# Source: Bypass Emote
+chrome.brand = Bypass Emote
+# Source: Collapse
+chrome.collapse = 접기
+# Source: Expand
+chrome.expand = 펼치기
+# Source: The windows let clicks through to the game. The title bars stay clickable.
+chrome.menu.click_through = 창을 클릭하면 게임으로 전달됩니다. 제목 표시줄은 계속 클릭할 수 있습니다.
+# Source: Keeps the windows open whenever the game hides its own UI.
+chrome.menu.hint.auto_hide = 게임이 자체 UI를 숨길 때도 창을 열어 둡니다.
+# Source: Keeps the windows open during cutscenes.
+chrome.menu.hint.cutscenes = 컷신 중에도 창을 열어 둡니다.
+# Source: Keeps the windows open while gpose is active.
+chrome.menu.hint.gpose = 단체 포즈 중에도 창을 열어 둡니다.
+# Source: Keeps the windows open when you hide the game UI.
+chrome.menu.hint.ui_hidden = 게임 UI를 숨겨도 창을 열어 둡니다.
+# Source: Shared by every Bypass Emote window.
+chrome.menu.shared = 모든 Bypass Emote 창에 공통으로 적용됩니다.
+# Source: Always on top
+chrome.on_top = 항상 위에 표시
+# Source: Window options
+chrome.options = 창 설정
+# Source: Create
+classic.create_mod.create = 만들기
+# Source: This window allows you to create a permanent swap mod, and it stays unaffected by Bypass Emote. You own it, and you manage it, like any other mod.
+classic.create_mod.intro = 이 창에서는 Bypass Emote의 영향을 받지 않는 영구 교체 모드를 만들 수 있습니다. 다른 모드처럼 직접 소유하고 관리합니다.
+# Source: Mod name
+classic.create_mod.name = 모드 이름
+# Source: The name of the generated mod.
+classic.create_mod.name.help = 만들 모드의 이름입니다.
+# Source: No race covered
+classic.create_mod.no_race = 적용되는 종족 없음
+# Source: Makes the mod have the highest priority. When off, it is created at priority 0.
+classic.create_mod.priority.help = 모드의 우선순위를 가장 높게 합니다. 꺼져 있으면 우선순위 0으로 만들어집니다.
+# Source: Which bodies the mod is written for.
+classic.create_mod.races.help = 모드를 만들 대상 체형입니다.
+# Source: Search races...
+classic.create_mod.search_races = 종족 검색...
+# Source: Currently assigned: {name}
+classic.hotbar.assigned = 현재 등록됨: {name}
+# Source: XHB {number}
+classic.hotbar.cross = 십자 단축바 {number}
+# Source: You can also drag and drop an emote from the main window onto any visible hotbar slot.
+classic.hotbar.drag_hint = 메인 창에서 보이는 단축바 칸으로 감정 표현을 끌어다 놓을 수도 있습니다.
+# Source: This slot is empty. You can safely assign an emote.
+classic.hotbar.slot_empty = 이 칸은 비어 있습니다. 안심하고 감정 표현을 등록할 수 있습니다.
+# Source: Assign {emote} to hotbar...
+classic.hotbar.title = {emote}을(를) 단축바에 등록...
+# Source: {name}  (empty)
+classic.overrides.empty = {name}  (비어 있음)
+# Source: This tab allows you to make sure a locked emote will always use one or multiple specific target emotes.
+classic.overrides.intro = 이 탭에서는 잠긴 감정 표현이 항상 특정 대상 감정 표현(하나 또는 여러 개)을 사용하도록 할 수 있습니다.
+# Source: Limited to selected targets only
+classic.overrides.limited = 선택한 대상으로만 제한
+# Source: No override yet.
+classic.overrides.none = 아직 재정의가 없습니다.
+# Source: No target yet.
+classic.overrides.no_target = 아직 대상이 없습니다.
+# Source: Pick an emote on the left.
+classic.overrides.pick = 왼쪽에서 감정 표현을 선택하세요.
+# Source: Override an emote...
+classic.overrides.source = 감정 표현 재정의...
+# Source: Add a target emote...
+classic.overrides.target = 대상 감정 표현 추가...
+# Source: Allow
+classic.settings.allow = 허용
+# Source: Allowed
+classic.settings.allowed = 허용
+# Source: Anything allowed
+classic.settings.anything = 모두 허용
+# Source: "Multiple swaps" keeps multiple swaps active at the same time in the mod.\n"One swap at a time" turns the previous swaps off as soon as a new one starts.\n\nRecommended: "Multiple swaps", unless for some reason you want to only keep one swap at a time.
+classic.settings.behavior.help = "여러 교체"는 모드에서 여러 교체를 동시에 켜 둡니다.\n"한 번에 하나"는 새 교체가 시작되는 즉시 이전 교체를 끕니다.\n\n권장: 특별한 이유로 교체를 하나만 유지하려는 경우가 아니라면 "여러 교체".
+# Source: Multiple swaps
+classic.settings.behavior.multiple = 여러 교체
+# Source: One swap at a time
+classic.settings.behavior.one = 한 번에 하나
+# Source: Blocked
+classic.settings.blocked = 차단
+# Source: Leave this on, otherwise bypassing several animations in a row may look broken.
+classic.settings.cached_dispatch.alarm = 켜 두세요. 꺼져 있으면 여러 동작을 연속으로 우회할 때 깨져 보일 수 있습니다.
+# Source: Gives each bypassed emote a target emote of its own. This is useful when you want to bypass multiple emotes quickly.\n\n"Off" would make it so other people on your sync service would see you redraw constantly.\n"Only when necessary" spreads emotes only after a game patch breaks the cache-breaker feature.\n"On" always spreads emotes.\n\nRecommended: "On" if you want other people on your sync service to always see you properly without redrawing all the time, otherwise highly recommended to leave it on "Only when necessary" and not "Off".
+classic.settings.cached_dispatch.help = 우회하는 감정 표현마다 전용 대상 감정 표현을 지정합니다. 여러 감정 표현을 빠르게 우회하고 싶을 때 유용합니다.\n\n"끔"으로 하면 동기화 서비스의 다른 사람들에게 당신이 계속 다시 그려지는 것처럼 보입니다.\n"필요할 때만"은 게임 패치로 캐시 우회 기능이 작동하지 않게 된 뒤에만 감정 표현을 분산합니다.\n"켬"은 항상 감정 표현을 분산합니다.\n\n권장: 동기화 서비스의 다른 사람들에게 항상 다시 그리기 없이 제대로 보이고 싶다면 "켬". 그렇지 않더라도 "끔"보다는 "필요할 때만"을 강력히 권장합니다.
+# Source: Applies the cache-break mechanism to every emote, even those you own. This is a bonus feature and is experimental. This will allow the client to always "refresh" animations so you never have to redraw yourself or stop emoting to apply an animation change.
+classic.settings.cache_break.help = 소유한 감정 표현을 포함해 모든 감정 표현에 캐시 우회를 적용합니다. 실험적인 추가 기능입니다. 클라이언트가 항상 동작을 "새로 고치므로", 동작 변경을 적용하기 위해 다시 그리거나 감정 표현을 멈출 필요가 없습니다.
+# Source: Takes effect when "Spread swaps over several emote" is enabled. This determines which emotes become available for a source emote. Basically, if you want to spread swaps over 5 emotes, and you try to bypass an emote but you only have 2 same-rank targets available, this is how it will determine what to do in this scenario. A rank is basically a category of emotes with similar characteristics (same turn behaviour, etc).\n\n"Same rank only" strictly picks targets of the same rank.\n"One rank below" also accepts targets one rank below.\n"Anything allowed" picks any target it can find, regardless of the rank.\n\nNone of them ever breaks your other rules.\n\nRecommended: "One rank below", or "Same rank only" if you want behavior accuracy.
+classic.settings.dispatch_fidelity.help = "교체를 여러 감정 표현에 분산"이 켜져 있을 때 적용됩니다. 원본 감정 표현에 어떤 감정 표현을 사용할 수 있는지 정합니다. 예를 들어 교체를 감정 표현 5개에 분산하고 싶은데, 우회하려 할 때 같은 등급의 대상이 2개뿐이라면 이 설정이 어떻게 할지 결정합니다. 등급이란 비슷한 특성(방향 전환 방식 등)을 가진 감정 표현의 묶음입니다.\n\n"같은 등급만"은 같은 등급의 대상만 엄격하게 고릅니다.\n"한 등급 아래까지"는 한 등급 아래의 대상도 허용합니다.\n"모두 허용"은 등급과 관계없이 찾을 수 있는 대상을 고릅니다.\n\n어느 것을 골라도 다른 규칙이 깨지지 않습니다.\n\n권장: "한 등급 아래까지". 동작의 정확성을 원한다면 "같은 등급만".
+# Source: How long the same error stays quiet after you have seen it.\n\nAccepts time format: 5m, 300s, 5m10s, 1h.\nSet to 0 to see every one of them.
+classic.settings.error_throttle.help = 같은 오류를 한 번 본 뒤 다시 표시하지 않는 시간입니다.\n\n사용할 수 있는 시간 형식: 5m, 300s, 5m10s, 1h.\n0으로 설정하면 모두 표시합니다.
+# Source: Checked at {time}.
+classic.settings.gate.checked_at = {time}에 확인했습니다.
+# Source: {label} ({seconds})
+classic.settings.gate.countdown = {label} ({seconds})
+# Source: Force approval is on.
+classic.settings.gate.forced = 강제 승인이 켜져 있습니다.
+# Source: Disable Force Approval
+classic.settings.gate.force_disable = 강제 승인 끄기
+# Source: Enable Force Approval
+classic.settings.gate.force_enable = 강제 승인 켜기
+# Source: Bypass Emote has not been approved for this game build.
+classic.settings.gate.not_approved = Bypass Emote는 이 게임 빌드에서 아직 승인되지 않았습니다.
+# Source: Emote swaps may behave oddly until the build is approved.\nThe plugin will automatically fetch updates every 10 minutes to check if it was approved.
+classic.settings.gate.not_approved.text = 빌드가 승인될 때까지 감정 표현 교체가 이상하게 동작할 수 있습니다.\n플러그인은 10분마다 자동으로 업데이트를 가져와 승인 여부를 확인합니다.
+# Source: Bypass Emote cannot be tested on this game client.
+classic.settings.gate.untested = Bypass Emote는 이 게임 클라이언트에서 테스트할 수 없습니다.
+# Source: Show windows in GPose
+classic.settings.gpose = 단체 포즈 중 창 표시
+# Source: Keeps this plugin's windows visible while you are in GPose.
+classic.settings.gpose.help = 단체 포즈 중에도 이 플러그인의 창을 계속 표시합니다.
+# Source: Show windows while the game UI is hidden
+classic.settings.hidden_ui = 게임 UI를 숨겼을 때 창 표시
+# Source: Keeps this plugin's windows visible when you hide the game UI.
+classic.settings.hidden_ui.help = 게임 UI를 숨겨도 이 플러그인의 창을 계속 표시합니다.
+# Source: When no unlocked looped emote fits as a target, your current idle pose may be eligible instead. The emote you try to bypass will then be targeted onto your current idle pose. This will cause a redraw of your character when triggered.\n\n"Never" blocks idle poses from being used as targets.\n"Only when nothing else fits" uses the pose only when literally no unlocked looped emote could have played here at all. This will not use your idle pose if any other emote would have been available if it wasn't blocked.\n"Allow" always falls back to your idle pose when no other options are available.\n\nRecommended: "Only when nothing else fits".
+classic.settings.idle_pose_loops.help = 대상으로 맞는 습득한 반복 감정 표현이 없으면, 대신 현재 대기 자세가 사용될 수 있습니다. 우회하려는 감정 표현이 현재 대기 자세에 적용됩니다. 이때 캐릭터가 다시 그려집니다.\n\n"사용 안 함"은 대기 자세를 대상으로 사용하지 않습니다.\n"다른 것이 맞지 않을 때만"은 습득한 반복 감정 표현이 이곳에서 전혀 재생될 수 없었을 때만 자세를 사용합니다. 차단되지 않았다면 사용할 수 있었던 다른 감정 표현이 있으면 대기 자세를 사용하지 않습니다.\n"허용"은 다른 선택지가 없을 때 항상 대기 자세를 사용합니다.\n\n권장: "다른 것이 맞지 않을 때만".
+# Source: How many swaps are kept per target emote. 0 keeps them all.\n\nEach kept swap stays as an option of the generated Penumbra mod, so playing an emote again enables it again without rebuilding it. The only cost is that the mod gets bigger.
+classic.settings.kept_swaps.help = 대상 감정 표현마다 유지할 교체 수입니다. 0이면 모두 유지합니다.\n\n유지된 교체는 생성된 Penumbra 모드의 옵션으로 남기 때문에, 같은 감정 표현을 다시 사용하면 새로 만들지 않고 다시 켜집니다. 유일한 단점은 모드가 커진다는 것입니다.
+# Source: Last resort
+classic.settings.last_resort = 최후의 수단
+# Source: Lenient
+classic.settings.lenient = 느슨함
+# Source: When the emote ends
+classic.settings.lifetime.ends = 감정 표현이 끝날 때
+# Source: "When the emote ends" puts your real emote back as soon as the animation stops.\n"When you play the target emote" keeps the swap enabled until the next time you play the target emote.\n"Never" keeps the swap live until another swap claims the same target emote.\n\nRecommended: "When you play the target emote". "When the emote ends" is not recommended, as people will see you redraw constantly after swapping.
+classic.settings.lifetime.help = "감정 표현이 끝날 때"는 동작이 멈추는 즉시 원래 감정 표현으로 되돌립니다.\n"대상 감정 표현을 사용할 때"는 다음에 대상 감정 표현을 사용할 때까지 교체를 켜 둡니다.\n"사용 안 함"은 다른 교체가 같은 대상 감정 표현을 차지할 때까지 교체를 켜 둡니다.\n\n권장: "대상 감정 표현을 사용할 때". "감정 표현이 끝날 때"는 교체 후 다른 사람들에게 계속 다시 그려지는 것처럼 보이므로 권장하지 않습니다.
+# Source: When you play the target emote
+classic.settings.lifetime.target = 대상 감정 표현을 사용할 때
+# Source: Show locked emotes in the game's Emote window
+classic.settings.locked_in_window = 게임 감정 표현 창에 잠긴 감정 표현 표시
+# Source: "Strict" only puts a looping emote on another looping one.\n"Lenient" lets a looping emote play once on a one time emote when no better match exists.\n\nRecommended: "Strict", or "Lenient" if you really don't have many emotes.
+classic.settings.loop_matching.help = "엄격함"은 반복 감정 표현을 다른 반복 감정 표현에만 적용합니다.\n"느슨함"은 더 나은 일치가 없을 때 반복 감정 표현을 1회성 감정 표현에서 한 번 재생하게 합니다.\n\n권장: "엄격함". 감정 표현이 정말 적다면 "느슨함".
+# Source: Determines whether to block unlocked emotes from being picked when they are modified by at least one of your mods. This prevents other people from seeing other modded emotes you might have before the swap takes place.\nAs an example, you have a mod on beesknees, and you try to bypass /conduct which happens to land on beesknees: other players might or might not see the modded beesknees for a moment.\n\n"Allowed" allows using unlocked emotes that are modified by one of your mods.\n"Last resort" uses one only when nothing else fits.\n"Blocked" never uses one, and show an error message in the chat with options to disable or open the mod in penumbra.\n\nRecommended: "Last resort", or "Blocked" if you absolutely don't want your modded emotes to accidentaly be seen.
+classic.settings.modded_targets.help = 하나 이상의 모드가 변경하는 습득한 감정 표현을 고르지 않도록 할지 정합니다. 교체가 적용되기 전에 가지고 있는 다른 모드의 감정 표현이 다른 사람들에게 보이는 것을 막습니다.\n예를 들어 beesknees에 모드가 있고, /conduct를 우회했는데 beesknees로 교체되면, 다른 플레이어에게 모드가 적용된 beesknees가 잠깐 보일 수 있습니다.\n\n"허용"은 모드가 변경하는 습득한 감정 표현을 사용할 수 있게 합니다.\n"최후의 수단"은 다른 것이 맞지 않을 때만 사용합니다.\n"차단"은 절대 사용하지 않으며, 채팅에 오류 메시지를 표시하고 모드를 끄거나 Penumbra에서 여는 옵션을 제공합니다.\n\n권장: "최후의 수단". 모드가 적용된 감정 표현이 실수로라도 보이는 것을 원하지 않는다면 "차단".
+# Source: Never
+classic.settings.never = 사용 안 함
+# Source: Use the new interface
+classic.settings.new_interface = 새 인터페이스 사용
+# Source: Switches back to the new interface.\nThe classic interface is the one you are looking at, exactly as in previous versions.
+classic.settings.new_interface.help = 새 인터페이스로 돌아갑니다.\n클래식 인터페이스는 지금 보고 있는 것으로, 이전 버전과 완전히 같습니다.
+# Source: Only when nothing else fits
+classic.settings.nothing_else_fits = 다른 것이 맞지 않을 때만
+# Source: Off
+classic.settings.off = 끔
+# Source: On
+classic.settings.on = 켬
+# Source: One rank below
+classic.settings.one_below = 한 등급 아래까지
+# Source: Safe mode is not 100% guaranteed to be safe either. It prevents Direct Play from being used in states where it was proved to go wrong, but I can not prove the absence of issues. Use Emote Swap if you want to be 100% safe, it will behave almost the same way.
+classic.settings.safe_mode_not_a_promise = 안전 모드도 100% 안전을 보장하지는 않습니다. 문제가 발생한다고 확인된 상태에서는 Direct Play를 사용하지 않게 하지만, 문제가 없다는 것을 증명할 수는 없습니다. 100% 안전하고 싶다면 Emote Swap을 사용하세요. 거의 같은 방식으로 동작합니다.
+# Source: Same rank only
+classic.settings.same_rank = 같은 등급만
+# Source: Windows
+classic.settings.section.windows = 창
+# Source: "Strict" never puts an emote on one that makes sound.\n"Lenient" allows matching emotes that make sounds together.\n"Off" will let emotes play regardless of sound.\n\nThis is to prevent vanilla people from seeing you play fume which could annoy other vanilla players, for example.\n\nRecommended: "Lenient".
+classic.settings.sound_matching.help = "엄격함"은 소리가 있는 감정 표현에는 절대 적용하지 않습니다.\n"느슨함"은 소리가 있는 감정 표현끼리 맞추는 것을 허용합니다.\n"끔"은 소리와 관계없이 감정 표현을 재생합니다.\n\n예를 들어 모드를 쓰지 않는 사람들에게 fume을 사용하는 모습이 보여 다른 플레이어를 불편하게 하는 것을 막기 위한 설정입니다.\n\n권장: "느슨함".
+# Source: Strict
+classic.settings.strict = 엄격함
+# Source: Emotes have different turn behaviors when you target someone. Some emotes will make your torso turn (i.e: /hum), some only your head (i.e: /stepdance),some will only make your eyes follow your target (i.e: /beesknees) while others will not move at all (i.e:/guard).\n\n"Very strict" only picks emotes that behaves the same way.\n"Strict" allows eye following differences but keeps emotes head and body turn behaviors.\n"Lenient" allows any turn behavior.\n\nThe plugin will still always try to find the best match first, regardless of the selected rule.\n\nRecommended: "Lenient".
+classic.settings.turn_matching.help = 감정 표현마다 누군가를 대상으로 지정했을 때 방향을 바꾸는 방식이 다릅니다. 상체를 돌리는 것(예: /hum), 고개만 돌리는 것(예: /stepdance), 눈으로만 대상을 따라가는 것(예: /beesknees), 전혀 움직이지 않는 것(예: /guard)이 있습니다.\n\n"매우 엄격함"은 같은 방식으로 움직이는 감정 표현만 고릅니다.\n"엄격함"은 눈의 움직임 차이는 허용하지만 고개와 몸의 방향 전환 방식은 유지합니다.\n"느슨함"은 어떤 방향 전환 방식이든 허용합니다.\n\n선택한 규칙과 관계없이 플러그인은 항상 가장 잘 맞는 것을 먼저 찾습니다.\n\n권장: "느슨함".
+# Source: Lets Direct Play bypass an emote in any pose.\n\nLeave it off unless you know what you are doing. When off, the plugin only plays emotes from states where nothing can be noticed.
+classic.settings.unsafe.help = Direct Play로 어떤 자세에서든 감정 표현을 우회할 수 있게 합니다.\n\n무엇을 하는지 잘 모른다면 꺼 두세요. 꺼져 있으면 플러그인은 아무것도 눈치챌 수 없는 상태에서만 감정 표현을 재생합니다.
+# Source: In practice it is a non-issue. This has been a thing in other tools and plugins (and still is in some of them), which people have used for years without trouble. Go back to safe mode, or even better, to emote swap, if you are uncomfy with this.
+classic.settings.unsafe.reassurance = 실제로는 문제가 되지 않습니다. 다른 도구와 플러그인에서도 해 온 일이고(일부는 지금도 그렇습니다), 사람들이 몇 년 동안 문제없이 사용해 왔습니다. 불안하다면 안전 모드로, 더 좋게는 Emote Swap으로 돌아가세요.
+# Source: Very strict
+classic.settings.very_strict = 매우 엄격함
+# Source: Shows a warning in chat when a swap happened, but not the way you would expect.
+classic.settings.warning_messages.help = 교체는 되었지만 예상과 다르게 되었을 때 채팅에 경고를 표시합니다.
+# Source: How long the same warning stays quiet after you have seen it.\n\nAccepts time format: 5m, 300s, 5m10s, 1h.\nSet to 0 to disable.
+classic.settings.warning_throttle.help = 같은 경고를 한 번 본 뒤 다시 표시하지 않는 시간입니다.\n\n사용할 수 있는 시간 형식: 5m, 300s, 5m10s, 1h.\n0으로 설정하면 끕니다.
+# Source: Only when necessary
+classic.settings.when_necessary = 필요할 때만
+# Source: Opens the changelog window.
+command.changelog = 업데이트 내역 창을 엽니다.
+# Source: Applies any emote to your own chocobo if summoned, without needing to target it. Use /bec <emote_command> or /bec stop.
+command.chocobo = 소환한 자신의 초코보에 대상 지정 없이 원하는 감정 표현을 적용합니다. /bec <emote_command> 또는 /bec stop을 사용하세요.
+# Source: Plays the emote on your chocobo, by command name or ID.
+command.chocobo_emote = 명령어 이름이나 ID로 초코보에게 감정 표현을 재생합니다.
+# Source: Stops the emote currently playing on your chocobo.
+command.chocobo_stop = 초코보가 재생 중인 감정 표현을 멈춥니다.
+# Source: Opens the configuration window.
+command.config = 설정 창을 엽니다.
+# Source: Opens the debug window.
+command.debug = 디버그 창을 엽니다.
+# Source: Shows the hooks window.
+command.hooks = 후크 창을 표시합니다.
+# Source: Exports a zip with the plugin logs and settings, to send to the developer.
+command.logs = 개발자에게 보낼 수 있도록 플러그인 로그와 설정을 zip으로 내보냅니다.
+# Source: Opens the Bypass Emote main window.
+command.main = Bypass Emote 메인 창을 엽니다.
+# Source: Applies any emote to your own minion if summoned, without needing to target it. Use /bem <emote_command> or /bem stop.
+command.minion = 소환한 자신의 꼬마 친구에게 대상 지정 없이 원하는 감정 표현을 적용합니다. /bem <emote_command> 또는 /bem stop을 사용하세요.
+# Source: Plays the emote on your minion, by command name or ID.
+command.minion_emote = 명령어 이름이나 ID로 꼬마 친구에게 감정 표현을 재생합니다.
+# Source: Stops the emote currently playing on your minion.
+command.minion_stop = 꼬마 친구가 재생 중인 감정 표현을 멈춥니다.
+# Source: Applies any emote to your own pet (carbuncle/eos) if summoned, without needing to target it. Use /bep <emote_command> or /bep stop.
+command.pet = 소환한 자신의 소환수(카벙클/에오스)에게 대상 지정 없이 원하는 감정 표현을 적용합니다. /bep <emote_command> 또는 /bep stop을 사용하세요.
+# Source: Plays the emote on your pet, by command name or ID.
+command.pet_emote = 명령어 이름이나 ID로 소환수에게 감정 표현을 재생합니다.
+# Source: Stops the emote currently playing on your pet.
+command.pet_stop = 소환수가 재생 중인 감정 표현을 멈춥니다.
+# Source: Bypasses any emote (including locked ones) on yourself, by command name or ID.
+command.self_emote = 명령어 이름이나 ID로 원하는 감정 표현(잠긴 것 포함)을 자신에게 우회합니다.
+# Source: Stops the emote currently playing on yourself. Direct Play mode only.
+command.stop = 자신이 재생 중인 감정 표현을 멈춥니다. Direct Play 모드 전용입니다.
+# Source: Restarts the emotes of every player and NPC around you, with their sounds.
+command.sync = 주변 모든 플레이어와 NPC의 감정 표현을 소리와 함께 다시 시작합니다.
+# Source: Restarts only the emotes played with Direct Play.
+command.sync_direct = Direct Play로 재생한 감정 표현만 다시 시작합니다.
+# Source: Applies any emote to a targetted NPC. Only works on NPCs and owned minions/pets. Use /bet <emote_command> or /bet stop.
+command.target = 대상으로 지정한 NPC에 원하는 감정 표현을 적용합니다. NPC와 자신의 꼬마 친구/소환수에만 작동합니다. /bet <emote_command> 또는 /bet stop을 사용하세요.
+# Source: Plays the emote on your target, by command name or ID.
+command.target_emote = 명령어 이름이나 ID로 대상에게 감정 표현을 재생합니다.
+# Source: Stops the emote currently playing on your target.
+command.target_stop = 대상이 재생 중인 감정 표현을 멈춥니다.
+# Source: All
+common.all = 전체
+# Source: Cancel
+common.cancel = 취소
+# Source: Close
+common.close = 닫기
+# Source: None
+common.none = 없음
+# Source: Owned
+common.owned = 보유
+# Source: Enable on creation
+create_mod.enable = 만들 때 켜기
+# Source: Switches the mod on in your character's collection as soon as it exists.
+create_mod.enable.help = 모드가 만들어지는 즉시 캐릭터의 컬렉션에서 켭니다.
+# Source: Emote data is still loading. Try again in a moment.
+create_mod.loading = 감정 표현 데이터를 아직 불러오는 중입니다. 잠시 후 다시 시도하세요.
+# Source: Modded animation: {mod}
+create_mod.modded = 모드 동작: {mod}
+# Source: My emote mod
+create_mod.name.placeholder = 내 감정 표현 모드
+# Source: An emote cannot be played over itself.
+create_mod.not_over_itself = 감정 표현을 자기 자신 위에 재생할 수는 없습니다.
+# Source: One of those emotes has no animation this can read.
+create_mod.no_animation = 이 감정 표현 중 하나에 읽을 수 있는 동작이 없습니다.
+# Source: Penumbra is not running.
+create_mod.penumbra_off = Penumbra가 실행 중이 아닙니다.
+# Source: Pick both emotes and name the mod.
+create_mod.pick_both = 두 감정 표현을 모두 고르고 모드 이름을 정하세요.
+# Source: Pick at least one race.
+create_mod.pick_race = 종족을 하나 이상 고르세요.
+# Source: Highest priority
+create_mod.priority = 최고 우선순위
+# Source: Races covered
+create_mod.races = 적용 종족
+# Source: Emote to play
+create_mod.source = 재생할 감정 표현
+# Source: The animation the mod plays. The one you have not unlocked.
+create_mod.source.help = 모드가 재생하는 동작입니다. 습득하지 않은 감정 표현입니다.
+# Source: Pick the emote to play...
+create_mod.source.placeholder = 재생할 감정 표현 선택...
+# Source: Played over
+create_mod.target = 덮어쓸 감정 표현
+# Source: The emote you will actually use in game. The one you have unlocked.
+create_mod.target.help = 게임에서 실제로 사용할 감정 표현입니다. 습득한 감정 표현입니다.
+# Source: Pick the emote to play over...
+create_mod.target.placeholder = 덮어쓸 감정 표현 선택...
+# Source: Vanilla animation
+create_mod.vanilla = 기본 동작
+# Source: This also changes the emote for {races}. They read a file the mod writes.
+create_mod.warning.also_reached = {races}의 감정 표현도 바뀝니다. 이들은 모드가 쓰는 파일을 읽습니다.
+# Source: Your mod "{mod}" already changes {target}.
+create_mod.warning.modded = 모드 "{mod}"이(가) 이미 {target}을(를) 변경합니다.
+# Source: You have not unlocked {target}.
+create_mod.warning.not_unlocked = {target}을(를) 습득하지 않았습니다.
+# Source: {losers} read the same animation file as {winner}. {winner}'s version plays for all of them.
+create_mod.warning.shared = {losers}은(는) {winner}와(과) 같은 동작 파일을 읽습니다. 모두에게 {winner}의 버전이 재생됩니다.
+# Source: Added in patch {patch}
+emote.added = 패치 {patch}에서 추가
+# Source: Base game
+emote.base_game = 기본 게임
+# Source: ID {id}
+emote.id = ID {id}
+# Source: No name
+emote.no_name = 이름 없음
+# Source: Patch {patch}
+emote.patch = 패치 {patch}
+# Source: Unknown name
+emote.unknown = 알 수 없는 이름
+# Source: The approval recorded for game build {build} was dropped.
+gate.approval_dropped = 게임 빌드 {build}에 기록된 승인이 취소되었습니다.
+# Source: Game build {build} is approved.
+gate.approved = 게임 빌드 {build}은(는) 승인되었습니다.
+# Source: Game build {build} was approved earlier.
+gate.approved_earlier = 게임 빌드 {build}은(는) 이전에 승인되었습니다.
+# Source: The installed game build could not be read.
+gate.build_unreadable = 설치된 게임 빌드를 읽을 수 없습니다.
+# Source: The approval list could not be reached.
+gate.list_unreachable = 승인 목록에 연결할 수 없습니다.
+# Source: Game build {build} needs Bypass Emote {minimum} or newer. Installed: {installed}.
+gate.needs_version = 게임 빌드 {build}에는 Bypass Emote {minimum} 이상이 필요합니다. 설치됨: {installed}.
+# Source: Game build {build} has not been approved yet.
+gate.not_approved_yet = 게임 빌드 {build}은(는) 아직 승인되지 않았습니다.
+# Source: Reading the approval list.
+gate.reading_list = 승인 목록을 읽는 중입니다.
+# Source: unknown
+gate.unknown_version = 알 수 없음
+# Source: Game build {build} names a plugin version the plugin cannot read.
+gate.unreadable_version = 게임 빌드 {build}에 플러그인이 읽을 수 없는 플러그인 버전이 지정되어 있습니다.
+# Source: The {client} client has not and can not be tested. This plugin might not work and might be unstable/unusable. Please don't use it if it does not work well.
+gate.untested_client = {client} 클라이언트는 테스트되지 않았으며 테스트할 수도 없습니다. 이 플러그인은 작동하지 않거나 불안정하고 사용할 수 없을 수 있습니다. 잘 작동하지 않는다면 사용하지 마세요.
+# Source: This game client is not the Global one, and has not and can not be tested. This plugin might not work and might be unstable/unusable. Please don't use it if it does not work well.
+gate.untested_other = 이 게임 클라이언트는 글로벌 버전이 아니며, 테스트되지 않았고 테스트할 수도 없습니다. 이 플러그인은 작동하지 않거나 불안정하고 사용할 수 없을 수 있습니다. 잘 작동하지 않는다면 사용하지 마세요.
+# Source: Assign
+hotbar.assign = 등록
+# Source: Hotbar
+hotbar.hotbar = 단축바
+# Source: Slot {slot} - Empty
+hotbar.slot.empty = 칸 {slot} - 비어 있음
+# Source: Slot {slot} - {name}
+hotbar.slot.holds = 칸 {slot} - {name}
+# Source: Discord
+main.discord = Discord
+# Source: Help, bug reports and updates.
+main.discord.tooltip = 도움말, 버그 신고, 업데이트 소식.
+# Source: No blocked emote
+main.empty.blocked = 차단한 감정 표현이 없습니다
+# Source: No favorited emote
+main.empty.favourites.classic = 즐겨찾기한 감정 표현이 없습니다
+# Source: Support me on Ko-fi
+main.kofi = Ko-fi에서 후원하기
+# Source: This plugin is free and always will be, donations are appreciated.
+main.kofi.tooltip = 이 플러그인은 무료이며 앞으로도 무료입니다. 후원은 큰 힘이 됩니다.
+# Source: Apply emote on Chocobo
+main.menu.chocobo.classic = 초코보에게 감정 표현 적용
+# Source: Create a mod from this emote...
+main.menu.create_mod = 이 감정 표현으로 모드 만들기...
+# Source: Force swap
+main.menu.force_swap = 강제 교체
+# Source: Assign emote to Hotbar...
+main.menu.hotbar.classic = 감정 표현을 단축바에 등록...
+# Source: Apply emote on Minion
+main.menu.minion.classic = 꼬마 친구에게 감정 표현 적용
+# Source: Only for Emote Swap mode.
+main.menu.only_emote_swap = Emote Swap 모드 전용입니다.
+# Source: Add an override...
+main.menu.override.classic = 재정의 추가...
+# Source: Apply emote on Pet
+main.menu.pet.classic = 소환수에게 감정 표현 적용
+# Source: Block an emote as a swap target...
+main.quick.blocked = 교체 대상으로 감정 표현 차단...
+# Source: (blocked)
+main.quick.blocked.marked = (차단됨)
+# Source: Add an emote to your favorites...
+main.quick.favourite.classic = 감정 표현을 즐겨찾기에 추가...
+# Source: (favorite)
+main.quick.favourite.marked.classic = (즐겨찾기)
+# Source: Block this emote as a swap target
+main.row.block = 이 감정 표현을 교체 대상에서 차단
+# Source: Blocked: no swap will land on this emote
+main.row.blocked = 차단됨: 이 감정 표현으로는 교체되지 않습니다
+# Source: Drag onto a hotbar slot to assign it
+main.row.drag = 단축바 칸으로 끌어서 등록
+# Source: Left-click to apply to yourself
+main.row.left_click = 왼쪽 클릭으로 자신에게 적용
+# Source: Patch: {patch}
+main.row.patch = 패치: {patch}
+# Source: Right-click for more options
+main.row.right_click = 오른쪽 클릭으로 더 많은 옵션
+# Source: Search emotes...
+main.search = 감정 표현 검색...
+# Source: Show all emotes
+main.show_all = 모든 감정 표현 표시
+# Source: Show IDs
+main.show_ids = ID 표시
+# Source: Show invalid emotes
+main.show_invalid = 유효하지 않은 감정 표현 표시
+# Source: Show Invalid Emotes
+main.show_invalid.classic = 유효하지 않은 감정 표현 표시
+# Source: Sync Direct Play only (/be syncdirect)
+main.sync.direct = Direct Play만 동기화 (/be syncdirect)
+# Source: Sync everyone (/be sync)
+main.sync.everyone = 모두 동기화 (/be sync)
+# Source: All
+main.tab.all = 전체
+# Source: Blocked
+main.tab.blocked = 차단
+# Source: Expressions
+main.tab.expressions = 표정
+# Source: Fav
+main.tab.favourites = 즐겨찾기
+# Source: General
+main.tab.general = 일반
+# Source: Other
+main.tab.other = 기타
+# Source: Special
+main.tab.special = 특수
+# Source: Create a mod
+main.toolbar.create_mod = 모드 만들기
+# Source: Refresh Locked Emotes
+main.toolbar.refresh.tooltip = 잠긴 감정 표현 새로 고침
+# Source: Sync...
+main.toolbar.sync_menu = 동기화...
+# Source: '{mod}' was created. Penumbra could not enable it in {collection}.
+mod_builder.created_not_enabled = '{mod}'을(를) 만들었습니다. Penumbra가 {collection}에서 켤 수 없었습니다.
+# Source: '{mod}' was created. No collection is assigned to your character. The mod is off.
+mod_builder.created_no_collection = '{mod}'을(를) 만들었습니다. 캐릭터에 할당된 컬렉션이 없습니다. 모드는 꺼져 있습니다.
+# Source: '{mod}' was created. Enable it in Penumbra when you want it.
+mod_builder.created_off = '{mod}'을(를) 만들었습니다. 원할 때 Penumbra에서 켜세요.
+# Source: '{mod}' was created and switched on in {collection}.
+mod_builder.created_on = '{mod}'을(를) 만들고 {collection}에서 켰습니다.
+# Source: Something went wrong. Nothing was created. The log has the details.
+mod_builder.failed = 문제가 발생했습니다. 아무것도 만들지 않았습니다. 자세한 내용은 로그에 있습니다.
+# Source: Penumbra already holds a mod folder called '{folder}'. Pick another name.
+mod_builder.folder_taken = Penumbra에 이미 '{folder}'(이)라는 모드 폴더가 있습니다. 다른 이름을 고르세요.
+# Source: Give the mod a name first.
+mod_builder.name_first = 먼저 모드 이름을 정하세요.
+# Source: '{mod}' was written to '{folder}'. Penumbra did not load it. Rediscover mods in Penumbra to pick it up.
+mod_builder.not_loaded = '{mod}'을(를) '{folder}'에 썼습니다. Penumbra가 불러오지 않았습니다. Penumbra에서 모드를 다시 검색해 불러오세요.
+# Source: The mod's files could not be written. The log has the details.
+mod_builder.not_written = 모드 파일을 쓸 수 없습니다. 자세한 내용은 로그에 있습니다.
+# Source: The swap engine is not running.
+mod_builder.no_engine = 교체 엔진이 실행 중이 아닙니다.
+# Source: Penumbra's mod folder could not be read.
+mod_builder.no_mod_folder = Penumbra의 모드 폴더를 읽을 수 없습니다.
+# Source: /{source} cannot be played over /{target}. They share no posture.
+mod_builder.no_posture = /{source}을(를) /{target} 위에 재생할 수 없습니다. 공통된 자세가 없습니다.
+# Source: Pick at least one race for the mod to cover.
+mod_builder.pick_race = 모드가 적용될 종족을 하나 이상 고르세요.
+# Source: Applied.
+noire.applied = 적용했습니다.
+# Source: Cancel
+noire.cancel = 취소
+# Source: Entries
+noire.changelog.entries = 항목
+# Source: Footer
+noire.changelog.footer = 바닥글
+# Source: No changelog available for this version.
+noire.changelog.none = 이 버전의 업데이트 내역이 없습니다.
+# Source: Select a version:
+noire.changelog.select_version = 버전 선택:
+# Source: Changelog
+noire.changelog.title = 업데이트 내역
+# Source: Versions
+noire.changelog.versions = 버전
+# Source: Close
+noire.close = 닫기
+# Source: Accent
+noire.colors.accent = 강조색
+# Source: Copy as code
+noire.colors.copy = 코드로 복사
+# Source: Danger
+noire.colors.danger = 위험
+# Source: Edit colours
+noire.colors.edit = 색상 편집
+# Source: Import from clipboard
+noire.colors.import = 클립보드에서 가져오기
+# Source: Restore all colours
+noire.colors.reset = 모든 색상 되돌리기
+# Source: Colours
+noire.colors.title = 색상
+# Source: Copied.
+noire.copied = 복사했습니다.
+# Source: {label} ({seconds})
+noire.countdown = {label} ({seconds})
+# Source: Done
+noire.done = 완료
+# Source: Hide
+noire.hide = 숨기기
+# Source: Language
+noire.language = 언어
+# Source: {count} outdated
+noire.language.outdated.other = {count}개 오래됨
+# Source: {name} ({percent}%)
+noire.language.progress = {name} ({percent}%)
+# Source: Translate...
+noire.language.translate = 번역...
+# Source: Arrange {window}
+noire.layout.arrange = {window} 배치
+# Source: Title bar buttons
+noire.layout.buttons = 제목 표시줄 버튼
+# Source: Default layout
+noire.layout.default = 기본 레이아웃
+# Source: Restore the layout
+noire.layout.reset = 레이아웃 되돌리기
+# Source: Layout
+noire.layout.title = 레이아웃
+# Source: Add the entry
+noire.logs.add_entry = 항목 추가
+# Source: All categories
+noire.logs.all_categories = 모든 분류
+# Source: All levels
+noire.logs.all_levels = 모든 수준
+# Source: {count} categories
+noire.logs.categories.other = 분류 {count}개
+# Source: Category
+noire.logs.category_hint = 분류
+# Source: Clear the database entries
+noire.logs.clear_database = 데이터베이스 항목 지우기
+# Source: Clear the entries in memory
+noire.logs.clear_memory = 메모리의 항목 지우기
+# Source: Collapse the panel
+noire.logs.collapse_panel = 패널 접기
+# Source: Category
+noire.logs.column.category = 분류
+# Source: Level
+noire.logs.column.level = 수준
+# Source: Message
+noire.logs.column.message = 메시지
+# Source: Source
+noire.logs.column.source = 출처
+# Source: Time
+noire.logs.column.time = 시간
+# Source: Copy the entry
+noire.logs.copy_entry = 항목 복사
+# Source: Copy the selected line
+noire.logs.copy_line = 선택한 줄 복사
+# Source: Copy the selected lines
+noire.logs.copy_lines = 선택한 줄 복사
+# Source: Copy the lines selected across entries ({count})
+noire.logs.copy_lines_across = 여러 항목에서 선택한 줄 복사 ({count})
+# Source: Copy only the message
+noire.logs.copy_message = 메시지만 복사
+# Source: Copy only the messages ({count})
+noire.logs.copy_messages = 메시지만 복사 ({count})
+# Source: Copy the selected entries ({count})
+noire.logs.copy_selected = 선택한 항목 복사 ({count})
+# Source: Delete the entry
+noire.logs.delete_entry = 항목 삭제
+# Source: Delete the selected entries ({count})
+noire.logs.delete_selected = 선택한 항목 삭제 ({count})
+# Source: Entries
+noire.logs.entries = 항목
+# Source: Expand the panel
+noire.logs.expand_panel = 패널 펼치기
+# Source: Filters
+noire.logs.filters = 필터
+# Source: Filters and storage
+noire.logs.filters_storage = 필터와 저장
+# Source: Hide the category
+noire.logs.hide_category = 분류 숨기기
+# Source: Hide the source
+noire.logs.hide_source = 출처 숨기기
+# Source: Hold CTRL and SHIFT to clear.
+noire.logs.hold_clear = 지우려면 CTRL과 SHIFT를 누르고 있으세요.
+# Source: Hold CTRL to delete.
+noire.logs.hold_delete = 삭제하려면 CTRL을 누르고 있으세요.
+# Source: {count} levels
+noire.logs.levels.other = 수준 {count}개
+# Source: Manual entry
+noire.logs.manual_entry = 직접 입력
+# Source: What happened?
+noire.logs.message_hint = 무슨 일이 있었나요?
+# Source: Save to the database
+noire.logs.persist = 데이터베이스에 저장
+# Source: per page
+noire.logs.per_page = 페이지당
+# Source: Refresh the entries
+noire.logs.refresh = 항목 새로 고침
+# Source: Search for a message, category, source...
+noire.logs.search_hint = 메시지, 분류, 출처 검색...
+# Source: Showing {range} of {count}
+noire.logs.showing = {count}개 중 {range} 표시
+# Source: Show colors
+noire.logs.show_colors = 색상 표시
+# Source: Split lines
+noire.logs.split_lines = 줄 나누기
+# Source: All logs
+noire.logs.title = 모든 로그
+# Source: ({total} in total)
+noire.logs.total = (총 {total}개)
+# Source: Auto hide
+noire.menu.auto_hide = 자동 숨김
+# Source: Keeps the window open whenever the game hides its own UI.
+noire.menu.auto_hide.hint = 게임이 자체 UI를 숨길 때도 창을 열어 둡니다.
+# Source: BEHAVIOUR
+noire.menu.behaviour = 동작
+# Source: Click through
+noire.menu.click_through = 클릭 통과
+# Source: The window lets clicks through to the game. Its title bar stays clickable.
+noire.menu.click_through.note = 창을 클릭하면 게임으로 전달됩니다. 제목 표시줄은 계속 클릭할 수 있습니다.
+# Source: In cutscene
+noire.menu.in_cutscene = 컷신 중
+# Source: Keeps the window open during cutscenes.
+noire.menu.in_cutscene.hint = 컷신 중에도 창을 열어 둡니다.
+# Source: In gpose
+noire.menu.in_gpose = 단체 포즈 중
+# Source: Keeps the window open while gpose is active.
+noire.menu.in_gpose.hint = 단체 포즈 중에도 창을 열어 둡니다.
+# Source: Lock height
+noire.menu.lock_height = 높이 고정
+# Source: Lock position
+noire.menu.lock_position = 위치 고정
+# Source: Lock width
+noire.menu.lock_width = 너비 고정
+# Source: Always on top
+noire.menu.on_top = 항상 위에 표시
+# Source: Opacity
+noire.menu.opacity = 불투명도
+# Source: Reduced motion
+noire.menu.reduced_motion = 움직임 줄이기
+# Source: Text size
+noire.menu.text_size = 글자 크기
+# Source: UI hidden
+noire.menu.ui_hidden = UI 숨김 중
+# Source: Keeps the window open when you hide the game UI.
+noire.menu.ui_hidden.hint = 게임 UI를 숨겨도 창을 열어 둡니다.
+# Source: STAY VISIBLE
+noire.menu.visibility = 계속 표시
+# Source: WINDOW
+noire.menu.window = 창
+# Source: Restore
+noire.restore = 되돌리기
+# Source: Export settings
+noire.settings.export = 설정 내보내기
+# Source: Settings copied to the clipboard.
+noire.settings.exported = 설정을 클립보드에 복사했습니다.
+# Source: Import from clipboard
+noire.settings.import = 클립보드에서 가져오기
+# Source: {count} settings imported.
+noire.settings.imported = 설정 {count}개를 가져왔습니다.
+# Source: The clipboard holds no valid code.
+noire.settings.import_failed = 클립보드에 유효한 코드가 없습니다.
+# Source: No setting matches.
+noire.settings.none = 일치하는 설정이 없습니다.
+# Source: Reset to default
+noire.settings.reset = 기본값으로 되돌리기
+# Source: Search settings
+noire.settings.search = 설정 검색
+# Source: Show
+noire.show = 표시
+# Source: Interface
+noire.skin = 인터페이스
+# Source: Plain
+noire.skin.stock = 기본
+# Source: Contains
+noire.translate.contains = 포함
+# Source: Translation credits
+noire.translate.credits = 번역에 참여한 분들
+# Source: {language}: {names}
+noire.translate.credit_line = {language}: {names}
+# Source: Key
+noire.translate.key = 키
+# Source: Missing or outdated
+noire.translate.missing = 누락 또는 오래됨
+# Source: Missing tags: {tags}
+noire.translate.missing_tags = 누락된 태그: {tags}
+# Source: Start
+noire.translate.new = 시작
+# Source: Source changed
+noire.translate.outdated = 원문이 바뀜
+# Source: Translated from: {text}
+noire.translate.outdated_from = 번역한 원문: {text}
+# Source: Pick a language, or type a language code to start a new one.
+noire.translate.pick = 언어를 고르거나 언어 코드를 입력해 새로 시작하세요.
+# Source: Show the plugin in this language
+noire.translate.preview = 이 언어로 플러그인 표시
+# Source: Revert
+noire.translate.revert = 되돌리기
+# Source: Saved text: {text}
+noire.translate.revert_to = 저장된 텍스트: {text}
+# Source: Saved without a translation
+noire.translate.revert_to_empty = 번역 없이 저장됨
+# Source: Save
+noire.translate.save = 저장
+# Source: Saved to {path}.
+noire.translate.saved = {path}에 저장했습니다.
+# Source: The file could not be written.
+noire.translate.save_failed = 파일을 쓸 수 없습니다.
+# Source: Save to a file...
+noire.translate.save_file = 파일로 저장...
+# Source: Search keys and texts
+noire.translate.search = 키와 텍스트 검색
+# Source: Original
+noire.translate.source = 원문
+# Source: Translate
+noire.translate.title = 번역
+# Source: Translation
+noire.translate.translation = 번역
+# Source: Unknown tags: {tags}
+noire.translate.unknown_tags = 알 수 없는 태그: {tags}
+# Source: Still correct
+noire.translate.validate = 그대로 맞음
+# Source: Window options
+noire.window.options = 창 설정
+# Source: The emote catalog is still building.
+overrides.catalog_building = 감정 표현 목록을 아직 만드는 중입니다.
+# Source: On: this emote plays on one of these targets, or not at all.\nOff: your usual settings take over when none of these targets can be used.
+overrides.limited.help = 켬: 이 감정 표현은 이 대상 중 하나에서 재생되거나, 아예 재생되지 않습니다.\n끔: 이 대상을 하나도 사용할 수 없으면 평소 설정이 적용됩니다.
+# Source: (overridden)
+overrides.marked.source = (재정의됨)
+# Source: (already a target)
+overrides.marked.target = (이미 대상임)
+# Source: Remove this override
+overrides.remove = 이 재정의 삭제
+# Source: Every emote that fits is on your blocked targets list.
+preview.all_blocked = 맞는 감정 표현이 모두 차단한 대상 목록에 있습니다.
+# Source: One of your mods changes every emote that fits.
+preview.all_modded = 맞는 감정 표현을 모두 모드가 변경합니다.
+# Source: Every emote that can carry this one is unavailable.
+preview.all_unavailable = 이 감정 표현을 받을 수 있는 감정 표현을 모두 사용할 수 없습니다.
+# Source: {n} emote(s) that fit: on your blocked targets list.
+preview.blocked_fit.other = 맞는 감정 표현 {n}개: 차단한 대상 목록에 있습니다.
+# Source: {emote}: {reason}
+preview.detail = {emote}: {reason}
+# Source: You are in group pose.
+preview.group_pose = 단체 포즈 중입니다.
+# Source: /{command}: {reason}
+preview.miss = /{command}: {reason}
+# Source: on your blocked targets list.
+preview.miss.blocked = 차단한 대상 목록에 있습니다.
+# Source: different loop kind.
+preview.miss.loop = 반복 종류가 다릅니다.
+# Source: changed by your mod "{mod}".
+preview.miss.named_mod = 모드 "{mod}"이(가) 변경합니다.
+# Source: {rule} does not match.
+preview.miss.other = {rule}이(가) 일치하지 않습니다.
+# Source: makes a sound.
+preview.miss.sound = 소리가 있습니다.
+# Source: turn does not match.
+preview.miss.turn = 방향이 일치하지 않습니다.
+# Source: {n} emote(s) that fit: changed by another mod.
+preview.modded_fit.other = 맞는 감정 표현 {n}개: 다른 모드가 변경합니다.
+# Source: {n} more target(s) skipped.
+preview.more_skipped.other = 대상 {n}개를 추가로 건너뛰었습니다.
+# Source: No loop is free. Idle-pose loops are off.
+preview.no_loop = 비어 있는 반복 동작이 없습니다. 대기 자세 반복은 꺼져 있습니다.
+# Source: No emote you own matches /{command}.
+preview.no_match = /{command}에 맞는 보유한 감정 표현이 없습니다.
+# Source: No override target of /{command} can be played.
+preview.no_override_target = /{command}의 재정의 대상 중 재생할 수 있는 것이 없습니다.
+# Source: You already own this emote.
+preview.owned = 이미 이 감정 표현을 보유하고 있습니다.
+# Source: You own no emote that can carry this one.
+preview.own_none = 이 감정 표현을 받을 수 있는 보유한 감정 표현이 없습니다.
+# Source: {n} emote(s) refused by the game.
+preview.pool.game_gate.other = 감정 표현 {n}개를 게임이 거부했습니다.
+# Source: {n} emote(s) not unlocked.
+preview.pool.locked.other = 감정 표현 {n}개를 습득하지 않았습니다.
+# Source: {n} emote(s) never a swap target.
+preview.pool.never_target.other = 감정 표현 {n}개는 교체 대상이 될 수 없습니다.
+# Source: {n} emote(s) not playable in your current state.
+preview.pool.not_here.other = 감정 표현 {n}개는 현재 상태에서 사용할 수 없습니다.
+# Source: {n} emote(s): {reason}.
+preview.pool.other.other = 감정 표현 {n}개: {reason}.
+# Source: {n} emote(s) play another row with a target.
+preview.pool.targeted.other = 감정 표현 {n}개는 대상이 있으면 다른 동작을 재생합니다.
+# Source: changed by another mod.
+preview.refusal.changed_by_mod = 다른 모드가 변경합니다.
+# Source: not unlocked.
+preview.refusal.locked = 습득하지 않았습니다.
+# Source: never a swap target.
+preview.refusal.never_target = 교체 대상이 될 수 없습니다.
+# Source: not playable in your current state.
+preview.refusal.not_here = 현재 상태에서 사용할 수 없습니다.
+# Source: no animation data.
+preview.refusal.no_animation = 동작 데이터가 없습니다.
+# Source: unavailable.
+preview.refusal.unavailable = 사용할 수 없습니다.
+# Source: Emote Swap is off.
+preview.swap_off = Emote Swap이 꺼져 있습니다.
+# Source: Until now Bypass Emote forced the animation onto your character from your own client. Nothing was ever sent to the server, but in specific cases, where your character would be in any pose other than the base one, the game client would send duplicate change pose packets to the server. This is not caused by the plugin itself, but rather by how the game handles pose changes. The "Idle Animation Delay" setting in the game's Character Configuration > Control Settings > Character tab is what causes this.
+prompt.before = 지금까지 Bypass Emote는 당신의 클라이언트에서 캐릭터에 동작을 강제로 적용했습니다. 서버로는 아무것도 보내지 않았지만, 캐릭터가 기본 자세가 아닌 다른 자세였던 특정한 경우에 게임 클라이언트가 자세 변경 패킷을 중복으로 서버에 보냈습니다. 이는 플러그인 자체가 아니라 게임이 자세 변경을 처리하는 방식 때문입니다. 원인은 게임의 캐릭터 설정 > 조작 설정 > 캐릭터 탭에 있는 대기 동작 지연 설정입니다.
+# Source: You can change this at any time in the settings.
+prompt.change_later = 이 설정은 언제든지 설정에서 바꿀 수 있습니다.
+# Source: Keep Direct Play
+prompt.direct_play = Direct Play 유지
+# Source: Use Emote Swap
+prompt.emote_swap = Emote Swap 사용
+# Source: A safer way to play locked emotes
+prompt.heading = 잠긴 감정 표현을 더 안전하게 재생하는 방법
+# Source: The new mode uses Penumbra to swap locked emotes onto unlocked ones. The game plays the emote itself. Nothing mismatches between the game and the server anymore.
+prompt.now = 새 모드는 Penumbra를 사용해 잠긴 감정 표현을 습득한 감정 표현으로 교체합니다. 감정 표현은 게임이 직접 재생합니다. 이제 게임과 서버 사이에 어긋나는 것이 없습니다.
+# Source: Choose how Bypass Emote plays locked emotes
+prompt.title = Bypass Emote가 잠긴 감정 표현을 재생하는 방식을 선택하세요
+# Source: Hide your name on the mod
+settings.anonymize = 모드에 이름 숨기기
+# Source: Names the generated mod after your initials instead of your full name and world.
+settings.anonymize.help = 생성되는 모드 이름에 전체 이름과 서버 대신 이니셜을 사용합니다.
+# Source: Swaps at the same time
+settings.behavior = 동시에 유지할 교체
+# Source: Spread swaps over several emotes
+settings.cached_dispatch = 교체를 여러 감정 표현에 분산
+# Source: Always cache-break
+settings.cache_break = 항상 캐시 우회
+# Source: This game build is not approved yet, this will not work.
+settings.cache_break.not_approved = 이 게임 빌드는 아직 승인되지 않아 작동하지 않습니다.
+# Source: Show the changelog after an update
+settings.changelog_on_update = 업데이트 후 업데이트 내역 표시
+# Source: Opens the changelog window after an update.
+settings.changelog_on_update.help = 업데이트 후 업데이트 내역 창을 엽니다.
+# Source: Switch to Direct Play
+settings.confirm.direct_play = Direct Play로 전환
+# Source: Switch to Direct Play?
+settings.confirm.direct_play.title = Direct Play로 전환할까요?
+# Source: Enable unsafe mode
+settings.confirm.unsafe = 안전하지 않은 모드 켜기
+# Source: Enable unsafe mode?
+settings.confirm.unsafe.title = 안전하지 않은 모드를 켤까요?
+# Source: Not all sync services support it. {limit}
+settings.direct_play.safe_tooltip = 모든 동기화 서비스가 지원하지는 않습니다. {limit}
+# Source: Not recommended. Not all sync services support it. Emote Swap is safer and works over any sync service.
+settings.direct_play.unsafe_tooltip = 권장하지 않습니다. 모든 동기화 서비스가 지원하지는 않습니다. Emote Swap이 더 안전하며 모든 동기화 서비스에서 작동합니다.
+# Source: How close a spread emote must fit
+settings.dispatch_fidelity = 분산할 감정 표현의 일치 정도
+# Source: Show error messages
+settings.error_messages = 오류 메시지 표시
+# Source: Shows an error in chat when a swap could not be done.
+settings.error_messages.help = 교체할 수 없을 때 채팅에 오류를 표시합니다.
+# Source: Repeat an error at most every
+settings.error_throttle = 같은 오류를 다시 표시하는 최소 간격
+# Source: Face your target automatically
+settings.face_target = 자동으로 대상 바라보기
+# Source: Turns your character toward your target when you bypass an emote.
+settings.face_target.help = 감정 표현을 우회할 때 캐릭터가 대상을 바라보게 합니다.
+# Source: Check now
+settings.gate.check_now = 지금 확인
+# Source: not yet
+settings.gate.not_yet = 아직 안 함
+# Source: Bypass emotes from locked hotbar slots
+settings.hotbar_bypass = 잠긴 단축바 칸에서 감정 표현 우회
+# Source: Bypasses a locked emote when you press its hotbar slot.\nRight-click an emote in the main window to assign it to a slot.
+settings.hotbar_bypass.help = 단축바 칸을 누르면 잠긴 감정 표현을 우회합니다.\n메인 창에서 감정 표현을 오른쪽 클릭하면 칸에 등록할 수 있습니다.
+# Source: Loops on idle poses
+settings.idle_pose_loops = 대기 자세에서 반복
+# Source: Kept swaps per emote
+settings.kept_swaps = 감정 표현당 유지할 교체
+# Source: Language
+settings.language = 언어
+# Source: The language of the plugin's windows and chat messages.
+settings.language.help = 플러그인 창과 채팅 메시지의 언어입니다.
+# Source: Turn the swap off
+settings.lifetime = 교체를 끄는 시점
+# Source: Do not grey out locked emotes
+settings.locked_as_usable = 잠긴 감정 표현을 회색으로 표시하지 않기
+# Source: Keeps the emotes you have not unlocked lit in the game's emote window and on your hotbars.\nPurely cosmetic.
+settings.locked_as_usable.help = 습득하지 않은 감정 표현을 게임의 감정 표현 창과 단축바에서 밝게 표시합니다.\n외형만 바뀝니다.
+# Source: Lists the emotes you have not unlocked in the game's own emote window.\nClose and reopen the emote window for changes to appear.
+settings.locked_in_window.help = 습득하지 않은 감정 표현을 게임 자체의 감정 표현 창에 표시합니다.\n변경 사항을 보려면 감정 표현 창을 닫았다가 다시 여세요.
+# Source: Loop matching
+settings.loop_matching = 반복 일치
+# Source: Emotes used per behaviour
+settings.max_targets = 동작 유형별 사용 감정 표현 수
+# Source: How many different target emotes one kind of emote may swap to.
+settings.max_targets.help = 한 종류의 감정 표현이 교체될 수 있는 서로 다른 대상 감정 표현의 수입니다.
+# Source: Emotes your mods change
+settings.modded_targets = 모드가 변경하는 감정 표현
+# Source: Mode
+settings.mode = 모드
+# Source: Direct Play
+settings.mode.direct_play = Direct Play
+# Source: Emote Swap
+settings.mode.emote_swap = Emote Swap
+# Source: "Emote Swap" plays your emote over one your character owns, through a Penumbra mod. Other players see it over any sync service.\n"Direct Play" sends the emote to the game itself. Not every sync service supports it.
+settings.mode.help = "Emote Swap"은 Penumbra 모드를 통해 캐릭터가 보유한 감정 표현 위에 감정 표현을 재생합니다. 다른 플레이어는 어떤 동기화 서비스에서든 볼 수 있습니다.\n"Direct Play"는 감정 표현을 게임에 직접 보냅니다. 모든 동기화 서비스가 지원하지는 않습니다.
+# Source: Not running: {fault}.
+settings.not_running = 실행 중이 아님: {fault}.
+# Source: General settings
+settings.page.general = 일반 설정
+# Source: Bypass Mode
+settings.page.mode = 우회 모드
+# Source: Emote overrides
+settings.page.overrides = 감정 표현 재정의
+# Source: Enable the plugin
+settings.plugin_enabled = 플러그인 켜기
+# Source: Lets you bypass emotes with the vanilla emote commands (/beesknees, /tea, and so on) and with hotbar slots.\nThe main window and the /be command work regardless of this setting.
+settings.plugin_enabled.help = 일반 감정 표현 명령어(/beesknees, /tea 등)와 단축바 칸으로 감정 표현을 우회할 수 있게 합니다.\n메인 창과 /be 명령어는 이 설정과 관계없이 작동합니다.
+# Source: In safe mode you can only bypass emotes from the base pose (pose 0) of your current stance.
+settings.safe_mode_limit = 안전 모드에서는 현재 자세 유형의 기본 자세(자세 0)에서만 감정 표현을 우회할 수 있습니다.
+# Source: Chat messages
+settings.section.chat = 채팅 메시지
+# Source: Direct play
+settings.section.direct_play = Direct Play
+# Source: Interface
+settings.section.interface = 인터페이스
+# Source: Matching
+settings.section.matching = 일치
+# Source: Penumbra
+settings.section.penumbra = Penumbra
+# Source: Plugin
+settings.section.plugin = 플러그인
+# Source: Safety
+settings.section.safety = 안전
+# Source: Updates
+settings.section.updates = 업데이트
+# Source: Sound matching
+settings.sound_matching = 소리 일치
+# Source: Stop companion emotes when they move
+settings.stop_on_move = 동료가 움직이면 감정 표현 멈추기
+# Source: Stops your minion, pet or chocobo's looped emote when they move.
+settings.stop_on_move.help = 꼬마 친구, 소환수, 초코보가 움직이면 반복 중인 감정 표현을 멈춥니다.
+# Source: Show swap messages
+settings.swap_messages = 교체 메시지 표시
+# Source: Shows a message in chat when an emote is swapped.
+settings.swap_messages.help = 감정 표현이 교체되면 채팅에 메시지를 표시합니다.
+# Source: Not all sync services support Direct Play.
+settings.sync_services = 모든 동기화 서비스가 Direct Play를 지원하지는 않습니다.
+# Source: Translate...
+settings.translate = 번역...
+# Source: Translation
+settings.translation = 번역
+# Source: Opens the translation editor. Your translations are saved in the plugin's configuration folder. Translations or improvements are very much welcome: open an issue or a pull request on the plugin's GitHub to share yours.
+settings.translation.help = 번역 편집기를 엽니다. 번역은 플러그인의 설정 폴더에 저장됩니다. 번역이나 개선은 언제나 환영합니다. 플러그인의 GitHub에서 issue나 pull request를 열어 공유해 주세요.
+# Source: Turn matching
+settings.turn_matching = 방향 일치
+# Source: Unsafe toggle
+settings.unsafe = 안전하지 않은 설정
+# Source: This is unsafe. Forcing an emote outside your base pose is, in theory, detectable by the server.
+settings.unsafe.headline = 이 설정은 안전하지 않습니다. 기본 자세가 아닌 상태에서 감정 표현을 강제로 재생하는 것은 이론상 서버에서 감지될 수 있습니다.
+# Source: Show update notifications
+settings.update_notification = 업데이트 알림 표시
+# Source: Tells you in chat and on screen when a new version of the plugin has been installed.
+settings.update_notification.help = 플러그인의 새 버전이 설치되면 채팅과 화면으로 알려 줍니다.
+# Source: Show warning messages
+settings.warning_messages = 경고 메시지 표시
+# Source: Repeat a warning at most every
+settings.warning_throttle = 같은 경고를 다시 표시하는 최소 간격
+# Source: Default
+silk.card.default = 기본
+# Source: Every character has this emote.
+silk.card.default.text = 모든 캐릭터가 이 감정 표현을 가지고 있습니다.
+# Source: FFXIV Collect
+silk.card.ffxiv_collect = FFXIV Collect
+# Source: Open page
+silk.card.open_page = 페이지 열기
+# Source: Owned by {percent} of players
+silk.card.owned_by = 플레이어의 {percent} 보유
+# Source: Playable while
+silk.card.playable_while = 사용 가능한 상태
+# Source: Sources
+silk.card.sources = 획득처
+# Source: NEW
+silk.changelog.new = NEW
+# Source: {source} over {target}
+silk.create_mod.auto_name = {target} 위의 {source}
+# Source: Create the mod
+silk.create_mod.create = 모드 만들기
+# Source: "{mod}" is in Penumbra, enabled at the highest priority.
+silk.create_mod.done = "{mod}"이(가) Penumbra에 있으며 최고 우선순위로 켜져 있습니다.
+# Source: Creates a permanent swap mod in Penumbra. Bypass Emote never touches it afterwards. You own it and manage it like any other mod.
+silk.create_mod.intro = Penumbra에 영구 교체 모드를 만듭니다. 이후 Bypass Emote는 이 모드를 건드리지 않습니다. 다른 모드처럼 직접 소유하고 관리합니다.
+# Source: Mod
+silk.create_mod.mod = 모드
+# Source: Not unlocked
+silk.create_mod.not_unlocked = 습득하지 않음
+# Source: This emote has no animation for this body
+silk.create_mod.no_body = 이 감정 표현에는 이 체형의 동작이 없습니다
+# Source: Gives the mod the highest priority. When it is off, the mod is created at priority 0.
+silk.create_mod.priority.help = 모드의 우선순위를 가장 높게 합니다. 꺼져 있으면 모드는 우선순위 0으로 만들어집니다.
+# Source: Block as target
+silk.dock.block = 대상에서 차단
+# Source: Blocked as target
+silk.dock.blocked = 대상에서 차단됨
+# Source: Chocobo
+silk.dock.chocobo = 초코보
+# Source: Play on a companion
+silk.dock.companion = 동료에게 재생
+# Source: Favourite
+silk.dock.favourite = 즐겨찾기
+# Source: Favourited
+silk.dock.favourited = 즐겨찾기됨
+# Source: Hotbar
+silk.dock.hotbar = 단축바
+# Source: Your idle pose
+silk.dock.idle_pose = 대기 자세
+# Source: your idle pose
+silk.dock.idle_pose.lower = 대기 자세
+# Source: Locked
+silk.dock.locked = 잠김
+# Source: Loop
+silk.dock.loop = 반복
+# Source: Loop matches exactly
+silk.dock.match.loop_exact = 반복이 정확히 일치
+# Source: Loop matches leniently
+silk.dock.match.loop_lenient = 반복이 느슨하게 일치
+# Source: Sound matches exactly
+silk.dock.match.sound_exact = 소리가 정확히 일치
+# Source: Sound matches leniently
+silk.dock.match.sound_lenient = 소리가 느슨하게 일치
+# Source: Turn matches exactly
+silk.dock.match.turn_exact = 방향이 정확히 일치
+# Source: Turn matches leniently
+silk.dock.match.turn_lenient = 방향이 느슨하게 일치
+# Source: Minion
+silk.dock.minion = 꼬마 친구
+# Source: Never use this emote as a swap target
+silk.dock.never_target = 이 감정 표현을 교체 대상으로 사용하지 않기
+# Source: No text command
+silk.dock.no_command = 텍스트 명령어 없음
+# Source: Pet
+silk.dock.pet = 소환수
+# Source: Play emote
+silk.dock.play = 감정 표현 재생
+# Source: or double-click
+silk.dock.play.small = 또는 더블 클릭
+# Source: Plays through {emote}
+silk.dock.plays_through = {emote}(으)로 재생
+# Source: Pose {pose}
+silk.dock.pose = 자세 {pose}
+# Source: Preview popup
+silk.dock.preview_popup = 미리보기 팝업
+# Source: You can enable this again in the general settings at any time.
+silk.dock.preview_popup.tip = 일반 설정에서 언제든지 다시 켤 수 있습니다.
+# Source: Sound
+silk.dock.sound = 소리
+# Source: Swap preview
+silk.dock.swap_preview = 교체 미리보기
+# Source: Idle pose
+silk.dock.tag.idle_pose = 대기 자세
+# Source: Override
+silk.dock.tag.override = 재정의
+# Source: Turn
+silk.dock.turn = 방향
+# Source: {label} ({seconds})
+silk.gate.countdown = {label} ({seconds})
+# Source: {reason}\nEmote swaps may behave oddly until the build is approved. The plugin fetches updates every 10 minutes to check if it was approved.{notice}\nChecked at {time}.
+silk.gate.detail = {reason}\n빌드가 승인될 때까지 감정 표현 교체가 이상하게 동작할 수 있습니다. 플러그인은 10분마다 업데이트를 가져와 승인 여부를 확인합니다.{notice}\n{time}에 확인했습니다.
+# Source: Force approval
+silk.gate.force = 강제 승인
+# Source: Force approval is on.
+silk.gate.forced = 강제 승인이 켜져 있습니다.
+# Source: Disable force approval
+silk.gate.force_disable = 강제 승인 끄기
+# Source: Bypass Emote cannot be tested on this game client
+silk.gate.untested = Bypass Emote는 이 게임 클라이언트에서 테스트할 수 없습니다
+# Source: Waiting for this game patch to be approved
+silk.gate.waiting = 이 게임 패치의 승인을 기다리는 중
+# Source: Bypass Emote stays off until the current game version is checked. It usually takes a few hours.
+silk.gate.waiting.text = 현재 게임 버전이 확인될 때까지 Bypass Emote는 꺼져 있습니다. 보통 몇 시간이 걸립니다.
+# Source: Cross
+silk.hotbar.cross = 십자
+# Source: You can also drag an emote from the main window onto any visible hotbar slot.
+silk.hotbar.drag_hint = 메인 창에서 보이는 단축바 칸으로 감정 표현을 끌어다 놓을 수도 있습니다.
+# Source: LEFT TRIGGER
+silk.hotbar.left_trigger = 왼쪽 트리거
+# Source: Pick a slot.
+silk.hotbar.pick_slot = 칸을 고르세요.
+# Source: Pick a slot for {emote}.
+silk.hotbar.pick_slot_for = {emote}을(를) 등록할 칸을 고르세요.
+# Source: RIGHT TRIGGER
+silk.hotbar.right_trigger = 오른쪽 트리거
+# Source: Standard
+silk.hotbar.standard = 일반
+# Source: Cross hotbar {bar}, slot {slot} is empty. You can safely assign the emote.
+silk.hotbar.state.cross_empty = 십자 단축바 {bar}의 {slot}번 칸은 비어 있습니다. 안심하고 감정 표현을 등록할 수 있습니다.
+# Source: Cross hotbar {bar}, slot {slot} holds {name}. Assigning replaces it.
+silk.hotbar.state.cross_holds = 십자 단축바 {bar}의 {slot}번 칸에 {name}이(가) 있습니다. 등록하면 대체됩니다.
+# Source: Hotbar {bar}, slot {slot} is empty. You can safely assign the emote.
+silk.hotbar.state.empty = 단축바 {bar}의 {slot}번 칸은 비어 있습니다. 안심하고 감정 표현을 등록할 수 있습니다.
+# Source: Hotbar {bar}, slot {slot} holds {name}. Assigning replaces it.
+silk.hotbar.state.holds = 단축바 {bar}의 {slot}번 칸에 {name}이(가) 있습니다. 등록하면 대체됩니다.
+# Source: this emote
+silk.hotbar.this_emote = 이 감정 표현
+# Source: Add
+silk.logs.add = 추가
+# Source: Add entry
+silk.logs.add_entry = 항목 추가
+# Source: All categories
+silk.logs.all_categories = 모든 분류
+# Source: {n} categories
+silk.logs.categories.other = 분류 {n}개
+# Source: Category
+silk.logs.category_hint = 분류
+# Source: Show colors
+silk.logs.colors = 색상 표시
+# Source: No entry matches these filters.
+silk.logs.empty = 이 필터에 맞는 항목이 없습니다.
+# Source: Export
+silk.logs.export = 내보내기
+# Source: Same as /belogs: exports everything since the plugin loaded
+silk.logs.export.tip = /belogs와 같음: 플러그인을 불러온 뒤의 모든 것을 내보냅니다
+# Source: Category
+silk.logs.head.category = 분류
+# Source: Level
+silk.logs.head.level = 수준
+# Source: Message
+silk.logs.head.message = 메시지
+# Source: Source
+silk.logs.head.source = 출처
+# Source: Time
+silk.logs.head.time = 시간
+# Source: Hide category
+silk.logs.hide_category = 분류 숨기기
+# Source: Hide source
+silk.logs.hide_source = 출처 숨기기
+# Source: Hold to clear
+silk.logs.hold = 길게 눌러 지우기
+# Source: Hold to clear the database entries
+silk.logs.hold.database = 길게 눌러 데이터베이스 항목 지우기
+# Source: Hold to clear the in-memory entries
+silk.logs.hold.memory = 길게 눌러 메모리의 항목 지우기
+# Source: Critical
+silk.logs.level.critical = 심각
+# Source: Debug
+silk.logs.level.debug = 디버그
+# Source: Error
+silk.logs.level.error = 오류
+# Source: Info
+silk.logs.level.info = 정보
+# Source: Trace
+silk.logs.level.trace = 추적
+# Source: Warning
+silk.logs.level.warning = 경고
+# Source: Copy selected entries to clipboard ({n})
+silk.logs.menu.copy_entries.other = 선택한 항목을 클립보드에 복사 ({n})
+# Source: Copy entry to clipboard
+silk.logs.menu.copy_entry = 항목을 클립보드에 복사
+# Source: Copy selected line to clipboard
+silk.logs.menu.copy_line = 선택한 줄을 클립보드에 복사
+# Source: Copy selected lines to clipboard
+silk.logs.menu.copy_lines = 선택한 줄을 클립보드에 복사
+# Source: Copy selected lines from multiple entries to clipboard ({n})
+silk.logs.menu.copy_lines_multiple.other = 여러 항목에서 선택한 줄을 클립보드에 복사 ({n})
+# Source: Copy only message to clipboard
+silk.logs.menu.copy_message = 메시지만 클립보드에 복사
+# Source: Copy only messages to clipboard ({n})
+silk.logs.menu.copy_messages.other = 메시지만 클립보드에 복사 ({n})
+# Source: Delete entry
+silk.logs.menu.delete = 항목 삭제
+# Source: Hold CTRL to delete
+silk.logs.menu.delete.hint = 삭제하려면 CTRL을 누르고 있으세요
+# Source: Delete selected entries ({n})
+silk.logs.menu.delete_selected.other = 선택한 항목 삭제 ({n})
+# Source: What happened?
+silk.logs.message_hint = 무슨 일이 있었나요?
+# Source: 0 of {n} entries
+silk.logs.none_of.other = {n}개 중 0개
+# Source: Options
+silk.logs.options = 옵션
+# Source: Persist to database
+silk.logs.persist = 데이터베이스에 저장
+# Source: Search messages, categories, sources...
+silk.logs.search = 메시지, 분류, 출처 검색...
+# Source: Showing {first}-{last} of {n} entries ({total} total)
+silk.logs.showing.other = {n}개 중 {first}-{last} 표시 (총 {total}개)
+# Source: Split lines
+silk.logs.split = 줄 나누기
+# Source: Blocked emotes are never used as swap targets.
+silk.main.empty.blocked.hint = 차단한 감정 표현은 교체 대상으로 사용되지 않습니다.
+# Source: No favourited emote
+silk.main.empty.favourites = 즐겨찾기한 감정 표현이 없습니다
+# Source: Star an emote, or add one above.
+silk.main.empty.favourites.hint = 감정 표현에 별표를 하거나 위에서 추가하세요.
+# Source: Nothing matches "{query}"
+silk.main.empty.search = "{query}"와(과) 일치하는 것이 없습니다
+# Source: Search by name, command or ID.
+silk.main.empty.search.hint = 이름, 명령어, ID로 검색합니다.
+# Source: Click
+silk.main.hint.click = 클릭
+# Source: details
+silk.main.hint.details = 자세히
+# Source: Double-click
+silk.main.hint.double_click = 더블 클릭
+# Source: Drag
+silk.main.hint.drag = 끌기
+# Source: hotbar
+silk.main.hint.hotbar = 단축바
+# Source: more
+silk.main.hint.more = 더 보기
+# Source: play
+silk.main.hint.play = 재생
+# Source: play on yourself
+silk.main.hint.play_self = 자신에게 재생
+# Source: Right-click
+silk.main.hint.right_click = 오른쪽 클릭
+# Source: Emote played!
+silk.main.pill.played = 감정 표현 재생!
+# Source: Emote swapped!
+silk.main.pill.swapped = 감정 표현 교체!
+# Source: Add an emote to your favourites...
+silk.main.quick.favourite = 감정 표현을 즐겨찾기에 추가...
+# Source: blocked
+silk.main.quick.marked_blocked = 차단됨
+# Source: favourite
+silk.main.quick.marked_favourite = 즐겨찾기
+# Source: No emote matches.
+silk.main.quick.none = 일치하는 감정 표현이 없습니다.
+# Source: Allow as a swap target
+silk.main.row.allow = 교체 대상으로 허용
+# Source: Block as a swap target
+silk.main.row.block = 교체 대상에서 차단
+# Source: Add to favourites
+silk.main.row.favourite = 즐겨찾기에 추가
+# Source: Remove from favourites
+silk.main.row.unfavourite = 즐겨찾기에서 삭제
+# Source: {tab} ({count})
+silk.main.tab.tip = {tab} ({count})
+# Source: Refresh
+silk.main.toolbar.refresh = 새로 고침
+# Source: Sync everyone
+silk.main.toolbar.sync = 모두 동기화
+# Source: Apply emote on chocobo
+silk.menu.chocobo = 초코보에게 감정 표현 적용
+# Source: Assign to a hotbar slot
+silk.menu.hotbar = 단축바 칸에 등록
+# Source: Apply emote on minion
+silk.menu.minion = 꼬마 친구에게 감정 표현 적용
+# Source: Add an override
+silk.menu.override = 재정의 추가
+# Source: Apply emote on pet
+silk.menu.pet = 소환수에게 감정 표현 적용
+# Source: Play on yourself
+silk.menu.play = 자신에게 재생
+# Source: This tab makes sure a locked emote always uses one or more specific target emotes, tried in order.
+silk.overrides.intro = 이 탭에서는 잠긴 감정 표현이 항상 특정 대상 감정 표현(하나 또는 여러 개)을 순서대로 시도해 사용하도록 할 수 있습니다.
+# Source: Limited to these targets only
+silk.overrides.limited = 이 대상으로만 제한
+# Source: Locked emote
+silk.overrides.locked_emote = 잠긴 감정 표현
+# Source: Pick an emote on the left
+silk.overrides.pick = 왼쪽에서 감정 표현을 선택하세요
+# Source: {emote} plays through
+silk.overrides.plays_through = {emote}의 재생 대상
+# Source: Remove
+silk.overrides.remove = 삭제
+# Source: + Override an emote...
+silk.overrides.source = + 감정 표현 재정의...
+# Source: + Add a target emote...
+silk.overrides.target = + 대상 감정 표현 추가...
+# Source: No result
+silk.picker.no_result = 결과 없음
+# Source: OWNED
+silk.picker.owned = 보유
+# Source: Allow
+silk.settings.allow = 허용
+# Source: Allowed
+silk.settings.allowed = 허용
+# Source: Any
+silk.settings.any = 모두
+# Source: "Multiple" keeps multiple swaps active at the same time in the mod.\n"One at a time" turns the previous swaps off as soon as a new one starts.\n\nRecommended: "Multiple".
+silk.settings.behavior.help = "여러 개"는 모드에서 여러 교체를 동시에 켜 둡니다.\n"한 번에 하나"는 새 교체가 시작되는 즉시 이전 교체를 끕니다.\n\n권장: "여러 개".
+# Source: Blocked
+silk.settings.blocked = 차단
+# Source: Leave this on. Bypassing several animations in a row can look broken while it is off.
+silk.settings.cached_dispatch.alarm = 켜 두세요. 꺼져 있는 동안에는 여러 동작을 연속으로 우회할 때 깨져 보일 수 있습니다.
+# Source: Gives each bypassed emote a target emote of its own. Useful when you bypass several emotes quickly.\n\n"Off" redraws your character on every bypass.\n"When needed" spreads emotes only after a game patch breaks the cache-breaker.\n"On" always spreads emotes.\n\nRecommended: "On". "Off" is not recommended.
+silk.settings.cached_dispatch.help = 우회하는 감정 표현마다 전용 대상 감정 표현을 지정합니다. 여러 감정 표현을 빠르게 우회할 때 유용합니다.\n\n"끔"은 우회할 때마다 캐릭터를 다시 그립니다.\n"필요할 때"는 게임 패치로 캐시 우회가 작동하지 않게 된 뒤에만 감정 표현을 분산합니다.\n"켬"은 항상 감정 표현을 분산합니다.\n\n권장: "켬". "끔"은 권장하지 않습니다.
+# Source: Applies the cache-break mechanism to every emote, even the ones you own. An animation change then applies without a redraw and without stopping the emote. Experimental.
+silk.settings.cache_break.help = 소유한 감정 표현을 포함해 모든 감정 표현에 캐시 우회를 적용합니다. 그러면 다시 그리거나 감정 표현을 멈추지 않아도 동작 변경이 적용됩니다. 실험적인 기능입니다.
+# Source: The old version.
+silk.settings.classic_interface.text = 이전 버전입니다.
+# Source: Compact rows
+silk.settings.compact_rows = 간결한 행
+# Source: Much smaller rows in the emote list, to see more emotes at once.
+silk.settings.compact_rows.help = 감정 표현 목록의 행을 훨씬 작게 해서 한 번에 더 많은 감정 표현을 봅니다.
+# Source: Which emotes a source emote may spread over. Takes effect while "Spread swaps over several emotes" is on. A rank is a group of emotes with the same characteristics (turn behaviour and so on).\n\n"Same rank" only picks targets of the same rank.\n"One below" also accepts targets one rank below.\n"Any" picks any target it can find.\n\nNone of them breaks your other rules.\n\nRecommended: "One below". Pick "Same rank" for behaviour accuracy.
+silk.settings.dispatch_fidelity.help = 원본 감정 표현을 분산할 수 있는 감정 표현을 정합니다. "교체를 여러 감정 표현에 분산"이 켜져 있는 동안 적용됩니다. 등급이란 같은 특성(방향 전환 방식 등)을 가진 감정 표현의 묶음입니다.\n\n"같은 등급"은 같은 등급의 대상만 고릅니다.\n"한 단계 아래"는 한 등급 아래의 대상도 허용합니다.\n"모두"는 찾을 수 있는 대상을 고릅니다.\n\n어느 것을 골라도 다른 규칙이 깨지지 않습니다.\n\n권장: "한 단계 아래". 동작의 정확성을 원한다면 "같은 등급".
+# Source: How long the same error stays quiet after you have seen it.\n\nSet to 0 to see every one of them.
+silk.settings.error_throttle.help = 같은 오류를 한 번 본 뒤 다시 표시하지 않는 시간입니다.\n\n0으로 설정하면 모두 표시합니다.
+# Source: When no unlocked looped emote fits as a target, your current idle pose can carry the emote instead. Using the pose redraws your character.\n\n"Never" blocks idle poses as targets.\n"If nothing fits" uses the pose only when no unlocked looped emote could have played at all. An emote you blocked yourself still counts as one that could have played.\n"Allow" falls back to your idle pose whenever nothing else is available.\n\nRecommended: "If nothing fits".
+silk.settings.idle_pose_loops.help = 대상으로 맞는 습득한 반복 감정 표현이 없으면, 대신 현재 대기 자세에서 감정 표현을 재생할 수 있습니다. 자세를 사용하면 캐릭터가 다시 그려집니다.\n\n"사용 안 함"은 대기 자세를 대상으로 사용하지 않습니다.\n"맞는 것이 없을 때"는 습득한 반복 감정 표현이 전혀 재생될 수 없었을 때만 자세를 사용합니다. 직접 차단한 감정 표현도 재생될 수 있었던 것으로 계산됩니다.\n"허용"은 다른 것을 사용할 수 없을 때마다 대기 자세를 사용합니다.\n\n권장: "맞는 것이 없을 때".
+# Source: If nothing fits
+silk.settings.if_nothing_fits = 맞는 것이 없을 때
+# Source: How many swaps are kept per target emote. 0 keeps them all.\n\nA kept swap stays as an option of the generated Penumbra mod. Playing that emote again enables it without rebuilding the mod. Kept swaps make the mod bigger.
+silk.settings.kept_swaps.help = 대상 감정 표현마다 유지할 교체 수입니다. 0이면 모두 유지합니다.\n\n유지된 교체는 생성된 Penumbra 모드의 옵션으로 남습니다. 그 감정 표현을 다시 사용하면 모드를 새로 만들지 않고 켜집니다. 유지하는 교체가 많을수록 모드가 커집니다.
+# Source: Last resort
+silk.settings.last_resort = 최후의 수단
+# Source: Lenient
+silk.settings.lenient = 느슨함
+# Source: "When it ends" puts your real emote back as soon as the animation stops.\n"On the target" keeps the swap enabled until the next time you play the target emote.\n"Never" keeps the swap live until another swap claims the same target emote.\n\n"When it ends" redraws your character after every swap.\n\nRecommended: "On the target".
+silk.settings.lifetime.help = "끝날 때"는 동작이 멈추는 즉시 원래 감정 표현으로 되돌립니다.\n"대상 사용 시"는 다음에 대상 감정 표현을 사용할 때까지 교체를 켜 둡니다.\n"사용 안 함"은 다른 교체가 같은 대상 감정 표현을 차지할 때까지 교체를 켜 둡니다.\n\n"끝날 때"는 교체할 때마다 캐릭터를 다시 그립니다.\n\n권장: "대상 사용 시".
+# Source: Show locked emotes in the game emote window
+silk.settings.locked_in_window = 게임 감정 표현 창에 잠긴 감정 표현 표시
+# Source: "Strict" only puts a looping emote on another looping one.\n"Lenient" lets a looping emote play once on a one time emote when no better match exists.\n\nRecommended: "Strict". Pick "Lenient" when you own few emotes.
+silk.settings.loop_matching.help = "엄격함"은 반복 감정 표현을 다른 반복 감정 표현에만 적용합니다.\n"느슨함"은 더 나은 일치가 없을 때 반복 감정 표현을 1회성 감정 표현에서 한 번 재생하게 합니다.\n\n권장: "엄격함". 보유한 감정 표현이 적다면 "느슨함".
+# Source: Adopt Malou, the orange cat
+silk.settings.malou = 주황색 고양이 말루 입양하기
+# Source: He's really cute.
+silk.settings.malou.help = 정말 귀여워요.
+# Source: Whether an unlocked emote that one of your mods changes may be used as a target. Other players can see that modded emote for a moment before the swap takes place.\n\n"Allowed" uses them freely.\n"Last resort" uses one only when nothing else fits.\n"Blocked" never uses one. The chat error then offers to disable the mod or open it in Penumbra.\n\nRecommended: "Last resort". Pick "Blocked" to keep your modded emotes out of sight.
+silk.settings.modded_targets.help = 모드가 변경하는 습득한 감정 표현을 대상으로 사용할 수 있는지 정합니다. 교체가 적용되기 전에 그 모드의 감정 표현이 다른 플레이어에게 잠깐 보일 수 있습니다.\n\n"허용"은 자유롭게 사용합니다.\n"최후의 수단"은 다른 것이 맞지 않을 때만 사용합니다.\n"차단"은 사용하지 않습니다. 채팅 오류에서 모드를 끄거나 Penumbra에서 열 수 있습니다.\n\n권장: "최후의 수단". 모드가 적용된 감정 표현을 보이지 않게 하려면 "차단".
+# Source: Multiple
+silk.settings.multiple = 여러 개
+# Source: Never
+silk.settings.never = 사용 안 함
+# Source: The one you are looking at.
+silk.settings.new_interface.text = 지금 보고 있는 것입니다.
+# Source: Off
+silk.settings.off = 끔
+# Source: On
+silk.settings.on = 켬
+# Source: One at a time
+silk.settings.one_at_a_time = 한 번에 하나
+# Source: One below
+silk.settings.one_below = 한 단계 아래
+# Source: On the target
+silk.settings.on_the_target = 대상 사용 시
+# Source: Enable preview popup
+silk.settings.preview_popup = 미리보기 팝업 켜기
+# Source: On: clicking an emote opens a panel next to the window, and a double-click plays it. In Emote Swap the panel also previews the swap. Off: no panel, a single click plays the emote.
+silk.settings.preview_popup.help = 켬: 감정 표현을 클릭하면 창 옆에 패널이 열리고, 더블 클릭하면 재생합니다. Emote Swap에서는 패널에 교체 미리보기도 표시됩니다. 끔: 패널 없이 한 번 클릭하면 감정 표현을 재생합니다.
+# Source: Recommended
+silk.settings.recommended = 권장
+# Source: Safe mode is not a guarantee either. It keeps Direct Play out of the states where it was proved to go wrong. Emote Swap is the safe option and behaves almost the same way.
+silk.settings.safe_mode_not_a_promise = 안전 모드도 보장은 아닙니다. 문제가 발생한다고 확인된 상태에서는 Direct Play를 사용하지 않게 합니다. Emote Swap이 안전한 선택이며 거의 같은 방식으로 동작합니다.
+# Source: Same rank
+silk.settings.same_rank = 같은 등급
+# Source: Emote list
+silk.settings.section.emote_list = 감정 표현 목록
+# Source: "Strict" never puts an emote on one that makes sound.\n"Lenient" allows matching emotes that make sounds together.\n"Off" plays emotes regardless of sound.\n\nSound matching keeps other players from hearing an emote you did not play.\n\nRecommended: "Lenient".
+silk.settings.sound_matching.help = "엄격함"은 소리가 있는 감정 표현에는 절대 적용하지 않습니다.\n"느슨함"은 소리가 있는 감정 표현끼리 맞추는 것을 허용합니다.\n"끔"은 소리와 관계없이 감정 표현을 재생합니다.\n\n소리 일치는 당신이 사용하지 않은 감정 표현의 소리를 다른 플레이어가 듣지 않게 합니다.\n\n권장: "느슨함".
+# Source: Strict
+silk.settings.strict = 엄격함
+# Source: Emotes turn your character differently when you have a target. Some turn the torso (/hum). Some turn only the head (/stepdance). Some only move the eyes (/beesknees). Some do not move at all (/guard).\n\n"Very strict" only picks emotes that behave the same way.\n"Strict" keeps the head and body turn, and allows a different eye behaviour.\n"Lenient" allows any turn behaviour.\n\nThe best match is always tried first.\n\nRecommended: "Lenient".
+silk.settings.turn_matching.help = 대상이 있을 때 감정 표현마다 캐릭터의 방향을 바꾸는 방식이 다릅니다. 상체를 돌리는 것(/hum), 고개만 돌리는 것(/stepdance), 눈만 움직이는 것(/beesknees), 전혀 움직이지 않는 것(/guard)이 있습니다.\n\n"매우 엄격함"은 같은 방식으로 움직이는 감정 표현만 고릅니다.\n"엄격함"은 고개와 몸의 방향 전환은 유지하고, 눈의 움직임 차이는 허용합니다.\n"느슨함"은 어떤 방향 전환 방식이든 허용합니다.\n\n항상 가장 잘 맞는 것을 먼저 시도합니다.\n\n권장: "느슨함".
+# Source: Lets Direct Play bypass an emote in any pose.\n\nLeave it off unless you know what you are doing. When it is off, the plugin only plays emotes from states where nothing can be noticed.
+silk.settings.unsafe.help = Direct Play로 어떤 자세에서든 감정 표현을 우회할 수 있게 합니다.\n\n무엇을 하는지 잘 모른다면 꺼 두세요. 꺼져 있으면 플러그인은 아무것도 눈치챌 수 없는 상태에서만 감정 표현을 재생합니다.
+# Source: In practice it is a non-issue. Other tools and plugins have done this for years without trouble. Go back to safe mode, or to Emote Swap, if you are uncomfortable with it.
+silk.settings.unsafe.reassurance = 실제로는 문제가 되지 않습니다. 다른 도구와 플러그인은 몇 년 동안 문제없이 이렇게 해 왔습니다. 불안하다면 안전 모드나 Emote Swap으로 돌아가세요.
+# Source: Very strict
+silk.settings.very_strict = 매우 엄격함
+# Source: Shows a warning in chat when a swap did not happen the way you would expect.
+silk.settings.warning_messages.help = 교체가 예상과 다르게 이루어졌을 때 채팅에 경고를 표시합니다.
+# Source: How long the same warning stays quiet after you have seen it.\n\nSet to 0 to disable.
+silk.settings.warning_throttle.help = 같은 경고를 한 번 본 뒤 다시 표시하지 않는 시간입니다.\n\n0으로 설정하면 끕니다.
+# Source: When it ends
+silk.settings.when_it_ends = 끝날 때
+# Source: When needed
+silk.settings.when_needed = 필요할 때
+# Source: Classic interface
+skin.classic = 클래식 인터페이스
+# Source: New interface
+skin.silk = 새 인터페이스
+# Source: Changelog
+title.changelog = 업데이트 내역
+# Source: Show changelogs
+title.changelogs = 업데이트 내역 보기
+# Source: Join the Discord
+title.discord = Discord 참여하기
+# Source: Show every logs
+title.every_logs = 모든 로그 보기
+# Source: Support me
+title.kofi = 후원하기
+# Source: All logs
+title.logs = 모든 로그
+# Source: Open settings
+title.open_settings = 설정 열기
+# Source: Settings
+title.settings = 설정
+# Source: Changelog
+window.changelog.subtitle = 업데이트 내역
+# Source: Create a mod
+window.create_mod.subtitle = 모드 만들기
+# Source: Bypass Emote - Create a mod
+window.create_mod.title = Bypass Emote - 모드 만들기
+# Source: Assign to a hotbar
+window.hotbar.subtitle = 단축바에 등록
+# Source: Logs
+window.logs.subtitle = 로그
+# Source: Locked emotes
+window.main.subtitle = 잠긴 감정 표현
+# Source: Bypass Emote - Locked Emotes
+window.main.title = Bypass Emote - 잠긴 감정 표현
+# Source: Settings
+window.settings.subtitle = 설정
+# Source: Bypass Emote
+window.settings.title = Bypass Emote

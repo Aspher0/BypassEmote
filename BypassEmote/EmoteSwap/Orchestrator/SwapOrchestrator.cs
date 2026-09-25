@@ -1,6 +1,7 @@
 using BypassEmote.Enums;
 using BypassEmote.Helpers;
 using BypassEmote.IPC;
+using BypassEmote.Localization;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using Lumina.Excel.Sheets;
@@ -19,14 +20,13 @@ public sealed partial class SwapOrchestrator : IDisposable
 {
     private const string LogPrefix = "[SwapOrchestrator] ";
 
-    private const string CatalogLoadingMessage = "Still loading emote data. Try again in a moment.";
-    private const string GenericFailureMessage = "Something went wrong. Emote not swapped.";
-    private const string NoCollectionMessage = "No Penumbra collection is assigned to your character. Emote not swapped.";
+    private static ChatText CatalogLoadingMessage => L.CatalogLoading;
+    private static ChatText GenericFailureMessage => L.SwapFailed;
+    private static ChatText NoCollectionMessage => L.SwapNoCollection;
 
-    private string PenumbraUnavailableMessage => $"{_penumbra.UnavailableReason} Emote not swapped.";
+    private ChatText PenumbraUnavailableMessage => ChatText.Of(L.SwapPenumbraUnavailable, "reason", _penumbra.Unavailable);
 
-    private const string NoCharacterMessage =
-        "Penumbra could not say which collection your character uses. Emote not swapped.";
+    private static ChatText NoCharacterMessage => L.SwapNoCharacter;
 
     private readonly IPCCaller_Penumbra _penumbra;
     private readonly EmoteAttributeCatalog _catalog;
@@ -263,7 +263,8 @@ public sealed partial class SwapOrchestrator : IDisposable
         }
 
         if (!EmoteHelper.MeetsEnvironmentFor(localPlayer, source.RowId))
-            return Refuse($"/{source.Command} needs {EmoteHelper.EnvironmentRequirementFor(source.RowId)}.");
+            return Refuse(ChatText.Of(L.NeedsEnvironment, "command", source.Command, "requirement",
+                EmoteHelper.EnvironmentRequirementFor(source.RowId) ?? string.Empty));
 
         if (GameEmoteCooldownActive())
         {
@@ -279,7 +280,7 @@ public sealed partial class SwapOrchestrator : IDisposable
 
         return new PipelineStart(localPlayer, WithConditionVariant(source, condition), condition, collection.Id);
 
-        static PipelineStart? Refuse(string message)
+        static PipelineStart? Refuse(ChatText message)
         {
             LogHelper.Error(message);
             return null;

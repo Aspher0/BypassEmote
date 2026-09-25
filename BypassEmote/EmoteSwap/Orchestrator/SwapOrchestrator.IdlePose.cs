@@ -1,11 +1,13 @@
 using BypassEmote.Enums;
 using BypassEmote.Helpers;
+using BypassEmote.Localization;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using NoireLib.Animations.Helpers;
 using NoireLib.Animations.PapFormat;
+using NoireLib.Localizer;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,8 +22,8 @@ public sealed partial class SwapOrchestrator
     internal static bool TargetDropsSourceIntro(EmoteAttributes source, EmoteAttributes target)
         => source.Intro == IntroKind.Pap && target.Intro != IntroKind.Pap;
 
-    internal static string TargetIntroDroppedMessageFor(EmoteAttributes target)
-        => $"This emote landed on a {(target.LoopKind == EmotePlayType.Looped ? "loop only" : "one shot")} target with no intro. You will not see the intro play.";
+    internal static ChatText TargetIntroDroppedMessageFor(EmoteAttributes target)
+        => target.LoopKind == EmotePlayType.Looped ? L.IntroDroppedLoop : L.IntroDroppedOneShot;
 
     internal static bool IdlePoseDropsSourceIntro(string? poseStartRelativePapPath, IntroKind sourceIntro,
         string? sourceIntroRequestedPath)
@@ -43,23 +45,23 @@ public sealed partial class SwapOrchestrator
         RedrawFailed,
     }
 
-    internal static string IdlePoseCauseFor(IdlePoseFailure reason) => reason switch
+    internal static NoireString IdlePoseCauseFor(IdlePoseFailure reason) => reason switch
     {
-        IdlePoseFailure.StillInAnotherEmote => "Your character is still in another emote. Move, or change pose, then try again.",
-        IdlePoseFailure.MountedOrRiding => "Your character is mounted. There is no idle pose to borrow.",
-        IdlePoseFailure.PoseHasNoRedirectablePap => "This pose cannot be changed.",
-        IdlePoseFailure.PosePapNotFound => "Your pose animation could not be found.",
-        IdlePoseFailure.SourceHasNoVariant => "That emote has no animation to lend.",
-        IdlePoseFailure.SourcePapNotFound => "That emote's animation could not be found.",
-        IdlePoseFailure.PosePapCouldNotBeBuilt => "Your pose animation could not be rebuilt.",
-        IdlePoseFailure.CollectionUnavailable => "Penumbra could not say which collection your character uses.",
-        IdlePoseFailure.ModCouldNotBeApplied => "The swap mod could not be turned on.",
-        IdlePoseFailure.RedrawFailed => "Your character could not be refreshed.",
-        _ => "Something went wrong.",
+        IdlePoseFailure.StillInAnotherEmote => L.IdleStillInEmote,
+        IdlePoseFailure.MountedOrRiding => L.IdleMounted,
+        IdlePoseFailure.PoseHasNoRedirectablePap => L.IdlePoseUnchangeable,
+        IdlePoseFailure.PosePapNotFound => L.IdlePoseNotFound,
+        IdlePoseFailure.SourceHasNoVariant => L.IdleNothingToLend,
+        IdlePoseFailure.SourcePapNotFound => L.IdleSourceNotFound,
+        IdlePoseFailure.PosePapCouldNotBeBuilt => L.IdlePoseNotRebuilt,
+        IdlePoseFailure.CollectionUnavailable => L.IdleNoCollection,
+        IdlePoseFailure.ModCouldNotBeApplied => L.IdleModNotOn,
+        IdlePoseFailure.RedrawFailed => L.IdleNotRefreshed,
+        _ => L.IdleSomethingWrong,
     };
 
-    internal static string IdlePoseFailureLine(IdlePoseFailure reason)
-        => $"Could not use your idle pose for this emote. {IdlePoseCauseFor(reason)}";
+    internal static ChatText IdlePoseFailureLine(IdlePoseFailure reason)
+        => ChatText.Of(L.IdlePoseFailed, "cause", (ChatText)IdlePoseCauseFor(reason));
 
     internal static EmoteController.PoseType? StanceFromMode(CharacterModes mode, byte modeParam)
         => IdlePoseData.StanceFromMode(mode, modeParam);
@@ -254,10 +256,10 @@ public sealed partial class SwapOrchestrator
                 ? [posePaths.LoopRelativePapPath, poseStart]
                 : [posePaths.LoopRelativePapPath]);
 
-        LogHelper.SwapLine(source.Command, "idle pose");
+        LogHelper.SwapLine(source.Command, (ChatText)L.IdlePoseSwapTarget);
 
         if (IdlePoseDropsSourceIntro(posePaths.StartRelativePapPath, source.Intro, sourceIntroRequestedPath))
-            LogHelper.Notice("Your idle 0 pose has no intro. This emote's intro will not play. Try changing pose.");
+            LogHelper.Notice(L.IdleZeroNoIntro);
 
         if (ArmsIdlePoseWatch(Configuration.SwapLifetime))
             _endWatcher.ArmIdlePose(entry!, () => _penumbra.RedrawLocalPlayer(), () => ArmPoseCacheBreak(poseType, poseIndex));

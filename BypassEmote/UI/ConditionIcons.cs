@@ -8,23 +8,6 @@ namespace BypassEmote.UI;
 // The ten condition icons the game's own emote window shows
 internal static class ConditionIcons
 {
-    private const string UldPath = "ui/uld/emote.uld";
-    private const uint PartListId = 15;
-
-    private static readonly (EmoteCondition Condition, int Part)[] Order =
-    [
-        (EmoteCondition.Standing, 4),
-        (EmoteCondition.Swimming, 5),
-        (EmoteCondition.Diving, 6),
-        (EmoteCondition.SittingOnGround, 0),
-        (EmoteCondition.SittingInChair, 1),
-        (EmoteCondition.Mounted, 2),
-        (EmoteCondition.HoldingUmbrella, 7),
-        (EmoteCondition.HoldingTorch, 9),
-        (EmoteCondition.WearingFashionAccessory, 8),
-        (EmoteCondition.Fishing, 3),
-    ];
-
     private static readonly Vector4 Lit = Vector4.One;
     private static readonly Vector4 Unlit = new(1f, 1f, 1f, 0.18f);
 
@@ -32,9 +15,9 @@ internal static class ConditionIcons
     {
         var drawn = false;
 
-        foreach (var (condition, partIndex) in Order)
+        foreach (var condition in EmoteHelper.ConditionIconOrder)
         {
-            if (UldHelper.PartTexture(UldPath, PartListId, partIndex) is not { } part)
+            if (EmoteHelper.GetConditionIcon(condition) is not { } part)
                 continue;
 
             if (drawn)

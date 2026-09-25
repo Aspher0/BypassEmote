@@ -452,8 +452,7 @@ public class DebugWindow : Window, IDisposable
                     var iconSize = 25f;
                     try
                     {
-                        var iconTex = NoireService.TextureProvider.GetFromGameIcon(Helpers.CommonHelper.GetEmoteIcon(emote));
-                        var wrap = iconTex?.GetWrapOrEmpty();
+                        var wrap = IconHelper.Get(Helpers.CommonHelper.GetEmoteIcon(emote))?.GetWrapOrEmpty();
                         if (wrap != null)
                         {
                             var posY = ImGui.GetCursorPosY();
@@ -483,7 +482,7 @@ public class DebugWindow : Window, IDisposable
         ImGui.SameLine();
 
         var localPlayer = NoireService.ObjectTable.LocalPlayer;
-        var target = CommonHelper.GetLocalTarget();
+        var target = GameObjectHelper.GetLocalTarget();
         var executedAction = selectedEmoteId == 0 ? ExecutedAction.StoppedEmote : ExecutedAction.StartedEmote;
         var currentState = CurrentState.Stopped;
 
@@ -554,7 +553,7 @@ public class DebugWindow : Window, IDisposable
         {
             if (child)
             {
-                if (CommonHelper.GetLocalTarget() is ICharacter targettedChar)
+                if (GameObjectHelper.GetLocalTarget() is ICharacter targettedChar)
                 {
                     var ipcData = IpcProvider.GetStateForCharacter(targettedChar.Address);
 

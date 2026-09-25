@@ -1,4 +1,5 @@
 using BypassEmote.EmoteSwap;
+using BypassEmote.Localization;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Plugin;
@@ -156,12 +157,14 @@ public sealed class IPCCaller_Penumbra : IDisposable
         }
     }
 
-    public string UnavailableReason => Readiness switch
+    public string UnavailableReason => Unavailable.Display;
+
+    public ChatText Unavailable => Readiness switch
     {
-        PenumbraReadiness.Ready => string.Empty,
-        PenumbraReadiness.TooOld => $"Bypass Emote needs Penumbra {RequiredPenumbraVersion} or newer. Update Penumbra "
-            + $"(its interface reads {_reportedBreaking}.{_reportedFeature}).",
-        _ => "Penumbra is not running. Emote Swap needs it installed.",
+        PenumbraReadiness.Ready => ChatText.Empty,
+        PenumbraReadiness.TooOld => ChatText.Of(L.PenumbraTooOld, "version", RequiredPenumbraVersion, "api",
+            $"{_reportedBreaking}.{_reportedFeature}"),
+        _ => L.PenumbraMissing,
     };
 
     public string ResolvePlayerPath(string gamePath)

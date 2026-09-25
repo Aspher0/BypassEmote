@@ -32,7 +32,7 @@ public sealed class SwapModManager
     private static readonly IReadOnlyDictionary<string, string> NoRedirects = new Dictionary<string, string>();
 
     private const string GeneratedModDescription =
-        "Made by BypassEmote automatically. Safe to disable or delete. BypassEmote will recreate it when needed.";
+        "Made by Bypass Emote automatically. Safe to disable or delete. Bypass Emote will recreate it when needed.";
 
     internal static ModMeta MetaFor(string modName)
         => new(modName, Service.PenumbraModAuthor, GeneratedModDescription, Service.PenumbraModVersion,
@@ -73,7 +73,7 @@ public sealed class SwapModManager
 
     private SwapModNames? ActiveNames => _identity.Names ?? _boundNames;
 
-    private string GeneratedModName => _identity.Names?.Display ?? "BypassEmote Generated";
+    private string GeneratedModName => _identity.Names?.Display ?? "Bypass Emote Generated";
 
     private string? CharacterDirectory
         => _identity.Names is { } names ? CharacterDirectoryCore(_configDirectory, names.CharacterKey) : null;

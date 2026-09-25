@@ -1,5 +1,6 @@
 using BypassEmote.Enums;
 using BypassEmote.Helpers;
+using BypassEmote.Localization;
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
@@ -7,6 +8,7 @@ using Lumina.Excel.Sheets;
 using NoireLib.Animations.Helpers;
 using NoireLib.Enums;
 using NoireLib.Helpers;
+using NoireLib.Localizer;
 using System;
 using System.Collections.Generic;
 
@@ -124,31 +126,33 @@ internal static class DirectPlayPlanner
             : specification.SpecificOneShotActionTimelineSlot;
     }
 
-    internal static string RefusalMessageFor(Emote emote, PlayerState state)
+    internal static ChatText RefusalMessageFor(Emote emote, PlayerState state)
         => RefusalMessage(
             (emote.TextCommand.ValueNullable?.Command.ExtractText() ?? string.Empty).TrimStart('/'),
             state.Condition,
             state.OrnamentName);
 
-    internal static string RefusalMessage(string command, EmoteCondition condition, string? ornamentName = null)
-        => $"/{command} cannot be played {Describe(condition, ornamentName)}.";
-
-    private static string Describe(EmoteCondition condition, string? ornamentName) => condition switch
+    internal static ChatText RefusalMessage(string command, EmoteCondition condition, string? ornamentName = null)
     {
-        EmoteCondition.HoldingUmbrella or EmoteCondition.HoldingTorch
-            when !string.IsNullOrWhiteSpace(ornamentName) => $"while carrying your {ornamentName}",
+        if (condition is EmoteCondition.HoldingUmbrella or EmoteCondition.HoldingTorch && !string.IsNullOrWhiteSpace(ornamentName))
+            return ChatText.Of(L.RefusedCarrying, "command", command, "ornament", ornamentName);
 
-        EmoteCondition.Standing => "while standing",
-        EmoteCondition.Swimming => "while swimming",
-        EmoteCondition.Diving => "while diving",
-        EmoteCondition.SittingOnGround => "while sitting on the ground",
-        EmoteCondition.SittingInChair => "while sitting in a chair",
-        EmoteCondition.Mounted => "while mounted",
-        EmoteCondition.HoldingUmbrella => "while holding an umbrella",
-        EmoteCondition.HoldingTorch => "while holding a torch",
-        EmoteCondition.WearingFashionAccessory => "while wearing a fashion accessory",
-        EmoteCondition.Fishing => "while fishing",
-        _ => "right now",
+        return ChatText.Of(Describe(condition), "command", command);
+    }
+
+    private static NoireString Describe(EmoteCondition condition) => condition switch
+    {
+        EmoteCondition.Standing => L.RefusedStanding,
+        EmoteCondition.Swimming => L.RefusedSwimming,
+        EmoteCondition.Diving => L.RefusedDiving,
+        EmoteCondition.SittingOnGround => L.RefusedGroundSitting,
+        EmoteCondition.SittingInChair => L.RefusedChairSitting,
+        EmoteCondition.Mounted => L.RefusedMounted,
+        EmoteCondition.HoldingUmbrella => L.RefusedUmbrella,
+        EmoteCondition.HoldingTorch => L.RefusedTorch,
+        EmoteCondition.WearingFashionAccessory => L.RefusedAccessory,
+        EmoteCondition.Fishing => L.RefusedFishing,
+        _ => L.RefusedRightNow,
     };
 
     internal static IReadOnlyList<int> SlotPreferenceFor(EmoteCondition condition)

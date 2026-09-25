@@ -96,7 +96,7 @@ internal static class SessionLog
 
         using var writer = new StreamWriter(path, false, new UTF8Encoding(false));
 
-        writer.WriteLine($"BypassEmote session log, opened {startedAt.ToString(StampFormat, CultureInfo.InvariantCulture)}");
+        writer.WriteLine($"Bypass Emote session log, opened {startedAt.ToString(StampFormat, CultureInfo.InvariantCulture)}");
         writer.WriteLine($"{total} line(s) recorded, {dropped} dropped, {snapshot.Length} kept below.");
         writer.WriteLine();
 

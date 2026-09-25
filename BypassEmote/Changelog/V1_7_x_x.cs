@@ -22,8 +22,8 @@ public class V1_7_x_x : BaseChangelogVersion
             Description = "Enhances the target handling and the emote bypassing.",
             Entries = new List<ChangelogEntry>
             {
-                Header("New Features", Orange, 0, FontAwesomeIcon.Book),
-                EntryBullet("BypassEmote now handles hotbar emote slots. If you click a locked emote hotbar slot (greyed out), the emote will play.", Orange, 1),
+                Header("New Features", Orange, 0, FontAwesomeIcon.Star),
+                EntryBullet("Bypass Emote now handles hotbar emote slots. If you click a locked emote hotbar slot (greyed out), the emote will play.", Orange, 1),
                 Separator(),
                 Header("Bug fixes", LightRed, 0, FontAwesomeIcon.Bug),
                 EntryBullet("The soft target is now properly handled. If you have both a target and a soft target, bypassing an emote will prioritize the soft target.", White, 1),
@@ -45,7 +45,7 @@ public class V1_7_x_x : BaseChangelogVersion
             Description = "Allows to add emotes to hotbars.",
             Entries = new List<ChangelogEntry>
             {
-                Header("New Features", Orange, 0, FontAwesomeIcon.Book),
+                Header("New Features", Orange, 0, FontAwesomeIcon.Star),
                 EntryBullet("Added the possibility to assign emotes to hotbar slots.\nRight click an emote in the main UI, and an option will appear if the emote is assignable.", Orange, 1),
                 EntryBullet("Added a new config option for enabling/disabling bypassing emotes on emote hotbar slot click.", White, 1),
             }

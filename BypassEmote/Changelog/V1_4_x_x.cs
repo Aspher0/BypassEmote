@@ -25,7 +25,7 @@ public class V1_4_x_x : BaseChangelogVersion
             Description = "Major update introducing a comprehensive changelog system with UI integration, configuration tracking, and enhanced user experience features.",
             Entries = new List<ChangelogEntry>
             {
-                Header("Changelog system", Orange, 0, FontAwesomeIcon.Book),
+                Header("Changelog system", Orange, 0, FontAwesomeIcon.Star),
                 EntryBullet("Introduced ChangelogWindow UI for viewing updates", Blue, 1),
                     EntryBullet("Accessible via main plugin window book button", null, 2),
                     EntryBullet("Clean, organized display of version history", null, 2),
@@ -38,13 +38,13 @@ public class V1_4_x_x : BaseChangelogVersion
 
                 Separator(),
 
-                Header("Added new emote data collected from FFXIVCollect", Orange, 0, FontAwesomeIcon.Database),
+                Header("Added new emote data collected from FFXIVCollect", Orange, 0, FontAwesomeIcon.Star),
                     EntryBullet("Added which patch the emote is from", null, 1),
                     EntryBullet("Added the obtention methods to get the emote", null, 1),
 
                 Separator(),
 
-                Header("Configuration & Settings", Orange, 0, FontAwesomeIcon.Cog),
+                Header("Configuration & Settings", Orange, 0, FontAwesomeIcon.Star),
                 EntryBullet("Updated configuration system to track changelog versions", null, 1),
                     EntryBullet("Show changelog on update", Blue, 2),
                     EntryBullet("Last seen changelog version tracking", null, 2),
@@ -52,7 +52,7 @@ public class V1_4_x_x : BaseChangelogVersion
 
                 Separator(),
 
-                Header("User Interface", Orange, 0, FontAwesomeIcon.Eye),
+                Header("User Interface", Orange, 0, FontAwesomeIcon.Star),
                 EntryBullet("Enhanced main plugin window with new action buttons in the title bar", null, 1),
                     EntryBullet("Added changelog button in title bar", Blue, 2),
                     EntryBullet("New settings access button", Blue, 2),

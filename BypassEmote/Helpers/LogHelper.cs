@@ -1,3 +1,4 @@
+using BypassEmote.Localization;
 using NoireLib;
 using NoireLib.Helpers;
 using NoireLib.HistoryLogger;
@@ -10,7 +11,7 @@ namespace BypassEmote.Helpers;
 
 public static class LogHelper
 {
-    public const string ChatTag = "[BypassEmote] ";
+    public const string ChatTag = "[Bypass Emote] ";
 
     private static readonly Logger Channel = new(ChatTag, "BypassEmote", "BypassEmote.Feedback");
 
@@ -22,30 +23,38 @@ public static class LogHelper
 
     internal static string ThrottleKeyFor(string channelKey, string kind) => channelKey + kind;
 
-    public static void Error(string message, string? kind = null, NoireLogger.ChatMessageBuilder? chat = null)
-        => Channel.Say(message, ErrorColor, "Error", HistoryLogLevel.Error,
+    internal static int ErrorCount { get; private set; }
+
+    public static void Error(ChatText message, string? kind = null, NoireLogger.ChatMessageBuilder? chat = null)
+    {
+        ErrorCount++;
+        Channel.Say(message, ErrorColor, "Error", HistoryLogLevel.Error,
             Configuration.ShowErrorMessages, Configuration.ThrottleTimeErrors,
             kind == null ? null : ThrottleKeyFor("Error", kind), chat);
+    }
 
-    public static void Notice(string message, string? kind = null, NoireLogger.ChatMessageBuilder? chat = null)
+    public static void Notice(ChatText message, string? kind = null, NoireLogger.ChatMessageBuilder? chat = null)
         => Channel.Say(message, WarningColor, "Warning", HistoryLogLevel.Warning,
             Configuration.ShowWarningMessages, Configuration.ThrottleTimeWarnings,
             kind == null ? null : ThrottleKeyFor("Warning", kind), chat);
 
-    public static void NoticeAlways(string message, NoireLogger.ChatMessageBuilder? chat = null)
+    public static void NoticeAlways(ChatText message, NoireLogger.ChatMessageBuilder? chat = null)
         => Channel.SayAlways(message, WarningColor, "Warning", HistoryLogLevel.Warning, chat);
 
-    public static void Success(string message)
+    public static void Success(ChatText message)
         => Channel.SayAlways(message, SuccessColor, "Info");
 
-    public static void Info(string message)
+    public static void Info(ChatText message)
         => Channel.SayAlways(message, InfoColor, "Info");
 
     public static void SwapLine(string sourceCommand, string targetCommand)
-    {
-        var line = $"{sourceCommand} -> {targetCommand}";
+        => SwapLine(sourceCommand, ChatText.Plain(targetCommand));
 
-        if (!Configuration.ShowSwapMessages || !ShouldShowSwapLine(sourceCommand, targetCommand))
+    public static void SwapLine(string sourceCommand, ChatText target)
+    {
+        var line = new ChatText($"{sourceCommand} -> {target.Display}", $"{sourceCommand} -> {target.Record}");
+
+        if (!Configuration.ShowSwapMessages || !ShouldShowSwapLine(sourceCommand, target.Record))
         {
             Channel.Record(line, "Swap", HistoryLogLevel.Info);
             return;

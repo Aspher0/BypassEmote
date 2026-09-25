@@ -1,5 +1,6 @@
 using BypassEmote.Enums;
 using BypassEmote.Helpers;
+using BypassEmote.Localization;
 using BypassEmote.Models;
 using NoireLib;
 using System;
@@ -12,14 +13,14 @@ public sealed partial class SwapOrchestrator
     private static readonly System.Numerics.Vector3 RefusalColor = NoireLib.Helpers.ColorHelper.HexToVector3("#E81313");
     private static readonly System.Numerics.Vector3 NoticeColor = NoireLib.Helpers.ColorHelper.HexToVector3("#FF8C1A");
 
-    internal static string NoMatchMessage(EmoteAttributes source, IReadOnlyList<NearMiss> diagnostics,
+    internal static ChatText NoMatchMessage(EmoteAttributes source, IReadOnlyList<NearMiss> diagnostics,
         Func<NearMiss, string?>? modNameFor = null)
-        => string.Join('\n', NoMatchLines(source, diagnostics, modNameFor));
+        => ChatText.Join("\n", NoMatchLines(source, diagnostics, modNameFor));
 
-    internal static IReadOnlyList<string> NoMatchLines(EmoteAttributes source, IReadOnlyList<NearMiss> diagnostics,
+    internal static IReadOnlyList<ChatText> NoMatchLines(EmoteAttributes source, IReadOnlyList<NearMiss> diagnostics,
         Func<NearMiss, string?>? modNameFor = null)
     {
-        var lines = new List<string>(diagnostics.Count + 1) { $"Could not swap /{source.Command}." };
+        var lines = new List<ChatText>(diagnostics.Count + 1) { ChatText.Of(L.CouldNotSwap, "command", source.Command) };
 
         for (var index = 0; index < diagnostics.Count; index++)
         {
@@ -29,11 +30,9 @@ public sealed partial class SwapOrchestrator
                 ? modNameFor?.Invoke(miss)
                 : null;
 
-            lines.Add((index == 0 ? "Found /" : "Also found /")
-                + miss.Candidate.Command
-                + " but "
-                + NearMissReason(miss.BlockedBy, Configuration.LoopMatching, Configuration.TurnMatching,
-                    Configuration.SoundMatching, modName));
+            lines.Add(ChatText.Of(index == 0 ? L.FoundBut : L.AlsoFoundBut, "reason",
+                NearMissReason(miss.BlockedBy, Configuration.LoopMatching, Configuration.TurnMatching, Configuration.SoundMatching, modName),
+                "command", miss.Candidate.Command));
         }
 
         return lines;
@@ -61,7 +60,7 @@ public sealed partial class SwapOrchestrator
             if (index > 0)
                 chat.AddText("\n");
 
-            chat.AddText(lines[index], RefusalColor);
+            chat.AddText(lines[index].Display, RefusalColor);
 
             if (index > 0 && diagnostics[index - 1] is { } miss
                 && directoryOf.TryGetValue(miss.Candidate.RowId, out var directory))
@@ -70,39 +69,38 @@ public sealed partial class SwapOrchestrator
             }
         }
 
-        LogHelper.Error(string.Join('\n', lines), "swap.no-match", chat);
+        LogHelper.Error(ChatText.Join("\n", lines), "swap.no-match", chat);
     }
 
-    internal static string NearMissReason(string blockedBy, LoopMatchRule loopRule, TurnMatchRule turnRule,
+    internal static ChatText NearMissReason(string blockedBy, LoopMatchRule loopRule, TurnMatchRule turnRule,
         SoundMatchRule soundRule, string? blockingModName = null)
     {
         if (blockedBy == BestMatchResolver.BlockedByRules)
-            return "it is on your blocked targets list.";
+            return L.NearBlockedList;
 
         if (blockedBy == BestMatchResolver.BlockedByModdedTarget)
         {
             return string.IsNullOrEmpty(blockingModName)
-                ? "another of your mods targets it. Your configuration blocked it."
-                : $"your mod \"{blockingModName}\" targets it. Your configuration blocked it.";
+                ? L.NearOtherMod
+                : ChatText.Of(L.NearNamedMod, "mod", blockingModName);
         }
 
         if (blockedBy == "Loop" && loopRule != LoopMatchRule.Strict)
-            return "the loop kinds do not match.";
+            return L.NearLoopKinds;
 
         if (blockedBy == "Turn" && turnRule == TurnMatchRule.VeryStrict)
-            return "turn matching is very strict.";
+            return L.NearTurnVeryStrict;
 
         if (blockedBy == "Sound")
         {
             return soundRule switch
             {
-                SoundMatchRule.Strict => "it makes a sound, and your sound rule avoids every target that does.",
-                SoundMatchRule.Lenient => "it makes a sound, and your sound rule only allows that for an emote "
-                    + "that makes one too.",
-                _ => "it makes a sound.",
+                SoundMatchRule.Strict => L.NearSoundStrict,
+                SoundMatchRule.Lenient => L.NearSoundLenient,
+                _ => L.NearSound,
             };
         }
 
-        return $"{blockedBy.ToLowerInvariant()} matching is strict.";
+        return ChatText.Of(L.NearStrict, "rule", blockedBy.ToLowerInvariant());
     }
 }

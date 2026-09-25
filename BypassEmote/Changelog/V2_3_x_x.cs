@@ -22,7 +22,7 @@ public class V2_3_x_x : BaseChangelogVersion
             Description = "Reworks how animations are refreshed, and stops other players from seeing you redraw.",
             Entries = new List<ChangelogEntry>
             {
-                Header("New Features", Orange, 0, FontAwesomeIcon.Book),
+                Header("New Features", Orange, 0, FontAwesomeIcon.Star),
                 EntryBullet("Added \"Add an override...\" to the right click menu of the main UI.\n" +
                     "It opens the \"Emote overrides\" tab with the emote already picked.", Orange, 1),
                 Separator(),

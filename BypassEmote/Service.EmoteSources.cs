@@ -10,7 +10,7 @@ namespace BypassEmote;
 public partial class Service
 {
     // Dictionary: Emote RowId -> (patch, List of (source type, source text)) from ffxivcollect
-    public static Dictionary<uint, (string? Patch, List<(string Type, string Text)> Sources)> EmoteSources { get; } = new();
+    public static Dictionary<uint, (string? Patch, string? Owned, List<(string Type, string Text)> Sources)> EmoteSources { get; } = new();
 
     private static async Task FetchAndBuildEmoteSourcesAsync(CancellationToken token)
     {
@@ -64,19 +64,24 @@ public partial class Service
             }
         }
 
-        if (entries.Count == 0 && entry.Patch.IsNullOrWhitespace())
+        if (entries.Count == 0 && entry.Patch.IsNullOrWhitespace() && entry.Owned.IsNullOrWhitespace())
             return;
 
         lock (EmoteSources)
         {
             if (!EmoteSources.TryGetValue(rowId, out var existing))
             {
-                existing = (entry.Patch, new List<(string Type, string Text)>());
+                existing = (entry.Patch, entry.Owned, new List<(string Type, string Text)>());
                 EmoteSources[rowId] = existing;
             }
-            else if (existing.Patch.IsNullOrWhitespace() && !entry.Patch.IsNullOrWhitespace())
+            else
             {
-                existing.Patch = entry.Patch;
+                if (existing.Patch.IsNullOrWhitespace() && !entry.Patch.IsNullOrWhitespace())
+                    existing.Patch = entry.Patch;
+
+                if (existing.Owned.IsNullOrWhitespace() && !entry.Owned.IsNullOrWhitespace())
+                    existing.Owned = entry.Owned;
+
                 EmoteSources[rowId] = existing;
             }
 

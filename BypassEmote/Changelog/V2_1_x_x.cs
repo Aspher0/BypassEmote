@@ -21,7 +21,7 @@ public class V2_1_x_x : BaseChangelogVersion
             Description = "Added \"Always cache-break\" option for Emote Swap, and various bug fixes.",
             Entries = new List<ChangelogEntry>
             {
-                Header("New Features", Orange, 0, FontAwesomeIcon.Book),
+                Header("New Features", Orange, 0, FontAwesomeIcon.Star),
                 Entry("Added \"Always cache-break\", a new option for Emote Swap.\n" +
                     "With it on, every emote you play will be cache-broken, especially the ones you own. Play an emote, enable or disable any mod affecting that emote, " +
                     "play the emote again, the new animation refreshes and shows without needing to redraw nor to stop the emote.", Orange, 1, FontAwesomeIcon.SyncAlt, White),

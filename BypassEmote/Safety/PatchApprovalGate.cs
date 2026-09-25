@@ -1,5 +1,6 @@
 using BypassEmote.Enums;
 using BypassEmote.Helpers;
+using BypassEmote.Localization;
 using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Plugin.Services;
 using NoireLib;
@@ -44,7 +45,7 @@ public sealed class PatchApprovalGate : IDisposable
     private Task? _polling;
     private DateTime? _manualCheckRequestedUtc;
 
-    private sealed record Reading(PatchApprovalStatus Status, string Reason, string? Notice, DateTime? CheckedUtc);
+    private sealed record Reading(PatchApprovalStatus Status, LiveText Reason, string? Notice, DateTime? CheckedUtc);
 
     public PatchApprovalGate()
     {
@@ -58,12 +59,12 @@ public sealed class PatchApprovalGate : IDisposable
     private Reading FirstReading()
     {
         if (RememberedApproval())
-            return new(PatchApprovalStatus.Approved, $"Game build {GameVersion} was approved earlier.", null, null);
+            return new(PatchApprovalStatus.Approved, new(L.GateApprovedEarlier, "build", GameVersion), null, null);
 
         if (Client != GameClient.Global)
             return new(PatchApprovalStatus.Untested, PatchApproval.UntestedReason(Client), null, null);
 
-        return new(PatchApprovalStatus.Checking, "Reading the approval list.", null, null);
+        return new(PatchApprovalStatus.Checking, new(L.GateReadingList), null, null);
     }
 
     public string GameVersion { get; }
@@ -74,7 +75,9 @@ public sealed class PatchApprovalGate : IDisposable
 
     public PatchApprovalStatus Status => Volatile.Read(ref _reading).Status;
 
-    public string Reason => Volatile.Read(ref _reading).Reason;
+    public string Reason => Volatile.Read(ref _reading).Reason.Display;
+
+    public string ReasonRecord => Volatile.Read(ref _reading).Reason.Record;
 
     public string? Notice => Volatile.Read(ref _reading).Notice;
 
@@ -117,11 +120,11 @@ public sealed class PatchApprovalGate : IDisposable
         else if (Untested)
         {
             Log.Warning($"Game build '{GameVersion}' reads as the {GameClientHelper.Name(Client)} "
-                + $"client. {Reason}", LogPrefix);
+                + $"client. {ReasonRecord}", LogPrefix);
         }
         else
         {
-            Log.Warning($"Game build '{GameVersion}' is not approved: {Reason}.", LogPrefix);
+            Log.Warning($"Game build '{GameVersion}' is not approved: {ReasonRecord}.", LogPrefix);
         }
 
         Resume();
@@ -177,7 +180,7 @@ public sealed class PatchApprovalGate : IDisposable
         _document = null;
 
         Volatile.Write(ref _reading, new Reading(PatchApprovalStatus.Checking,
-            $"The approval recorded for game build {GameVersion} was dropped.", null, DateTime.UtcNow));
+            new(L.GateApprovalDropped, "build", GameVersion), null, DateTime.UtcNow));
 
         Log.Debug($"Dropped the approval recorded for game build {GameVersion}. Next check in "
             + $"{RetryInterval.TotalMinutes:0} minutes.", LogPrefix);
@@ -318,15 +321,14 @@ public sealed class PatchApprovalGate : IDisposable
 
     private static void AnnounceApproval()
     {
-        var content = "The plugin has been approved for this patch. If you noticed weird behaviors prior to this message, "
-        + "try again and it should be fixed now.";
+        ChatText content = L.ApprovedAnnouncement;
 
         LogHelper.Success(content);
 
         NoireService.NotificationManager.AddNotification(new Notification
         {
             Title = "Bypass Emote",
-            Content = content,
+            Content = content.Display,
             InitialDuration = NotificationDuration,
             Type = NotificationType.Success,
         });
@@ -349,13 +351,13 @@ public sealed class PatchApprovalGate : IDisposable
     private void Reconsider()
     {
         var reading = _document == null && Client == GameClient.Global && RememberedApproval()
-            ? new Reading(PatchApprovalStatus.Approved, $"Game build {GameVersion} was approved earlier.", null,
+            ? new Reading(PatchApprovalStatus.Approved, new(L.GateApprovedEarlier, "build", GameVersion), null,
                 LastCheckedUtc)
             : Read(PatchApproval.Decide(_document, GameVersion, PluginVersion, Client));
 
         Volatile.Write(ref _reading, reading);
 
-        Log.Debug($"The client now reads as {GameClientHelper.Name(Client)}: {reading.Reason}", LogPrefix);
+        Log.Debug($"The client now reads as {GameClientHelper.Name(Client)}: {reading.Reason.Record}", LogPrefix);
 
         Apply();
     }

@@ -24,7 +24,7 @@ public class V1_6_x_x : BaseChangelogVersion
             Description = "Enhances the emote handling both locally and while synced.",
             Entries = new List<ChangelogEntry>
             {
-                Header("New Features", Orange, 0, FontAwesomeIcon.Book),
+                Header("New Features", Orange, 0, FontAwesomeIcon.Star),
                 Entry("Added support for special emotes such as /dote and /allsaintscharm where the target would not be handled properly.", Orange, 1, FontAwesomeIcon.Users, White),
                 Entry("Added /be sync and /be syncall which will respectively sync the emotes of bypassed players only, or all players on the map.", Orange, 1, FontAwesomeIcon.Sync, White),
                 Separator(),
@@ -92,7 +92,7 @@ public class V1_6_x_x : BaseChangelogVersion
                 EntryBullet("Added support for Minions, Pets and Chocobos. You can now apply any emote to your own minions, pets and chocobos provided they have been summoned and turned human.", Blue, 1),
                 EntryBullet("Added support for Battle NPCs. You can now apply any emote Battle NPCs in the world.", Blue, 1),
                 EntryBullet("Revised IPC to support above changes.", White, 1),
-                Header("New Features", Orange, 0, FontAwesomeIcon.Book),
+                Header("New Features", Orange, 0, FontAwesomeIcon.Star),
                 EntryBullet("Added the /bem command to apply emotes to your minion, provided it's been summoned and turned human.\n" +
                     "You do not need to target the minion, and just like /bet, you can use an emote argument or the stop argument (/bem stop, /bem beesknees, /bem /tea, ...).\n" +
                     "Useful for untargettable minions such as the cushion or the campfire.", Orange, 1),

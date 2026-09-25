@@ -1,0 +1,2039 @@
+# Language file template, written by the build. Copy it to <code>.lang, such as de.lang, and write each
+# translation after its "=". A key left empty shows its source text. "# Source:" is the text a translation
+# was made from: leave it, the plugin uses it to tell when a source text changes. Your own comments are kept.
+# A plural key ending in .one or .other can take the forms the language needs: .zero, .one, .two, .few, .many, .other.
+# "@credits = Your name" credits you in the plugin's language settings.
+# Source: {target} has an adjust variant for use on someone. {source} has none. Targeting someone keeps {target}'s animation.
+advice.adjust = 
+# Source: {target} is the emote being bypassed.
+advice.being_bypassed = 
+# Source: {target} is on your blocked targets list. This override uses it anyway.
+advice.blocked = 
+# Source: {target} has an intro and {source} does not.
+advice.intro_added = 
+# Source: {target} has no intro and {source} has one. The intro will not play.
+advice.intro_dropped = 
+# Source: {target} loops while {source} plays once. Weird behavior might happen.
+advice.loops = 
+# Source: {target} has no {posture} animation. The swap will not happen when you play {source} in that posture.
+advice.missing_posture = 
+# Source: Your mod "{mod}" already changes {target}. Your "Emotes your mods change" setting still applies.
+advice.mod_changes = 
+# Source: {target} can never be a swap target (pose, facial expression, per-job emote or weapon drawn). It is always skipped.
+advice.never_target = 
+# Source: You have not unlocked {target}. It is skipped.
+advice.not_unlocked = 
+# Source: {target} and {source} share no posture. The swap will not happen.
+advice.no_posture = 
+# Source: {target} plays once while {source} loops. The animation will stop instead of looping.
+advice.plays_once = 
+# Source: chair sitting
+advice.posture.chair_sitting = 
+# Source: ground sitting
+advice.posture.ground_sitting = 
+# Source: matching
+advice.posture.matching = 
+# Source: mounted
+advice.posture.mounted = 
+# Source: {first} or {second}
+advice.posture.or = 
+# Source: standing
+advice.posture.standing = 
+# Source: {target} emits a sound that {source} does not. Everyone around you will hear it.
+advice.sound = 
+# Source: {target} will stop when you turn your character.
+advice.stops_on_turn = 
+# Source: When you target someone, {target} {target_turn} while {source} {source_turn}.
+advice.turn = 
+# Source: turns the whole body
+advice.turn.body = 
+# Source: only follows with the eyes
+advice.turn.eyes = 
+# Source: turns the head
+advice.turn.head = 
+# Source: does not turn at all
+advice.turn.none = 
+# Source: turns in a way the plugin could not read
+advice.turn.unknown = 
+# Source: {target} emits a voice line sound. Everyone around you will hear it.
+advice.voice_line = 
+# Source: New settings access button
+changelog.1.4.0.0.0298def8 = 
+# Source: Interactive elements and color-coded entries
+changelog.1.4.0.0.02fed927 = 
+# Source: Versioned changelog entries with structured data
+changelog.1.4.0.0.07adb9f9 = 
+# Source: Last seen changelog version tracking
+changelog.1.4.0.0.1416da5e = 
+# Source: Clean, organized display of version history
+changelog.1.4.0.0.210e33d8 = 
+# Source: Introduced ChangelogWindow UI for viewing updates
+changelog.1.4.0.0.2181daf2 = 
+# Source: Added changelog button in title bar
+changelog.1.4.0.0.255aa248 = 
+# Source: Configuration & Settings
+changelog.1.4.0.0.351650a7 = 
+# Source: Mark/unmark emotes as favorites
+changelog.1.4.0.0.3713c187 = 
+# Source: Show changelog on update
+changelog.1.4.0.0.3c3ec2c5 = 
+# Source: Support for rich formatting and icons
+changelog.1.4.0.0.40b56c74 = 
+# Source: Automatic changelog version tracking
+changelog.1.4.0.0.4523215d = 
+# Source: Enhanced main plugin window with new action buttons in the title bar
+changelog.1.4.0.0.481d2715 = 
+# Source: Added favorited emotes feature
+changelog.1.4.0.0.4c734a26 = 
+# Source: Added an info circle you can hover to see what patch the emote is from, and how to obtain it
+changelog.1.4.0.0.4d016422 = 
+# Source: View all favorited emotes in the "Fav" tab
+changelog.1.4.0.0.6541a8df = 
+# Source: Updated configuration system to track changelog versions
+changelog.1.4.0.0.6e5aab6b = 
+# Source: Accessible via main plugin window book button
+changelog.1.4.0.0.6e5ae035 = 
+# Source: User Interface
+changelog.1.4.0.0.7cc34557 = 
+# Source: Easily access frequently used emotes
+changelog.1.4.0.0.936392be = 
+# Source: Major update introducing a comprehensive changelog system with UI integration, configuration tracking, and enhanced user experience features.
+changelog.1.4.0.0.947b7be1 = 
+# Source: Comprehensive changelog management system
+changelog.1.4.0.0.9a9b8161 = 
+# Source: Added an option to show update notifications
+changelog.1.4.0.0.ac21cbc9 = 
+# Source: Various QoLs and Changelog System
+changelog.1.4.0.0.c163aa85 = 
+# Source: Added which patch the emote is from
+changelog.1.4.0.0.c9e99813 = 
+# Source: Donate
+changelog.1.4.0.0.da0e0147 = 
+# Source: Changelog system
+changelog.1.4.0.0.db290de8 = 
+# Source: Added new emote data collected from FFXIVCollect
+changelog.1.4.0.0.ec5c63bc = 
+# Source: Integrated support button (Ko-Fi)
+changelog.1.4.0.0.ef2d7f93 = 
+# Source: Added the obtention methods to get the emote
+changelog.1.4.0.0.fab46ec1 = 
+# Source: Improved Emote Detection
+changelog.1.4.1.0.034ead2f = 
+# Source: The game will now display Patch 7.35 game emotes.
+changelog.1.4.1.0.1ee5fa0b = 
+# Source: Fixed an incorrect detection of game emotes.
+changelog.1.4.1.0.baa86f40 = 
+# Source: You can now show emote IDs in the emote list.
+changelog.1.5.0.0.01457d86 = 
+# Source: Fixed a bug where Dalamud UI language would be used to get emote commands instead of game language when typing auto-translate emote commands.
+changelog.1.5.0.0.09bf17b8 = 
+# Source: Integrated NoireLib for improved utilities and changelog system.
+changelog.1.5.0.0.1daa9882 = 
+# Source: New Features
+changelog.1.5.0.0.36f4e595 = 
+# Source: Fixed a bug where NPCs emotes would bypass once and then block afterwards.
+changelog.1.5.0.0.551586a3 = 
+# Source: Bugfix, emote handling enhancement, and internal system change
+changelog.1.5.0.0.5c5edc35 = 
+# Source: Bug Fixes
+changelog.1.5.0.0.a199446a = 
+# Source: You can now emote while sitting, groundsitting, mounted or riding pillion.
+changelog.1.5.0.0.bce6580e = 
+# Source: Fixed emote playing capabilities, now allowing to bypass emotes when sitting or on a mount. Integrated NoireLib for improved utilities and features.
+changelog.1.5.0.0.be4c1a4e = 
+# Source: Technical Changes
+changelog.1.5.0.0.d80295d6 = 
+# Source: Refactored emote and character helpers to use NoireLib utilities.
+changelog.1.5.0.0.ed8f44b8 = 
+# Source: Emotes previously in the "Other" tab had disappeared. Those are now back.
+changelog.1.5.1.0.0dbd5cd1 = 
+# Source: New Features
+changelog.1.5.1.0.36f4e595 = 
+# Source: Refactored the code to use the new NoireLib helpers and utilities.
+changelog.1.5.1.0.5d935072 = 
+# Source: Bug Fixes
+changelog.1.5.1.0.a199446a = 
+# Source: Other various bug fixes.
+changelog.1.5.1.0.a977efbe = 
+# Source: Bugfix, new UI option and various internal changes
+changelog.1.5.1.0.bc2f8717 = 
+# Source: Technical Changes
+changelog.1.5.1.0.d80295d6 = 
+# Source: For debug purposes, you can now show absolutely *all* in game emotes, including invalid ones, with an option in the emote window. Look for "Show Invalid Emotes".
+changelog.1.5.1.0.fbc23e10 = 
+# Source: Fixed the settings to show the changelog and print in chat on update that were not enforced anymore.
+changelog.1.5.1.1.0a02634a = 
+# Source: Hotfix
+changelog.1.5.1.1.0b4d6087 = 
+# Source: Bug Hotfix
+changelog.1.5.1.1.6ced686b = 
+# Source: Bug Fixes
+changelog.1.5.1.1.a199446a = 
+# Source: Fixed the changelog that would not show anymore.
+changelog.1.5.1.1.e17c39d6 = 
+# Source: Fixed a bug where bypassing a looped emote would not cancel after mounting-dismounting, interacting with NPCs, casting, etc.
+changelog.1.6.0.0.2c6d1303 = 
+# Source: Emote handling enhancement
+changelog.1.6.0.0.3047865d = 
+# Source: New Features
+changelog.1.6.0.0.36f4e595 = 
+# Source: Fixed emote not being bypassed when you passed the emote command with parameters, such as "/beesknees motion".
+changelog.1.6.0.0.376a53ac = 
+# Source: Bug fixes
+changelog.1.6.0.0.60586b6e = 
+# Source: Enhances the emote handling both locally and while synced.
+changelog.1.6.0.0.6d3b8490 = 
+# Source: Fixed a bug where you could bypass emotes in GPose.
+changelog.1.6.0.0.718fc03b = 
+# Source: Added support for special emotes such as /dote and /allsaintscharm where the target would not be handled properly.
+changelog.1.6.0.0.80335920 = 
+# Source: Improved how the syncing works, and specifically how other players are handled when they stop emoting.
+changelog.1.6.0.0.8d9bcc24 = 
+# Source: Added /be sync and /be syncall which will respectively sync the emotes of bypassed players only, or all players on the map.
+changelog.1.6.0.0.c78311c9 = 
+# Source: Technical Changes
+changelog.1.6.0.0.d80295d6 = 
+# Source: Improved how the syncing works (again), and specifically how other players are handled when they stop emoting.\nA small delay will be added before the emote is sent over IPC.\nFurthermore, movement detections for other players has been improved to add some leeway so that the emote doesnt get stopped when the player is still moving a bit.
+changelog.1.6.1.2.0d00e73a = 
+# Source: Fixed emotes bypassing under some conditions that are not valid (Casting, in cutscene, in GPose, In event ...).
+changelog.1.6.1.2.1590a22e = 
+# Source: Fixes a few bugs with some specific emotes and syncing.
+changelog.1.6.1.2.1da6d7bb = 
+# Source: Bug fixes
+changelog.1.6.1.2.60586b6e = 
+# Source: Various bug fixes
+changelog.1.6.1.2.86e38eb0 = 
+# Source: Fixed some emotes not being bypassed properly, for example /waterfloat and /waterflip.
+changelog.1.6.1.2.d43b4901 = 
+# Source: Fixed a few bugs concerning facial expressions and facing targets.
+changelog.1.6.2.0.0faf04de = 
+# Source: Bug fixes
+changelog.1.6.2.0.60586b6e = 
+# Source: Prevented facial expressions from stopping bypassed looped emotes.
+changelog.1.6.2.0.9176a869 = 
+# Source: Facial expressions
+changelog.1.6.2.0.99905c39 = 
+# Source: Commands /be sync and /be syncall will now better handle syncing emotes that have intro + loop phases, hence improving the "syncing", where a slight delay would occur before for those type of emotes.
+changelog.1.6.2.0.c5a4e3ae = 
+# Source: Facial expression emotes no longer makes the character face its target.
+changelog.1.6.2.0.d115eae3 = 
+# Source: Additionnaly, the character will no longer rotate when emoting to itself (self-targetting).
+changelog.1.6.2.0.dae46f9f = 
+# Source: Revised IPC to support above changes.
+changelog.1.6.6.0.05394470 = 
+# Source: New Features
+changelog.1.6.6.0.36f4e595 = 
+# Source: Fixed a bug with facing targets.
+changelog.1.6.6.0.508e5f22 = 
+# Source: Bug fixes
+changelog.1.6.6.0.60586b6e = 
+# Source: Added the possibility to apply emotes to your owned entities from the emote selector window (/be) via right click.
+changelog.1.6.6.0.9e2cc2d8 = 
+# Source: Added a configuration option to choose whether you want your minion, pet or chocobo to stop emoting when it moves.\nUseful for the Plush Cushion or the Campfire if you're using SimpleHeels' temporary offsets, or for non-static entities.
+changelog.1.6.6.0.a7dd4107 = 
+# Source: Added support for Minions, Pets and Chocobos. You can now apply any emote to your own minions, pets and chocobos provided they have been summoned and turned human.
+changelog.1.6.6.0.a8e14b07 = 
+# Source: Minions, Pets, Chocobos & Battle NPCs support
+changelog.1.6.6.0.c2407df3 = 
+# Source: Technical Changes
+changelog.1.6.6.0.d80295d6 = 
+# Source: Added the /bem command to apply emotes to your minion, provided it's been summoned and turned human.\nYou do not need to target the minion, and just like /bet, you can use an emote argument or the stop argument (/bem stop, /bem beesknees, /bem /tea, ...).\nUseful for untargettable minions such as the cushion or the campfire.
+changelog.1.6.6.0.e16e66c9 = 
+# Source: Added support for Minions, Pets, Chocobos & Battle NPCs. Revised IPC.
+changelog.1.6.6.0.e1d4e40a = 
+# Source: Additionally, added the /bec command to apply emotes to your chocobo, provided it's been summoned and turned human.
+changelog.1.6.6.0.e8a03ffb = 
+# Source: Added support for Battle NPCs. You can now apply any emote Battle NPCs in the world.
+changelog.1.6.6.0.ed40f0c9 = 
+# Source: Additionally, added the /bep command to apply emotes to your pet (carbuncle and eos), provided it's been summoned and turned human.
+changelog.1.6.6.0.fccedc69 = 
+# Source: Enhances the target handling and the emote bypassing.
+changelog.1.7.2.0.0074ff21 = 
+# Source: The soft target is now properly handled. If you have both a target and a soft target, bypassing an emote will prioritize the soft target.
+changelog.1.7.2.0.12b1de73 = 
+# Source: Reworked the IPC Data being sent to consumers.
+changelog.1.7.2.0.288c78ea = 
+# Source: Emote handling enhancement
+changelog.1.7.2.0.3047865d = 
+# Source: New Features
+changelog.1.7.2.0.36f4e595 = 
+# Source: Various bug fixes over the versions.
+changelog.1.7.2.0.39c46762 = 
+# Source: Bug fixes
+changelog.1.7.2.0.60586b6e = 
+# Source: Bypass Emote now handles hotbar emote slots. If you click a locked emote hotbar slot (greyed out), the emote will play.
+changelog.1.7.2.0.6dcec185 = 
+# Source: Technical Changes
+changelog.1.7.2.0.d80295d6 = 
+# Source: Various technical enhancements.
+changelog.1.7.2.0.fe26324e = 
+# Source: New Features
+changelog.1.7.3.1.36f4e595 = 
+# Source: Allows to add emotes to hotbars.
+changelog.1.7.3.1.7c9483aa = 
+# Source: Hotbar integration enhancement
+changelog.1.7.3.1.c9d945ae = 
+# Source: Added a new config option for enabling/disabling bypassing emotes on emote hotbar slot click.
+changelog.1.7.3.1.e8eb4c4e = 
+# Source: Added the possibility to assign emotes to hotbar slots.\nRight click an emote in the main UI, and an option will appear if the emote is assignable.
+changelog.1.7.3.1.ef9d6d57 = 
+# Source: Emotes are now played according to your character's condition.\nSitting on the ground, sitting in a chair, mounted, riding pillion, swimming, diving, holding an umbrella or a torch, wearing a fashion accessory: the plugin plays the variant that matches the state you are in, instead of forcing the standing animation on you.\nIf an emote cannot be played in the state you are in, the plugin will tell you so instead of playing something wrong.
+changelog.2.0.0.0.084e3478 = 
+# Source: Added Emote Swap, a new bypass mode, which is now the default one.\nInstead of applying the animation on your character, the plugin looks for an emote you have unlocked that behaves like the one you asked for, plays that one for real, and swaps its animation with the locked one through a Penumbra mod it manages for you.\nThe game itself plays the emote, so other players see it over any sync service without their plugin having to integrate Bypass Emote.
+changelog.2.0.0.0.16002d22 = 
+# Source: Emote Swap
+changelog.2.0.0.0.1ac4c0e0 = 
+# Source: Emote Swap needs Penumbra installed and enabled.
+changelog.2.0.0.0.25dfbb84 = 
+# Source: Emote Swap follows the same rule, and will only play an emote you own that can be executed in the state you are in.
+changelog.2.0.0.0.308cc96c = 
+# Source: New Features
+changelog.2.0.0.0.36f4e595 = 
+# Source: Various bug fixes over the versions.
+changelog.2.0.0.0.39c46762 = 
+# Source: A prompt will appear on your first launch to let you pick the mode you want. You can change your mind at any time in the configuration window.
+changelog.2.0.0.0.3eec5ede = 
+# Source: The main UI now shows the same condition icons as the game's own emote window, so you can see at a glance where an emote can be played.
+changelog.2.0.0.0.460f6af3 = 
+# Source: Fixed visual effects not playing on some bypassed emotes.
+changelog.2.0.0.0.52167bcc = 
+# Source: Added a safe mode to Direct Play, the original method, which is on by default.\nWhile it is on, you can only bypass emotes from the base pose (pose 0) of your current stance. This is because the game client sends duplicate change pose packets when your character is in any other pose, which is not something the plugin causes, but not something it can prevent either.\nYou can lift that limit in the configuration window if you know what you are doing.
+changelog.2.0.0.0.56f1c59e = 
+# Source: Added drag and drop from the main UI onto your hotbars. Drag an emote onto a slot of hotbars 1 to 10 and it will be assigned to it.
+changelog.2.0.0.0.599120b2 = 
+# Source: Bug fixes
+changelog.2.0.0.0.60586b6e = 
+# Source: Moved a large part of the plugin's internals to NoireLib.
+changelog.2.0.0.0.6641c5cc = 
+# Source: Added a lot of configuration options for Emote Swap, such as how close a match has to be, when the swap is turned off, how many swaps are kept per emote, and whether your name appears on the generated mod.
+changelog.2.0.0.0.6810cb88 = 
+# Source: Adds a new way of bypassing emotes through Penumbra, visible on every sync service.
+changelog.2.0.0.0.68f4781f = 
+# Source: Added configuration options for the messages the plugin prints in chat, and for how often the same one is repeated.
+changelog.2.0.0.0.79695cb4 = 
+# Source: Added Penumbra V4 support.
+changelog.2.0.0.0.922b8a2e = 
+# Source: The default configuration is already set up the way it works best, you do not need to touch any of it.
+changelog.2.0.0.0.96f1b52c = 
+# Source: Safe mode is not a promise either, it only keeps Direct Play to the states where nothing has ever been seen to go wrong. Use Emote Swap if you want to be certain.
+changelog.2.0.0.0.b8c2d147 = 
+# Source: You can now stop Emote Swap from playing one of your own emotes, by clicking the ban icon next to its star.\nBlocked emotes have their own tab in the main UI. Useful if you would rather not have a specific one of yours played, for example one that makes noise.
+changelog.2.0.0.0.c9dbdfee = 
+# Source: Bypass Emote now checks that the game patch you are on has been approved before enabling anything it finds by signature.\nIf a patch breaks something, the plugin turns those parts off by itself and checks every 10 minutes until it is approved again, instead of doing something it should not.
+changelog.2.0.0.0.d7a5d625 = 
+# Source: Technical Changes
+changelog.2.0.0.0.d80295d6 = 
+# Source: Fixed emotes that make your character draw its weapon.
+changelog.2.0.0.0.e7a26549 = 
+# Source: Every swap is kept as an option of the generated mod, so playing the same emote again puts it back without rebuilding anything.
+changelog.2.0.0.0.f2350311 = 
+# Source: Added the possibility to create a permanent Penumbra mod from any emote.\nClick the "Create a mod" button in the main UI, or right click an emote and pick "Create a mod from this emote...".\nUseful if you want to keep an animation over one of your emotes without the plugin having to do anything.
+changelog.2.0.0.0.f33b320b = 
+# Source: Various technical enhancements.
+changelog.2.0.0.0.fe26324e = 
+# Source: New Features
+changelog.2.1.0.0.36f4e595 = 
+# Source: Playing the real emote of a swap while the swap is still playing now refreshes the animation.\nBefore, playing for example /beesknees while a swap was using it kept showing the swapped animation until you stopped emoting.
+changelog.2.1.0.0.5dc54c70 = 
+# Source: Added "Always cache-break" option for Emote Swap, and various bug fixes.
+changelog.2.1.0.0.5e17a8a9 = 
+# Source: Bug fixes
+changelog.2.1.0.0.60586b6e = 
+# Source: Playing an emote while a swapped idle pose is active now stops the idle pose swap.
+changelog.2.1.0.0.895c09e0 = 
+# Source: It is off by default, you can enable it in the configuration window.
+changelog.2.1.0.0.8c074b97 = 
+# Source: The plugin now recognizes the Korean and Chinese game clients.
+changelog.2.1.0.0.96052ffd = 
+# Source: Animation cache breaking
+changelog.2.1.0.0.9cac4b37 = 
+# Source: Reworked how animations are loaded around the game's caches.
+changelog.2.1.0.0.bf6ca6d5 = 
+# Source: Disabling the plugin now disables the generated mod.
+changelog.2.1.0.0.c423c08c = 
+# Source: Added "Always cache-break", a new option for Emote Swap.\nWith it on, every emote you play will be cache-broken, especially the ones you own. Play an emote, enable or disable any mod affecting that emote, play the emote again, the new animation refreshes and shows without needing to redraw nor to stop the emote.
+changelog.2.1.0.0.c92503a0 = 
+# Source: Added /belogs (also available as /be logs), which exports a zip of the plugin logs and settings to send to the developer. Check its content before sending it, it is not meant to be posted publicly.
+changelog.2.1.0.0.ca8e8176 = 
+# Source: Technical Changes
+changelog.2.1.0.0.d80295d6 = 
+# Source: Various technical enhancements.
+changelog.2.1.0.0.fe26324e = 
+# Source: The "Create a mod" window now warns you about mismatches and other potentially unwanted behaviors, such as when you have not unlocked the target emote, when one of your own mods already changes it, or when the two emotes have turn, loop, sound or intro mismatches.
+changelog.2.2.0.0.2323aeb2 = 
+# Source: Fixed one of the signatures the plugin needed for the cache-breaker feature.\nWithout it, a swap could play the emote you played before it.
+changelog.2.2.0.0.31b60c32 = 
+# Source: New Features
+changelog.2.2.0.0.36f4e595 = 
+# Source: Fixed changing world turning off the generated Penumbra mod and its options.
+changelog.2.2.0.0.4aabbfb7 = 
+# Source: Emote overrides
+changelog.2.2.0.0.587c7b7d = 
+# Source: Bug fixes
+changelog.2.2.0.0.60586b6e = 
+# Source: Adds "Emote overrides", and various bug fixes and improvements.
+changelog.2.2.0.0.679d7020 = 
+# Source: Added the "Emote overrides" tab to the configuration window.\nPick a locked emote, then pick the emotes it is allowed to land on. Emote Swap will then use your list instead of finding a best match, in the order you put it in.\nIf none of them can be played, the plugin tells you which ones it skipped and why.
+changelog.2.2.0.0.99ae3ed3 = 
+# Source: Added "Support me on Ko-fi" and "Discord" buttons to the main window.
+changelog.2.2.0.0.ac6010ab = 
+# Source: The "Fav" and "Blocked" tabs of the main window now have their own dropdown, to add an emote to either list without hunting for it in the other tabs.
+changelog.2.2.0.0.d4ad1225 = 
+# Source: Technical Changes
+changelog.2.2.0.0.d80295d6 = 
+# Source: Fixed "Create a mod" sometimes writing the wrong animation instead of the one you asked for.
+changelog.2.2.0.0.f2789edb = 
+# Source: Various technical enhancements.
+changelog.2.2.0.0.fe26324e = 
+# Source: Animation refresh rework
+changelog.2.3.0.0.07d79f01 = 
+# Source: Reworked how the plugin refreshes an animation, it is now way more efficient and optimized. Dropped from 10+ sigs to 2.
+changelog.2.3.0.0.105ef1de = 
+# Source: Added "Add an override..." to the right click menu of the main UI.\nIt opens the "Emote overrides" tab with the emote already picked.
+changelog.2.3.0.0.1284fd82 = 
+# Source: New Features
+changelog.2.3.0.0.36f4e595 = 
+# Source: Bug fixes
+changelog.2.3.0.0.60586b6e = 
+# Source: "Always cache-break" no longer makes other players see you redraw for random emotes.
+changelog.2.3.0.0.790f1b05 = 
+# Source: Reworks how animations are refreshed, and stops other players from seeing you redraw.
+changelog.2.3.0.0.a096b13e = 
+# Source: Technical Changes
+changelog.2.3.0.0.d80295d6 = 
+# Source: Various technical enhancements.
+changelog.2.3.0.0.fe26324e = 
+# Source: Loop emotes no longer play your own idle mod instead of the emote you asked for.\nGenerated bypass mods priority was not correctly set, this is fixed now.
+changelog.2.3.1.0.078d4ca5 = 
+# Source: Idle pose fixes
+changelog.2.3.1.0.0e591faf = 
+# Source: Fixed a bug with "Only when nothing else fits" for "Loops on idle poses" where it ignored blocked emotes.
+changelog.2.3.1.0.3b84d8da = 
+# Source: Bug fixes
+changelog.2.3.1.0.60586b6e = 
+# Source: Fixed a bug where stopping a bypass on an idle animation by moving would not correctly stop the animation.
+changelog.2.3.1.0.7e4e2d96 = 
+# Source: Fixes loop emotes playing your own idle mod instead of the emote you asked for.
+changelog.2.3.1.0.9ff59b49 = 
+# Source: /belogs now exports everything the plugin did since it loaded.\nIt would only partially export logs when the dalamud log level was not properly set.
+changelog.2.3.1.0.b5afd5f1 = 
+# Source: The plugin reads its mod's priority back from Penumbra instead of taking the cached value.
+changelog.2.3.1.0.c3cc6888 = 
+# Source: Technical Changes
+changelog.2.3.1.0.d80295d6 = 
+# Source: Various technical enhancements.
+changelog.2.3.1.0.fe26324e = 
+# Source: Updated to the latest Penumbra API.
+changelog.2.4.0.0.04292ed8 = 
+# Source: Added a translation editor, accessible from the settings. You can translate the plugin in game, see your changes live and save them.\nTranslations or improvements are very much welcome. Please open an issue or a pull request on the plugin's GitHub if you'd like to contribute.
+changelog.2.4.0.0.05c331b1 = 
+# Source: Added Malou. Please take good care of him.
+changelog.2.4.0.0.12192c44 = 
+# Source: Fixed mods that replace an emote's timeline (.tmb) files not being taken into account by Emote Swap.
+changelog.2.4.0.0.1856a1c1 = 
+# Source: /be sync now also restarts the sounds and VFXs of your emotes in Emote Swap mode as well, try it!
+changelog.2.4.0.0.1c445d74 = 
+# Source: Locked emotes are now listed in the game's own emote window.\nYou can search locked emotes and use them from there. Also added an option to grey or un-grey them from your hotbars, and this applies to the Emote game window as well.
+changelog.2.4.0.0.228e7d9a = 
+# Source: /belogs now exports more information, to help figuring out what went wrong.
+changelog.2.4.0.0.29c642fa = 
+# Source: New Features
+changelog.2.4.0.0.36f4e595 = 
+# Source: Various bug fixes over the versions.
+changelog.2.4.0.0.39c46762 = 
+# Source: Fixed swapped animations parsing in VFXEditor.
+changelog.2.4.0.0.52e06c34 = 
+# Source: Swapping an emote is now slightly faster.
+changelog.2.4.0.0.56686f6e = 
+# Source: Bug fixes
+changelog.2.4.0.0.60586b6e = 
+# Source: Added translations.\nThe plugin is now available in French, German, Japanese, Korean and Simplified Chinese.You can pick your language in the settings.
+changelog.2.4.0.0.6afdbd23 = 
+# Source: New interface & translations
+changelog.2.4.0.0.6e05d893 = 
+# Source: Both interfaces are now built on NoireLib's new interface system.
+changelog.2.4.0.0.7700f1ca = 
+# Source: Removed the outdated mod writer.
+changelog.2.4.0.0.973a6508 = 
+# Source: Adds a brand new interface, translations, shows your locked emotes in the game's own emote window and fix some issues with modded animations.
+changelog.2.4.0.0.9f4cc7be = 
+# Source: Fixed bypassing emotes from your hotbars on the Chinese client.
+changelog.2.4.0.0.a57ef1dd = 
+# Source: Added a "Compact rows" option to make the emote list smaller. On by default.
+changelog.2.4.0.0.c0c846f7 = 
+# Source: Technical Changes
+changelog.2.4.0.0.d80295d6 = 
+# Source: Added a brand new interface, which is now the default one.\nEvery window has been redesigned: the main UI, the settings, "Create a mod", the hotbar assignment, the changelog and the logs.\nIf you prefer the old look, you can switch back to the classic interface at any time in the settings.
+changelog.2.4.0.0.da488787 = 
+# Source: The new interface has its own window settings, click the Window Options button next to the close button. It allows you to adjust opacity, text size, make the plugin always on top, click through, lock its position, its width and/or height, and make the windows stay visible in gpose, when the UI is hidden, during cutscenes, or when the game hides its own UI.
+changelog.2.4.0.0.e862aedf = 
+# Source: Added a preview popup next to the main UI. Click an emote to make it appear. In Emote Swap mode, it will show you which of your emotes it will play through, offer you to play it, add it to your favorites, block it, assign it to a hotbar or play it on your minion, pet or chocobo.\nDouble click an emote to play it right away. You can turn the popup off in the settings.
+changelog.2.4.0.0.e94a5ffa = 
+# Source: Various technical enhancements.
+changelog.2.4.0.0.fe26324e = 
+# Source: You cannot bypass this emote right now.
+chat.cannot_bypass_now = 
+# Source: Error trying to process command
+chat.command.failed = 
+# Source: Emote or command not found: {arg}
+chat.command.not_found = 
+# Source: This emote cannot be played in Emote Swap mode.
+chat.command.not_in_swap = 
+# Source: No chocobo summoned.
+chat.command.no_chocobo = 
+# Source: No minion summoned.
+chat.command.no_minion = 
+# Source: No NPC targeted.
+chat.command.no_npc = 
+# Source: No pet summoned.
+chat.command.no_pet = 
+# Source: You can only target your own minion, pet, chocobo.
+chat.command.only_own = 
+# Source: Poses cannot be swapped.
+chat.command.poses = 
+# Source: Ask the developer where to send this file to be extra safe.
+chat.export.ask_where = 
+# Source: Debug logs exported to {path}. Send this file to the developer. Feel free to check the content of the zip and if you need to anonymize any information, please do so before sending it.
+chat.export.done = 
+# Source: Exporting logs...
+chat.export.exporting = 
+# Source: Debug logs could not be exported. The Dalamud log has the reason.
+chat.export.failed = 
+# Source: [Open folder]
+chat.export.open_folder = 
+# Source: Personal information appears in it, DO NOT send this in a public channel.
+chat.export.personal = 
+# Source: A debug log export is already running.
+chat.export.running = 
+# Source: The plugin has been approved for this patch. If you noticed weird behaviors prior to this message, try again and it should be fixed now.
+chat.gate.announcement = 
+# Source: Could not use your idle pose for this emote. {cause}
+chat.idle.failed = 
+# Source: The swap mod could not be turned on.
+chat.idle.mod_not_on = 
+# Source: Your character is mounted. There is no idle pose to borrow.
+chat.idle.mounted = 
+# Source: That emote has no animation to lend.
+chat.idle.nothing_to_lend = 
+# Source: Your character could not be refreshed.
+chat.idle.not_refreshed = 
+# Source: Penumbra could not say which collection your character uses.
+chat.idle.no_collection = 
+# Source: Your pose animation could not be found.
+chat.idle.pose_not_found = 
+# Source: Your pose animation could not be rebuilt.
+chat.idle.pose_not_rebuilt = 
+# Source: This pose cannot be changed.
+chat.idle.pose_unchangeable = 
+# Source: Something went wrong.
+chat.idle.something_wrong = 
+# Source: That emote's animation could not be found.
+chat.idle.source_not_found = 
+# Source: Your character is still in another emote. Move, or change pose, then try again.
+chat.idle.still_in_emote = 
+# Source: idle pose
+chat.idle.swap_target = 
+# Source: Your idle 0 pose has no intro. This emote's intro will not play. Try changing pose.
+chat.idle.zero_no_intro = 
+# Source: [Disable]
+chat.mod.disable = 
+# Source: {reason} Mod not disabled.
+chat.mod.not_disabled = 
+# Source: {reason} Mod not opened.
+chat.mod.not_opened = 
+# Source: '{mod}' is now off in {collection}.
+chat.mod.now_off = 
+# Source: No Penumbra collection is assigned to your character. Mod not disabled.
+chat.mod.no_collection = 
+# Source: [Open]
+chat.mod.open = 
+# Source: Penumbra would not open '{mod}'.
+chat.mod.would_not_open = 
+# Source: Penumbra would not switch '{mod}' off in {collection}.
+chat.mod.would_not_switch_off = 
+# Source: it is on your blocked targets list.
+chat.near.blocked_list = 
+# Source: the loop kinds do not match.
+chat.near.loop_kinds = 
+# Source: your mod "{mod}" targets it. Your configuration blocked it.
+chat.near.named_mod = 
+# Source: another of your mods targets it. Your configuration blocked it.
+chat.near.other_mod = 
+# Source: it makes a sound.
+chat.near.sound = 
+# Source: it makes a sound, and your sound rule only allows that for an emote that makes one too.
+chat.near.sound_lenient = 
+# Source: it makes a sound, and your sound rule avoids every target that does.
+chat.near.sound_strict = 
+# Source: {rule} matching is strict.
+chat.near.strict = 
+# Source: turn matching is very strict.
+chat.near.turn_very_strict = 
+# Source: Emote Swap was enabled because no choice was made.
+chat.no_choice_made = 
+# Source: Penumbra is not running. Emote Swap needs it installed.
+chat.penumbra.missing = 
+# Source: Bypass Emote needs Penumbra {version} or newer. Update Penumbra (its interface reads {api}).
+chat.penumbra.too_old = 
+# Source: Bypass Emote is waiting for you to choose how it should play locked emotes.
+chat.prompt_pending = 
+# Source: it is available
+chat.reason.available = 
+# Source: a mod changes it and your settings block modded emotes
+chat.reason.changed_by_mod = 
+# Source: you have not unlocked it
+chat.reason.locked = 
+# Source: it can never be a swap target
+chat.reason.never_a_target = 
+# Source: there is no animation data for it
+chat.reason.not_configured = 
+# Source: it cannot be played in your current state
+chat.reason.not_here = 
+# Source: /{command} cannot be played while wearing a fashion accessory.
+chat.refused.accessory = 
+# Source: /{command} cannot be played while carrying your {ornament}.
+chat.refused.carrying = 
+# Source: /{command} cannot be played while sitting in a chair.
+chat.refused.chair_sitting = 
+# Source: /{command} cannot be played while diving.
+chat.refused.diving = 
+# Source: /{command} cannot be played while fishing.
+chat.refused.fishing = 
+# Source: /{command} cannot be played while sitting on the ground.
+chat.refused.ground_sitting = 
+# Source: /{command} cannot be played while mounted.
+chat.refused.mounted = 
+# Source: /{command} cannot be played right now.
+chat.refused.right_now = 
+# Source: /{command} cannot be played while standing.
+chat.refused.standing = 
+# Source: /{command} cannot be played while swimming.
+chat.refused.swimming = 
+# Source: /{command} cannot be played while holding a torch.
+chat.refused.torch = 
+# Source: /{command} cannot be played while holding an umbrella.
+chat.refused.umbrella = 
+# Source: Due to detectability, you need to be in the base pose (pose 0) of your current stance to bypass emotes in safe mode.
+chat.safe_mode = 
+# Source: Also found /{command} but {reason}
+chat.swap.also_found_but = 
+# Source: Still loading emote data. Try again in a moment.
+chat.swap.catalog_loading = 
+# Source: This emote landed on /{command}, which your mod "{mod}" changes. Players around you may briefly see that mod's animation before yours reaches them. If you don't want this to happen, head over to the configuration window and block emotes that are changed by other mods.
+chat.swap.changed_target = 
+# Source: Could not swap /{command}.
+chat.swap.could_not = 
+# Source: Emote #{id}
+chat.swap.emote_number = 
+# Source: Something went wrong. Emote not swapped.
+chat.swap.failed = 
+# Source: Found /{command} but {reason}
+chat.swap.found_but = 
+# Source: This emote landed on a loop only target with no intro. You will not see the intro play.
+chat.swap.intro_dropped.loop = 
+# Source: This emote landed on a one shot target with no intro. You will not see the intro play.
+chat.swap.intro_dropped.one_shot = 
+# Source: {n} more target(s) were skipped for the same reason.
+chat.swap.more_skipped.one = 
+# Source: {n} more target(s) were skipped for the same reason.
+chat.swap.more_skipped.other = 
+# Source: /{command} needs {requirement}.
+chat.swap.needs_environment = 
+# Source: Penumbra could not say which collection your character uses. Emote not swapped.
+chat.swap.no_character = 
+# Source: No Penumbra collection is assigned to your character. Emote not swapped.
+chat.swap.no_collection = 
+# Source: Could not swap /{command}. None of its override targets can be played right now.
+chat.swap.no_override_target = 
+# Source: {emote} was skipped because {reason}.
+chat.swap.override_skipped = 
+# Source: {reason} Emote not swapped.
+chat.swap.penumbra_unavailable = 
+# Source: Bypass Emote
+chrome.brand = 
+# Source: Collapse
+chrome.collapse = 
+# Source: Expand
+chrome.expand = 
+# Source: The windows let clicks through to the game. The title bars stay clickable.
+chrome.menu.click_through = 
+# Source: Keeps the windows open whenever the game hides its own UI.
+chrome.menu.hint.auto_hide = 
+# Source: Keeps the windows open during cutscenes.
+chrome.menu.hint.cutscenes = 
+# Source: Keeps the windows open while gpose is active.
+chrome.menu.hint.gpose = 
+# Source: Keeps the windows open when you hide the game UI.
+chrome.menu.hint.ui_hidden = 
+# Source: Shared by every Bypass Emote window.
+chrome.menu.shared = 
+# Source: Always on top
+chrome.on_top = 
+# Source: Window options
+chrome.options = 
+# Source: Create
+classic.create_mod.create = 
+# Source: This window allows you to create a permanent swap mod, and it stays unaffected by Bypass Emote. You own it, and you manage it, like any other mod.
+classic.create_mod.intro = 
+# Source: Mod name
+classic.create_mod.name = 
+# Source: The name of the generated mod.
+classic.create_mod.name.help = 
+# Source: No race covered
+classic.create_mod.no_race = 
+# Source: Makes the mod have the highest priority. When off, it is created at priority 0.
+classic.create_mod.priority.help = 
+# Source: Which bodies the mod is written for.
+classic.create_mod.races.help = 
+# Source: Search races...
+classic.create_mod.search_races = 
+# Source: Currently assigned: {name}
+classic.hotbar.assigned = 
+# Source: XHB {number}
+classic.hotbar.cross = 
+# Source: You can also drag and drop an emote from the main window onto any visible hotbar slot.
+classic.hotbar.drag_hint = 
+# Source: This slot is empty. You can safely assign an emote.
+classic.hotbar.slot_empty = 
+# Source: Assign {emote} to hotbar...
+classic.hotbar.title = 
+# Source: {name}  (empty)
+classic.overrides.empty = 
+# Source: This tab allows you to make sure a locked emote will always use one or multiple specific target emotes.
+classic.overrides.intro = 
+# Source: Limited to selected targets only
+classic.overrides.limited = 
+# Source: No override yet.
+classic.overrides.none = 
+# Source: No target yet.
+classic.overrides.no_target = 
+# Source: Pick an emote on the left.
+classic.overrides.pick = 
+# Source: Override an emote...
+classic.overrides.source = 
+# Source: Add a target emote...
+classic.overrides.target = 
+# Source: Allow
+classic.settings.allow = 
+# Source: Allowed
+classic.settings.allowed = 
+# Source: Anything allowed
+classic.settings.anything = 
+# Source: "Multiple swaps" keeps multiple swaps active at the same time in the mod.\n"One swap at a time" turns the previous swaps off as soon as a new one starts.\n\nRecommended: "Multiple swaps", unless for some reason you want to only keep one swap at a time.
+classic.settings.behavior.help = 
+# Source: Multiple swaps
+classic.settings.behavior.multiple = 
+# Source: One swap at a time
+classic.settings.behavior.one = 
+# Source: Blocked
+classic.settings.blocked = 
+# Source: Leave this on, otherwise bypassing several animations in a row may look broken.
+classic.settings.cached_dispatch.alarm = 
+# Source: Gives each bypassed emote a target emote of its own. This is useful when you want to bypass multiple emotes quickly.\n\n"Off" would make it so other people on your sync service would see you redraw constantly.\n"Only when necessary" spreads emotes only after a game patch breaks the cache-breaker feature.\n"On" always spreads emotes.\n\nRecommended: "On" if you want other people on your sync service to always see you properly without redrawing all the time, otherwise highly recommended to leave it on "Only when necessary" and not "Off".
+classic.settings.cached_dispatch.help = 
+# Source: Applies the cache-break mechanism to every emote, even those you own. This is a bonus feature and is experimental. This will allow the client to always "refresh" animations so you never have to redraw yourself or stop emoting to apply an animation change.
+classic.settings.cache_break.help = 
+# Source: Takes effect when "Spread swaps over several emote" is enabled. This determines which emotes become available for a source emote. Basically, if you want to spread swaps over 5 emotes, and you try to bypass an emote but you only have 2 same-rank targets available, this is how it will determine what to do in this scenario. A rank is basically a category of emotes with similar characteristics (same turn behaviour, etc).\n\n"Same rank only" strictly picks targets of the same rank.\n"One rank below" also accepts targets one rank below.\n"Anything allowed" picks any target it can find, regardless of the rank.\n\nNone of them ever breaks your other rules.\n\nRecommended: "One rank below", or "Same rank only" if you want behavior accuracy.
+classic.settings.dispatch_fidelity.help = 
+# Source: How long the same error stays quiet after you have seen it.\n\nAccepts time format: 5m, 300s, 5m10s, 1h.\nSet to 0 to see every one of them.
+classic.settings.error_throttle.help = 
+# Source: Checked at {time}.
+classic.settings.gate.checked_at = 
+# Source: {label} ({seconds})
+classic.settings.gate.countdown = 
+# Source: Force approval is on.
+classic.settings.gate.forced = 
+# Source: Disable Force Approval
+classic.settings.gate.force_disable = 
+# Source: Enable Force Approval
+classic.settings.gate.force_enable = 
+# Source: Bypass Emote has not been approved for this game build.
+classic.settings.gate.not_approved = 
+# Source: Emote swaps may behave oddly until the build is approved.\nThe plugin will automatically fetch updates every 10 minutes to check if it was approved.
+classic.settings.gate.not_approved.text = 
+# Source: Bypass Emote cannot be tested on this game client.
+classic.settings.gate.untested = 
+# Source: Show windows in GPose
+classic.settings.gpose = 
+# Source: Keeps this plugin's windows visible while you are in GPose.
+classic.settings.gpose.help = 
+# Source: Show windows while the game UI is hidden
+classic.settings.hidden_ui = 
+# Source: Keeps this plugin's windows visible when you hide the game UI.
+classic.settings.hidden_ui.help = 
+# Source: When no unlocked looped emote fits as a target, your current idle pose may be eligible instead. The emote you try to bypass will then be targeted onto your current idle pose. This will cause a redraw of your character when triggered.\n\n"Never" blocks idle poses from being used as targets.\n"Only when nothing else fits" uses the pose only when literally no unlocked looped emote could have played here at all. This will not use your idle pose if any other emote would have been available if it wasn't blocked.\n"Allow" always falls back to your idle pose when no other options are available.\n\nRecommended: "Only when nothing else fits".
+classic.settings.idle_pose_loops.help = 
+# Source: How many swaps are kept per target emote. 0 keeps them all.\n\nEach kept swap stays as an option of the generated Penumbra mod, so playing an emote again enables it again without rebuilding it. The only cost is that the mod gets bigger.
+classic.settings.kept_swaps.help = 
+# Source: Last resort
+classic.settings.last_resort = 
+# Source: Lenient
+classic.settings.lenient = 
+# Source: When the emote ends
+classic.settings.lifetime.ends = 
+# Source: "When the emote ends" puts your real emote back as soon as the animation stops.\n"When you play the target emote" keeps the swap enabled until the next time you play the target emote.\n"Never" keeps the swap live until another swap claims the same target emote.\n\nRecommended: "When you play the target emote". "When the emote ends" is not recommended, as people will see you redraw constantly after swapping.
+classic.settings.lifetime.help = 
+# Source: When you play the target emote
+classic.settings.lifetime.target = 
+# Source: Show locked emotes in the game's Emote window
+classic.settings.locked_in_window = 
+# Source: "Strict" only puts a looping emote on another looping one.\n"Lenient" lets a looping emote play once on a one time emote when no better match exists.\n\nRecommended: "Strict", or "Lenient" if you really don't have many emotes.
+classic.settings.loop_matching.help = 
+# Source: Determines whether to block unlocked emotes from being picked when they are modified by at least one of your mods. This prevents other people from seeing other modded emotes you might have before the swap takes place.\nAs an example, you have a mod on beesknees, and you try to bypass /conduct which happens to land on beesknees: other players might or might not see the modded beesknees for a moment.\n\n"Allowed" allows using unlocked emotes that are modified by one of your mods.\n"Last resort" uses one only when nothing else fits.\n"Blocked" never uses one, and show an error message in the chat with options to disable or open the mod in penumbra.\n\nRecommended: "Last resort", or "Blocked" if you absolutely don't want your modded emotes to accidentaly be seen.
+classic.settings.modded_targets.help = 
+# Source: Never
+classic.settings.never = 
+# Source: Use the new interface
+classic.settings.new_interface = 
+# Source: Switches back to the new interface.\nThe classic interface is the one you are looking at, exactly as in previous versions.
+classic.settings.new_interface.help = 
+# Source: Only when nothing else fits
+classic.settings.nothing_else_fits = 
+# Source: Off
+classic.settings.off = 
+# Source: On
+classic.settings.on = 
+# Source: One rank below
+classic.settings.one_below = 
+# Source: Safe mode is not 100% guaranteed to be safe either. It prevents Direct Play from being used in states where it was proved to go wrong, but I can not prove the absence of issues. Use Emote Swap if you want to be 100% safe, it will behave almost the same way.
+classic.settings.safe_mode_not_a_promise = 
+# Source: Same rank only
+classic.settings.same_rank = 
+# Source: Windows
+classic.settings.section.windows = 
+# Source: "Strict" never puts an emote on one that makes sound.\n"Lenient" allows matching emotes that make sounds together.\n"Off" will let emotes play regardless of sound.\n\nThis is to prevent vanilla people from seeing you play fume which could annoy other vanilla players, for example.\n\nRecommended: "Lenient".
+classic.settings.sound_matching.help = 
+# Source: Strict
+classic.settings.strict = 
+# Source: Emotes have different turn behaviors when you target someone. Some emotes will make your torso turn (i.e: /hum), some only your head (i.e: /stepdance),some will only make your eyes follow your target (i.e: /beesknees) while others will not move at all (i.e:/guard).\n\n"Very strict" only picks emotes that behaves the same way.\n"Strict" allows eye following differences but keeps emotes head and body turn behaviors.\n"Lenient" allows any turn behavior.\n\nThe plugin will still always try to find the best match first, regardless of the selected rule.\n\nRecommended: "Lenient".
+classic.settings.turn_matching.help = 
+# Source: Lets Direct Play bypass an emote in any pose.\n\nLeave it off unless you know what you are doing. When off, the plugin only plays emotes from states where nothing can be noticed.
+classic.settings.unsafe.help = 
+# Source: In practice it is a non-issue. This has been a thing in other tools and plugins (and still is in some of them), which people have used for years without trouble. Go back to safe mode, or even better, to emote swap, if you are uncomfy with this.
+classic.settings.unsafe.reassurance = 
+# Source: Very strict
+classic.settings.very_strict = 
+# Source: Shows a warning in chat when a swap happened, but not the way you would expect.
+classic.settings.warning_messages.help = 
+# Source: How long the same warning stays quiet after you have seen it.\n\nAccepts time format: 5m, 300s, 5m10s, 1h.\nSet to 0 to disable.
+classic.settings.warning_throttle.help = 
+# Source: Only when necessary
+classic.settings.when_necessary = 
+# Source: Opens the changelog window.
+command.changelog = 
+# Source: Applies any emote to your own chocobo if summoned, without needing to target it. Use /bec <emote_command> or /bec stop.
+command.chocobo = 
+# Source: Plays the emote on your chocobo, by command name or ID.
+command.chocobo_emote = 
+# Source: Stops the emote currently playing on your chocobo.
+command.chocobo_stop = 
+# Source: Opens the configuration window.
+command.config = 
+# Source: Opens the debug window.
+command.debug = 
+# Source: Shows the hooks window.
+command.hooks = 
+# Source: Exports a zip with the plugin logs and settings, to send to the developer.
+command.logs = 
+# Source: Opens the Bypass Emote main window.
+command.main = 
+# Source: Applies any emote to your own minion if summoned, without needing to target it. Use /bem <emote_command> or /bem stop.
+command.minion = 
+# Source: Plays the emote on your minion, by command name or ID.
+command.minion_emote = 
+# Source: Stops the emote currently playing on your minion.
+command.minion_stop = 
+# Source: Applies any emote to your own pet (carbuncle/eos) if summoned, without needing to target it. Use /bep <emote_command> or /bep stop.
+command.pet = 
+# Source: Plays the emote on your pet, by command name or ID.
+command.pet_emote = 
+# Source: Stops the emote currently playing on your pet.
+command.pet_stop = 
+# Source: Bypasses any emote (including locked ones) on yourself, by command name or ID.
+command.self_emote = 
+# Source: Stops the emote currently playing on yourself. Direct Play mode only.
+command.stop = 
+# Source: Restarts the emotes of every player and NPC around you, with their sounds.
+command.sync = 
+# Source: Restarts only the emotes played with Direct Play.
+command.sync_direct = 
+# Source: Applies any emote to a targetted NPC. Only works on NPCs and owned minions/pets. Use /bet <emote_command> or /bet stop.
+command.target = 
+# Source: Plays the emote on your target, by command name or ID.
+command.target_emote = 
+# Source: Stops the emote currently playing on your target.
+command.target_stop = 
+# Source: All
+common.all = 
+# Source: Cancel
+common.cancel = 
+# Source: Close
+common.close = 
+# Source: None
+common.none = 
+# Source: Owned
+common.owned = 
+# Source: Enable on creation
+create_mod.enable = 
+# Source: Switches the mod on in your character's collection as soon as it exists.
+create_mod.enable.help = 
+# Source: Emote data is still loading. Try again in a moment.
+create_mod.loading = 
+# Source: Modded animation: {mod}
+create_mod.modded = 
+# Source: My emote mod
+create_mod.name.placeholder = 
+# Source: An emote cannot be played over itself.
+create_mod.not_over_itself = 
+# Source: One of those emotes has no animation this can read.
+create_mod.no_animation = 
+# Source: Penumbra is not running.
+create_mod.penumbra_off = 
+# Source: Pick both emotes and name the mod.
+create_mod.pick_both = 
+# Source: Pick at least one race.
+create_mod.pick_race = 
+# Source: Highest priority
+create_mod.priority = 
+# Source: Races covered
+create_mod.races = 
+# Source: Emote to play
+create_mod.source = 
+# Source: The animation the mod plays. The one you have not unlocked.
+create_mod.source.help = 
+# Source: Pick the emote to play...
+create_mod.source.placeholder = 
+# Source: Played over
+create_mod.target = 
+# Source: The emote you will actually use in game. The one you have unlocked.
+create_mod.target.help = 
+# Source: Pick the emote to play over...
+create_mod.target.placeholder = 
+# Source: Vanilla animation
+create_mod.vanilla = 
+# Source: This also changes the emote for {races}. They read a file the mod writes.
+create_mod.warning.also_reached = 
+# Source: Your mod "{mod}" already changes {target}.
+create_mod.warning.modded = 
+# Source: You have not unlocked {target}.
+create_mod.warning.not_unlocked = 
+# Source: {losers} read the same animation file as {winner}. {winner}'s version plays for all of them.
+create_mod.warning.shared = 
+# Source: Added in patch {patch}
+emote.added = 
+# Source: Base game
+emote.base_game = 
+# Source: ID {id}
+emote.id = 
+# Source: No name
+emote.no_name = 
+# Source: Patch {patch}
+emote.patch = 
+# Source: Unknown name
+emote.unknown = 
+# Source: The approval recorded for game build {build} was dropped.
+gate.approval_dropped = 
+# Source: Game build {build} is approved.
+gate.approved = 
+# Source: Game build {build} was approved earlier.
+gate.approved_earlier = 
+# Source: The installed game build could not be read.
+gate.build_unreadable = 
+# Source: The approval list could not be reached.
+gate.list_unreachable = 
+# Source: Game build {build} needs Bypass Emote {minimum} or newer. Installed: {installed}.
+gate.needs_version = 
+# Source: Game build {build} has not been approved yet.
+gate.not_approved_yet = 
+# Source: Reading the approval list.
+gate.reading_list = 
+# Source: unknown
+gate.unknown_version = 
+# Source: Game build {build} names a plugin version the plugin cannot read.
+gate.unreadable_version = 
+# Source: The {client} client has not and can not be tested. This plugin might not work and might be unstable/unusable. Please don't use it if it does not work well.
+gate.untested_client = 
+# Source: This game client is not the Global one, and has not and can not be tested. This plugin might not work and might be unstable/unusable. Please don't use it if it does not work well.
+gate.untested_other = 
+# Source: Assign
+hotbar.assign = 
+# Source: Hotbar
+hotbar.hotbar = 
+# Source: Slot {slot} - Empty
+hotbar.slot.empty = 
+# Source: Slot {slot} - {name}
+hotbar.slot.holds = 
+# Source: Discord
+main.discord = 
+# Source: Help, bug reports and updates.
+main.discord.tooltip = 
+# Source: No blocked emote
+main.empty.blocked = 
+# Source: No favorited emote
+main.empty.favourites.classic = 
+# Source: Support me on Ko-fi
+main.kofi = 
+# Source: This plugin is free and always will be, donations are appreciated.
+main.kofi.tooltip = 
+# Source: Apply emote on Chocobo
+main.menu.chocobo.classic = 
+# Source: Create a mod from this emote...
+main.menu.create_mod = 
+# Source: Force swap
+main.menu.force_swap = 
+# Source: Assign emote to Hotbar...
+main.menu.hotbar.classic = 
+# Source: Apply emote on Minion
+main.menu.minion.classic = 
+# Source: Only for Emote Swap mode.
+main.menu.only_emote_swap = 
+# Source: Add an override...
+main.menu.override.classic = 
+# Source: Apply emote on Pet
+main.menu.pet.classic = 
+# Source: Block an emote as a swap target...
+main.quick.blocked = 
+# Source: (blocked)
+main.quick.blocked.marked = 
+# Source: Add an emote to your favorites...
+main.quick.favourite.classic = 
+# Source: (favorite)
+main.quick.favourite.marked.classic = 
+# Source: Block this emote as a swap target
+main.row.block = 
+# Source: Blocked: no swap will land on this emote
+main.row.blocked = 
+# Source: Drag onto a hotbar slot to assign it
+main.row.drag = 
+# Source: Left-click to apply to yourself
+main.row.left_click = 
+# Source: Patch: {patch}
+main.row.patch = 
+# Source: Right-click for more options
+main.row.right_click = 
+# Source: Search emotes...
+main.search = 
+# Source: Show all emotes
+main.show_all = 
+# Source: Show IDs
+main.show_ids = 
+# Source: Show invalid emotes
+main.show_invalid = 
+# Source: Show Invalid Emotes
+main.show_invalid.classic = 
+# Source: Sync Direct Play only (/be syncdirect)
+main.sync.direct = 
+# Source: Sync everyone (/be sync)
+main.sync.everyone = 
+# Source: All
+main.tab.all = 
+# Source: Blocked
+main.tab.blocked = 
+# Source: Expressions
+main.tab.expressions = 
+# Source: Fav
+main.tab.favourites = 
+# Source: General
+main.tab.general = 
+# Source: Other
+main.tab.other = 
+# Source: Special
+main.tab.special = 
+# Source: Create a mod
+main.toolbar.create_mod = 
+# Source: Refresh Locked Emotes
+main.toolbar.refresh.tooltip = 
+# Source: Sync...
+main.toolbar.sync_menu = 
+# Source: '{mod}' was created. Penumbra could not enable it in {collection}.
+mod_builder.created_not_enabled = 
+# Source: '{mod}' was created. No collection is assigned to your character. The mod is off.
+mod_builder.created_no_collection = 
+# Source: '{mod}' was created. Enable it in Penumbra when you want it.
+mod_builder.created_off = 
+# Source: '{mod}' was created and switched on in {collection}.
+mod_builder.created_on = 
+# Source: Something went wrong. Nothing was created. The log has the details.
+mod_builder.failed = 
+# Source: Penumbra already holds a mod folder called '{folder}'. Pick another name.
+mod_builder.folder_taken = 
+# Source: Give the mod a name first.
+mod_builder.name_first = 
+# Source: '{mod}' was written to '{folder}'. Penumbra did not load it. Rediscover mods in Penumbra to pick it up.
+mod_builder.not_loaded = 
+# Source: The mod's files could not be written. The log has the details.
+mod_builder.not_written = 
+# Source: The swap engine is not running.
+mod_builder.no_engine = 
+# Source: Penumbra's mod folder could not be read.
+mod_builder.no_mod_folder = 
+# Source: /{source} cannot be played over /{target}. They share no posture.
+mod_builder.no_posture = 
+# Source: Pick at least one race for the mod to cover.
+mod_builder.pick_race = 
+# Source: Applied.
+noire.applied = 
+# Source: Cancel
+noire.cancel = 
+# Source: Entries
+noire.changelog.entries = 
+# Source: Footer
+noire.changelog.footer = 
+# Source: No changelog available for this version.
+noire.changelog.none = 
+# Source: Select a version:
+noire.changelog.select_version = 
+# Source: Changelog
+noire.changelog.title = 
+# Source: Versions
+noire.changelog.versions = 
+# Source: Close
+noire.close = 
+# Source: Accent
+noire.colors.accent = 
+# Source: Copy as code
+noire.colors.copy = 
+# Source: Danger
+noire.colors.danger = 
+# Source: Edit colours
+noire.colors.edit = 
+# Source: Import from clipboard
+noire.colors.import = 
+# Source: Restore all colours
+noire.colors.reset = 
+# Source: Colours
+noire.colors.title = 
+# Source: Copied.
+noire.copied = 
+# Source: {label} ({seconds})
+noire.countdown = 
+# Source: Done
+noire.done = 
+# Source: Hide
+noire.hide = 
+# Source: Language
+noire.language = 
+# Source: {count} outdated
+noire.language.outdated.one = 
+# Source: {count} outdated
+noire.language.outdated.other = 
+# Source: {name} ({percent}%)
+noire.language.progress = 
+# Source: Translate...
+noire.language.translate = 
+# Source: Arrange {window}
+noire.layout.arrange = 
+# Source: Title bar buttons
+noire.layout.buttons = 
+# Source: Default layout
+noire.layout.default = 
+# Source: Restore the layout
+noire.layout.reset = 
+# Source: Layout
+noire.layout.title = 
+# Source: Add the entry
+noire.logs.add_entry = 
+# Source: All categories
+noire.logs.all_categories = 
+# Source: All levels
+noire.logs.all_levels = 
+# Source: {count} category
+noire.logs.categories.one = 
+# Source: {count} categories
+noire.logs.categories.other = 
+# Source: Category
+noire.logs.category_hint = 
+# Source: Clear the database entries
+noire.logs.clear_database = 
+# Source: Clear the entries in memory
+noire.logs.clear_memory = 
+# Source: Collapse the panel
+noire.logs.collapse_panel = 
+# Source: Category
+noire.logs.column.category = 
+# Source: Level
+noire.logs.column.level = 
+# Source: Message
+noire.logs.column.message = 
+# Source: Source
+noire.logs.column.source = 
+# Source: Time
+noire.logs.column.time = 
+# Source: Copy the entry
+noire.logs.copy_entry = 
+# Source: Copy the selected line
+noire.logs.copy_line = 
+# Source: Copy the selected lines
+noire.logs.copy_lines = 
+# Source: Copy the lines selected across entries ({count})
+noire.logs.copy_lines_across = 
+# Source: Copy only the message
+noire.logs.copy_message = 
+# Source: Copy only the messages ({count})
+noire.logs.copy_messages = 
+# Source: Copy the selected entries ({count})
+noire.logs.copy_selected = 
+# Source: Delete the entry
+noire.logs.delete_entry = 
+# Source: Delete the selected entries ({count})
+noire.logs.delete_selected = 
+# Source: Entries
+noire.logs.entries = 
+# Source: Expand the panel
+noire.logs.expand_panel = 
+# Source: Filters
+noire.logs.filters = 
+# Source: Filters and storage
+noire.logs.filters_storage = 
+# Source: Hide the category
+noire.logs.hide_category = 
+# Source: Hide the source
+noire.logs.hide_source = 
+# Source: Hold CTRL and SHIFT to clear.
+noire.logs.hold_clear = 
+# Source: Hold CTRL to delete.
+noire.logs.hold_delete = 
+# Source: {count} level
+noire.logs.levels.one = 
+# Source: {count} levels
+noire.logs.levels.other = 
+# Source: Manual entry
+noire.logs.manual_entry = 
+# Source: What happened?
+noire.logs.message_hint = 
+# Source: Save to the database
+noire.logs.persist = 
+# Source: per page
+noire.logs.per_page = 
+# Source: Refresh the entries
+noire.logs.refresh = 
+# Source: Search for a message, category, source...
+noire.logs.search_hint = 
+# Source: Showing {range} of {count}
+noire.logs.showing = 
+# Source: Show colors
+noire.logs.show_colors = 
+# Source: Split lines
+noire.logs.split_lines = 
+# Source: All logs
+noire.logs.title = 
+# Source: ({total} in total)
+noire.logs.total = 
+# Source: Auto hide
+noire.menu.auto_hide = 
+# Source: Keeps the window open whenever the game hides its own UI.
+noire.menu.auto_hide.hint = 
+# Source: BEHAVIOUR
+noire.menu.behaviour = 
+# Source: Click through
+noire.menu.click_through = 
+# Source: The window lets clicks through to the game. Its title bar stays clickable.
+noire.menu.click_through.note = 
+# Source: In cutscene
+noire.menu.in_cutscene = 
+# Source: Keeps the window open during cutscenes.
+noire.menu.in_cutscene.hint = 
+# Source: In gpose
+noire.menu.in_gpose = 
+# Source: Keeps the window open while gpose is active.
+noire.menu.in_gpose.hint = 
+# Source: Lock height
+noire.menu.lock_height = 
+# Source: Lock position
+noire.menu.lock_position = 
+# Source: Lock width
+noire.menu.lock_width = 
+# Source: Always on top
+noire.menu.on_top = 
+# Source: Opacity
+noire.menu.opacity = 
+# Source: Reduced motion
+noire.menu.reduced_motion = 
+# Source: Text size
+noire.menu.text_size = 
+# Source: UI hidden
+noire.menu.ui_hidden = 
+# Source: Keeps the window open when you hide the game UI.
+noire.menu.ui_hidden.hint = 
+# Source: STAY VISIBLE
+noire.menu.visibility = 
+# Source: WINDOW
+noire.menu.window = 
+# Source: Restore
+noire.restore = 
+# Source: Export settings
+noire.settings.export = 
+# Source: Settings copied to the clipboard.
+noire.settings.exported = 
+# Source: Import from clipboard
+noire.settings.import = 
+# Source: {count} settings imported.
+noire.settings.imported = 
+# Source: The clipboard holds no valid code.
+noire.settings.import_failed = 
+# Source: No setting matches.
+noire.settings.none = 
+# Source: Reset to default
+noire.settings.reset = 
+# Source: Search settings
+noire.settings.search = 
+# Source: Show
+noire.show = 
+# Source: Interface
+noire.skin = 
+# Source: Plain
+noire.skin.stock = 
+# Source: Contains
+noire.translate.contains = 
+# Source: Translation credits
+noire.translate.credits = 
+# Source: {language}: {names}
+noire.translate.credit_line = 
+# Source: Key
+noire.translate.key = 
+# Source: Missing or outdated
+noire.translate.missing = 
+# Source: Missing tags: {tags}
+noire.translate.missing_tags = 
+# Source: Start
+noire.translate.new = 
+# Source: Source changed
+noire.translate.outdated = 
+# Source: Translated from: {text}
+noire.translate.outdated_from = 
+# Source: Pick a language, or type a language code to start a new one.
+noire.translate.pick = 
+# Source: Show the plugin in this language
+noire.translate.preview = 
+# Source: Revert
+noire.translate.revert = 
+# Source: Saved text: {text}
+noire.translate.revert_to = 
+# Source: Saved without a translation
+noire.translate.revert_to_empty = 
+# Source: Save
+noire.translate.save = 
+# Source: Saved to {path}.
+noire.translate.saved = 
+# Source: The file could not be written.
+noire.translate.save_failed = 
+# Source: Save to a file...
+noire.translate.save_file = 
+# Source: Search keys and texts
+noire.translate.search = 
+# Source: Original
+noire.translate.source = 
+# Source: Translate
+noire.translate.title = 
+# Source: Translation
+noire.translate.translation = 
+# Source: Unknown tags: {tags}
+noire.translate.unknown_tags = 
+# Source: Still correct
+noire.translate.validate = 
+# Source: Window options
+noire.window.options = 
+# Source: The emote catalog is still building.
+overrides.catalog_building = 
+# Source: On: this emote plays on one of these targets, or not at all.\nOff: your usual settings take over when none of these targets can be used.
+overrides.limited.help = 
+# Source: (overridden)
+overrides.marked.source = 
+# Source: (already a target)
+overrides.marked.target = 
+# Source: Remove this override
+overrides.remove = 
+# Source: Every emote that fits is on your blocked targets list.
+preview.all_blocked = 
+# Source: One of your mods changes every emote that fits.
+preview.all_modded = 
+# Source: Every emote that can carry this one is unavailable.
+preview.all_unavailable = 
+# Source: {n} emote(s) that fit: on your blocked targets list.
+preview.blocked_fit.one = 
+# Source: {n} emote(s) that fit: on your blocked targets list.
+preview.blocked_fit.other = 
+# Source: {emote}: {reason}
+preview.detail = 
+# Source: You are in group pose.
+preview.group_pose = 
+# Source: /{command}: {reason}
+preview.miss = 
+# Source: on your blocked targets list.
+preview.miss.blocked = 
+# Source: different loop kind.
+preview.miss.loop = 
+# Source: changed by your mod "{mod}".
+preview.miss.named_mod = 
+# Source: {rule} does not match.
+preview.miss.other = 
+# Source: makes a sound.
+preview.miss.sound = 
+# Source: turn does not match.
+preview.miss.turn = 
+# Source: {n} emote(s) that fit: changed by another mod.
+preview.modded_fit.one = 
+# Source: {n} emote(s) that fit: changed by another mod.
+preview.modded_fit.other = 
+# Source: {n} more target(s) skipped.
+preview.more_skipped.one = 
+# Source: {n} more target(s) skipped.
+preview.more_skipped.other = 
+# Source: No loop is free. Idle-pose loops are off.
+preview.no_loop = 
+# Source: No emote you own matches /{command}.
+preview.no_match = 
+# Source: No override target of /{command} can be played.
+preview.no_override_target = 
+# Source: You already own this emote.
+preview.owned = 
+# Source: You own no emote that can carry this one.
+preview.own_none = 
+# Source: {n} emote(s) refused by the game.
+preview.pool.game_gate.one = 
+# Source: {n} emote(s) refused by the game.
+preview.pool.game_gate.other = 
+# Source: {n} emote(s) not unlocked.
+preview.pool.locked.one = 
+# Source: {n} emote(s) not unlocked.
+preview.pool.locked.other = 
+# Source: {n} emote(s) never a swap target.
+preview.pool.never_target.one = 
+# Source: {n} emote(s) never a swap target.
+preview.pool.never_target.other = 
+# Source: {n} emote(s) not playable in your current state.
+preview.pool.not_here.one = 
+# Source: {n} emote(s) not playable in your current state.
+preview.pool.not_here.other = 
+# Source: {n} emote(s): {reason}.
+preview.pool.other.one = 
+# Source: {n} emote(s): {reason}.
+preview.pool.other.other = 
+# Source: {n} emote(s) play another row with a target.
+preview.pool.targeted.one = 
+# Source: {n} emote(s) play another row with a target.
+preview.pool.targeted.other = 
+# Source: changed by another mod.
+preview.refusal.changed_by_mod = 
+# Source: not unlocked.
+preview.refusal.locked = 
+# Source: never a swap target.
+preview.refusal.never_target = 
+# Source: not playable in your current state.
+preview.refusal.not_here = 
+# Source: no animation data.
+preview.refusal.no_animation = 
+# Source: unavailable.
+preview.refusal.unavailable = 
+# Source: Emote Swap is off.
+preview.swap_off = 
+# Source: Until now Bypass Emote forced the animation onto your character from your own client. Nothing was ever sent to the server, but in specific cases, where your character would be in any pose other than the base one, the game client would send duplicate change pose packets to the server. This is not caused by the plugin itself, but rather by how the game handles pose changes. The "Idle Animation Delay" setting in the game's Character Configuration > Control Settings > Character tab is what causes this.
+prompt.before = 
+# Source: You can change this at any time in the settings.
+prompt.change_later = 
+# Source: Keep Direct Play
+prompt.direct_play = 
+# Source: Use Emote Swap
+prompt.emote_swap = 
+# Source: A safer way to play locked emotes
+prompt.heading = 
+# Source: The new mode uses Penumbra to swap locked emotes onto unlocked ones. The game plays the emote itself. Nothing mismatches between the game and the server anymore.
+prompt.now = 
+# Source: Choose how Bypass Emote plays locked emotes
+prompt.title = 
+# Source: Hide your name on the mod
+settings.anonymize = 
+# Source: Names the generated mod after your initials instead of your full name and world.
+settings.anonymize.help = 
+# Source: Swaps at the same time
+settings.behavior = 
+# Source: Spread swaps over several emotes
+settings.cached_dispatch = 
+# Source: Always cache-break
+settings.cache_break = 
+# Source: This game build is not approved yet, this will not work.
+settings.cache_break.not_approved = 
+# Source: Show the changelog after an update
+settings.changelog_on_update = 
+# Source: Opens the changelog window after an update.
+settings.changelog_on_update.help = 
+# Source: Switch to Direct Play
+settings.confirm.direct_play = 
+# Source: Switch to Direct Play?
+settings.confirm.direct_play.title = 
+# Source: Enable unsafe mode
+settings.confirm.unsafe = 
+# Source: Enable unsafe mode?
+settings.confirm.unsafe.title = 
+# Source: Not all sync services support it. {limit}
+settings.direct_play.safe_tooltip = 
+# Source: Not recommended. Not all sync services support it. Emote Swap is safer and works over any sync service.
+settings.direct_play.unsafe_tooltip = 
+# Source: How close a spread emote must fit
+settings.dispatch_fidelity = 
+# Source: Show error messages
+settings.error_messages = 
+# Source: Shows an error in chat when a swap could not be done.
+settings.error_messages.help = 
+# Source: Repeat an error at most every
+settings.error_throttle = 
+# Source: Face your target automatically
+settings.face_target = 
+# Source: Turns your character toward your target when you bypass an emote.
+settings.face_target.help = 
+# Source: Check now
+settings.gate.check_now = 
+# Source: not yet
+settings.gate.not_yet = 
+# Source: Bypass emotes from locked hotbar slots
+settings.hotbar_bypass = 
+# Source: Bypasses a locked emote when you press its hotbar slot.\nRight-click an emote in the main window to assign it to a slot.
+settings.hotbar_bypass.help = 
+# Source: Loops on idle poses
+settings.idle_pose_loops = 
+# Source: Kept swaps per emote
+settings.kept_swaps = 
+# Source: Language
+settings.language = 
+# Source: The language of the plugin's windows and chat messages.
+settings.language.help = 
+# Source: Turn the swap off
+settings.lifetime = 
+# Source: Do not grey out locked emotes
+settings.locked_as_usable = 
+# Source: Keeps the emotes you have not unlocked lit in the game's emote window and on your hotbars.\nPurely cosmetic.
+settings.locked_as_usable.help = 
+# Source: Lists the emotes you have not unlocked in the game's own emote window.\nClose and reopen the emote window for changes to appear.
+settings.locked_in_window.help = 
+# Source: Loop matching
+settings.loop_matching = 
+# Source: Emotes used per behaviour
+settings.max_targets = 
+# Source: How many different target emotes one kind of emote may swap to.
+settings.max_targets.help = 
+# Source: Emotes your mods change
+settings.modded_targets = 
+# Source: Mode
+settings.mode = 
+# Source: Direct Play
+settings.mode.direct_play = 
+# Source: Emote Swap
+settings.mode.emote_swap = 
+# Source: "Emote Swap" plays your emote over one your character owns, through a Penumbra mod. Other players see it over any sync service.\n"Direct Play" sends the emote to the game itself. Not every sync service supports it.
+settings.mode.help = 
+# Source: Not running: {fault}.
+settings.not_running = 
+# Source: General settings
+settings.page.general = 
+# Source: Bypass Mode
+settings.page.mode = 
+# Source: Emote overrides
+settings.page.overrides = 
+# Source: Enable the plugin
+settings.plugin_enabled = 
+# Source: Lets you bypass emotes with the vanilla emote commands (/beesknees, /tea, and so on) and with hotbar slots.\nThe main window and the /be command work regardless of this setting.
+settings.plugin_enabled.help = 
+# Source: In safe mode you can only bypass emotes from the base pose (pose 0) of your current stance.
+settings.safe_mode_limit = 
+# Source: Chat messages
+settings.section.chat = 
+# Source: Direct play
+settings.section.direct_play = 
+# Source: Interface
+settings.section.interface = 
+# Source: Matching
+settings.section.matching = 
+# Source: Penumbra
+settings.section.penumbra = 
+# Source: Plugin
+settings.section.plugin = 
+# Source: Safety
+settings.section.safety = 
+# Source: Updates
+settings.section.updates = 
+# Source: Sound matching
+settings.sound_matching = 
+# Source: Stop companion emotes when they move
+settings.stop_on_move = 
+# Source: Stops your minion, pet or chocobo's looped emote when they move.
+settings.stop_on_move.help = 
+# Source: Show swap messages
+settings.swap_messages = 
+# Source: Shows a message in chat when an emote is swapped.
+settings.swap_messages.help = 
+# Source: Not all sync services support Direct Play.
+settings.sync_services = 
+# Source: Translate...
+settings.translate = 
+# Source: Translation
+settings.translation = 
+# Source: Opens the translation editor. Your translations are saved in the plugin's configuration folder. Translations or improvements are very much welcome: open an issue or a pull request on the plugin's GitHub to share yours.
+settings.translation.help = 
+# Source: Turn matching
+settings.turn_matching = 
+# Source: Unsafe toggle
+settings.unsafe = 
+# Source: This is unsafe. Forcing an emote outside your base pose is, in theory, detectable by the server.
+settings.unsafe.headline = 
+# Source: Show update notifications
+settings.update_notification = 
+# Source: Tells you in chat and on screen when a new version of the plugin has been installed.
+settings.update_notification.help = 
+# Source: Show warning messages
+settings.warning_messages = 
+# Source: Repeat a warning at most every
+settings.warning_throttle = 
+# Source: Default
+silk.card.default = 
+# Source: Every character has this emote.
+silk.card.default.text = 
+# Source: FFXIV Collect
+silk.card.ffxiv_collect = 
+# Source: Open page
+silk.card.open_page = 
+# Source: Owned by {percent} of players
+silk.card.owned_by = 
+# Source: Playable while
+silk.card.playable_while = 
+# Source: Sources
+silk.card.sources = 
+# Source: NEW
+silk.changelog.new = 
+# Source: {source} over {target}
+silk.create_mod.auto_name = 
+# Source: Create the mod
+silk.create_mod.create = 
+# Source: "{mod}" is in Penumbra, enabled at the highest priority.
+silk.create_mod.done = 
+# Source: Creates a permanent swap mod in Penumbra. Bypass Emote never touches it afterwards. You own it and manage it like any other mod.
+silk.create_mod.intro = 
+# Source: Mod
+silk.create_mod.mod = 
+# Source: Not unlocked
+silk.create_mod.not_unlocked = 
+# Source: This emote has no animation for this body
+silk.create_mod.no_body = 
+# Source: Gives the mod the highest priority. When it is off, the mod is created at priority 0.
+silk.create_mod.priority.help = 
+# Source: Block as target
+silk.dock.block = 
+# Source: Blocked as target
+silk.dock.blocked = 
+# Source: Chocobo
+silk.dock.chocobo = 
+# Source: Play on a companion
+silk.dock.companion = 
+# Source: Favourite
+silk.dock.favourite = 
+# Source: Favourited
+silk.dock.favourited = 
+# Source: Hotbar
+silk.dock.hotbar = 
+# Source: Your idle pose
+silk.dock.idle_pose = 
+# Source: your idle pose
+silk.dock.idle_pose.lower = 
+# Source: Locked
+silk.dock.locked = 
+# Source: Loop
+silk.dock.loop = 
+# Source: Loop matches exactly
+silk.dock.match.loop_exact = 
+# Source: Loop matches leniently
+silk.dock.match.loop_lenient = 
+# Source: Sound matches exactly
+silk.dock.match.sound_exact = 
+# Source: Sound matches leniently
+silk.dock.match.sound_lenient = 
+# Source: Turn matches exactly
+silk.dock.match.turn_exact = 
+# Source: Turn matches leniently
+silk.dock.match.turn_lenient = 
+# Source: Minion
+silk.dock.minion = 
+# Source: Never use this emote as a swap target
+silk.dock.never_target = 
+# Source: No text command
+silk.dock.no_command = 
+# Source: Pet
+silk.dock.pet = 
+# Source: Play emote
+silk.dock.play = 
+# Source: or double-click
+silk.dock.play.small = 
+# Source: Plays through {emote}
+silk.dock.plays_through = 
+# Source: Pose {pose}
+silk.dock.pose = 
+# Source: Preview popup
+silk.dock.preview_popup = 
+# Source: You can enable this again in the general settings at any time.
+silk.dock.preview_popup.tip = 
+# Source: Sound
+silk.dock.sound = 
+# Source: Swap preview
+silk.dock.swap_preview = 
+# Source: Idle pose
+silk.dock.tag.idle_pose = 
+# Source: Override
+silk.dock.tag.override = 
+# Source: Turn
+silk.dock.turn = 
+# Source: {label} ({seconds})
+silk.gate.countdown = 
+# Source: {reason}\nEmote swaps may behave oddly until the build is approved. The plugin fetches updates every 10 minutes to check if it was approved.{notice}\nChecked at {time}.
+silk.gate.detail = 
+# Source: Force approval
+silk.gate.force = 
+# Source: Force approval is on.
+silk.gate.forced = 
+# Source: Disable force approval
+silk.gate.force_disable = 
+# Source: Bypass Emote cannot be tested on this game client
+silk.gate.untested = 
+# Source: Waiting for this game patch to be approved
+silk.gate.waiting = 
+# Source: Bypass Emote stays off until the current game version is checked. It usually takes a few hours.
+silk.gate.waiting.text = 
+# Source: Cross
+silk.hotbar.cross = 
+# Source: You can also drag an emote from the main window onto any visible hotbar slot.
+silk.hotbar.drag_hint = 
+# Source: LEFT TRIGGER
+silk.hotbar.left_trigger = 
+# Source: Pick a slot.
+silk.hotbar.pick_slot = 
+# Source: Pick a slot for {emote}.
+silk.hotbar.pick_slot_for = 
+# Source: RIGHT TRIGGER
+silk.hotbar.right_trigger = 
+# Source: Standard
+silk.hotbar.standard = 
+# Source: Cross hotbar {bar}, slot {slot} is empty. You can safely assign the emote.
+silk.hotbar.state.cross_empty = 
+# Source: Cross hotbar {bar}, slot {slot} holds {name}. Assigning replaces it.
+silk.hotbar.state.cross_holds = 
+# Source: Hotbar {bar}, slot {slot} is empty. You can safely assign the emote.
+silk.hotbar.state.empty = 
+# Source: Hotbar {bar}, slot {slot} holds {name}. Assigning replaces it.
+silk.hotbar.state.holds = 
+# Source: this emote
+silk.hotbar.this_emote = 
+# Source: Add
+silk.logs.add = 
+# Source: Add entry
+silk.logs.add_entry = 
+# Source: All categories
+silk.logs.all_categories = 
+# Source: {n} categories
+silk.logs.categories.one = 
+# Source: {n} categories
+silk.logs.categories.other = 
+# Source: Category
+silk.logs.category_hint = 
+# Source: Show colors
+silk.logs.colors = 
+# Source: No entry matches these filters.
+silk.logs.empty = 
+# Source: Export
+silk.logs.export = 
+# Source: Same as /belogs: exports everything since the plugin loaded
+silk.logs.export.tip = 
+# Source: Category
+silk.logs.head.category = 
+# Source: Level
+silk.logs.head.level = 
+# Source: Message
+silk.logs.head.message = 
+# Source: Source
+silk.logs.head.source = 
+# Source: Time
+silk.logs.head.time = 
+# Source: Hide category
+silk.logs.hide_category = 
+# Source: Hide source
+silk.logs.hide_source = 
+# Source: Hold to clear
+silk.logs.hold = 
+# Source: Hold to clear the database entries
+silk.logs.hold.database = 
+# Source: Hold to clear the in-memory entries
+silk.logs.hold.memory = 
+# Source: Critical
+silk.logs.level.critical = 
+# Source: Debug
+silk.logs.level.debug = 
+# Source: Error
+silk.logs.level.error = 
+# Source: Info
+silk.logs.level.info = 
+# Source: Trace
+silk.logs.level.trace = 
+# Source: Warning
+silk.logs.level.warning = 
+# Source: Copy selected entries to clipboard ({n})
+silk.logs.menu.copy_entries.one = 
+# Source: Copy selected entries to clipboard ({n})
+silk.logs.menu.copy_entries.other = 
+# Source: Copy entry to clipboard
+silk.logs.menu.copy_entry = 
+# Source: Copy selected line to clipboard
+silk.logs.menu.copy_line = 
+# Source: Copy selected lines to clipboard
+silk.logs.menu.copy_lines = 
+# Source: Copy selected lines from multiple entries to clipboard ({n})
+silk.logs.menu.copy_lines_multiple.one = 
+# Source: Copy selected lines from multiple entries to clipboard ({n})
+silk.logs.menu.copy_lines_multiple.other = 
+# Source: Copy only message to clipboard
+silk.logs.menu.copy_message = 
+# Source: Copy only messages to clipboard ({n})
+silk.logs.menu.copy_messages.one = 
+# Source: Copy only messages to clipboard ({n})
+silk.logs.menu.copy_messages.other = 
+# Source: Delete entry
+silk.logs.menu.delete = 
+# Source: Hold CTRL to delete
+silk.logs.menu.delete.hint = 
+# Source: Delete selected entries ({n})
+silk.logs.menu.delete_selected.one = 
+# Source: Delete selected entries ({n})
+silk.logs.menu.delete_selected.other = 
+# Source: What happened?
+silk.logs.message_hint = 
+# Source: 0 of {n} entries
+silk.logs.none_of.one = 
+# Source: 0 of {n} entries
+silk.logs.none_of.other = 
+# Source: Options
+silk.logs.options = 
+# Source: Persist to database
+silk.logs.persist = 
+# Source: Search messages, categories, sources...
+silk.logs.search = 
+# Source: Showing {first}-{last} of {n} entries ({total} total)
+silk.logs.showing.one = 
+# Source: Showing {first}-{last} of {n} entries ({total} total)
+silk.logs.showing.other = 
+# Source: Split lines
+silk.logs.split = 
+# Source: Blocked emotes are never used as swap targets.
+silk.main.empty.blocked.hint = 
+# Source: No favourited emote
+silk.main.empty.favourites = 
+# Source: Star an emote, or add one above.
+silk.main.empty.favourites.hint = 
+# Source: Nothing matches "{query}"
+silk.main.empty.search = 
+# Source: Search by name, command or ID.
+silk.main.empty.search.hint = 
+# Source: Click
+silk.main.hint.click = 
+# Source: details
+silk.main.hint.details = 
+# Source: Double-click
+silk.main.hint.double_click = 
+# Source: Drag
+silk.main.hint.drag = 
+# Source: hotbar
+silk.main.hint.hotbar = 
+# Source: more
+silk.main.hint.more = 
+# Source: play
+silk.main.hint.play = 
+# Source: play on yourself
+silk.main.hint.play_self = 
+# Source: Right-click
+silk.main.hint.right_click = 
+# Source: Emote played!
+silk.main.pill.played = 
+# Source: Emote swapped!
+silk.main.pill.swapped = 
+# Source: Add an emote to your favourites...
+silk.main.quick.favourite = 
+# Source: blocked
+silk.main.quick.marked_blocked = 
+# Source: favourite
+silk.main.quick.marked_favourite = 
+# Source: No emote matches.
+silk.main.quick.none = 
+# Source: Allow as a swap target
+silk.main.row.allow = 
+# Source: Block as a swap target
+silk.main.row.block = 
+# Source: Add to favourites
+silk.main.row.favourite = 
+# Source: Remove from favourites
+silk.main.row.unfavourite = 
+# Source: {tab} ({count})
+silk.main.tab.tip = 
+# Source: Refresh
+silk.main.toolbar.refresh = 
+# Source: Sync everyone
+silk.main.toolbar.sync = 
+# Source: Apply emote on chocobo
+silk.menu.chocobo = 
+# Source: Assign to a hotbar slot
+silk.menu.hotbar = 
+# Source: Apply emote on minion
+silk.menu.minion = 
+# Source: Add an override
+silk.menu.override = 
+# Source: Apply emote on pet
+silk.menu.pet = 
+# Source: Play on yourself
+silk.menu.play = 
+# Source: This tab makes sure a locked emote always uses one or more specific target emotes, tried in order.
+silk.overrides.intro = 
+# Source: Limited to these targets only
+silk.overrides.limited = 
+# Source: Locked emote
+silk.overrides.locked_emote = 
+# Source: Pick an emote on the left
+silk.overrides.pick = 
+# Source: {emote} plays through
+silk.overrides.plays_through = 
+# Source: Remove
+silk.overrides.remove = 
+# Source: + Override an emote...
+silk.overrides.source = 
+# Source: + Add a target emote...
+silk.overrides.target = 
+# Source: No result
+silk.picker.no_result = 
+# Source: OWNED
+silk.picker.owned = 
+# Source: Allow
+silk.settings.allow = 
+# Source: Allowed
+silk.settings.allowed = 
+# Source: Any
+silk.settings.any = 
+# Source: "Multiple" keeps multiple swaps active at the same time in the mod.\n"One at a time" turns the previous swaps off as soon as a new one starts.\n\nRecommended: "Multiple".
+silk.settings.behavior.help = 
+# Source: Blocked
+silk.settings.blocked = 
+# Source: Leave this on. Bypassing several animations in a row can look broken while it is off.
+silk.settings.cached_dispatch.alarm = 
+# Source: Gives each bypassed emote a target emote of its own. Useful when you bypass several emotes quickly.\n\n"Off" redraws your character on every bypass.\n"When needed" spreads emotes only after a game patch breaks the cache-breaker.\n"On" always spreads emotes.\n\nRecommended: "On". "Off" is not recommended.
+silk.settings.cached_dispatch.help = 
+# Source: Applies the cache-break mechanism to every emote, even the ones you own. An animation change then applies without a redraw and without stopping the emote. Experimental.
+silk.settings.cache_break.help = 
+# Source: The old version.
+silk.settings.classic_interface.text = 
+# Source: Compact rows
+silk.settings.compact_rows = 
+# Source: Much smaller rows in the emote list, to see more emotes at once.
+silk.settings.compact_rows.help = 
+# Source: Which emotes a source emote may spread over. Takes effect while "Spread swaps over several emotes" is on. A rank is a group of emotes with the same characteristics (turn behaviour and so on).\n\n"Same rank" only picks targets of the same rank.\n"One below" also accepts targets one rank below.\n"Any" picks any target it can find.\n\nNone of them breaks your other rules.\n\nRecommended: "One below". Pick "Same rank" for behaviour accuracy.
+silk.settings.dispatch_fidelity.help = 
+# Source: How long the same error stays quiet after you have seen it.\n\nSet to 0 to see every one of them.
+silk.settings.error_throttle.help = 
+# Source: When no unlocked looped emote fits as a target, your current idle pose can carry the emote instead. Using the pose redraws your character.\n\n"Never" blocks idle poses as targets.\n"If nothing fits" uses the pose only when no unlocked looped emote could have played at all. An emote you blocked yourself still counts as one that could have played.\n"Allow" falls back to your idle pose whenever nothing else is available.\n\nRecommended: "If nothing fits".
+silk.settings.idle_pose_loops.help = 
+# Source: If nothing fits
+silk.settings.if_nothing_fits = 
+# Source: How many swaps are kept per target emote. 0 keeps them all.\n\nA kept swap stays as an option of the generated Penumbra mod. Playing that emote again enables it without rebuilding the mod. Kept swaps make the mod bigger.
+silk.settings.kept_swaps.help = 
+# Source: Last resort
+silk.settings.last_resort = 
+# Source: Lenient
+silk.settings.lenient = 
+# Source: "When it ends" puts your real emote back as soon as the animation stops.\n"On the target" keeps the swap enabled until the next time you play the target emote.\n"Never" keeps the swap live until another swap claims the same target emote.\n\n"When it ends" redraws your character after every swap.\n\nRecommended: "On the target".
+silk.settings.lifetime.help = 
+# Source: Show locked emotes in the game emote window
+silk.settings.locked_in_window = 
+# Source: "Strict" only puts a looping emote on another looping one.\n"Lenient" lets a looping emote play once on a one time emote when no better match exists.\n\nRecommended: "Strict". Pick "Lenient" when you own few emotes.
+silk.settings.loop_matching.help = 
+# Source: Adopt Malou, the orange cat
+silk.settings.malou = 
+# Source: He's really cute.
+silk.settings.malou.help = 
+# Source: Whether an unlocked emote that one of your mods changes may be used as a target. Other players can see that modded emote for a moment before the swap takes place.\n\n"Allowed" uses them freely.\n"Last resort" uses one only when nothing else fits.\n"Blocked" never uses one. The chat error then offers to disable the mod or open it in Penumbra.\n\nRecommended: "Last resort". Pick "Blocked" to keep your modded emotes out of sight.
+silk.settings.modded_targets.help = 
+# Source: Multiple
+silk.settings.multiple = 
+# Source: Never
+silk.settings.never = 
+# Source: The one you are looking at.
+silk.settings.new_interface.text = 
+# Source: Off
+silk.settings.off = 
+# Source: On
+silk.settings.on = 
+# Source: One at a time
+silk.settings.one_at_a_time = 
+# Source: One below
+silk.settings.one_below = 
+# Source: On the target
+silk.settings.on_the_target = 
+# Source: Enable preview popup
+silk.settings.preview_popup = 
+# Source: On: clicking an emote opens a panel next to the window, and a double-click plays it. In Emote Swap the panel also previews the swap. Off: no panel, a single click plays the emote.
+silk.settings.preview_popup.help = 
+# Source: Recommended
+silk.settings.recommended = 
+# Source: Safe mode is not a guarantee either. It keeps Direct Play out of the states where it was proved to go wrong. Emote Swap is the safe option and behaves almost the same way.
+silk.settings.safe_mode_not_a_promise = 
+# Source: Same rank
+silk.settings.same_rank = 
+# Source: Emote list
+silk.settings.section.emote_list = 
+# Source: "Strict" never puts an emote on one that makes sound.\n"Lenient" allows matching emotes that make sounds together.\n"Off" plays emotes regardless of sound.\n\nSound matching keeps other players from hearing an emote you did not play.\n\nRecommended: "Lenient".
+silk.settings.sound_matching.help = 
+# Source: Strict
+silk.settings.strict = 
+# Source: Emotes turn your character differently when you have a target. Some turn the torso (/hum). Some turn only the head (/stepdance). Some only move the eyes (/beesknees). Some do not move at all (/guard).\n\n"Very strict" only picks emotes that behave the same way.\n"Strict" keeps the head and body turn, and allows a different eye behaviour.\n"Lenient" allows any turn behaviour.\n\nThe best match is always tried first.\n\nRecommended: "Lenient".
+silk.settings.turn_matching.help = 
+# Source: Lets Direct Play bypass an emote in any pose.\n\nLeave it off unless you know what you are doing. When it is off, the plugin only plays emotes from states where nothing can be noticed.
+silk.settings.unsafe.help = 
+# Source: In practice it is a non-issue. Other tools and plugins have done this for years without trouble. Go back to safe mode, or to Emote Swap, if you are uncomfortable with it.
+silk.settings.unsafe.reassurance = 
+# Source: Very strict
+silk.settings.very_strict = 
+# Source: Shows a warning in chat when a swap did not happen the way you would expect.
+silk.settings.warning_messages.help = 
+# Source: How long the same warning stays quiet after you have seen it.\n\nSet to 0 to disable.
+silk.settings.warning_throttle.help = 
+# Source: When it ends
+silk.settings.when_it_ends = 
+# Source: When needed
+silk.settings.when_needed = 
+# Source: Classic interface
+skin.classic = 
+# Source: New interface
+skin.silk = 
+# Source: Changelog
+title.changelog = 
+# Source: Show changelogs
+title.changelogs = 
+# Source: Join the Discord
+title.discord = 
+# Source: Show every logs
+title.every_logs = 
+# Source: Support me
+title.kofi = 
+# Source: All logs
+title.logs = 
+# Source: Open settings
+title.open_settings = 
+# Source: Settings
+title.settings = 
+# Source: Changelog
+window.changelog.subtitle = 
+# Source: Create a mod
+window.create_mod.subtitle = 
+# Source: Bypass Emote - Create a mod
+window.create_mod.title = 
+# Source: Assign to a hotbar
+window.hotbar.subtitle = 
+# Source: Logs
+window.logs.subtitle = 
+# Source: Locked emotes
+window.main.subtitle = 
+# Source: Bypass Emote - Locked Emotes
+window.main.title = 
+# Source: Settings
+window.settings.subtitle = 
+# Source: Bypass Emote
+window.settings.title = 

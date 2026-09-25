@@ -35,7 +35,7 @@ public class V1_5_x_x : BaseChangelogVersion
 
                 Separator(),
 
-                Header("Technical Changes", Blue, 0, FontAwesomeIcon.Code, Blue),
+                Header("Technical Changes", Blue, 0, FontAwesomeIcon.Wrench, Blue),
                 Entry("Integrated NoireLib for improved utilities and changelog system.", White, 1, FontAwesomeIcon.Book, Blue),
                 Entry("Refactored emote and character helpers to use NoireLib utilities.", White, 1, FontAwesomeIcon.CodeBranch, Blue),
             }
@@ -62,7 +62,7 @@ public class V1_5_x_x : BaseChangelogVersion
 
                 Separator(),
 
-                Header("Technical Changes", Blue, 0, FontAwesomeIcon.Code, Blue),
+                Header("Technical Changes", Blue, 0, FontAwesomeIcon.Wrench, Blue),
                 EntryBullet("Refactored the code to use the new NoireLib helpers and utilities.", White, 1),
             }
         };

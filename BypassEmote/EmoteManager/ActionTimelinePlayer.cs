@@ -2,6 +2,7 @@ using BypassEmote.Helpers;
 using BypassEmote.IPC.Models;
 using Dalamud.Game.ClientState.Objects.Types;
 using NoireLib.Animations.Timelines;
+using NoireLib.Helpers;
 using System;
 
 namespace BypassEmote;
@@ -18,7 +19,7 @@ public sealed class ActionTimelinePlayer : IDisposable
         var alreadyTracked = CommonHelper.TryGetTrackedCharacterFromAddress(character.Address) != null;
 
         _driver.Play(character, actionTimeline, captureBase: !alreadyTracked, interrupt: interrupt,
-            targetId: CommonHelper.GetPlayerTarget(character));
+            targetId: GameObjectHelper.GetTargetId(character));
     }
 
     public void Blend(ICharacter character, ushort actionTimeline, int prio = ActionTimelineDriver.DefaultPriority,

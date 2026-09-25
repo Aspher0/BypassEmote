@@ -1,5 +1,7 @@
 using BypassEmote.Enums;
+using BypassEmote.Localization;
 using BypassEmote.Models;
+using NoireLib.Localizer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -75,13 +77,13 @@ public static class OverrideResolver
         return Refusal.None;
     }
 
-    public static string ReasonText(Refusal refusal) => refusal switch
+    public static NoireString ReasonText(Refusal refusal) => refusal switch
     {
-        Refusal.Locked => "you have not unlocked it",
-        Refusal.NeverATarget => "it can never be a swap target",
-        Refusal.NotHere => "it cannot be played in your current state",
-        Refusal.ChangedByAMod => "a mod changes it and your settings block modded emotes",
-        Refusal.NotConfigured => "there is no animation data for it",
-        _ => "it is available",
+        Refusal.Locked => L.ReasonLocked,
+        Refusal.NeverATarget => L.ReasonNeverATarget,
+        Refusal.NotHere => L.ReasonNotHere,
+        Refusal.ChangedByAMod => L.ReasonChangedByAMod,
+        Refusal.NotConfigured => L.ReasonNotConfigured,
+        _ => L.ReasonAvailable,
     };
 }

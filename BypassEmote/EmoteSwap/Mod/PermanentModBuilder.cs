@@ -1,4 +1,5 @@
 using BypassEmote.IPC;
+using BypassEmote.Localization;
 using BypassEmote.Models;
 using NoireLib;
 using System;
@@ -27,7 +28,7 @@ internal static class PermanentModBuilder
         catch (Exception ex)
         {
             Log.Error(ex, $"Creating a mod for /{source.Command} over /{target.Command} failed.", LogPrefix);
-            return new Outcome(false, "Something went wrong. Nothing was created. The log has the details.");
+            return new Outcome(false, L.BuildFailed.Text);
         }
     }
 
@@ -35,26 +36,26 @@ internal static class PermanentModBuilder
         IReadOnlyList<string> skeletons, string modName, bool enable, bool highestPriority)
     {
         if (skeletons.Count == 0)
-            return new Outcome(false, "Pick at least one race for the mod to cover.");
+            return new Outcome(false, L.BuildPickRace.Text);
 
         if (Service.Penumbra is not { Available: true } penumbra)
-            return new Outcome(false, Service.Penumbra?.UnavailableReason ?? "Penumbra is not running.");
+            return new Outcome(false, Service.Penumbra?.UnavailableReason ?? L.PenumbraNotRunning.Text);
 
         var name = CleanName(modName);
         if (name.Length == 0)
-            return new Outcome(false, "Give the mod a name first.");
+            return new Outcome(false, L.BuildNameFirst.Text);
 
         if (penumbra.GetModRootDirectory() is not { Length: > 0 } modRoot)
-            return new Outcome(false, "Penumbra's mod folder could not be read.");
+            return new Outcome(false, L.BuildNoModFolder.Text);
 
         if (Service.Orchestrator is not { } orchestrator)
-            return new Outcome(false, "The swap engine is not running.");
+            return new Outcome(false, L.BuildNoEngine.Text);
 
         var directoryName = DirectoryNameFor(name);
         var modDirectory = Path.Combine(modRoot, directoryName);
 
         if (Directory.Exists(modDirectory))
-            return new Outcome(false, $"Penumbra already holds a mod folder called '{directoryName}'. Pick another name.");
+            return new Outcome(false, L.BuildFolderTaken.With("folder", directoryName));
 
         var ownSkeleton = NoireService.ObjectTable.LocalPlayer is { } player
             ? SwapOrchestrator.SkeletonFor(player)
@@ -62,8 +63,7 @@ internal static class PermanentModBuilder
 
         if (orchestrator.BuildPlainSwapFiles(source, target, skeletons, ownSkeleton) is not { Count: > 0 } files)
         {
-            return new Outcome(false, $"/{source.Command} cannot be played over /{target.Command}. "
-                + "They share no posture.");
+            return new Outcome(false, L.BuildNoPosture.With("source", source.Command, "target", target.Command));
         }
 
         var redirects = new Dictionary<string, string>(files.Count);
@@ -77,27 +77,26 @@ internal static class PermanentModBuilder
             : 0;
 
         if (!WriteMod(modDirectory, name, source, target, files, redirects))
-            return new Outcome(false, "The mod's files could not be written. The log has the details.");
+            return new Outcome(false, L.BuildNotWritten.Text);
 
         if (!penumbra.AddMod(directoryName))
         {
-            return new Outcome(false, $"'{name}' was written to '{directoryName}'. Penumbra did not load it. "
-                + "Rediscover mods in Penumbra to pick it up.");
+            return new Outcome(false, L.BuildNotLoaded.With("mod", name, "folder", directoryName));
         }
 
         if (assigned is { } collectionToPrioritiseIn)
             penumbra.TrySetModPriority(collectionToPrioritiseIn.Id, directoryName, priority);
 
         if (!enable)
-            return new Outcome(true, $"'{name}' was created. Enable it in Penumbra when you want it.");
+            return new Outcome(true, L.BuildCreatedOff.With("mod", name));
 
         if (assigned is not { } collection)
-            return new Outcome(true, $"'{name}' was created. No collection is assigned to your character. The mod is off.");
+            return new Outcome(true, L.BuildCreatedNoCollection.With("mod", name));
 
         if (!penumbra.TrySetModEnabled(collection.Id, directoryName, true))
-            return new Outcome(true, $"'{name}' was created. Penumbra could not enable it in {collection.Name}.");
+            return new Outcome(true, L.BuildCreatedNotEnabled.With("mod", name, "collection", collection.Name));
 
-        return new Outcome(true, $"'{name}' was created and switched on in {collection.Name}.");
+        return new Outcome(true, L.BuildCreatedOn.With("mod", name, "collection", collection.Name));
     }
 
     private static int PriorityOver(IPCCaller_Penumbra penumbra, Guid collectionId,
@@ -170,7 +169,7 @@ internal static class PermanentModBuilder
     }
 
     internal static string DescriptionFor(EmoteAttributes source, EmoteAttributes target)
-        => $"Plays /{source.Command} whenever /{target.Command} is used. Made with BypassEmote.";
+        => $"Plays /{source.Command} whenever /{target.Command} is used. Made with Bypass Emote.";
 
     internal static string CleanName(string? modName)
     {

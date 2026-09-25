@@ -21,7 +21,10 @@ public partial class Service
     public static NoireHook<OnEmoteFuncDelegate>? OnEmoteHook;
     public static NoireHook<AgentEmote.Delegates.ExecuteEmote> AgentExecuteEmoteHook;
     public static NoireHook<EmoteManager.Delegates.ExecuteEmote> ExecuteEmoteHook;
-    public static NoireHook<RaptureHotbarModule.Delegates.ExecuteSlot> ExecuteHotbarSlotHook;
+    public static NoireHook<RaptureHotbarModule.Delegates.ExecuteSlot>? ExecuteHotbarSlotHook;
+
+    // From Luckyumimi: https://github.com/Luckyumimi/BypassEmoteCN/blob/main/BypassEmote/Service.Hooks.cs
+    private const string ChineseExecuteSlotSignature = "E9 ?? ?? ?? ?? 73 25 8B CA 49 8D 91 A0 00 00 00";
 
     private const byte HotbarSlotNotExecuted = 0;
     private static bool inHotbarSlot;
@@ -30,7 +33,7 @@ public partial class Service
     {
         AgentExecuteEmoteHook = new(DetourAgentExecuteEmote, true);
         ExecuteEmoteHook = new(DetourExecuteEmote, true);
-        ExecuteHotbarSlotHook = new(DetourExecuteHotbarSlot, true);
+        InstallHotbarSlotHook();
 
         try
         {
@@ -40,6 +43,26 @@ public partial class Service
         catch (Exception ex)
         {
             Log.Error(ex, "OnEmote Hook error");
+        }
+    }
+
+    private static unsafe void InstallHotbarSlotHook()
+    {
+        if (GameClientHelper.Current() != GameClient.Chinese)
+        {
+            ExecuteHotbarSlotHook = new(DetourExecuteHotbarSlot, true);
+            return;
+        }
+
+        try
+        {
+            ExecuteHotbarSlotHook = new(ChineseExecuteSlotSignature, DetourExecuteHotbarSlot, true, "ExecuteSlot");
+        }
+        catch (Exception ex)
+        {
+            ExecuteHotbarSlotHook?.Dispose();
+            ExecuteHotbarSlotHook = null;
+            Log.Error(ex, "The Chinese client's hotbar ExecuteSlot signature was not found. Hotbar bypassing stays off.");
         }
     }
 
@@ -69,7 +92,7 @@ public partial class Service
 
         try
         {
-            ret = ExecuteHotbarSlotHook.Original(thisPtr, hotbarSlot);
+            ret = ExecuteHotbarSlotHook!.Original(thisPtr, hotbarSlot);
         }
         finally
         {

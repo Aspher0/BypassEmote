@@ -32,6 +32,9 @@ public sealed class FfxivCollectEntry
     [JsonProperty("patch")]
     public string? Patch { get; set; }
 
+    [JsonProperty("owned")]
+    public string? Owned { get; set; }
+
     [JsonProperty("sources")]
     public List<FfxivCollectSource>? Sources { get; set; }
 

@@ -2,6 +2,7 @@ using BypassEmote.Enums;
 using BypassEmote.Helpers;
 using BypassEmote.IPC.Enums;
 using BypassEmote.IPC.Models;
+using BypassEmote.Localization;
 using BypassEmote.UI;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.SubKinds;
@@ -59,10 +60,9 @@ internal static unsafe class EmotePlayer
         var isLocalPlayer = NoireService.ObjectTable.LocalPlayer is { } localPlayer
             && chara.Address == localPlayer.Address;
 
-        if (isLocalPlayer && SwapPromptWindow.IsShowing)
+        if (isLocalPlayer && SwapPrompt.IsShowing)
         {
-            LogHelper.Error(
-                "Bypass Emote is waiting for you to choose how it should play locked emotes.", "prompt.pending");
+            LogHelper.Error(L.PromptPending, "prompt.pending");
 
             return;
         }
@@ -76,7 +76,7 @@ internal static unsafe class EmotePlayer
                 isLocalPlayer && NoireService.Condition[ConditionFlag.Fishing]))
         {
             if (isLocalPlayer)
-                LogHelper.Error("You cannot bypass this emote right now.");
+                LogHelper.Error(L.CannotBypassNow);
             return;
         }
 

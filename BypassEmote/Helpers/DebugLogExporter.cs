@@ -1,5 +1,6 @@
 using BypassEmote.EmoteSwap;
 using BypassEmote.Enums;
+using BypassEmote.Localization;
 using BypassEmote.Models;
 using Dalamud.Plugin;
 using Lumina.Excel.Sheets;
@@ -55,11 +56,11 @@ internal static class DebugLogExporter
     {
         if (Interlocked.CompareExchange(ref _running, 1, 0) != 0)
         {
-            LogHelper.Info("A debug log export is already running.");
+            LogHelper.Info(L.ExportRunning);
             return;
         }
 
-        LogHelper.NoticeAlways("Exporting logs...");
+        LogHelper.NoticeAlways(L.Exporting);
 
         _ = AsyncHelper.RunInBackgroundAsync(ExportAsync, "BypassEmote.ExportDebugLogs");
     }
@@ -76,7 +77,7 @@ internal static class DebugLogExporter
         catch (Exception ex)
         {
             Log.Error(ex, "Exporting the debug logs failed.", LogPrefix);
-            LogHelper.Error("Debug logs could not be exported. The Dalamud log has the reason.");
+            LogHelper.Error(L.ExportFailed);
         }
         finally
         {
@@ -86,10 +87,11 @@ internal static class DebugLogExporter
 
     private static void Announce(string archivePath)
     {
-        var openText = "Debug logs exported to ";
-        var bodyText = ". Send this file to the developer. Feel free to check the content of the zip and if you need to anonymize any information, please do so before sending it. ";
-        var warningtext = "Personal information appears in it, DO NOT send this in a public channel.";
-        var endText = " Ask the developer where to send this file to be extra safe.";
+        var openText = L.ExportedTo.Before;
+        var bodyText = L.ExportedTo.After + " ";
+        var warningtext = L.ExportPersonal.Text;
+        var endText = " " + L.ExportAskWhere.Text;
+        var (openRecord, bodyRecord) = L.ExportedTo.Source;
 
         var key = $"BypassEmote.OpenDebugLogs.{Path.GetFileName(archivePath)}";
 
@@ -103,9 +105,10 @@ internal static class DebugLogExporter
         chat.AddText(warningtext, LogHelper.ErrorColor);
         chat.AddText(endText, LogHelper.WarningColor);
         chat.AddText(" ");
-        chat.AddLink("[Open folder]", key, Open, LinkColor);
+        chat.AddLink(L.OpenFolder.Text, key, Open, LinkColor);
 
-        LogHelper.NoticeAlways(openText + archivePath + bodyText + warningtext + endText, chat);
+        LogHelper.NoticeAlways(new ChatText(openText + archivePath + bodyText + warningtext + endText,
+            openRecord + archivePath + bodyRecord + " " + L.ExportPersonal.Source + " " + L.ExportAskWhere.Source), chat);
     }
 
     private static string Write(LiveSnapshot live)
@@ -192,7 +195,7 @@ internal static class DebugLogExporter
 
         var described = sources.Count == 0 ? "none found" : string.Join(", ", sources.Select(Describe));
 
-        writer.WriteLine($"BypassEmote lines from the Dalamud log, from "
+        writer.WriteLine($"Bypass Emote lines from the Dalamud log, from "
             + $"{cutoff.ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.InvariantCulture)}.");
 
         writer.WriteLine($"Sources: {described}");
@@ -367,7 +370,7 @@ internal static class DebugLogExporter
 
         var report = new StringBuilder();
 
-        report.AppendLine("BypassEmote debug report");
+        report.AppendLine("Bypass Emote debug report");
         report.AppendLine($"Generated: {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}");
         report.AppendLine();
 
@@ -653,7 +656,7 @@ internal static class DebugLogExporter
         }
 
         report.AppendLine($"Status: {gate.Status}");
-        report.AppendLine($"Reason: {gate.Reason}");
+        report.AppendLine($"Reason: {gate.ReasonRecord}");
         report.AppendLine($"Notice: {gate.Notice ?? "none"}");
         report.AppendLine($"Plugin version seen: {gate.PluginVersion?.ToString() ?? "unknown"}");
         report.AppendLine($"Last checked: {gate.LastCheckedUtc?.ToString("u", CultureInfo.InvariantCulture) ?? "never"}");
@@ -681,7 +684,7 @@ internal static class DebugLogExporter
             + $", locked as usable {Configuration.ShowLockedEmotesAsUsable}");
         report.AppendLine($"Plugin emote window: all emotes {Configuration.ShowAllEmotes}, ids {Configuration.ShowEmoteIds}"
             + $", invalid emotes {Configuration.ShowInvalidEmotes}");
-        report.AppendLine($"Windows: in gpose {Configuration.ShowWindowsInGpose}, with the UI hidden {Configuration.ShowWindowsWhenUiHidden}");
+        report.AppendLine($"Interface: {NoireLib.UI.NoireSkins.Active.Id}, language {NoireLib.Localizer.NoireLanguages.Localizer?.CurrentLocale ?? "en"}");
         report.AppendLine($"Chat: swap {Configuration.ShowSwapMessages}, warnings {Configuration.ShowWarningMessages}"
             + $" (throttle {Configuration.ThrottleTimeWarnings}), errors {Configuration.ShowErrorMessages}"
             + $" (throttle {Configuration.ThrottleTimeErrors})");
@@ -716,7 +719,7 @@ internal static class DebugLogExporter
         }
 
         report.AppendLine($"Available: {penumbra.Available}");
-        report.AppendLine($"Reason: {penumbra.UnavailableReason}");
+        report.AppendLine($"Reason: {penumbra.Unavailable.Record}");
 
         if (!penumbra.Available)
             return;
@@ -898,7 +901,7 @@ internal static class DebugLogExporter
             .ToList();
 
         var loopTargets = unlockedLoops.Count(emote => Service.Catalog?.Get(emote.RowId) is
-            { EligibleTarget: true, IsPoseFamily: false } && !blocked.Contains(emote.RowId));
+        { EligibleTarget: true, IsPoseFamily: false } && !blocked.Contains(emote.RowId));
 
         report.AppendLine($"Unlocked loops: {unlockedLoops.Count}, {loopTargets} of them eligible and not blocked as swap targets");
 

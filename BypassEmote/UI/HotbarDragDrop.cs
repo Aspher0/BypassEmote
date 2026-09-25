@@ -2,6 +2,7 @@ using BypassEmote.Helpers;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.Sheets;
 using NoireLib;
@@ -14,12 +15,6 @@ namespace BypassEmote.UI;
 
 public static class HotbarDragDrop
 {
-    private static readonly string[] BarAddonNames =
-    [
-        "_ActionBar", "_ActionBar01", "_ActionBar02", "_ActionBar03", "_ActionBar04",
-        "_ActionBar05", "_ActionBar06", "_ActionBar07", "_ActionBar08", "_ActionBar09",
-    ];
-
     private const float GhostSize = 40f;
     private const float OutlineRounding = 4f;
     private const float OutlineThickness = 2f;
@@ -29,7 +24,6 @@ public static class HotbarDragDrop
 
     private static Emote? draggedEmote;
     private static bool swallowUntilRelease;
-    private static readonly List<HotbarSlotCandidate> candidates = new(120);
 
     public static bool IsDragging => draggedEmote.HasValue || swallowUntilRelease;
 
@@ -73,92 +67,37 @@ public static class HotbarDragDrop
 
         var mousePos = ImGui.GetMousePos();
 
-        HotbarSlotCandidate? hovered = null;
-        if (!ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow))
-        {
-            CollectSlotCandidates(candidates);
-            hovered = HotbarSlotPicker.Pick(mousePos, candidates);
-        }
+        HotbarSlotBounds hovered = default;
+        var hovering = !ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow) && AddonHelper.TryGetHotbarSlotAt(mousePos, out hovered);
 
         if (released)
         {
-            if (hovered is { } target)
-                CommonHelper.AssignEmoteToHotbarSlot(target.BarId, target.SlotIndex, emote.RowId);
+            if (hovering)
+                AddonHelper.SetHotbarSlot(hovered.HotbarId, hovered.SlotIndex, RaptureHotbarModule.HotbarSlotType.Emote, emote.RowId);
 
             draggedEmote = null;
             return;
         }
 
-        if (hovered is { } slot)
-            DrawSlotOutline(slot.Rect);
+        if (hovering)
+            DrawSlotOutline(hovered);
 
         DrawDragGhost(emote, mousePos);
     }
 
-    private static unsafe void CollectSlotCandidates(List<HotbarSlotCandidate> into)
-    {
-        into.Clear();
-
-        if (!AddonHelper.IsNativeUiVisible())
-            return;
-
-        foreach (var addonName in BarAddonNames)
-        {
-            try
-            {
-                if (!AddonHelper.TryGetReadyAddon<AddonActionBarBase>(addonName, out var bar) || bar == null)
-                    continue;
-
-                var unit = (AtkUnitBase*)bar;
-                var addonScale = unit->Scale;
-
-                int barId = bar->RaptureHotbarId;
-                if (barId > 9)
-                    continue;
-
-                var slotCount = Math.Min((int)bar->SlotCount, bar->ActionBarSlotVector.Count);
-                for (var slotIndex = 0; slotIndex < slotCount; slotIndex++)
-                {
-                    ref var slot = ref bar->ActionBarSlotVector[slotIndex];
-
-                    var node = slot.ComponentDragDrop != null && slot.ComponentDragDrop->AtkComponentBase.OwnerNode != null
-                        ? &slot.ComponentDragDrop->AtkComponentBase.OwnerNode->AtkResNode
-                        : slot.Icon != null ? &slot.Icon->AtkResNode : null;
-                    if (node == null)
-                        continue;
-
-                    var width = node->Width * node->ScaleX * addonScale;
-                    var height = node->Height * node->ScaleY * addonScale;
-                    if (width <= 1 || height <= 1)
-                        continue;
-
-                    into.Add(new HotbarSlotCandidate(barId, slotIndex, new Vector4(
-                        node->ScreenX, node->ScreenY, node->ScreenX + width, node->ScreenY + height)));
-                }
-            }
-            catch
-            {
-                // no-op
-            }
-        }
-    }
-
-    private static void DrawSlotOutline(Vector4 rect)
+    private static void DrawSlotOutline(HotbarSlotBounds slot)
     {
         var drawList = ImGui.GetForegroundDrawList();
-        var min = new Vector2(rect.X, rect.Y);
-        var max = new Vector2(rect.Z, rect.W);
 
-        drawList.AddRectFilled(min, max, OutlineFillColor, OutlineRounding);
-        drawList.AddRect(min, max, OutlineColor, OutlineRounding, ImDrawFlags.None, OutlineThickness);
+        drawList.AddRectFilled(slot.Min, slot.Max, OutlineFillColor, OutlineRounding);
+        drawList.AddRect(slot.Min, slot.Max, OutlineColor, OutlineRounding, ImDrawFlags.None, OutlineThickness);
     }
 
     private static void DrawDragGhost(Emote emote, Vector2 mousePos)
     {
         try
         {
-            var texture = NoireService.TextureProvider.GetFromGameIcon(CommonHelper.GetEmoteIcon(emote));
-            if (texture.TryGetWrap(out var wrap, out _))
+            if (IconHelper.Get(CommonHelper.GetEmoteIcon(emote)) is { } texture && texture.TryGetWrap(out var wrap, out _))
             {
                 var half = new Vector2(GhostSize * 0.5f * ImGuiHelpers.GlobalScale);
                 ImGui.GetForegroundDrawList().AddImage(wrap.Handle, mousePos - half, mousePos + half, Vector2.Zero, Vector2.One, GhostTint);

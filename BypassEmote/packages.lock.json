@@ -16,23 +16,25 @@
       },
       "NoireLib": {
         "type": "Direct",
-        "requested": "[2.0.1, )",
-        "resolved": "2.0.1",
-        "contentHash": "urkafST3lssZC2S3BaKz2HnViu/bUHiI5luzkY05/r49WhQMxA0vhDyuDQYzzIEMikAPh45HlD2AQjxvVFAwrA==",
+        "requested": "[2.1.0, )",
+        "resolved": "2.1.0",
+        "contentHash": "N/wINF+Ks7EV3lGNNktL6ji1JE6xVv8Wygkd1n2OgkOXrWmjXqH7hJ5vCed5tv5YzoxawVRy266VW6R9IoyYrA==",
         "dependencies": {
           "BCrypt.Net-Next": "4.2.0",
           "Castle.Core": "5.2.1",
+          "Clipper2": "2.0.0",
           "Konscious.Security.Cryptography.Argon2": "1.3.1",
           "Newtonsoft.Json": "13.0.4",
+          "NoireLib.Client": "2.1.0",
           "SharpGLTF.Core": "1.0.6",
           "System.Data.SQLite": "2.0.4"
         }
       },
       "Penumbra.Api": {
         "type": "Direct",
-        "requested": "[5.15.1, )",
-        "resolved": "5.15.1",
-        "contentHash": "3ikk0zIOaLm2n3nZRQpW3xaRQ2cq/TOOEApNUjYXolqbyvCrZVGXhdQulcssNUbo0AMQ81l+cf7OfqRceeRBcg=="
+        "requested": "[5.19.1, )",
+        "resolved": "5.19.1",
+        "contentHash": "QPoOajzNZJblbaKegp5XsFS+1MsU7QiOlH5lljykr5kepVdCQBFh5RB5pR7gXFGy3MzziIKo5hnh1KHqQrfeTg=="
       },
       "BCrypt.Net-Next": {
         "type": "Transitive",
@@ -46,6 +48,11 @@
         "dependencies": {
           "System.Diagnostics.EventLog": "6.0.0"
         }
+      },
+      "Clipper2": {
+        "type": "Transitive",
+        "resolved": "2.0.0",
+        "contentHash": "2X23RZxJrjRjOSZc20aqXY9jpmHLekDRy4PIMfrsi2LPNzxFYlnuqzX/nLdk77fbURHUeX+gMhUn2a1z9/wMTQ=="
       },
       "Konscious.Security.Cryptography.Argon2": {
         "type": "Transitive",
@@ -65,10 +72,61 @@
         "resolved": "13.0.4",
         "contentHash": "pdgNNMai3zv51W5aq268sujXUyx7SNdE2bj1wZcWjAQrKMFZV260lbqYop1d2GM67JI1huLRwxo9ZqnfF/lC6A=="
       },
+      "NoireLib.Client": {
+        "type": "Transitive",
+        "resolved": "2.1.0",
+        "contentHash": "hJLCiZ3lXEMUst4F3SasNuwLyAqKciAfMr4N5ONH6xnLYI06czG4mVxqGoklukDLio9BOCp4UIuNcQERxvHDRQ==",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.4",
+          "SocketIO.Serializer.NewtonsoftJson": "3.1.2",
+          "SocketIOClient": "3.1.2"
+        }
+      },
       "SharpGLTF.Core": {
         "type": "Transitive",
         "resolved": "1.0.6",
         "contentHash": "m3qIvUnpvRRfQ0fp0TFfpPk+vsHkCIOf/uIVJ19fe9dwa29KCO/PeHVXKAph8nsFxFLXitTIIqCa5W8JGLMhBg=="
+      },
+      "SocketIO.Core": {
+        "type": "Transitive",
+        "resolved": "3.1.2",
+        "contentHash": "tb6vZ7DYhZooRGLHTPK7/Gifbu+kHbkQRbsee0LAnI28pWc5+Br+juh4pvid3kfIrGTl5dzAfy5huLELVU4svA=="
+      },
+      "SocketIO.Serializer.Core": {
+        "type": "Transitive",
+        "resolved": "3.1.2",
+        "contentHash": "/cJtU3JVzjqP/Jh3BpMMR0aNzYua6s9e3+hjZ6OnYprFHrGYyg/n9OcST1dBjmOvvgyJ3GwJlyq0NjnPETAHsA==",
+        "dependencies": {
+          "SocketIO.Core": "3.1.2"
+        }
+      },
+      "SocketIO.Serializer.NewtonsoftJson": {
+        "type": "Transitive",
+        "resolved": "3.1.2",
+        "contentHash": "vTCbbPo3UOC3KOma1VqNkZg33A/Y14ZHWT0y3JP65BWTmJN9B2NdeA1mkPkncponq6UkdszMobJ5WXHIOkvqtg==",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3",
+          "SocketIO.Core": "3.1.2",
+          "SocketIO.Serializer.Core": "3.1.2"
+        }
+      },
+      "SocketIO.Serializer.SystemTextJson": {
+        "type": "Transitive",
+        "resolved": "3.1.2",
+        "contentHash": "AA8w3Y4JldC3FaL1D4WuyG4zLPdrzjf8AQx1LCKtzlMlTLOcbEW0UGt+BhKxkUnxYAD5O5fsqRrTNCGXu6VeWA==",
+        "dependencies": {
+          "SocketIO.Core": "3.1.2",
+          "SocketIO.Serializer.Core": "3.1.2"
+        }
+      },
+      "SocketIOClient": {
+        "type": "Transitive",
+        "resolved": "3.1.2",
+        "contentHash": "CMmnmhvG1Qf8k6BPh3RLqc/9MNvGUlCOyptjoP8a62bowPQkHTWvN25yy+gQqx5Ry/NgzkQHBJNpmRJhZNZrVQ==",
+        "dependencies": {
+          "SocketIO.Serializer.Core": "3.1.2",
+          "SocketIO.Serializer.SystemTextJson": "3.1.2"
+        }
       },
       "System.Data.SQLite": {
         "type": "Transitive",

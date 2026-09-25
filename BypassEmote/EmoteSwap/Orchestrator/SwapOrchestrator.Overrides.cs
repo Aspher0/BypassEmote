@@ -1,5 +1,6 @@
 using BypassEmote.Enums;
 using BypassEmote.Helpers;
+using BypassEmote.Localization;
 using BypassEmote.Models;
 using NoireLib.Helpers;
 using System;
@@ -72,25 +73,28 @@ public sealed partial class SwapOrchestrator
         LogHelper.Error(NoOverrideTargetMessage(source, refusals, NameOf), NoOverrideTargetKind);
     }
 
-    internal static string NoOverrideTargetMessage(EmoteAttributes source,
+    internal static ChatText NoOverrideTargetMessage(EmoteAttributes source,
         IReadOnlyList<(uint RowId, OverrideResolver.Refusal Refusal)> refusals, Func<uint, string> nameOf)
     {
-        var lines = new List<string>(refusals.Count + 2)
+        var lines = new List<ChatText>(refusals.Count + 2)
         {
-            $"Could not swap /{source.Command}. None of its override targets can be played right now.",
+            ChatText.Of(L.NoOverrideTarget, "command", source.Command),
         };
 
         foreach (var (rowId, refusal) in refusals.Take(MaxRefusalsReported))
-            lines.Add($"{nameOf(rowId)} was skipped because {OverrideResolver.ReasonText(refusal)}.");
+            lines.Add(ChatText.Of(L.OverrideSkipped, "reason", (ChatText)OverrideResolver.ReasonText(refusal), "emote", nameOf(rowId)));
 
         if (refusals.Count > MaxRefusalsReported)
-            lines.Add($"{refusals.Count - MaxRefusalsReported} more target(s) were skipped for the same reason.");
+        {
+            var more = refusals.Count - MaxRefusalsReported;
+            lines.Add(L.CountChat(L.MoreSkipped, more));
+        }
 
-        return string.Join('\n', lines);
+        return ChatText.Join("\n", lines);
     }
 
     internal static string NameOf(uint emoteRowId)
         => EmoteHelper.GetEmoteById(emoteRowId) is { } emote
             ? CommonHelper.GetEmoteName(emote)
-            : $"Emote #{emoteRowId}";
+            : L.EmoteNumber.With("id", emoteRowId.ToString(System.Globalization.CultureInfo.InvariantCulture));
 }

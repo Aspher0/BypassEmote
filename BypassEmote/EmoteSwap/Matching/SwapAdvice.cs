@@ -1,4 +1,5 @@
 using BypassEmote.Enums;
+using BypassEmote.Localization;
 using BypassEmote.Models;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,30 +36,28 @@ public static class SwapAdvice
         string targetName, Facts facts)
     {
         if (source.RowId == target.RowId)
-            return [new Line(Severity.Error, $"{targetName} is the emote being bypassed.")];
+            return [new Line(Severity.Error, L.AdviceBeingBypassed.With("target", targetName))];
 
         var lines = new List<Line>();
 
         if (!target.EligibleTarget)
         {
-            lines.Add(new Line(Severity.Error, $"{targetName} can never be a swap target (pose, facial expression, "
-                + "per-job emote or weapon drawn). It is always skipped."));
+            lines.Add(new Line(Severity.Error, L.AdviceNeverTarget.With("target", targetName)));
         }
 
         if (!facts.Unlocked)
         {
-            lines.Add(new Line(Severity.Note, $"You have not unlocked {targetName}. It is skipped."));
+            lines.Add(new Line(Severity.Note, L.AdviceNotUnlocked.With("target", targetName)));
         }
 
         if (facts.Blocked)
         {
-            lines.Add(new Line(Severity.Warning, $"{targetName} is on your blocked targets list. This override uses it anyway."));
+            lines.Add(new Line(Severity.Warning, L.AdviceBlocked.With("target", targetName)));
         }
 
         if (facts.ChangedByMod is { Length: > 0 } modName)
         {
-            lines.Add(new Line(Severity.Warning, $"Your mod \"{modName}\" already changes {targetName}. Your "
-                + "\"Emotes your mods change\" setting still applies."));
+            lines.Add(new Line(Severity.Warning, L.AdviceModChanges.With("mod", modName, "target", targetName)));
         }
 
         lines.AddRange(Behaviour(source, sourceName, target, targetName));
@@ -73,12 +72,12 @@ public static class SwapAdvice
 
         if ((source.Postures & target.Postures) == PostureFlags.None)
         {
-            lines.Add(new Line(Severity.Error, $"{targetName} and {sourceName} share no posture. The swap will not happen."));
+            lines.Add(new Line(Severity.Error, L.AdviceNoPosture.With("target", targetName, "source", sourceName)));
         }
         else if ((source.Postures & ~target.Postures) is var missing && missing != PostureFlags.None)
         {
-            lines.Add(new Line(Severity.Warning, $"{targetName} has no {PostureText(missing)} animation. The swap "
-                + $"will not happen when you play {sourceName} in that posture."));
+            lines.Add(new Line(Severity.Warning, L.Fill(L.AdviceMissingPosture, "target", targetName, "source", sourceName,
+                "posture", PostureText(missing))));
         }
 
         AddLoopLine(lines, source, sourceName, target, targetName);
@@ -89,7 +88,7 @@ public static class SwapAdvice
 
         if (target.CancelsOnRotate)
         {
-            lines.Add(new Line(Severity.Warning, $"{targetName} will stop when you turn your character."));
+            lines.Add(new Line(Severity.Warning, L.AdviceStopsOnTurn.With("target", targetName)));
         }
 
         return lines;
@@ -107,8 +106,7 @@ public static class SwapAdvice
             return;
         }
 
-        lines.Add(new Line(Severity.Warning, $"{targetName} has an adjust variant for use on someone. {sourceName} has none. "
-            + $"Targeting someone keeps {targetName}'s animation."));
+        lines.Add(new Line(Severity.Warning, L.AdviceAdjust.With("target", targetName, "source", sourceName)));
     }
 
     private static void AddLoopLine(List<Line> lines, EmoteAttributes source, string sourceName,
@@ -118,9 +116,8 @@ public static class SwapAdvice
             return;
 
         lines.Add(source.LoopKind == EmotePlayType.Looped
-            ? new Line(Severity.Warning, $"{targetName} plays once while {sourceName} loops. The animation will stop "
-                + "instead of looping.")
-            : new Line(Severity.Warning, $"{targetName} loops while {sourceName} plays once. Weird behavior might happen."));
+            ? new Line(Severity.Warning, L.AdvicePlaysOnce.With("target", targetName, "source", sourceName))
+            : new Line(Severity.Warning, L.AdviceLoops.With("target", targetName, "source", sourceName)));
     }
 
     private static void AddTurnLine(List<Line> lines, EmoteAttributes source, string sourceName,
@@ -129,8 +126,8 @@ public static class SwapAdvice
         if (source.Turn == target.Turn)
             return;
 
-        lines.Add(new Line(Severity.Warning, $"When you target someone, {targetName} {TurnText(target.Turn)} "
-            + $"while {sourceName} {TurnText(source.Turn)}."));
+        lines.Add(new Line(Severity.Warning, L.Fill(L.AdviceTurn, "target", targetName, "source", sourceName,
+            "target_turn", TurnText(target.Turn), "source_turn", TurnText(source.Turn))));
     }
 
     private static void AddSoundLine(List<Line> lines, EmoteAttributes source, string sourceName,
@@ -138,13 +135,13 @@ public static class SwapAdvice
     {
         if (target.Sound == SoundClass.Voiceline && source.Sound != SoundClass.Voiceline)
         {
-            lines.Add(new Line(Severity.Warning, $"{targetName} emits a voice line sound. Everyone around you will hear it."));
+            lines.Add(new Line(Severity.Warning, L.AdviceVoiceLine.With("target", targetName)));
             return;
         }
 
         if (target.Sound == SoundClass.Sfx && source.Sound == SoundClass.Silent)
         {
-            lines.Add(new Line(Severity.Warning, $"{targetName} emits a sound that {sourceName} does not. Everyone around you will hear it."));
+            lines.Add(new Line(Severity.Warning, L.AdviceSound.With("target", targetName, "source", sourceName)));
         }
     }
 
@@ -155,23 +152,23 @@ public static class SwapAdvice
 
         if (sourceHasIntro && target.Intro == IntroKind.None || target.Intro == IntroKind.TmbOnly)
         {
-            lines.Add(new Line(Severity.Warning, $"{targetName} has no intro and {sourceName} has one. The intro will not play."));
+            lines.Add(new Line(Severity.Warning, L.AdviceIntroDropped.With("target", targetName, "source", sourceName)));
             return;
         }
 
         if (!sourceHasIntro && target.Intro == IntroKind.Pap)
         {
-            lines.Add(new Line(Severity.Warning, $"{targetName} has an intro and {sourceName} does not."));
+            lines.Add(new Line(Severity.Warning, L.AdviceIntroAdded.With("target", targetName, "source", sourceName)));
         }
     }
 
     private static string TurnText(TurnClass turn) => turn switch
     {
-        TurnClass.None => "does not turn at all",
-        TurnClass.Eyes => "only follows with the eyes",
-        TurnClass.Head => "turns the head",
-        TurnClass.Body => "turns the whole body",
-        _ => "turns in a way the plugin could not read",
+        TurnClass.None => L.TurnNone.Text,
+        TurnClass.Eyes => L.TurnEyes.Text,
+        TurnClass.Head => L.TurnHead.Text,
+        TurnClass.Body => L.TurnBody.Text,
+        _ => L.TurnUnknown.Text,
     };
 
     private static string PostureText(PostureFlags postures)
@@ -179,17 +176,25 @@ public static class SwapAdvice
         var names = new List<string>(4);
 
         if (postures.HasFlag(PostureFlags.Standing))
-            names.Add("standing");
+            names.Add(L.PostureStanding.Text);
 
         if (postures.HasFlag(PostureFlags.ChairSit))
-            names.Add("chair sitting");
+            names.Add(L.PostureChairSitting.Text);
 
         if (postures.HasFlag(PostureFlags.GroundSit))
-            names.Add("ground sitting");
+            names.Add(L.PostureGroundSitting.Text);
 
         if (postures.HasFlag(PostureFlags.Mounted))
-            names.Add("mounted");
+            names.Add(L.PostureMounted.Text);
 
-        return names.Count == 0 ? "matching" : string.Join(" or ", names);
+        if (names.Count == 0)
+            return L.PostureMatching.Text;
+
+        var text = names[0];
+
+        for (var index = 1; index < names.Count; index++)
+            text = L.PostureOr.With("first", text, "second", names[index]);
+
+        return text;
     }
 }

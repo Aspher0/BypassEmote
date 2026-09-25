@@ -1,4 +1,5 @@
 using BypassEmote.Enums;
+using BypassEmote.Localization;
 using NoireLib.Helpers;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ public sealed class PatchApprovalDocument
     public List<ApprovedPatch>? Approved { get; set; }
 }
 
-public readonly record struct PatchApprovalVerdict(PatchApprovalStatus Status, string Reason, string? Notice);
+public readonly record struct PatchApprovalVerdict(PatchApprovalStatus Status, LiveText Reason, string? Notice);
 
 public static class PatchApproval
 {
@@ -27,15 +28,15 @@ public static class PatchApproval
         Version? pluginVersion, GameClient client = GameClient.Global)
     {
         if (string.IsNullOrWhiteSpace(gameVersion))
-            return new(PatchApprovalStatus.Blocked, "The installed game build could not be read.", null);
+            return new(PatchApprovalStatus.Blocked, new(L.GateBuildUnreadable), null);
 
         if (document == null)
-            return Unapproved(client, "The approval list could not be reached.", null);
+            return Unapproved(client, new(L.GateListUnreachable), null);
 
         var notice = Trimmed(document.Notice);
 
         if (Find(document, gameVersion, client) is not { } entry)
-            return Unapproved(client, $"Game build {gameVersion} has not been approved yet.", notice);
+            return Unapproved(client, new(L.GateNotApprovedYet, "build", gameVersion), notice);
 
         notice = Trimmed(entry.Notice) ?? notice;
 
@@ -43,19 +44,17 @@ public static class PatchApproval
         {
             if (!Version.TryParse(minimumText, out var minimum))
             {
-                return new(PatchApprovalStatus.Blocked,
-                    $"Game build {gameVersion} names a plugin version the plugin cannot read.", notice);
+                return new(PatchApprovalStatus.Blocked, new(L.GateUnreadableVersion, "build", gameVersion), notice);
             }
 
             if (pluginVersion == null || pluginVersion < minimum)
             {
-                return new(PatchApprovalStatus.Blocked,
-                    $"Game build {gameVersion} needs Bypass Emote {minimum} or newer. Installed: "
-                    + $"{pluginVersion?.ToString() ?? "unknown"}.", notice);
+                return new(PatchApprovalStatus.Blocked, new(L.GateNeedsVersion, "build", gameVersion, "minimum", minimum.ToString(),
+                    "installed", pluginVersion?.ToString() ?? L.GateUnknownVersion.Text), notice);
             }
         }
 
-        return new(PatchApprovalStatus.Approved, $"Game build {gameVersion} is approved.", notice);
+        return new(PatchApprovalStatus.Approved, new(L.GateApproved, "build", gameVersion), notice);
     }
 
     internal static bool ShouldAnnounce(PatchApprovalStatus status, bool wasApproved, string? gameVersion,
@@ -85,17 +84,13 @@ public static class PatchApproval
         return remaining <= TimeSpan.Zero ? 0 : (int)Math.Ceiling(remaining.TotalSeconds);
     }
 
-    private const string UntestedTail = "has not and can not be tested. This plugin might not work and might be "
-        + "unstable/unusable. Please don't use it if it does not work well.";
-
-    public static string UntestedReason(GameClient client) => client switch
+    public static LiveText UntestedReason(GameClient client) => client switch
     {
-        GameClient.Korean or GameClient.Chinese
-            => $"The {GameClientHelper.Name(client)} client {UntestedTail}",
-        _ => $"This game client is not the Global one, and {UntestedTail}",
+        GameClient.Korean or GameClient.Chinese => new(L.GateUntestedClient, "client", GameClientHelper.Name(client)),
+        _ => new(L.GateUntestedOther),
     };
 
-    private static PatchApprovalVerdict Unapproved(GameClient client, string blockedReason, string? notice)
+    private static PatchApprovalVerdict Unapproved(GameClient client, LiveText blockedReason, string? notice)
         => client == GameClient.Global
             ? new(PatchApprovalStatus.Blocked, blockedReason, notice)
             : new(PatchApprovalStatus.Untested, UntestedReason(client), notice);

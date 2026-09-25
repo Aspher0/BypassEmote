@@ -2,6 +2,7 @@ using BypassEmote.Data;
 using BypassEmote.Enums;
 using BypassEmote.IPC.Enums;
 using BypassEmote.IPC.Models;
+using BypassEmote.Localization;
 using BypassEmote.Models;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -122,7 +123,7 @@ public static class CommonHelper
         if (specification == null)
         {
             return emote.Name.ToString().IsNullOrWhitespace() ?
-                (emote.TextCommand.ValueNullable?.Command.ExtractText() ?? $"No name")
+                (emote.TextCommand.ValueNullable?.Command.ExtractText() ?? L.NoName.Text)
                 : name + $"{emote.Name.ToString()}";
         }
 
@@ -147,7 +148,7 @@ public static class CommonHelper
     public static string GetRealEmoteNameById(uint emoteId)
     {
         var foundEmote = EmoteHelper.GetEmoteById(emoteId);
-        return foundEmote?.Name.ToString() ?? $"No name";
+        return foundEmote?.Name.ToString() ?? L.NoName.Text;
     }
 
     public static uint? GetRealEmoteIconById(uint emoteId)
@@ -181,20 +182,13 @@ public static class CommonHelper
         return foundCharacter != null;
     }
 
-    public static IGameObject? GetLocalTarget() => GameObjectHelper.GetLocalTarget();
-
-    public static ulong GetPlayerTarget(ICharacter chara) => GameObjectHelper.GetTargetId(chara);
-
     public static ulong TargetIdFor(ICharacter chara, CharacterState? characterState = null)
         => characterState != null
             ? characterState.TargetObject?.GameObjectId ?? NoTargetId
-            : GetPlayerTarget(chara);
-
-    public static EmoteController.PlayEmoteOption EmoteOptionFor(ulong targetId)
-        => EmoteHelper.EmoteOptionFor(targetId);
+            : GameObjectHelper.GetTargetId(chara);
 
     public static EmoteController.PlayEmoteOption LocalPlayerEmoteOption()
-        => EmoteOptionFor(NoireService.ObjectTable.LocalPlayer is { } player ? GetPlayerTarget(player) : NoTargetId);
+        => EmoteHelper.EmoteOptionFor(NoireService.ObjectTable.LocalPlayer is { } player ? GameObjectHelper.GetTargetId(player) : NoTargetId);
 
     public static uint ResolveTargetedEmote(ICharacter chara, uint emoteRowId, CharacterState? characterState = null)
         => EmoteHelper.ResolveTargetedEmote(chara, emoteRowId, TargetIdFor(chara, characterState));
@@ -202,7 +196,7 @@ public static class CommonHelper
     public static void FaceTarget()
     {
         if (NoireService.ObjectTable.LocalPlayer is not ICharacter localCharacter ||
-            GetLocalTarget() is not IGameObject targetObject)
+            GameObjectHelper.GetLocalTarget() is not IGameObject targetObject)
             return;
 
         if (localCharacter.Address == targetObject.Address)
@@ -254,7 +248,7 @@ public static class CommonHelper
 
         var native = CharacterHelper.GetCharacterAddress(castChar);
 
-        var charTargetId = GetPlayerTarget(castChar);
+        var charTargetId = GameObjectHelper.GetTargetId(castChar);
         var targetObject = GameObjectHelper.FindByGameObjectId(charTargetId);
         var targetCid = 0UL;
         if (targetObject is IPlayerCharacter)
@@ -268,18 +262,6 @@ public static class CommonHelper
     }
 
     // From ReActionEx: https://github.com/Taurenkey/ReActionEX/blob/master/ReAction/Game.cs
-    public static unsafe void AssignEmoteToHotbarSlot(int hotbar, int slot, uint emoteId)
-    {
-        if (hotbar is < 0 or > 17 || (hotbar < 10 ? slot is < 0 or > 11 : slot is < 0 or > 15)) return;
-        Framework.Instance()->GetUIModule()->GetRaptureHotbarModule()->SetAndSaveSlot((uint)hotbar, (uint)slot, HotbarSlotType.Emote, emoteId, false, false);
-    }
-
-    public static unsafe HotbarSlot* GetHotbarSlot(int hotbar, int slot)
-    {
-        if (hotbar is < 0 or > 17 || (hotbar < 10 ? slot is < 0 or > 11 : slot is < 0 or > 15)) return null;
-        return Framework.Instance()->GetUIModule()->GetRaptureHotbarModule()->GetSlotById((uint)hotbar, (uint)slot);
-    }
-
     public static bool IsEmoteAssignableToHotbar(Emote emote)
     {
         var category = EmoteHelper.GetEmoteCategory(emote);

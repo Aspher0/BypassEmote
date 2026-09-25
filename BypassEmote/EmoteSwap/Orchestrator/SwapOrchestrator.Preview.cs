@@ -1,3 +1,5 @@
+#if DEBUG
+
 using BypassEmote.Enums;
 using BypassEmote.Models;
 using NoireLib;
@@ -12,7 +14,6 @@ namespace BypassEmote.EmoteSwap;
 
 public sealed partial class SwapOrchestrator
 {
-#if DEBUG
     internal sealed record SwapPreview
     {
         public EmoteAttributes? Source { get; init; }
@@ -65,12 +66,12 @@ public sealed partial class SwapOrchestrator
             return "Client in gpose.";
 
         if (!_penumbra.Available)
-            return PenumbraUnavailableMessage;
+            return PenumbraUnavailableMessage.Display;
 
         if (_penumbra.GetPlayerCollection() is not { } collection)
-            return _penumbra.Available ? NoCharacterMessage : PenumbraUnavailableMessage;
+            return (_penumbra.Available ? NoCharacterMessage : PenumbraUnavailableMessage).Display;
 
-        return IsUnassignedCollection(collection.Id) ? NoCollectionMessage : null;
+        return IsUnassignedCollection(collection.Id) ? NoCollectionMessage.Display : null;
     }
 
     private SwapPreview PreviewCore(uint sourceRowId, EmoteCondition rawCondition)
@@ -81,7 +82,7 @@ public sealed partial class SwapOrchestrator
             return new SwapPreview { Condition = condition, Refusal = "Local player not found." };
 
         if (!_catalog.Ready)
-            return new SwapPreview { Condition = condition, Refusal = CatalogLoadingMessage };
+            return new SwapPreview { Condition = condition, Refusal = CatalogLoadingMessage.Display };
 
         if (ResolveSource(localPlayer, sourceRowId) is not { } source)
         {
@@ -112,7 +113,7 @@ public sealed partial class SwapOrchestrator
                 Source = source,
                 ResolvedFrom = resolvedFrom,
                 Condition = condition,
-                Refusal = DirectPlayPlanner.RefusalMessage(source.Command, rawCondition),
+                Refusal = DirectPlayPlanner.RefusalMessage(source.Command, rawCondition).Display,
             };
         }
 
@@ -236,5 +237,6 @@ public sealed partial class SwapOrchestrator
             NoUsablePair = match.Target is { } target && PairVariants(source, target, skeleton).Count == 0,
         };
     }
-#endif
 }
+
+#endif

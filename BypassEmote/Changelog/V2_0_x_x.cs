@@ -21,11 +21,11 @@ public class V2_0_x_x : BaseChangelogVersion
             Description = "Adds a new way of bypassing emotes through Penumbra, visible on every sync service.",
             Entries = new List<ChangelogEntry>
             {
-                Header("New Features", Orange, 0, FontAwesomeIcon.Book),
+                Header("New Features", Orange, 0, FontAwesomeIcon.Star),
                 Entry("Added Emote Swap, a new bypass mode, which is now the default one.\n" +
                     "Instead of applying the animation on your character, the plugin looks for an emote you have unlocked that behaves like the one you asked for, " +
                     "plays that one for real, and swaps its animation with the locked one through a Penumbra mod it manages for you.\n" +
-                    "The game itself plays the emote, so other players see it over any sync service without their plugin having to integrate BypassEmote.", Orange, 1, FontAwesomeIcon.ExchangeAlt, White),
+                    "The game itself plays the emote, so other players see it over any sync service without their plugin having to integrate Bypass Emote.", Orange, 1, FontAwesomeIcon.ExchangeAlt, White),
                 EntryBullet("Emote Swap needs Penumbra installed and enabled.", Orange, 1),
                 EntryBullet("A prompt will appear on your first launch to let you pick the mode you want. You can change your mind at any time in the configuration window.", White, 1),
                 EntryBullet("Added a lot of configuration options for Emote Swap, such as how close a match has to be, when the swap is turned off, how many swaps are kept per emote, " +
@@ -61,7 +61,7 @@ public class V2_0_x_x : BaseChangelogVersion
                 EntryBullet("Added Penumbra V4 support.", White, 1),
                 Separator(),
                 Header("Technical Changes", Blue, 0, FontAwesomeIcon.Wrench),
-                EntryBullet("BypassEmote now checks that the game patch you are on has been approved before enabling anything it finds by signature.\n" +
+                EntryBullet("Bypass Emote now checks that the game patch you are on has been approved before enabling anything it finds by signature.\n" +
                     "If a patch breaks something, the plugin turns those parts off by itself and checks every 10 minutes until it is approved again, " +
                     "instead of doing something it should not.", Blue, 1),
                 EntryBullet("Moved a large part of the plugin's internals to NoireLib.", White, 1),

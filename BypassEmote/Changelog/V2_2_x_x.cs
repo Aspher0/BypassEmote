@@ -21,7 +21,7 @@ public class V2_2_x_x : BaseChangelogVersion
             Description = "Adds \"Emote overrides\", and various bug fixes and improvements.",
             Entries = new List<ChangelogEntry>
             {
-                Header("New Features", Orange, 0, FontAwesomeIcon.Book),
+                Header("New Features", Orange, 0, FontAwesomeIcon.Star),
                 Entry("Added the \"Emote overrides\" tab to the configuration window.\n" +
                     "Pick a locked emote, then pick the emotes it is allowed to land on. Emote Swap will then use " +
                     "your list instead of finding a best match, in the order you put it in.\n" +

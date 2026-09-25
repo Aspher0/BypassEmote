@@ -8,9 +8,9 @@ namespace BypassEmote;
 public partial class Service
 {
     // Tags replaced per character: {playerFullName}, {playerName}, {playerWorld}
-    public static string PenumbraModNameTemplate { get; set; } = "BypassEmote [{playerFullName}]";
+    public static string PenumbraModNameTemplate { get; set; } = "Bypass Emote [{playerFullName}]";
 
-    public static string PenumbraModAuthor { get; set; } = "Aspher_XIV - BypassEmote";
+    public static string PenumbraModAuthor { get; set; } = "Aspher_XIV - Bypass Emote";
 
     public static string PenumbraModWebsite { get; set; } = "https://github.com/Aspher0/BypassEmote";
 

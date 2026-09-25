@@ -1,0 +1,1994 @@
+# Source: {target} has an adjust variant for use on someone. {source} has none. Targeting someone keeps {target}'s animation.
+advice.adjust = {target} には相手に向けて使う専用のモーションがありますが、{source} にはありません。誰かをターゲットしていても {target} のモーションのままになります。
+# Source: {target} is the emote being bypassed.
+advice.being_bypassed = {target} はバイパス対象のエモートです。
+# Source: {target} is on your blocked targets list. This override uses it anyway.
+advice.blocked = {target} はブロックしたターゲットのリストにあります。このオーバーライドでは使用されます。
+# Source: {target} has an intro and {source} does not.
+advice.intro_added = {target} には導入モーションがありますが、{source} にはありません。
+# Source: {target} has no intro and {source} has one. The intro will not play.
+advice.intro_dropped = {target} には導入モーションがありませんが、{source} にはあります。導入モーションは再生されません。
+# Source: {target} loops while {source} plays once. Weird behavior might happen.
+advice.loops = {target} はループしますが、{source} は一度だけ再生されます。おかしな動作になることがあります。
+# Source: {target} has no {posture} animation. The swap will not happen when you play {source} in that posture.
+advice.missing_posture = {target} には「{posture}」のモーションがありません。その姿勢で {source} を使ってもスワップされません。
+# Source: Your mod "{mod}" already changes {target}. Your "Emotes your mods change" setting still applies.
+advice.mod_changes = Mod「{mod}」がすでに {target} を変更しています。「Modが変更するエモート」の設定は引き続き適用されます。
+# Source: {target} can never be a swap target (pose, facial expression, per-job emote or weapon drawn). It is always skipped.
+advice.never_target = {target} はスワップ先になれません（ポーズ、表情、ジョブ専用エモート、または抜刀中）。常にスキップされます。
+# Source: You have not unlocked {target}. It is skipped.
+advice.not_unlocked = {target} を習得していません。スキップされます。
+# Source: {target} and {source} share no posture. The swap will not happen.
+advice.no_posture = {target} と {source} には共通の姿勢がありません。スワップされません。
+# Source: {target} plays once while {source} loops. The animation will stop instead of looping.
+advice.plays_once = {target} は一度だけ再生されますが、{source} はループします。ループせずにモーションが止まります。
+# Source: chair sitting
+advice.posture.chair_sitting = 椅子に座っている
+# Source: ground sitting
+advice.posture.ground_sitting = 地面に座っている
+# Source: matching
+advice.posture.matching = 一致する
+# Source: mounted
+advice.posture.mounted = 騎乗中
+# Source: {first} or {second}
+advice.posture.or = {first} または {second}
+# Source: standing
+advice.posture.standing = 立っている
+# Source: {target} emits a sound that {source} does not. Everyone around you will hear it.
+advice.sound = {target} には {source} にない効果音があります。周囲の全員に聞こえます。
+# Source: {target} will stop when you turn your character.
+advice.stops_on_turn = キャラクターの向きを変えると {target} は止まります。
+# Source: When you target someone, {target} {target_turn} while {source} {source_turn}.
+advice.turn = 誰かをターゲットすると、{target} は{target_turn}が、{source} は{source_turn}。
+# Source: turns the whole body
+advice.turn.body = 全身を向ける
+# Source: only follows with the eyes
+advice.turn.eyes = 目線だけで追う
+# Source: turns the head
+advice.turn.head = 頭を向ける
+# Source: does not turn at all
+advice.turn.none = まったく向きを変えない
+# Source: turns in a way the plugin could not read
+advice.turn.unknown = プラグインが読み取れない方法で向きを変える
+# Source: {target} emits a voice line sound. Everyone around you will hear it.
+advice.voice_line = {target} にはボイスがあります。周囲の全員に聞こえます。
+# Source: New settings access button
+changelog.1.4.0.0.0298def8 = 
+# Source: Interactive elements and color-coded entries
+changelog.1.4.0.0.02fed927 = 
+# Source: Versioned changelog entries with structured data
+changelog.1.4.0.0.07adb9f9 = 
+# Source: Last seen changelog version tracking
+changelog.1.4.0.0.1416da5e = 
+# Source: Clean, organized display of version history
+changelog.1.4.0.0.210e33d8 = 
+# Source: Introduced ChangelogWindow UI for viewing updates
+changelog.1.4.0.0.2181daf2 = 
+# Source: Added changelog button in title bar
+changelog.1.4.0.0.255aa248 = 
+# Source: Configuration & Settings
+changelog.1.4.0.0.351650a7 = 
+# Source: Mark/unmark emotes as favorites
+changelog.1.4.0.0.3713c187 = 
+# Source: Show changelog on update
+changelog.1.4.0.0.3c3ec2c5 = 
+# Source: Support for rich formatting and icons
+changelog.1.4.0.0.40b56c74 = 
+# Source: Automatic changelog version tracking
+changelog.1.4.0.0.4523215d = 
+# Source: Enhanced main plugin window with new action buttons in the title bar
+changelog.1.4.0.0.481d2715 = 
+# Source: Added favorited emotes feature
+changelog.1.4.0.0.4c734a26 = 
+# Source: Added an info circle you can hover to see what patch the emote is from, and how to obtain it
+changelog.1.4.0.0.4d016422 = 
+# Source: View all favorited emotes in the "Fav" tab
+changelog.1.4.0.0.6541a8df = 
+# Source: Updated configuration system to track changelog versions
+changelog.1.4.0.0.6e5aab6b = 
+# Source: Accessible via main plugin window book button
+changelog.1.4.0.0.6e5ae035 = 
+# Source: User Interface
+changelog.1.4.0.0.7cc34557 = 
+# Source: Easily access frequently used emotes
+changelog.1.4.0.0.936392be = 
+# Source: Major update introducing a comprehensive changelog system with UI integration, configuration tracking, and enhanced user experience features.
+changelog.1.4.0.0.947b7be1 = 
+# Source: Comprehensive changelog management system
+changelog.1.4.0.0.9a9b8161 = 
+# Source: Added an option to show update notifications
+changelog.1.4.0.0.ac21cbc9 = 
+# Source: Various QoLs and Changelog System
+changelog.1.4.0.0.c163aa85 = 
+# Source: Added which patch the emote is from
+changelog.1.4.0.0.c9e99813 = 
+# Source: Donate
+changelog.1.4.0.0.da0e0147 = 
+# Source: Changelog system
+changelog.1.4.0.0.db290de8 = 
+# Source: Added new emote data collected from FFXIVCollect
+changelog.1.4.0.0.ec5c63bc = 
+# Source: Integrated support button (Ko-Fi)
+changelog.1.4.0.0.ef2d7f93 = 
+# Source: Added the obtention methods to get the emote
+changelog.1.4.0.0.fab46ec1 = 
+# Source: Improved Emote Detection
+changelog.1.4.1.0.034ead2f = 
+# Source: The game will now display Patch 7.35 game emotes.
+changelog.1.4.1.0.1ee5fa0b = 
+# Source: Fixed an incorrect detection of game emotes.
+changelog.1.4.1.0.baa86f40 = 
+# Source: You can now show emote IDs in the emote list.
+changelog.1.5.0.0.01457d86 = 
+# Source: Fixed a bug where Dalamud UI language would be used to get emote commands instead of game language when typing auto-translate emote commands.
+changelog.1.5.0.0.09bf17b8 = 
+# Source: Integrated NoireLib for improved utilities and changelog system.
+changelog.1.5.0.0.1daa9882 = 
+# Source: New Features
+changelog.1.5.0.0.36f4e595 = 
+# Source: Fixed a bug where NPCs emotes would bypass once and then block afterwards.
+changelog.1.5.0.0.551586a3 = 
+# Source: Bugfix, emote handling enhancement, and internal system change
+changelog.1.5.0.0.5c5edc35 = 
+# Source: Bug Fixes
+changelog.1.5.0.0.a199446a = 
+# Source: You can now emote while sitting, groundsitting, mounted or riding pillion.
+changelog.1.5.0.0.bce6580e = 
+# Source: Fixed emote playing capabilities, now allowing to bypass emotes when sitting or on a mount. Integrated NoireLib for improved utilities and features.
+changelog.1.5.0.0.be4c1a4e = 
+# Source: Technical Changes
+changelog.1.5.0.0.d80295d6 = 
+# Source: Refactored emote and character helpers to use NoireLib utilities.
+changelog.1.5.0.0.ed8f44b8 = 
+# Source: Emotes previously in the "Other" tab had disappeared. Those are now back.
+changelog.1.5.1.0.0dbd5cd1 = 
+# Source: New Features
+changelog.1.5.1.0.36f4e595 = 
+# Source: Refactored the code to use the new NoireLib helpers and utilities.
+changelog.1.5.1.0.5d935072 = 
+# Source: Bug Fixes
+changelog.1.5.1.0.a199446a = 
+# Source: Other various bug fixes.
+changelog.1.5.1.0.a977efbe = 
+# Source: Bugfix, new UI option and various internal changes
+changelog.1.5.1.0.bc2f8717 = 
+# Source: Technical Changes
+changelog.1.5.1.0.d80295d6 = 
+# Source: For debug purposes, you can now show absolutely *all* in game emotes, including invalid ones, with an option in the emote window. Look for "Show Invalid Emotes".
+changelog.1.5.1.0.fbc23e10 = 
+# Source: Fixed the settings to show the changelog and print in chat on update that were not enforced anymore.
+changelog.1.5.1.1.0a02634a = 
+# Source: Hotfix
+changelog.1.5.1.1.0b4d6087 = 
+# Source: Bug Hotfix
+changelog.1.5.1.1.6ced686b = 
+# Source: Bug Fixes
+changelog.1.5.1.1.a199446a = 
+# Source: Fixed the changelog that would not show anymore.
+changelog.1.5.1.1.e17c39d6 = 
+# Source: Fixed a bug where bypassing a looped emote would not cancel after mounting-dismounting, interacting with NPCs, casting, etc.
+changelog.1.6.0.0.2c6d1303 = 
+# Source: Emote handling enhancement
+changelog.1.6.0.0.3047865d = 
+# Source: New Features
+changelog.1.6.0.0.36f4e595 = 
+# Source: Fixed emote not being bypassed when you passed the emote command with parameters, such as "/beesknees motion".
+changelog.1.6.0.0.376a53ac = 
+# Source: Bug fixes
+changelog.1.6.0.0.60586b6e = 
+# Source: Enhances the emote handling both locally and while synced.
+changelog.1.6.0.0.6d3b8490 = 
+# Source: Fixed a bug where you could bypass emotes in GPose.
+changelog.1.6.0.0.718fc03b = 
+# Source: Added support for special emotes such as /dote and /allsaintscharm where the target would not be handled properly.
+changelog.1.6.0.0.80335920 = 
+# Source: Improved how the syncing works, and specifically how other players are handled when they stop emoting.
+changelog.1.6.0.0.8d9bcc24 = 
+# Source: Added /be sync and /be syncall which will respectively sync the emotes of bypassed players only, or all players on the map.
+changelog.1.6.0.0.c78311c9 = 
+# Source: Technical Changes
+changelog.1.6.0.0.d80295d6 = 
+# Source: Improved how the syncing works (again), and specifically how other players are handled when they stop emoting.\nA small delay will be added before the emote is sent over IPC.\nFurthermore, movement detections for other players has been improved to add some leeway so that the emote doesnt get stopped when the player is still moving a bit.
+changelog.1.6.1.2.0d00e73a = 
+# Source: Fixed emotes bypassing under some conditions that are not valid (Casting, in cutscene, in GPose, In event ...).
+changelog.1.6.1.2.1590a22e = 
+# Source: Fixes a few bugs with some specific emotes and syncing.
+changelog.1.6.1.2.1da6d7bb = 
+# Source: Bug fixes
+changelog.1.6.1.2.60586b6e = 
+# Source: Various bug fixes
+changelog.1.6.1.2.86e38eb0 = 
+# Source: Fixed some emotes not being bypassed properly, for example /waterfloat and /waterflip.
+changelog.1.6.1.2.d43b4901 = 
+# Source: Fixed a few bugs concerning facial expressions and facing targets.
+changelog.1.6.2.0.0faf04de = 
+# Source: Bug fixes
+changelog.1.6.2.0.60586b6e = 
+# Source: Prevented facial expressions from stopping bypassed looped emotes.
+changelog.1.6.2.0.9176a869 = 
+# Source: Facial expressions
+changelog.1.6.2.0.99905c39 = 
+# Source: Commands /be sync and /be syncall will now better handle syncing emotes that have intro + loop phases, hence improving the "syncing", where a slight delay would occur before for those type of emotes.
+changelog.1.6.2.0.c5a4e3ae = 
+# Source: Facial expression emotes no longer makes the character face its target.
+changelog.1.6.2.0.d115eae3 = 
+# Source: Additionnaly, the character will no longer rotate when emoting to itself (self-targetting).
+changelog.1.6.2.0.dae46f9f = 
+# Source: Revised IPC to support above changes.
+changelog.1.6.6.0.05394470 = 
+# Source: New Features
+changelog.1.6.6.0.36f4e595 = 
+# Source: Fixed a bug with facing targets.
+changelog.1.6.6.0.508e5f22 = 
+# Source: Bug fixes
+changelog.1.6.6.0.60586b6e = 
+# Source: Added the possibility to apply emotes to your owned entities from the emote selector window (/be) via right click.
+changelog.1.6.6.0.9e2cc2d8 = 
+# Source: Added a configuration option to choose whether you want your minion, pet or chocobo to stop emoting when it moves.\nUseful for the Plush Cushion or the Campfire if you're using SimpleHeels' temporary offsets, or for non-static entities.
+changelog.1.6.6.0.a7dd4107 = 
+# Source: Added support for Minions, Pets and Chocobos. You can now apply any emote to your own minions, pets and chocobos provided they have been summoned and turned human.
+changelog.1.6.6.0.a8e14b07 = 
+# Source: Minions, Pets, Chocobos & Battle NPCs support
+changelog.1.6.6.0.c2407df3 = 
+# Source: Technical Changes
+changelog.1.6.6.0.d80295d6 = 
+# Source: Added the /bem command to apply emotes to your minion, provided it's been summoned and turned human.\nYou do not need to target the minion, and just like /bet, you can use an emote argument or the stop argument (/bem stop, /bem beesknees, /bem /tea, ...).\nUseful for untargettable minions such as the cushion or the campfire.
+changelog.1.6.6.0.e16e66c9 = 
+# Source: Added support for Minions, Pets, Chocobos & Battle NPCs. Revised IPC.
+changelog.1.6.6.0.e1d4e40a = 
+# Source: Additionally, added the /bec command to apply emotes to your chocobo, provided it's been summoned and turned human.
+changelog.1.6.6.0.e8a03ffb = 
+# Source: Added support for Battle NPCs. You can now apply any emote Battle NPCs in the world.
+changelog.1.6.6.0.ed40f0c9 = 
+# Source: Additionally, added the /bep command to apply emotes to your pet (carbuncle and eos), provided it's been summoned and turned human.
+changelog.1.6.6.0.fccedc69 = 
+# Source: Enhances the target handling and the emote bypassing.
+changelog.1.7.2.0.0074ff21 = 
+# Source: The soft target is now properly handled. If you have both a target and a soft target, bypassing an emote will prioritize the soft target.
+changelog.1.7.2.0.12b1de73 = 
+# Source: Reworked the IPC Data being sent to consumers.
+changelog.1.7.2.0.288c78ea = 
+# Source: Emote handling enhancement
+changelog.1.7.2.0.3047865d = 
+# Source: New Features
+changelog.1.7.2.0.36f4e595 = 
+# Source: Various bug fixes over the versions.
+changelog.1.7.2.0.39c46762 = 
+# Source: Bug fixes
+changelog.1.7.2.0.60586b6e = 
+# Source: Bypass Emote now handles hotbar emote slots. If you click a locked emote hotbar slot (greyed out), the emote will play.
+changelog.1.7.2.0.6dcec185 = 
+# Source: Technical Changes
+changelog.1.7.2.0.d80295d6 = 
+# Source: Various technical enhancements.
+changelog.1.7.2.0.fe26324e = 
+# Source: New Features
+changelog.1.7.3.1.36f4e595 = 
+# Source: Allows to add emotes to hotbars.
+changelog.1.7.3.1.7c9483aa = 
+# Source: Hotbar integration enhancement
+changelog.1.7.3.1.c9d945ae = 
+# Source: Added a new config option for enabling/disabling bypassing emotes on emote hotbar slot click.
+changelog.1.7.3.1.e8eb4c4e = 
+# Source: Added the possibility to assign emotes to hotbar slots.\nRight click an emote in the main UI, and an option will appear if the emote is assignable.
+changelog.1.7.3.1.ef9d6d57 = 
+# Source: Emotes are now played according to your character's condition.\nSitting on the ground, sitting in a chair, mounted, riding pillion, swimming, diving, holding an umbrella or a torch, wearing a fashion accessory: the plugin plays the variant that matches the state you are in, instead of forcing the standing animation on you.\nIf an emote cannot be played in the state you are in, the plugin will tell you so instead of playing something wrong.
+changelog.2.0.0.0.084e3478 = 
+# Source: Added Emote Swap, a new bypass mode, which is now the default one.\nInstead of applying the animation on your character, the plugin looks for an emote you have unlocked that behaves like the one you asked for, plays that one for real, and swaps its animation with the locked one through a Penumbra mod it manages for you.\nThe game itself plays the emote, so other players see it over any sync service without their plugin having to integrate Bypass Emote.
+changelog.2.0.0.0.16002d22 = 
+# Source: Emote Swap
+changelog.2.0.0.0.1ac4c0e0 = 
+# Source: Emote Swap needs Penumbra installed and enabled.
+changelog.2.0.0.0.25dfbb84 = 
+# Source: Emote Swap follows the same rule, and will only play an emote you own that can be executed in the state you are in.
+changelog.2.0.0.0.308cc96c = 
+# Source: New Features
+changelog.2.0.0.0.36f4e595 = 
+# Source: Various bug fixes over the versions.
+changelog.2.0.0.0.39c46762 = 
+# Source: A prompt will appear on your first launch to let you pick the mode you want. You can change your mind at any time in the configuration window.
+changelog.2.0.0.0.3eec5ede = 
+# Source: The main UI now shows the same condition icons as the game's own emote window, so you can see at a glance where an emote can be played.
+changelog.2.0.0.0.460f6af3 = 
+# Source: Fixed visual effects not playing on some bypassed emotes.
+changelog.2.0.0.0.52167bcc = 
+# Source: Added a safe mode to Direct Play, the original method, which is on by default.\nWhile it is on, you can only bypass emotes from the base pose (pose 0) of your current stance. This is because the game client sends duplicate change pose packets when your character is in any other pose, which is not something the plugin causes, but not something it can prevent either.\nYou can lift that limit in the configuration window if you know what you are doing.
+changelog.2.0.0.0.56f1c59e = 
+# Source: Added drag and drop from the main UI onto your hotbars. Drag an emote onto a slot of hotbars 1 to 10 and it will be assigned to it.
+changelog.2.0.0.0.599120b2 = 
+# Source: Bug fixes
+changelog.2.0.0.0.60586b6e = 
+# Source: Moved a large part of the plugin's internals to NoireLib.
+changelog.2.0.0.0.6641c5cc = 
+# Source: Added a lot of configuration options for Emote Swap, such as how close a match has to be, when the swap is turned off, how many swaps are kept per emote, and whether your name appears on the generated mod.
+changelog.2.0.0.0.6810cb88 = 
+# Source: Adds a new way of bypassing emotes through Penumbra, visible on every sync service.
+changelog.2.0.0.0.68f4781f = 
+# Source: Added configuration options for the messages the plugin prints in chat, and for how often the same one is repeated.
+changelog.2.0.0.0.79695cb4 = 
+# Source: Added Penumbra V4 support.
+changelog.2.0.0.0.922b8a2e = 
+# Source: The default configuration is already set up the way it works best, you do not need to touch any of it.
+changelog.2.0.0.0.96f1b52c = 
+# Source: Safe mode is not a promise either, it only keeps Direct Play to the states where nothing has ever been seen to go wrong. Use Emote Swap if you want to be certain.
+changelog.2.0.0.0.b8c2d147 = 
+# Source: You can now stop Emote Swap from playing one of your own emotes, by clicking the ban icon next to its star.\nBlocked emotes have their own tab in the main UI. Useful if you would rather not have a specific one of yours played, for example one that makes noise.
+changelog.2.0.0.0.c9dbdfee = 
+# Source: Bypass Emote now checks that the game patch you are on has been approved before enabling anything it finds by signature.\nIf a patch breaks something, the plugin turns those parts off by itself and checks every 10 minutes until it is approved again, instead of doing something it should not.
+changelog.2.0.0.0.d7a5d625 = 
+# Source: Technical Changes
+changelog.2.0.0.0.d80295d6 = 
+# Source: Fixed emotes that make your character draw its weapon.
+changelog.2.0.0.0.e7a26549 = 
+# Source: Every swap is kept as an option of the generated mod, so playing the same emote again puts it back without rebuilding anything.
+changelog.2.0.0.0.f2350311 = 
+# Source: Added the possibility to create a permanent Penumbra mod from any emote.\nClick the "Create a mod" button in the main UI, or right click an emote and pick "Create a mod from this emote...".\nUseful if you want to keep an animation over one of your emotes without the plugin having to do anything.
+changelog.2.0.0.0.f33b320b = 
+# Source: Various technical enhancements.
+changelog.2.0.0.0.fe26324e = 
+# Source: New Features
+changelog.2.1.0.0.36f4e595 = 
+# Source: Playing the real emote of a swap while the swap is still playing now refreshes the animation.\nBefore, playing for example /beesknees while a swap was using it kept showing the swapped animation until you stopped emoting.
+changelog.2.1.0.0.5dc54c70 = 
+# Source: Added "Always cache-break" option for Emote Swap, and various bug fixes.
+changelog.2.1.0.0.5e17a8a9 = 
+# Source: Bug fixes
+changelog.2.1.0.0.60586b6e = 
+# Source: Playing an emote while a swapped idle pose is active now stops the idle pose swap.
+changelog.2.1.0.0.895c09e0 = 
+# Source: It is off by default, you can enable it in the configuration window.
+changelog.2.1.0.0.8c074b97 = 
+# Source: The plugin now recognizes the Korean and Chinese game clients.
+changelog.2.1.0.0.96052ffd = 
+# Source: Animation cache breaking
+changelog.2.1.0.0.9cac4b37 = 
+# Source: Reworked how animations are loaded around the game's caches.
+changelog.2.1.0.0.bf6ca6d5 = 
+# Source: Disabling the plugin now disables the generated mod.
+changelog.2.1.0.0.c423c08c = 
+# Source: Added "Always cache-break", a new option for Emote Swap.\nWith it on, every emote you play will be cache-broken, especially the ones you own. Play an emote, enable or disable any mod affecting that emote, play the emote again, the new animation refreshes and shows without needing to redraw nor to stop the emote.
+changelog.2.1.0.0.c92503a0 = 
+# Source: Added /belogs (also available as /be logs), which exports a zip of the plugin logs and settings to send to the developer. Check its content before sending it, it is not meant to be posted publicly.
+changelog.2.1.0.0.ca8e8176 = 
+# Source: Technical Changes
+changelog.2.1.0.0.d80295d6 = 
+# Source: Various technical enhancements.
+changelog.2.1.0.0.fe26324e = 
+# Source: The "Create a mod" window now warns you about mismatches and other potentially unwanted behaviors, such as when you have not unlocked the target emote, when one of your own mods already changes it, or when the two emotes have turn, loop, sound or intro mismatches.
+changelog.2.2.0.0.2323aeb2 = 
+# Source: Fixed one of the signatures the plugin needed for the cache-breaker feature.\nWithout it, a swap could play the emote you played before it.
+changelog.2.2.0.0.31b60c32 = 
+# Source: New Features
+changelog.2.2.0.0.36f4e595 = 
+# Source: Fixed changing world turning off the generated Penumbra mod and its options.
+changelog.2.2.0.0.4aabbfb7 = 
+# Source: Emote overrides
+changelog.2.2.0.0.587c7b7d = 
+# Source: Bug fixes
+changelog.2.2.0.0.60586b6e = 
+# Source: Adds "Emote overrides", and various bug fixes and improvements.
+changelog.2.2.0.0.679d7020 = 
+# Source: Added the "Emote overrides" tab to the configuration window.\nPick a locked emote, then pick the emotes it is allowed to land on. Emote Swap will then use your list instead of finding a best match, in the order you put it in.\nIf none of them can be played, the plugin tells you which ones it skipped and why.
+changelog.2.2.0.0.99ae3ed3 = 
+# Source: Added "Support me on Ko-fi" and "Discord" buttons to the main window.
+changelog.2.2.0.0.ac6010ab = 
+# Source: The "Fav" and "Blocked" tabs of the main window now have their own dropdown, to add an emote to either list without hunting for it in the other tabs.
+changelog.2.2.0.0.d4ad1225 = 
+# Source: Technical Changes
+changelog.2.2.0.0.d80295d6 = 
+# Source: Fixed "Create a mod" sometimes writing the wrong animation instead of the one you asked for.
+changelog.2.2.0.0.f2789edb = 
+# Source: Various technical enhancements.
+changelog.2.2.0.0.fe26324e = 
+# Source: Animation refresh rework
+changelog.2.3.0.0.07d79f01 = 
+# Source: Reworked how the plugin refreshes an animation, it is now way more efficient and optimized. Dropped from 10+ sigs to 2.
+changelog.2.3.0.0.105ef1de = 
+# Source: Added "Add an override..." to the right click menu of the main UI.\nIt opens the "Emote overrides" tab with the emote already picked.
+changelog.2.3.0.0.1284fd82 = 
+# Source: New Features
+changelog.2.3.0.0.36f4e595 = 
+# Source: Bug fixes
+changelog.2.3.0.0.60586b6e = 
+# Source: "Always cache-break" no longer makes other players see you redraw for random emotes.
+changelog.2.3.0.0.790f1b05 = 
+# Source: Reworks how animations are refreshed, and stops other players from seeing you redraw.
+changelog.2.3.0.0.a096b13e = 
+# Source: Technical Changes
+changelog.2.3.0.0.d80295d6 = 
+# Source: Various technical enhancements.
+changelog.2.3.0.0.fe26324e = 
+# Source: Loop emotes no longer play your own idle mod instead of the emote you asked for.\nGenerated bypass mods priority was not correctly set, this is fixed now.
+changelog.2.3.1.0.078d4ca5 = 
+# Source: Idle pose fixes
+changelog.2.3.1.0.0e591faf = 
+# Source: Fixed a bug with "Only when nothing else fits" for "Loops on idle poses" where it ignored blocked emotes.
+changelog.2.3.1.0.3b84d8da = 
+# Source: Bug fixes
+changelog.2.3.1.0.60586b6e = 
+# Source: Fixed a bug where stopping a bypass on an idle animation by moving would not correctly stop the animation.
+changelog.2.3.1.0.7e4e2d96 = 
+# Source: Fixes loop emotes playing your own idle mod instead of the emote you asked for.
+changelog.2.3.1.0.9ff59b49 = 
+# Source: /belogs now exports everything the plugin did since it loaded.\nIt would only partially export logs when the dalamud log level was not properly set.
+changelog.2.3.1.0.b5afd5f1 = 
+# Source: The plugin reads its mod's priority back from Penumbra instead of taking the cached value.
+changelog.2.3.1.0.c3cc6888 = 
+# Source: Technical Changes
+changelog.2.3.1.0.d80295d6 = 
+# Source: Various technical enhancements.
+changelog.2.3.1.0.fe26324e = 
+# Source: Updated to the latest Penumbra API.
+changelog.2.4.0.0.04292ed8 = 
+# Source: Added a translation editor, accessible from the settings. You can translate the plugin in game, see your changes live and save them.\nTranslations or improvements are very much welcome. Please open an issue or a pull request on the plugin's GitHub if you'd like to contribute.
+changelog.2.4.0.0.05c331b1 = 
+# Source: Added Malou. Please take good care of him.
+changelog.2.4.0.0.12192c44 = 
+# Source: Fixed mods that replace an emote's timeline (.tmb) files not being taken into account by Emote Swap.
+changelog.2.4.0.0.1856a1c1 = 
+# Source: /be sync now also restarts the sounds and VFXs of your emotes in Emote Swap mode as well, try it!
+changelog.2.4.0.0.1c445d74 = 
+# Source: Locked emotes are now listed in the game's own emote window.\nYou can search locked emotes and use them from there. Also added an option to grey or un-grey them from your hotbars, and this applies to the Emote game window as well.
+changelog.2.4.0.0.228e7d9a = 
+# Source: /belogs now exports more information, to help figuring out what went wrong.
+changelog.2.4.0.0.29c642fa = 
+# Source: New Features
+changelog.2.4.0.0.36f4e595 = 
+# Source: Various bug fixes over the versions.
+changelog.2.4.0.0.39c46762 = 
+# Source: Fixed swapped animations parsing in VFXEditor.
+changelog.2.4.0.0.52e06c34 = 
+# Source: Swapping an emote is now slightly faster.
+changelog.2.4.0.0.56686f6e = 
+# Source: Bug fixes
+changelog.2.4.0.0.60586b6e = 
+# Source: Added translations.\nThe plugin is now available in French, German, Japanese, Korean and Simplified Chinese.You can pick your language in the settings.
+changelog.2.4.0.0.6afdbd23 = 
+# Source: New interface & translations
+changelog.2.4.0.0.6e05d893 = 
+# Source: Both interfaces are now built on NoireLib's new interface system.
+changelog.2.4.0.0.7700f1ca = 
+# Source: Removed the outdated mod writer.
+changelog.2.4.0.0.973a6508 = 
+# Source: Adds a brand new interface, translations, shows your locked emotes in the game's own emote window and fix some issues with modded animations.
+changelog.2.4.0.0.9f4cc7be = 
+# Source: Fixed bypassing emotes from your hotbars on the Chinese client.
+changelog.2.4.0.0.a57ef1dd = 
+# Source: Added a "Compact rows" option to make the emote list smaller. On by default.
+changelog.2.4.0.0.c0c846f7 = 
+# Source: Technical Changes
+changelog.2.4.0.0.d80295d6 = 
+# Source: Added a brand new interface, which is now the default one.\nEvery window has been redesigned: the main UI, the settings, "Create a mod", the hotbar assignment, the changelog and the logs.\nIf you prefer the old look, you can switch back to the classic interface at any time in the settings.
+changelog.2.4.0.0.da488787 = 
+# Source: The new interface has its own window settings, click the Window Options button next to the close button. It allows you to adjust opacity, text size, make the plugin always on top, click through, lock its position, its width and/or height, and make the windows stay visible in gpose, when the UI is hidden, during cutscenes, or when the game hides its own UI.
+changelog.2.4.0.0.e862aedf = 
+# Source: Added a preview popup next to the main UI. Click an emote to make it appear. In Emote Swap mode, it will show you which of your emotes it will play through, offer you to play it, add it to your favorites, block it, assign it to a hotbar or play it on your minion, pet or chocobo.\nDouble click an emote to play it right away. You can turn the popup off in the settings.
+changelog.2.4.0.0.e94a5ffa = 
+# Source: Various technical enhancements.
+changelog.2.4.0.0.fe26324e = 
+# Source: You cannot bypass this emote right now.
+chat.cannot_bypass_now = 現在このエモートはバイパスできません。
+# Source: Error trying to process command
+chat.command.failed = コマンドの処理中にエラーが発生しました
+# Source: Emote or command not found: {arg}
+chat.command.not_found = エモートまたはコマンドが見つかりません: {arg}
+# Source: This emote cannot be played in Emote Swap mode.
+chat.command.not_in_swap = このエモートは Emote Swap モードでは使用できません。
+# Source: No chocobo summoned.
+chat.command.no_chocobo = チョコボが呼び出されていません。
+# Source: No minion summoned.
+chat.command.no_minion = ミニオンが呼び出されていません。
+# Source: No NPC targeted.
+chat.command.no_npc = NPCをターゲットしていません。
+# Source: No pet summoned.
+chat.command.no_pet = ペットが召喚されていません。
+# Source: You can only target your own minion, pet, chocobo.
+chat.command.only_own = ターゲットにできるのは自分のミニオン、ペット、チョコボだけです。
+# Source: Poses cannot be swapped.
+chat.command.poses = ポーズはスワップできません。
+# Source: Ask the developer where to send this file to be extra safe.
+chat.export.ask_where = 念のため、このファイルの送り先は開発者に確認してください。
+# Source: Debug logs exported to {path}. Send this file to the developer. Feel free to check the content of the zip and if you need to anonymize any information, please do so before sending it.
+chat.export.done = デバッグログを {path} にエクスポートしました。このファイルを開発者に送ってください。送信前にzipの中身を確認し、匿名化したい情報があれば自由に変更してください。
+# Source: Exporting logs...
+chat.export.exporting = ログをエクスポート中...
+# Source: Debug logs could not be exported. The Dalamud log has the reason.
+chat.export.failed = デバッグログをエクスポートできませんでした。理由はDalamudのログに記録されています。
+# Source: [Open folder]
+chat.export.open_folder = [フォルダを開く]
+# Source: Personal information appears in it, DO NOT send this in a public channel.
+chat.export.personal = 個人情報が含まれています。公開チャンネルには絶対に送らないでください。
+# Source: A debug log export is already running.
+chat.export.running = デバッグログのエクスポートはすでに実行中です。
+# Source: The plugin has been approved for this patch. If you noticed weird behaviors prior to this message, try again and it should be fixed now.
+chat.gate.announcement = このパッチでのプラグインの使用が承認されました。このメッセージの前におかしな動作があった場合は、もう一度試してください。修正されているはずです。
+# Source: Could not use your idle pose for this emote. {cause}
+chat.idle.failed = このエモートに待機ポーズを使用できませんでした。{cause}
+# Source: The swap mod could not be turned on.
+chat.idle.mod_not_on = スワップ用のModを有効にできませんでした。
+# Source: Your character is mounted. There is no idle pose to borrow.
+chat.idle.mounted = キャラクターが騎乗中です。借りられる待機ポーズがありません。
+# Source: That emote has no animation to lend.
+chat.idle.nothing_to_lend = そのエモートには借りられるモーションがありません。
+# Source: Your character could not be refreshed.
+chat.idle.not_refreshed = キャラクターを更新できませんでした。
+# Source: Penumbra could not say which collection your character uses.
+chat.idle.no_collection = Penumbraがキャラクターの使用中のコレクションを判別できませんでした。
+# Source: Your pose animation could not be found.
+chat.idle.pose_not_found = ポーズのモーションが見つかりませんでした。
+# Source: Your pose animation could not be rebuilt.
+chat.idle.pose_not_rebuilt = ポーズのモーションを再構築できませんでした。
+# Source: This pose cannot be changed.
+chat.idle.pose_unchangeable = このポーズは変更できません。
+# Source: Something went wrong.
+chat.idle.something_wrong = 問題が発生しました。
+# Source: That emote's animation could not be found.
+chat.idle.source_not_found = そのエモートのモーションが見つかりませんでした。
+# Source: Your character is still in another emote. Move, or change pose, then try again.
+chat.idle.still_in_emote = キャラクターがまだ別のエモート中です。移動するかポーズを変更してから、もう一度試してください。
+# Source: idle pose
+chat.idle.swap_target = 待機ポーズ
+# Source: Your idle 0 pose has no intro. This emote's intro will not play. Try changing pose.
+chat.idle.zero_no_intro = 待機ポーズ0には導入モーションがありません。このエモートの導入モーションは再生されません。ポーズを変更してみてください。
+# Source: [Disable]
+chat.mod.disable = [無効化]
+# Source: {reason} Mod not disabled.
+chat.mod.not_disabled = {reason} Modは無効化されていません。
+# Source: {reason} Mod not opened.
+chat.mod.not_opened = {reason} Modを開けませんでした。
+# Source: '{mod}' is now off in {collection}.
+chat.mod.now_off = 「{mod}」は {collection} で無効になりました。
+# Source: No Penumbra collection is assigned to your character. Mod not disabled.
+chat.mod.no_collection = キャラクターにPenumbraのコレクションが割り当てられていません。Modは無効化されていません。
+# Source: [Open]
+chat.mod.open = [開く]
+# Source: Penumbra would not open '{mod}'.
+chat.mod.would_not_open = Penumbraが「{mod}」を開きませんでした。
+# Source: Penumbra would not switch '{mod}' off in {collection}.
+chat.mod.would_not_switch_off = Penumbraが {collection} で「{mod}」を無効にしませんでした。
+# Source: it is on your blocked targets list.
+chat.near.blocked_list = ブロックしたターゲットのリストにあります。
+# Source: the loop kinds do not match.
+chat.near.loop_kinds = ループの種類が一致しません。
+# Source: your mod "{mod}" targets it. Your configuration blocked it.
+chat.near.named_mod = Mod「{mod}」がこのエモートを変更しています。設定によりブロックされました。
+# Source: another of your mods targets it. Your configuration blocked it.
+chat.near.other_mod = 別のModがこのエモートを変更しています。設定によりブロックされました。
+# Source: it makes a sound.
+chat.near.sound = 効果音があります。
+# Source: it makes a sound, and your sound rule only allows that for an emote that makes one too.
+chat.near.sound_lenient = 効果音があり、効果音のルールでは同じく効果音のあるエモートにしか許可されていません。
+# Source: it makes a sound, and your sound rule avoids every target that does.
+chat.near.sound_strict = 効果音があり、効果音のルールでは効果音のあるターゲットをすべて避けます。
+# Source: {rule} matching is strict.
+chat.near.strict = {rule}の一致判定が「厳密」です。
+# Source: turn matching is very strict.
+chat.near.turn_very_strict = 向きの一致判定が「非常に厳密」です。
+# Source: Emote Swap was enabled because no choice was made.
+chat.no_choice_made = 選択が行われなかったため、Emote Swap が有効になりました。
+# Source: Penumbra is not running. Emote Swap needs it installed.
+chat.penumbra.missing = Penumbraが起動していません。Emote Swap にはPenumbraが必要です。
+# Source: Bypass Emote needs Penumbra {version} or newer. Update Penumbra (its interface reads {api}).
+chat.penumbra.too_old = Bypass Emote にはPenumbra {version} 以降が必要です。Penumbraを更新してください（インターフェースのバージョン: {api}）。
+# Source: Bypass Emote is waiting for you to choose how it should play locked emotes.
+chat.prompt_pending = Bypass Emote は、未習得エモートの再生方法が選ばれるのを待っています。
+# Source: it is available
+chat.reason.available = 使用可能です
+# Source: a mod changes it and your settings block modded emotes
+chat.reason.changed_by_mod = Modがこのエモートを変更しており、設定でModによる変更のあるエモートをブロックしています
+# Source: you have not unlocked it
+chat.reason.locked = 習得していません
+# Source: it can never be a swap target
+chat.reason.never_a_target = スワップ先になれません
+# Source: there is no animation data for it
+chat.reason.not_configured = モーションデータがありません
+# Source: it cannot be played in your current state
+chat.reason.not_here = 現在の状態では使用できません
+# Source: /{command} cannot be played while wearing a fashion accessory.
+chat.refused.accessory = ファッションアクセサリ使用中は /{command} を使用できません。
+# Source: /{command} cannot be played while carrying your {ornament}.
+chat.refused.carrying = {ornament}を持っている間は /{command} を使用できません。
+# Source: /{command} cannot be played while sitting in a chair.
+chat.refused.chair_sitting = 椅子に座っている間は /{command} を使用できません。
+# Source: /{command} cannot be played while diving.
+chat.refused.diving = 潜水中は /{command} を使用できません。
+# Source: /{command} cannot be played while fishing.
+chat.refused.fishing = 釣り中は /{command} を使用できません。
+# Source: /{command} cannot be played while sitting on the ground.
+chat.refused.ground_sitting = 地面に座っている間は /{command} を使用できません。
+# Source: /{command} cannot be played while mounted.
+chat.refused.mounted = 騎乗中は /{command} を使用できません。
+# Source: /{command} cannot be played right now.
+chat.refused.right_now = 現在 /{command} は使用できません。
+# Source: /{command} cannot be played while standing.
+chat.refused.standing = 立っている間は /{command} を使用できません。
+# Source: /{command} cannot be played while swimming.
+chat.refused.swimming = 水泳中は /{command} を使用できません。
+# Source: /{command} cannot be played while holding a torch.
+chat.refused.torch = たいまつを持っている間は /{command} を使用できません。
+# Source: /{command} cannot be played while holding an umbrella.
+chat.refused.umbrella = 傘を持っている間は /{command} を使用できません。
+# Source: Due to detectability, you need to be in the base pose (pose 0) of your current stance to bypass emotes in safe mode.
+chat.safe_mode = 検知される可能性があるため、セーフモードでエモートをバイパスするには、現在の構えの基本ポーズ（ポーズ0）である必要があります。
+# Source: Also found /{command} but {reason}
+chat.swap.also_found_but = /{command} も見つかりましたが、{reason}
+# Source: Still loading emote data. Try again in a moment.
+chat.swap.catalog_loading = エモートデータを読み込み中です。少し待ってからもう一度試してください。
+# Source: This emote landed on /{command}, which your mod "{mod}" changes. Players around you may briefly see that mod's animation before yours reaches them. If you don't want this to happen, head over to the configuration window and block emotes that are changed by other mods.
+chat.swap.changed_target = このエモートは /{command} にスワップされましたが、これはMod「{mod}」が変更しています。あなたのモーションが届く前に、周囲のプレイヤーにそのModのモーションが一瞬見えることがあります。これを避けたい場合は、設定ウィンドウで他のModが変更するエモートをブロックしてください。
+# Source: Could not swap /{command}.
+chat.swap.could_not = /{command} をスワップできませんでした。
+# Source: Emote #{id}
+chat.swap.emote_number = エモート #{id}
+# Source: Something went wrong. Emote not swapped.
+chat.swap.failed = 問題が発生しました。エモートはスワップされませんでした。
+# Source: Found /{command} but {reason}
+chat.swap.found_but = /{command} が見つかりましたが、{reason}
+# Source: This emote landed on a loop only target with no intro. You will not see the intro play.
+chat.swap.intro_dropped.loop = このエモートは導入モーションのないループ専用のターゲットにスワップされました。導入モーションは再生されません。
+# Source: This emote landed on a one shot target with no intro. You will not see the intro play.
+chat.swap.intro_dropped.one_shot = このエモートは導入モーションのない一回再生のターゲットにスワップされました。導入モーションは再生されません。
+# Source: {n} more target(s) were skipped for the same reason.
+chat.swap.more_skipped.other = 他に {n} 件のターゲットが同じ理由でスキップされました。
+# Source: /{command} needs {requirement}.
+chat.swap.needs_environment = /{command} には{requirement}が必要です。
+# Source: Penumbra could not say which collection your character uses. Emote not swapped.
+chat.swap.no_character = Penumbraがキャラクターの使用中のコレクションを判別できませんでした。エモートはスワップされませんでした。
+# Source: No Penumbra collection is assigned to your character. Emote not swapped.
+chat.swap.no_collection = キャラクターにPenumbraのコレクションが割り当てられていません。エモートはスワップされませんでした。
+# Source: Could not swap /{command}. None of its override targets can be played right now.
+chat.swap.no_override_target = /{command} をスワップできませんでした。オーバーライドのターゲットはどれも現在使用できません。
+# Source: {emote} was skipped because {reason}.
+chat.swap.override_skipped = {emote} はスキップされました。理由: {reason}。
+# Source: {reason} Emote not swapped.
+chat.swap.penumbra_unavailable = {reason} エモートはスワップされませんでした。
+# Source: Bypass Emote
+chrome.brand = Bypass Emote
+# Source: Collapse
+chrome.collapse = 折りたたむ
+# Source: Expand
+chrome.expand = 展開する
+# Source: The windows let clicks through to the game. The title bars stay clickable.
+chrome.menu.click_through = ウィンドウへのクリックがゲームに通過します。タイトルバーはクリックできます。
+# Source: Keeps the windows open whenever the game hides its own UI.
+chrome.menu.hint.auto_hide = ゲームがUIを非表示にしているときもウィンドウを開いたままにします。
+# Source: Keeps the windows open during cutscenes.
+chrome.menu.hint.cutscenes = カットシーン中もウィンドウを開いたままにします。
+# Source: Keeps the windows open while gpose is active.
+chrome.menu.hint.gpose = グループポーズ中もウィンドウを開いたままにします。
+# Source: Keeps the windows open when you hide the game UI.
+chrome.menu.hint.ui_hidden = ゲームのUIを非表示にしたときもウィンドウを開いたままにします。
+# Source: Shared by every Bypass Emote window.
+chrome.menu.shared = すべての Bypass Emote ウィンドウで共通です。
+# Source: Always on top
+chrome.on_top = 常に手前に表示
+# Source: Window options
+chrome.options = ウィンドウの設定
+# Source: Create
+classic.create_mod.create = 作成
+# Source: This window allows you to create a permanent swap mod, and it stays unaffected by Bypass Emote. You own it, and you manage it, like any other mod.
+classic.create_mod.intro = このウィンドウでは、Bypass Emote の影響を受けない永続的なスワップModを作成できます。作成したModは他のModと同じように、あなた自身が所有し管理します。
+# Source: Mod name
+classic.create_mod.name = Mod名
+# Source: The name of the generated mod.
+classic.create_mod.name.help = 作成するModの名前です。
+# Source: No race covered
+classic.create_mod.no_race = 対応する種族がありません
+# Source: Makes the mod have the highest priority. When off, it is created at priority 0.
+classic.create_mod.priority.help = Modの優先度を最高にします。オフの場合、優先度0で作成されます。
+# Source: Which bodies the mod is written for.
+classic.create_mod.races.help = Modを作成する対象の体型です。
+# Source: Search races...
+classic.create_mod.search_races = 種族を検索...
+# Source: Currently assigned: {name}
+classic.hotbar.assigned = 現在の割り当て: {name}
+# Source: XHB {number}
+classic.hotbar.cross = クロスホットバー {number}
+# Source: You can also drag and drop an emote from the main window onto any visible hotbar slot.
+classic.hotbar.drag_hint = メインウィンドウから表示中のホットバーのスロットにエモートをドラッグ＆ドロップすることもできます。
+# Source: This slot is empty. You can safely assign an emote.
+classic.hotbar.slot_empty = このスロットは空です。安心してエモートを割り当てられます。
+# Source: Assign {emote} to hotbar...
+classic.hotbar.title = {emote} をホットバーに割り当て...
+# Source: {name}  (empty)
+classic.overrides.empty = {name}  （空）
+# Source: This tab allows you to make sure a locked emote will always use one or multiple specific target emotes.
+classic.overrides.intro = このタブでは、未習得のエモートが常に特定のターゲットエモート（1つまたは複数）を使うように設定できます。
+# Source: Limited to selected targets only
+classic.overrides.limited = 選択したターゲットのみに限定
+# Source: No override yet.
+classic.overrides.none = オーバーライドはまだありません。
+# Source: No target yet.
+classic.overrides.no_target = ターゲットはまだありません。
+# Source: Pick an emote on the left.
+classic.overrides.pick = 左側でエモートを選んでください。
+# Source: Override an emote...
+classic.overrides.source = エモートをオーバーライド...
+# Source: Add a target emote...
+classic.overrides.target = ターゲットエモートを追加...
+# Source: Allow
+classic.settings.allow = 許可
+# Source: Allowed
+classic.settings.allowed = 許可
+# Source: Anything allowed
+classic.settings.anything = すべて許可
+# Source: "Multiple swaps" keeps multiple swaps active at the same time in the mod.\n"One swap at a time" turns the previous swaps off as soon as a new one starts.\n\nRecommended: "Multiple swaps", unless for some reason you want to only keep one swap at a time.
+classic.settings.behavior.help = 「複数のスワップ」はMod内で複数のスワップを同時に有効にしておきます。\n「一度に1つのスワップ」は新しいスワップが始まるとすぐに以前のスワップを無効にします。\n\n推奨: 何らかの理由でスワップを1つだけにしたい場合を除き、「複数のスワップ」。
+# Source: Multiple swaps
+classic.settings.behavior.multiple = 複数のスワップ
+# Source: One swap at a time
+classic.settings.behavior.one = 一度に1つのスワップ
+# Source: Blocked
+classic.settings.blocked = ブロック
+# Source: Leave this on, otherwise bypassing several animations in a row may look broken.
+classic.settings.cached_dispatch.alarm = オンのままにしてください。オフだと、複数のモーションを続けてバイパスしたときに表示が崩れることがあります。
+# Source: Gives each bypassed emote a target emote of its own. This is useful when you want to bypass multiple emotes quickly.\n\n"Off" would make it so other people on your sync service would see you redraw constantly.\n"Only when necessary" spreads emotes only after a game patch breaks the cache-breaker feature.\n"On" always spreads emotes.\n\nRecommended: "On" if you want other people on your sync service to always see you properly without redrawing all the time, otherwise highly recommended to leave it on "Only when necessary" and not "Off".
+classic.settings.cached_dispatch.help = バイパスする各エモートに専用のターゲットエモートを割り当てます。複数のエモートを素早くバイパスしたいときに便利です。\n\n「オフ」だと、同期サービス上の他の人からは、あなたが何度も再描画されているように見えます。\n「必要なときのみ」は、ゲームのパッチでキャッシュ破棄機能が使えなくなった後にのみエモートを分散します。\n「オン」は常にエモートを分散します。\n\n推奨: 同期サービス上の他の人に常に再描画なしで正しく見せたい場合は「オン」。それ以外の場合も「オフ」ではなく「必要なときのみ」を強く推奨します。
+# Source: Applies the cache-break mechanism to every emote, even those you own. This is a bonus feature and is experimental. This will allow the client to always "refresh" animations so you never have to redraw yourself or stop emoting to apply an animation change.
+classic.settings.cache_break.help = 所持しているエモートも含め、すべてのエモートにキャッシュ破棄を適用します。これは実験的な追加機能です。クライアントが常にモーションを「更新」するため、モーションの変更を反映するために再描画したりエモートを止めたりする必要がなくなります。
+# Source: Takes effect when "Spread swaps over several emote" is enabled. This determines which emotes become available for a source emote. Basically, if you want to spread swaps over 5 emotes, and you try to bypass an emote but you only have 2 same-rank targets available, this is how it will determine what to do in this scenario. A rank is basically a category of emotes with similar characteristics (same turn behaviour, etc).\n\n"Same rank only" strictly picks targets of the same rank.\n"One rank below" also accepts targets one rank below.\n"Anything allowed" picks any target it can find, regardless of the rank.\n\nNone of them ever breaks your other rules.\n\nRecommended: "One rank below", or "Same rank only" if you want behavior accuracy.
+classic.settings.dispatch_fidelity.help = 「スワップを複数のエモートに分散」が有効なときに機能します。元のエモートに対してどのエモートを使えるようにするかを決めます。例えば、スワップを5つのエモートに分散したいのに、バイパスしようとしたときに同じランクのターゲットが2つしかない場合、この設定でどうするかが決まります。ランクとは、似た特徴（向きの変え方など）を持つエモートのグループです。\n\n「同じランクのみ」は同じランクのターゲットだけを厳密に選びます。\n「1ランク下まで」は1ランク下のターゲットも受け入れます。\n「すべて許可」はランクに関係なく見つかったターゲットを選びます。\n\nどれを選んでも他のルールが破られることはありません。\n\n推奨: 「1ランク下まで」。動作の正確さを重視する場合は「同じランクのみ」。
+# Source: How long the same error stays quiet after you have seen it.\n\nAccepts time format: 5m, 300s, 5m10s, 1h.\nSet to 0 to see every one of them.
+classic.settings.error_throttle.help = 同じエラーを一度表示した後、再表示しない時間です。\n\n使える時間の形式: 5m、300s、5m10s、1h。\n0にするとすべて表示します。
+# Source: Checked at {time}.
+classic.settings.gate.checked_at = {time} に確認しました。
+# Source: {label} ({seconds})
+classic.settings.gate.countdown = {label}（{seconds}）
+# Source: Force approval is on.
+classic.settings.gate.forced = 強制承認がオンです。
+# Source: Disable Force Approval
+classic.settings.gate.force_disable = 強制承認を無効にする
+# Source: Enable Force Approval
+classic.settings.gate.force_enable = 強制承認を有効にする
+# Source: Bypass Emote has not been approved for this game build.
+classic.settings.gate.not_approved = Bypass Emote はこのゲームビルドでの使用がまだ承認されていません。
+# Source: Emote swaps may behave oddly until the build is approved.\nThe plugin will automatically fetch updates every 10 minutes to check if it was approved.
+classic.settings.gate.not_approved.text = ビルドが承認されるまで、エモートのスワップがおかしな動作をすることがあります。\nプラグインは10分ごとに自動で更新を取得し、承認されたかを確認します。
+# Source: Bypass Emote cannot be tested on this game client.
+classic.settings.gate.untested = Bypass Emote はこのゲームクライアントではテストできません。
+# Source: Show windows in GPose
+classic.settings.gpose = グループポーズ中にウィンドウを表示
+# Source: Keeps this plugin's windows visible while you are in GPose.
+classic.settings.gpose.help = グループポーズ中もこのプラグインのウィンドウを表示したままにします。
+# Source: Show windows while the game UI is hidden
+classic.settings.hidden_ui = ゲームのUI非表示中にウィンドウを表示
+# Source: Keeps this plugin's windows visible when you hide the game UI.
+classic.settings.hidden_ui.help = ゲームのUIを非表示にしたときも、このプラグインのウィンドウを表示したままにします。
+# Source: When no unlocked looped emote fits as a target, your current idle pose may be eligible instead. The emote you try to bypass will then be targeted onto your current idle pose. This will cause a redraw of your character when triggered.\n\n"Never" blocks idle poses from being used as targets.\n"Only when nothing else fits" uses the pose only when literally no unlocked looped emote could have played here at all. This will not use your idle pose if any other emote would have been available if it wasn't blocked.\n"Allow" always falls back to your idle pose when no other options are available.\n\nRecommended: "Only when nothing else fits".
+classic.settings.idle_pose_loops.help = ターゲットに合う習得済みのループエモートがない場合、代わりに現在の待機ポーズが使われることがあります。バイパスしようとしたエモートは現在の待機ポーズに割り当てられます。この場合、キャラクターが再描画されます。\n\n「使わない」は待機ポーズをターゲットとして使いません。\n「他に合うものがないときのみ」は、習得済みのループエモートがこの場で一切再生できなかった場合にのみポーズを使います。ブロックされていなければ使えた他のエモートがある場合、待機ポーズは使いません。\n「許可」は他に選択肢がないとき、常に待機ポーズを使います。\n\n推奨: 「他に合うものがないときのみ」。
+# Source: How many swaps are kept per target emote. 0 keeps them all.\n\nEach kept swap stays as an option of the generated Penumbra mod, so playing an emote again enables it again without rebuilding it. The only cost is that the mod gets bigger.
+classic.settings.kept_swaps.help = ターゲットエモートごとに保持するスワップの数です。0ですべて保持します。\n\n保持されたスワップは作成されたPenumbra Modのオプションとして残るため、同じエモートを再度使うと、作り直すことなく再び有効になります。唯一の欠点はModのサイズが大きくなることです。
+# Source: Last resort
+classic.settings.last_resort = 最終手段
+# Source: Lenient
+classic.settings.lenient = 緩やか
+# Source: When the emote ends
+classic.settings.lifetime.ends = エモートの終了時
+# Source: "When the emote ends" puts your real emote back as soon as the animation stops.\n"When you play the target emote" keeps the swap enabled until the next time you play the target emote.\n"Never" keeps the swap live until another swap claims the same target emote.\n\nRecommended: "When you play the target emote". "When the emote ends" is not recommended, as people will see you redraw constantly after swapping.
+classic.settings.lifetime.help = 「エモートの終了時」はモーションが止まるとすぐに本来のエモートに戻します。\n「ターゲットエモートの使用時」は次にターゲットエモートを使うまでスワップを有効にしておきます。\n「しない」は別のスワップが同じターゲットエモートを使うまでスワップを有効にしておきます。\n\n推奨: 「ターゲットエモートの使用時」。「エモートの終了時」は、スワップ後に周囲から何度も再描画されているように見えるため推奨しません。
+# Source: When you play the target emote
+classic.settings.lifetime.target = ターゲットエモートの使用時
+# Source: Show locked emotes in the game's Emote window
+classic.settings.locked_in_window = ゲームのエモートウィンドウに未習得のエモートを表示
+# Source: "Strict" only puts a looping emote on another looping one.\n"Lenient" lets a looping emote play once on a one time emote when no better match exists.\n\nRecommended: "Strict", or "Lenient" if you really don't have many emotes.
+classic.settings.loop_matching.help = 「厳密」はループするエモートを別のループするエモートにのみ割り当てます。\n「緩やか」は、より良い一致がない場合、ループするエモートを一回再生のエモートで一度だけ再生させます。\n\n推奨: 「厳密」。エモートをあまり持っていない場合は「緩やか」。
+# Source: Determines whether to block unlocked emotes from being picked when they are modified by at least one of your mods. This prevents other people from seeing other modded emotes you might have before the swap takes place.\nAs an example, you have a mod on beesknees, and you try to bypass /conduct which happens to land on beesknees: other players might or might not see the modded beesknees for a moment.\n\n"Allowed" allows using unlocked emotes that are modified by one of your mods.\n"Last resort" uses one only when nothing else fits.\n"Blocked" never uses one, and show an error message in the chat with options to disable or open the mod in penumbra.\n\nRecommended: "Last resort", or "Blocked" if you absolutely don't want your modded emotes to accidentaly be seen.
+classic.settings.modded_targets.help = Modで変更されている習得済みのエモートを選ばないようにするかを決めます。これにより、スワップが反映される前に、あなたが持っている他のModのエモートが他の人に見えることを防ぎます。\n例えば、beesknees にModを入れていて、/conduct をバイパスしたら beesknees にスワップされた場合、他のプレイヤーにModの beesknees が一瞬見えるかもしれません。\n\n「許可」はModで変更された習得済みのエモートを使えるようにします。\n「最終手段」は他に合うものがないときだけ使います。\n「ブロック」は使わず、チャットにエラーメッセージを表示し、Modを無効にするかPenumbraで開くかを選べます。\n\n推奨: 「最終手段」。Modのエモートを絶対に見られたくない場合は「ブロック」。
+# Source: Never
+classic.settings.never = しない
+# Source: Use the new interface
+classic.settings.new_interface = 新しいインターフェースを使う
+# Source: Switches back to the new interface.\nThe classic interface is the one you are looking at, exactly as in previous versions.
+classic.settings.new_interface.help = 新しいインターフェースに戻します。\nクラシックインターフェースは今見ているもので、以前のバージョンとまったく同じです。
+# Source: Only when nothing else fits
+classic.settings.nothing_else_fits = 他に合うものがないときのみ
+# Source: Off
+classic.settings.off = オフ
+# Source: On
+classic.settings.on = オン
+# Source: One rank below
+classic.settings.one_below = 1ランク下まで
+# Source: Safe mode is not 100% guaranteed to be safe either. It prevents Direct Play from being used in states where it was proved to go wrong, but I can not prove the absence of issues. Use Emote Swap if you want to be 100% safe, it will behave almost the same way.
+classic.settings.safe_mode_not_a_promise = セーフモードも100%安全とは限りません。問題が起きると確認された状態では Direct Play を使わないようにしますが、問題がないことを証明することはできません。100%安全にしたい場合は Emote Swap を使ってください。動作はほぼ同じです。
+# Source: Same rank only
+classic.settings.same_rank = 同じランクのみ
+# Source: Windows
+classic.settings.section.windows = ウィンドウ
+# Source: "Strict" never puts an emote on one that makes sound.\n"Lenient" allows matching emotes that make sounds together.\n"Off" will let emotes play regardless of sound.\n\nThis is to prevent vanilla people from seeing you play fume which could annoy other vanilla players, for example.\n\nRecommended: "Lenient".
+classic.settings.sound_matching.help = 「厳密」は効果音のあるエモートには決して割り当てません。\n「緩やか」は効果音のあるエモート同士の割り当てを許可します。\n「オフ」は効果音に関係なくエモートを再生します。\n\n例えば、Modを使っていない周囲のプレイヤーに fume を使っているところを見られ、迷惑をかけることを防ぐためのものです。\n\n推奨: 「緩やか」。
+# Source: Strict
+classic.settings.strict = 厳密
+# Source: Emotes have different turn behaviors when you target someone. Some emotes will make your torso turn (i.e: /hum), some only your head (i.e: /stepdance),some will only make your eyes follow your target (i.e: /beesknees) while others will not move at all (i.e:/guard).\n\n"Very strict" only picks emotes that behaves the same way.\n"Strict" allows eye following differences but keeps emotes head and body turn behaviors.\n"Lenient" allows any turn behavior.\n\nThe plugin will still always try to find the best match first, regardless of the selected rule.\n\nRecommended: "Lenient".
+classic.settings.turn_matching.help = エモートは、誰かをターゲットしたときの向きの変え方がそれぞれ違います。胴体を向けるもの（例: /hum）、頭だけを向けるもの（例: /stepdance）、目線だけで追うもの（例: /beesknees）、まったく動かないもの（例: /guard）があります。\n\n「非常に厳密」は同じ動きをするエモートだけを選びます。\n「厳密」は目線の違いを許可しますが、頭と体の向きの変え方は同じにします。\n「緩やか」はどんな向きの変え方も許可します。\n\n選んだルールに関係なく、プラグインは常に最も一致するものを先に探します。\n\n推奨: 「緩やか」。
+# Source: Lets Direct Play bypass an emote in any pose.\n\nLeave it off unless you know what you are doing. When off, the plugin only plays emotes from states where nothing can be noticed.
+classic.settings.unsafe.help = どのポーズでも Direct Play でエモートをバイパスできるようにします。\n\n何をしているか分かっていない限り、オフのままにしてください。オフの場合、プラグインは何も気付かれない状態からのみエモートを再生します。
+# Source: In practice it is a non-issue. This has been a thing in other tools and plugins (and still is in some of them), which people have used for years without trouble. Go back to safe mode, or even better, to emote swap, if you are uncomfy with this.
+classic.settings.unsafe.reassurance = 実際には問題になりません。これは他のツールやプラグインでも行われてきたことで（今も行われているものがあります）、多くの人が何年も問題なく使ってきました。不安な場合はセーフモードに、できれば Emote Swap に戻してください。
+# Source: Very strict
+classic.settings.very_strict = 非常に厳密
+# Source: Shows a warning in chat when a swap happened, but not the way you would expect.
+classic.settings.warning_messages.help = スワップは行われたものの、期待通りではなかった場合にチャットに警告を表示します。
+# Source: How long the same warning stays quiet after you have seen it.\n\nAccepts time format: 5m, 300s, 5m10s, 1h.\nSet to 0 to disable.
+classic.settings.warning_throttle.help = 同じ警告を一度表示した後、再表示しない時間です。\n\n使える時間の形式: 5m、300s、5m10s、1h。\n0にすると無効になります。
+# Source: Only when necessary
+classic.settings.when_necessary = 必要なときのみ
+# Source: Opens the changelog window.
+command.changelog = 更新履歴ウィンドウを開きます。
+# Source: Applies any emote to your own chocobo if summoned, without needing to target it. Use /bec <emote_command> or /bec stop.
+command.chocobo = 呼び出し中の自分のチョコボに、ターゲットせずに任意のエモートを適用します。/bec <emote_command> または /bec stop を使ってください。
+# Source: Plays the emote on your chocobo, by command name or ID.
+command.chocobo_emote = コマンド名またはIDで、チョコボにエモートを再生させます。
+# Source: Stops the emote currently playing on your chocobo.
+command.chocobo_stop = チョコボが再生中のエモートを止めます。
+# Source: Opens the configuration window.
+command.config = 設定ウィンドウを開きます。
+# Source: Opens the debug window.
+command.debug = デバッグウィンドウを開きます。
+# Source: Shows the hooks window.
+command.hooks = フックウィンドウを表示します。
+# Source: Exports a zip with the plugin logs and settings, to send to the developer.
+command.logs = 開発者に送るため、プラグインのログと設定をzipでエクスポートします。
+# Source: Opens the Bypass Emote main window.
+command.main = Bypass Emote のメインウィンドウを開きます。
+# Source: Applies any emote to your own minion if summoned, without needing to target it. Use /bem <emote_command> or /bem stop.
+command.minion = 呼び出し中の自分のミニオンに、ターゲットせずに任意のエモートを適用します。/bem <emote_command> または /bem stop を使ってください。
+# Source: Plays the emote on your minion, by command name or ID.
+command.minion_emote = コマンド名またはIDで、ミニオンにエモートを再生させます。
+# Source: Stops the emote currently playing on your minion.
+command.minion_stop = ミニオンが再生中のエモートを止めます。
+# Source: Applies any emote to your own pet (carbuncle/eos) if summoned, without needing to target it. Use /bep <emote_command> or /bep stop.
+command.pet = 召喚中の自分のペット（カーバンクル/フェアリー・エオス）に、ターゲットせずに任意のエモートを適用します。/bep <emote_command> または /bep stop を使ってください。
+# Source: Plays the emote on your pet, by command name or ID.
+command.pet_emote = コマンド名またはIDで、ペットにエモートを再生させます。
+# Source: Stops the emote currently playing on your pet.
+command.pet_stop = ペットが再生中のエモートを止めます。
+# Source: Bypasses any emote (including locked ones) on yourself, by command name or ID.
+command.self_emote = コマンド名またはIDで、任意のエモート（未習得のものも含む）を自分にバイパスします。
+# Source: Stops the emote currently playing on yourself. Direct Play mode only.
+command.stop = 自分が再生中のエモートを止めます。Direct Play モードのみ。
+# Source: Restarts the emotes of every player and NPC around you, with their sounds.
+command.sync = 周囲のすべてのプレイヤーとNPCのエモートを、効果音とともに再開します。
+# Source: Restarts only the emotes played with Direct Play.
+command.sync_direct = Direct Play で再生したエモートのみを再開します。
+# Source: Applies any emote to a targetted NPC. Only works on NPCs and owned minions/pets. Use /bet <emote_command> or /bet stop.
+command.target = ターゲットしたNPCに任意のエモートを適用します。NPCと自分のミニオン/ペットにのみ有効です。/bet <emote_command> または /bet stop を使ってください。
+# Source: Plays the emote on your target, by command name or ID.
+command.target_emote = コマンド名またはIDで、ターゲットにエモートを再生させます。
+# Source: Stops the emote currently playing on your target.
+command.target_stop = ターゲットが再生中のエモートを止めます。
+# Source: All
+common.all = すべて
+# Source: Cancel
+common.cancel = キャンセル
+# Source: Close
+common.close = 閉じる
+# Source: None
+common.none = なし
+# Source: Owned
+common.owned = 習得済み
+# Source: Enable on creation
+create_mod.enable = 作成時に有効にする
+# Source: Switches the mod on in your character's collection as soon as it exists.
+create_mod.enable.help = Modが作成されたらすぐに、キャラクターのコレクションで有効にします。
+# Source: Emote data is still loading. Try again in a moment.
+create_mod.loading = エモートデータを読み込み中です。少し待ってからもう一度試してください。
+# Source: Modded animation: {mod}
+create_mod.modded = Modのモーション: {mod}
+# Source: My emote mod
+create_mod.name.placeholder = マイ エモートMod
+# Source: An emote cannot be played over itself.
+create_mod.not_over_itself = エモートを自分自身に重ねて再生することはできません。
+# Source: One of those emotes has no animation this can read.
+create_mod.no_animation = それらのエモートのどれかに、読み取れるモーションがありません。
+# Source: Penumbra is not running.
+create_mod.penumbra_off = Penumbraが起動していません。
+# Source: Pick both emotes and name the mod.
+create_mod.pick_both = 両方のエモートを選び、Modに名前を付けてください。
+# Source: Pick at least one race.
+create_mod.pick_race = 種族を1つ以上選んでください。
+# Source: Highest priority
+create_mod.priority = 最高優先度
+# Source: Races covered
+create_mod.races = 対応する種族
+# Source: Emote to play
+create_mod.source = 再生するエモート
+# Source: The animation the mod plays. The one you have not unlocked.
+create_mod.source.help = Modが再生するモーションです。習得していないほうのエモートです。
+# Source: Pick the emote to play...
+create_mod.source.placeholder = 再生するエモートを選択...
+# Source: Played over
+create_mod.target = 置き換え先
+# Source: The emote you will actually use in game. The one you have unlocked.
+create_mod.target.help = 実際にゲーム内で使うエモートです。習得済みのほうのエモートです。
+# Source: Pick the emote to play over...
+create_mod.target.placeholder = 置き換え先のエモートを選択...
+# Source: Vanilla animation
+create_mod.vanilla = バニラのモーション
+# Source: This also changes the emote for {races}. They read a file the mod writes.
+create_mod.warning.also_reached = これにより {races} のエモートも変わります。それらはModが書き込むファイルを読み込みます。
+# Source: Your mod "{mod}" already changes {target}.
+create_mod.warning.modded = Mod「{mod}」がすでに {target} を変更しています。
+# Source: You have not unlocked {target}.
+create_mod.warning.not_unlocked = {target} を習得していません。
+# Source: {losers} read the same animation file as {winner}. {winner}'s version plays for all of them.
+create_mod.warning.shared = {losers} は {winner} と同じモーションファイルを読み込みます。すべてに {winner} のバージョンが再生されます。
+# Source: Added in patch {patch}
+emote.added = パッチ {patch} で追加
+# Source: Base game
+emote.base_game = 基本ゲーム
+# Source: ID {id}
+emote.id = ID {id}
+# Source: No name
+emote.no_name = 名前なし
+# Source: Patch {patch}
+emote.patch = パッチ {patch}
+# Source: Unknown name
+emote.unknown = 不明な名前
+# Source: The approval recorded for game build {build} was dropped.
+gate.approval_dropped = ゲームビルド {build} の承認記録は破棄されました。
+# Source: Game build {build} is approved.
+gate.approved = ゲームビルド {build} は承認されています。
+# Source: Game build {build} was approved earlier.
+gate.approved_earlier = ゲームビルド {build} は以前に承認されました。
+# Source: The installed game build could not be read.
+gate.build_unreadable = インストールされているゲームビルドを読み取れませんでした。
+# Source: The approval list could not be reached.
+gate.list_unreachable = 承認リストに接続できませんでした。
+# Source: Game build {build} needs Bypass Emote {minimum} or newer. Installed: {installed}.
+gate.needs_version = ゲームビルド {build} には Bypass Emote {minimum} 以降が必要です。インストール済み: {installed}。
+# Source: Game build {build} has not been approved yet.
+gate.not_approved_yet = ゲームビルド {build} はまだ承認されていません。
+# Source: Reading the approval list.
+gate.reading_list = 承認リストを読み込み中です。
+# Source: unknown
+gate.unknown_version = 不明
+# Source: Game build {build} names a plugin version the plugin cannot read.
+gate.unreadable_version = ゲームビルド {build} には、プラグインが読み取れないバージョンが指定されています。
+# Source: The {client} client has not and can not be tested. This plugin might not work and might be unstable/unusable. Please don't use it if it does not work well.
+gate.untested_client = {client}クライアントはテストされておらず、テストすることもできません。このプラグインは動作しない、または不安定で使えない可能性があります。うまく動作しない場合は使わないでください。
+# Source: This game client is not the Global one, and has not and can not be tested. This plugin might not work and might be unstable/unusable. Please don't use it if it does not work well.
+gate.untested_other = このゲームクライアントはグローバル版ではなく、テストされておらず、テストすることもできません。このプラグインは動作しない、または不安定で使えない可能性があります。うまく動作しない場合は使わないでください。
+# Source: Assign
+hotbar.assign = 割り当て
+# Source: Hotbar
+hotbar.hotbar = ホットバー
+# Source: Slot {slot} - Empty
+hotbar.slot.empty = スロット {slot} - 空
+# Source: Slot {slot} - {name}
+hotbar.slot.holds = スロット {slot} - {name}
+# Source: Discord
+main.discord = Discord
+# Source: Help, bug reports and updates.
+main.discord.tooltip = ヘルプ、バグ報告、更新情報。
+# Source: No blocked emote
+main.empty.blocked = ブロックしたエモートはありません
+# Source: No favorited emote
+main.empty.favourites.classic = お気に入りのエモートはありません
+# Source: Support me on Ko-fi
+main.kofi = Ko-fiで支援する
+# Source: This plugin is free and always will be, donations are appreciated.
+main.kofi.tooltip = このプラグインは無料で、これからもずっと無料です。寄付はとてもありがたいです。
+# Source: Apply emote on Chocobo
+main.menu.chocobo.classic = チョコボにエモートを適用
+# Source: Create a mod from this emote...
+main.menu.create_mod = このエモートからModを作成...
+# Source: Force swap
+main.menu.force_swap = 強制スワップ
+# Source: Assign emote to Hotbar...
+main.menu.hotbar.classic = エモートをホットバーに割り当て...
+# Source: Apply emote on Minion
+main.menu.minion.classic = ミニオンにエモートを適用
+# Source: Only for Emote Swap mode.
+main.menu.only_emote_swap = Emote Swap モードのみ。
+# Source: Add an override...
+main.menu.override.classic = オーバーライドを追加...
+# Source: Apply emote on Pet
+main.menu.pet.classic = ペットにエモートを適用
+# Source: Block an emote as a swap target...
+main.quick.blocked = スワップ先としてエモートをブロック...
+# Source: (blocked)
+main.quick.blocked.marked = （ブロック中）
+# Source: Add an emote to your favorites...
+main.quick.favourite.classic = エモートをお気に入りに追加...
+# Source: (favorite)
+main.quick.favourite.marked.classic = （お気に入り）
+# Source: Block this emote as a swap target
+main.row.block = このエモートをスワップ先としてブロック
+# Source: Blocked: no swap will land on this emote
+main.row.blocked = ブロック中: このエモートにはスワップされません
+# Source: Drag onto a hotbar slot to assign it
+main.row.drag = ホットバーのスロットにドラッグして割り当て
+# Source: Left-click to apply to yourself
+main.row.left_click = 左クリックで自分に適用
+# Source: Patch: {patch}
+main.row.patch = パッチ: {patch}
+# Source: Right-click for more options
+main.row.right_click = 右クリックでその他のオプション
+# Source: Search emotes...
+main.search = エモートを検索...
+# Source: Show all emotes
+main.show_all = すべてのエモートを表示
+# Source: Show IDs
+main.show_ids = IDを表示
+# Source: Show invalid emotes
+main.show_invalid = 無効なエモートを表示
+# Source: Show Invalid Emotes
+main.show_invalid.classic = 無効なエモートを表示
+# Source: Sync Direct Play only (/be syncdirect)
+main.sync.direct = Direct Play のみ同期（/be syncdirect）
+# Source: Sync everyone (/be sync)
+main.sync.everyone = 全員を同期（/be sync）
+# Source: All
+main.tab.all = すべて
+# Source: Blocked
+main.tab.blocked = ブロック
+# Source: Expressions
+main.tab.expressions = 表情
+# Source: Fav
+main.tab.favourites = お気に入り
+# Source: General
+main.tab.general = 一般
+# Source: Other
+main.tab.other = その他
+# Source: Special
+main.tab.special = 特殊
+# Source: Create a mod
+main.toolbar.create_mod = Modを作成
+# Source: Refresh Locked Emotes
+main.toolbar.refresh.tooltip = 未習得のエモートを更新
+# Source: Sync...
+main.toolbar.sync_menu = 同期...
+# Source: '{mod}' was created. Penumbra could not enable it in {collection}.
+mod_builder.created_not_enabled = 「{mod}」を作成しました。Penumbraが {collection} で有効にできませんでした。
+# Source: '{mod}' was created. No collection is assigned to your character. The mod is off.
+mod_builder.created_no_collection = 「{mod}」を作成しました。キャラクターにコレクションが割り当てられていません。Modは無効です。
+# Source: '{mod}' was created. Enable it in Penumbra when you want it.
+mod_builder.created_off = 「{mod}」を作成しました。使いたいときにPenumbraで有効にしてください。
+# Source: '{mod}' was created and switched on in {collection}.
+mod_builder.created_on = 「{mod}」を作成し、{collection} で有効にしました。
+# Source: Something went wrong. Nothing was created. The log has the details.
+mod_builder.failed = 問題が発生しました。何も作成されませんでした。詳細はログにあります。
+# Source: Penumbra already holds a mod folder called '{folder}'. Pick another name.
+mod_builder.folder_taken = Penumbraにはすでに「{folder}」という名前のModフォルダがあります。別の名前を選んでください。
+# Source: Give the mod a name first.
+mod_builder.name_first = 先にModの名前を付けてください。
+# Source: '{mod}' was written to '{folder}'. Penumbra did not load it. Rediscover mods in Penumbra to pick it up.
+mod_builder.not_loaded = 「{mod}」を「{folder}」に書き込みました。Penumbraが読み込みませんでした。PenumbraでModを再検出して読み込んでください。
+# Source: The mod's files could not be written. The log has the details.
+mod_builder.not_written = Modのファイルを書き込めませんでした。詳細はログにあります。
+# Source: The swap engine is not running.
+mod_builder.no_engine = スワップエンジンが動作していません。
+# Source: Penumbra's mod folder could not be read.
+mod_builder.no_mod_folder = PenumbraのModフォルダを読み取れませんでした。
+# Source: /{source} cannot be played over /{target}. They share no posture.
+mod_builder.no_posture = /{source} を /{target} に重ねて再生することはできません。共通の姿勢がありません。
+# Source: Pick at least one race for the mod to cover.
+mod_builder.pick_race = Modが対応する種族を1つ以上選んでください。
+# Source: Applied.
+noire.applied = 適用しました。
+# Source: Cancel
+noire.cancel = キャンセル
+# Source: Entries
+noire.changelog.entries = 項目
+# Source: Footer
+noire.changelog.footer = フッター
+# Source: No changelog available for this version.
+noire.changelog.none = このバージョンの更新履歴はありません。
+# Source: Select a version:
+noire.changelog.select_version = バージョンを選択:
+# Source: Changelog
+noire.changelog.title = 更新履歴
+# Source: Versions
+noire.changelog.versions = バージョン
+# Source: Close
+noire.close = 閉じる
+# Source: Accent
+noire.colors.accent = アクセント
+# Source: Copy as code
+noire.colors.copy = コードとしてコピー
+# Source: Danger
+noire.colors.danger = 危険
+# Source: Edit colours
+noire.colors.edit = 色を編集
+# Source: Import from clipboard
+noire.colors.import = クリップボードから読み込む
+# Source: Restore all colours
+noire.colors.reset = すべての色を元に戻す
+# Source: Colours
+noire.colors.title = 色
+# Source: Copied.
+noire.copied = コピーしました。
+# Source: {label} ({seconds})
+noire.countdown = {label}（{seconds}）
+# Source: Done
+noire.done = 完了
+# Source: Hide
+noire.hide = 非表示
+# Source: Language
+noire.language = 言語
+# Source: {count} outdated
+noire.language.outdated.other = {count} 件が古い
+# Source: {name} ({percent}%)
+noire.language.progress = {name}（{percent}%）
+# Source: Translate...
+noire.language.translate = 翻訳...
+# Source: Arrange {window}
+noire.layout.arrange = {window} を配置
+# Source: Title bar buttons
+noire.layout.buttons = タイトルバーのボタン
+# Source: Default layout
+noire.layout.default = デフォルトのレイアウト
+# Source: Restore the layout
+noire.layout.reset = レイアウトを元に戻す
+# Source: Layout
+noire.layout.title = レイアウト
+# Source: Add the entry
+noire.logs.add_entry = 項目を追加
+# Source: All categories
+noire.logs.all_categories = すべてのカテゴリー
+# Source: All levels
+noire.logs.all_levels = すべてのレベル
+# Source: {count} categories
+noire.logs.categories.other = {count} カテゴリー
+# Source: Category
+noire.logs.category_hint = カテゴリー
+# Source: Clear the database entries
+noire.logs.clear_database = データベースの項目を消去
+# Source: Clear the entries in memory
+noire.logs.clear_memory = メモリ上の項目を消去
+# Source: Collapse the panel
+noire.logs.collapse_panel = パネルを折りたたむ
+# Source: Category
+noire.logs.column.category = カテゴリー
+# Source: Level
+noire.logs.column.level = レベル
+# Source: Message
+noire.logs.column.message = メッセージ
+# Source: Source
+noire.logs.column.source = ソース
+# Source: Time
+noire.logs.column.time = 時刻
+# Source: Copy the entry
+noire.logs.copy_entry = 項目をコピー
+# Source: Copy the selected line
+noire.logs.copy_line = 選択した行をコピー
+# Source: Copy the selected lines
+noire.logs.copy_lines = 選択した行をコピー
+# Source: Copy the lines selected across entries ({count})
+noire.logs.copy_lines_across = 複数の項目で選択した行をコピー（{count}）
+# Source: Copy only the message
+noire.logs.copy_message = メッセージのみコピー
+# Source: Copy only the messages ({count})
+noire.logs.copy_messages = メッセージのみコピー（{count}）
+# Source: Copy the selected entries ({count})
+noire.logs.copy_selected = 選択した項目をコピー（{count}）
+# Source: Delete the entry
+noire.logs.delete_entry = 項目を削除
+# Source: Delete the selected entries ({count})
+noire.logs.delete_selected = 選択した項目を削除（{count}）
+# Source: Entries
+noire.logs.entries = 項目
+# Source: Expand the panel
+noire.logs.expand_panel = パネルを展開
+# Source: Filters
+noire.logs.filters = フィルター
+# Source: Filters and storage
+noire.logs.filters_storage = フィルターと保存
+# Source: Hide the category
+noire.logs.hide_category = カテゴリーを非表示
+# Source: Hide the source
+noire.logs.hide_source = ソースを非表示
+# Source: Hold CTRL and SHIFT to clear.
+noire.logs.hold_clear = CTRLとSHIFTを押したままで消去します。
+# Source: Hold CTRL to delete.
+noire.logs.hold_delete = CTRLを押したままで削除します。
+# Source: {count} levels
+noire.logs.levels.other = {count} レベル
+# Source: Manual entry
+noire.logs.manual_entry = 手動入力
+# Source: What happened?
+noire.logs.message_hint = 何が起きましたか？
+# Source: Save to the database
+noire.logs.persist = データベースに保存
+# Source: per page
+noire.logs.per_page = 件/ページ
+# Source: Refresh the entries
+noire.logs.refresh = 項目を更新
+# Source: Search for a message, category, source...
+noire.logs.search_hint = メッセージ、カテゴリー、ソースを検索...
+# Source: Showing {range} of {count}
+noire.logs.showing = {count} 件中 {range} を表示
+# Source: Show colors
+noire.logs.show_colors = 色を表示
+# Source: Split lines
+noire.logs.split_lines = 行を分割
+# Source: All logs
+noire.logs.title = すべてのログ
+# Source: ({total} in total)
+noire.logs.total = （合計 {total} 件）
+# Source: Auto hide
+noire.menu.auto_hide = 自動非表示
+# Source: Keeps the window open whenever the game hides its own UI.
+noire.menu.auto_hide.hint = ゲームがUIを非表示にしているときもウィンドウを開いたままにします。
+# Source: BEHAVIOUR
+noire.menu.behaviour = 動作
+# Source: Click through
+noire.menu.click_through = クリック透過
+# Source: The window lets clicks through to the game. Its title bar stays clickable.
+noire.menu.click_through.note = ウィンドウへのクリックがゲームに通過します。タイトルバーはクリックできます。
+# Source: In cutscene
+noire.menu.in_cutscene = カットシーン中
+# Source: Keeps the window open during cutscenes.
+noire.menu.in_cutscene.hint = カットシーン中もウィンドウを開いたままにします。
+# Source: In gpose
+noire.menu.in_gpose = グループポーズ中
+# Source: Keeps the window open while gpose is active.
+noire.menu.in_gpose.hint = グループポーズ中もウィンドウを開いたままにします。
+# Source: Lock height
+noire.menu.lock_height = 高さを固定
+# Source: Lock position
+noire.menu.lock_position = 位置を固定
+# Source: Lock width
+noire.menu.lock_width = 幅を固定
+# Source: Always on top
+noire.menu.on_top = 常に手前に表示
+# Source: Opacity
+noire.menu.opacity = 不透明度
+# Source: Reduced motion
+noire.menu.reduced_motion = アニメーションを減らす
+# Source: Text size
+noire.menu.text_size = 文字サイズ
+# Source: UI hidden
+noire.menu.ui_hidden = UI非表示中
+# Source: Keeps the window open when you hide the game UI.
+noire.menu.ui_hidden.hint = ゲームのUIを非表示にしたときもウィンドウを開いたままにします。
+# Source: STAY VISIBLE
+noire.menu.visibility = 表示を維持
+# Source: WINDOW
+noire.menu.window = ウィンドウ
+# Source: Restore
+noire.restore = 元に戻す
+# Source: Export settings
+noire.settings.export = 設定をエクスポート
+# Source: Settings copied to the clipboard.
+noire.settings.exported = 設定をクリップボードにコピーしました。
+# Source: Import from clipboard
+noire.settings.import = クリップボードから読み込む
+# Source: {count} settings imported.
+noire.settings.imported = {count} 件の設定を読み込みました。
+# Source: The clipboard holds no valid code.
+noire.settings.import_failed = クリップボードに有効なコードがありません。
+# Source: No setting matches.
+noire.settings.none = 一致する設定はありません。
+# Source: Reset to default
+noire.settings.reset = デフォルトに戻す
+# Source: Search settings
+noire.settings.search = 設定を検索
+# Source: Show
+noire.show = 表示
+# Source: Interface
+noire.skin = インターフェース
+# Source: Plain
+noire.skin.stock = シンプル
+# Source: Contains
+noire.translate.contains = 含む
+# Source: Translation credits
+noire.translate.credits = 翻訳者
+# Source: {language}: {names}
+noire.translate.credit_line = {language}: {names}
+# Source: Key
+noire.translate.key = キー
+# Source: Missing or outdated
+noire.translate.missing = 未翻訳または古い
+# Source: Missing tags: {tags}
+noire.translate.missing_tags = 不足しているタグ: {tags}
+# Source: Start
+noire.translate.new = 開始
+# Source: Source changed
+noire.translate.outdated = 原文が変更されました
+# Source: Translated from: {text}
+noire.translate.outdated_from = 翻訳元: {text}
+# Source: Pick a language, or type a language code to start a new one.
+noire.translate.pick = 言語を選ぶか、言語コードを入力して新しく始めてください。
+# Source: Show the plugin in this language
+noire.translate.preview = この言語でプラグインを表示
+# Source: Revert
+noire.translate.revert = 元に戻す
+# Source: Saved text: {text}
+noire.translate.revert_to = 保存済みのテキスト: {text}
+# Source: Saved without a translation
+noire.translate.revert_to_empty = 翻訳なしで保存済み
+# Source: Save
+noire.translate.save = 保存
+# Source: Saved to {path}.
+noire.translate.saved = {path} に保存しました。
+# Source: The file could not be written.
+noire.translate.save_failed = ファイルを書き込めませんでした。
+# Source: Save to a file...
+noire.translate.save_file = ファイルに保存...
+# Source: Search keys and texts
+noire.translate.search = キーとテキストを検索
+# Source: Original
+noire.translate.source = 原文
+# Source: Translate
+noire.translate.title = 翻訳
+# Source: Translation
+noire.translate.translation = 翻訳
+# Source: Unknown tags: {tags}
+noire.translate.unknown_tags = 不明なタグ: {tags}
+# Source: Still correct
+noire.translate.validate = このままで正しい
+# Source: Window options
+noire.window.options = ウィンドウの設定
+# Source: The emote catalog is still building.
+overrides.catalog_building = エモートカタログを作成中です。
+# Source: On: this emote plays on one of these targets, or not at all.\nOff: your usual settings take over when none of these targets can be used.
+overrides.limited.help = オン: このエモートはこれらのターゲットのいずれかで再生されるか、まったく再生されません。\nオフ: これらのターゲットがどれも使えない場合、通常の設定が適用されます。
+# Source: (overridden)
+overrides.marked.source = （オーバーライド済み）
+# Source: (already a target)
+overrides.marked.target = （すでにターゲット）
+# Source: Remove this override
+overrides.remove = このオーバーライドを削除
+# Source: Every emote that fits is on your blocked targets list.
+preview.all_blocked = 合うエモートはすべてブロックしたターゲットのリストにあります。
+# Source: One of your mods changes every emote that fits.
+preview.all_modded = 合うエモートはすべてModで変更されています。
+# Source: Every emote that can carry this one is unavailable.
+preview.all_unavailable = このエモートを割り当てられるエモートはすべて使用できません。
+# Source: {n} emote(s) that fit: on your blocked targets list.
+preview.blocked_fit.other = 合うエモート {n} 件: ブロックしたターゲットのリストにあります。
+# Source: {emote}: {reason}
+preview.detail = {emote}: {reason}
+# Source: You are in group pose.
+preview.group_pose = グループポーズ中です。
+# Source: /{command}: {reason}
+preview.miss = /{command}: {reason}
+# Source: on your blocked targets list.
+preview.miss.blocked = ブロックしたターゲットのリストにあります。
+# Source: different loop kind.
+preview.miss.loop = ループの種類が異なります。
+# Source: changed by your mod "{mod}".
+preview.miss.named_mod = Mod「{mod}」で変更されています。
+# Source: {rule} does not match.
+preview.miss.other = {rule}が一致しません。
+# Source: makes a sound.
+preview.miss.sound = 効果音があります。
+# Source: turn does not match.
+preview.miss.turn = 向きが一致しません。
+# Source: {n} emote(s) that fit: changed by another mod.
+preview.modded_fit.other = 合うエモート {n} 件: 別のModで変更されています。
+# Source: {n} more target(s) skipped.
+preview.more_skipped.other = 他に {n} 件のターゲットをスキップしました。
+# Source: No loop is free. Idle-pose loops are off.
+preview.no_loop = 空いているループがありません。待機ポーズでのループはオフです。
+# Source: No emote you own matches /{command}.
+preview.no_match = /{command} に合う習得済みのエモートがありません。
+# Source: No override target of /{command} can be played.
+preview.no_override_target = /{command} のオーバーライドのターゲットはどれも再生できません。
+# Source: You already own this emote.
+preview.owned = このエモートはすでに習得しています。
+# Source: You own no emote that can carry this one.
+preview.own_none = このエモートを割り当てられる習得済みのエモートがありません。
+# Source: {n} emote(s) refused by the game.
+preview.pool.game_gate.other = {n} 件のエモートがゲームに拒否されました。
+# Source: {n} emote(s) not unlocked.
+preview.pool.locked.other = {n} 件のエモートが未習得です。
+# Source: {n} emote(s) never a swap target.
+preview.pool.never_target.other = {n} 件のエモートはスワップ先になれません。
+# Source: {n} emote(s) not playable in your current state.
+preview.pool.not_here.other = {n} 件のエモートは現在の状態では使用できません。
+# Source: {n} emote(s): {reason}.
+preview.pool.other.other = {n} 件のエモート: {reason}。
+# Source: {n} emote(s) play another row with a target.
+preview.pool.targeted.other = {n} 件のエモートはターゲットがいると別の動作を再生します。
+# Source: changed by another mod.
+preview.refusal.changed_by_mod = 別のModで変更されています。
+# Source: not unlocked.
+preview.refusal.locked = 未習得です。
+# Source: never a swap target.
+preview.refusal.never_target = スワップ先になれません。
+# Source: not playable in your current state.
+preview.refusal.not_here = 現在の状態では使用できません。
+# Source: no animation data.
+preview.refusal.no_animation = モーションデータがありません。
+# Source: unavailable.
+preview.refusal.unavailable = 使用できません。
+# Source: Emote Swap is off.
+preview.swap_off = Emote Swap はオフです。
+# Source: Until now Bypass Emote forced the animation onto your character from your own client. Nothing was ever sent to the server, but in specific cases, where your character would be in any pose other than the base one, the game client would send duplicate change pose packets to the server. This is not caused by the plugin itself, but rather by how the game handles pose changes. The "Idle Animation Delay" setting in the game's Character Configuration > Control Settings > Character tab is what causes this.
+prompt.before = これまで Bypass Emote は、あなた自身のクライアントからキャラクターにモーションを強制していました。サーバーには何も送信されていませんでしたが、キャラクターが基本ポーズ以外のポーズだった特定の場合に、ゲームクライアントがポーズ変更のパケットを重複してサーバーに送信していました。これはプラグイン自体が原因ではなく、ゲームのポーズ変更の処理によるものです。原因はゲームの「キャラクターコンフィグ > 操作設定 > キャラクター」タブにある待機モーションの遅延設定です。
+# Source: You can change this at any time in the settings.
+prompt.change_later = これはいつでも設定で変更できます。
+# Source: Keep Direct Play
+prompt.direct_play = Direct Play を続ける
+# Source: Use Emote Swap
+prompt.emote_swap = Emote Swap を使う
+# Source: A safer way to play locked emotes
+prompt.heading = 未習得のエモートをより安全に再生する方法
+# Source: The new mode uses Penumbra to swap locked emotes onto unlocked ones. The game plays the emote itself. Nothing mismatches between the game and the server anymore.
+prompt.now = 新しいモードでは、Penumbraを使って未習得のエモートを習得済みのエモートにスワップします。エモートはゲーム自身が再生します。ゲームとサーバーの間に食い違いが起きることはもうありません。
+# Source: Choose how Bypass Emote plays locked emotes
+prompt.title = Bypass Emote で未習得のエモートを再生する方法を選択
+# Source: Hide your name on the mod
+settings.anonymize = Modにあなたの名前を表示しない
+# Source: Names the generated mod after your initials instead of your full name and world.
+settings.anonymize.help = 作成するModの名前を、フルネームとワールドではなくイニシャルにします。
+# Source: Swaps at the same time
+settings.behavior = 同時に有効なスワップ
+# Source: Spread swaps over several emotes
+settings.cached_dispatch = スワップを複数のエモートに分散
+# Source: Always cache-break
+settings.cache_break = 常にキャッシュを破棄
+# Source: This game build is not approved yet, this will not work.
+settings.cache_break.not_approved = このゲームビルドはまだ承認されていないため、これは機能しません。
+# Source: Show the changelog after an update
+settings.changelog_on_update = 更新後に更新履歴を表示
+# Source: Opens the changelog window after an update.
+settings.changelog_on_update.help = 更新後に更新履歴ウィンドウを開きます。
+# Source: Switch to Direct Play
+settings.confirm.direct_play = Direct Play に切り替える
+# Source: Switch to Direct Play?
+settings.confirm.direct_play.title = Direct Play に切り替えますか？
+# Source: Enable unsafe mode
+settings.confirm.unsafe = 安全でないモードを有効にする
+# Source: Enable unsafe mode?
+settings.confirm.unsafe.title = 安全でないモードを有効にしますか？
+# Source: Not all sync services support it. {limit}
+settings.direct_play.safe_tooltip = すべての同期サービスが対応しているわけではありません。{limit}
+# Source: Not recommended. Not all sync services support it. Emote Swap is safer and works over any sync service.
+settings.direct_play.unsafe_tooltip = 推奨しません。すべての同期サービスが対応しているわけではありません。Emote Swap のほうが安全で、どの同期サービスでも動作します。
+# Source: How close a spread emote must fit
+settings.dispatch_fidelity = 分散するエモートの一致の厳しさ
+# Source: Show error messages
+settings.error_messages = エラーメッセージを表示
+# Source: Shows an error in chat when a swap could not be done.
+settings.error_messages.help = スワップできなかったときにチャットにエラーを表示します。
+# Source: Repeat an error at most every
+settings.error_throttle = 同じエラーを繰り返す最短間隔
+# Source: Face your target automatically
+settings.face_target = 自動でターゲットの方を向く
+# Source: Turns your character toward your target when you bypass an emote.
+settings.face_target.help = エモートをバイパスしたとき、キャラクターをターゲットの方に向けます。
+# Source: Check now
+settings.gate.check_now = 今すぐ確認
+# Source: not yet
+settings.gate.not_yet = まだ
+# Source: Bypass emotes from locked hotbar slots
+settings.hotbar_bypass = 未習得のホットバースロットからエモートをバイパス
+# Source: Bypasses a locked emote when you press its hotbar slot.\nRight-click an emote in the main window to assign it to a slot.
+settings.hotbar_bypass.help = ホットバーのスロットを押したとき、未習得のエモートをバイパスします。\nメインウィンドウでエモートを右クリックしてスロットに割り当てます。
+# Source: Loops on idle poses
+settings.idle_pose_loops = 待機ポーズでのループ
+# Source: Kept swaps per emote
+settings.kept_swaps = エモートごとに保持するスワップ
+# Source: Language
+settings.language = 言語
+# Source: The language of the plugin's windows and chat messages.
+settings.language.help = プラグインのウィンドウとチャットメッセージの言語です。
+# Source: Turn the swap off
+settings.lifetime = スワップを無効にするタイミング
+# Source: Do not grey out locked emotes
+settings.locked_as_usable = 未習得のエモートをグレー表示しない
+# Source: Keeps the emotes you have not unlocked lit in the game's emote window and on your hotbars.\nPurely cosmetic.
+settings.locked_as_usable.help = 習得していないエモートを、ゲームのエモートウィンドウとホットバーで明るく表示したままにします。\n見た目だけの変更です。
+# Source: Lists the emotes you have not unlocked in the game's own emote window.\nClose and reopen the emote window for changes to appear.
+settings.locked_in_window.help = 習得していないエモートをゲームのエモートウィンドウに一覧表示します。\n変更を反映するには、エモートウィンドウを閉じてから開き直してください。
+# Source: Loop matching
+settings.loop_matching = ループの一致
+# Source: Emotes used per behaviour
+settings.max_targets = 動作ごとに使うエモート数
+# Source: How many different target emotes one kind of emote may swap to.
+settings.max_targets.help = 1種類のエモートがスワップ先として使える、異なるターゲットエモートの数です。
+# Source: Emotes your mods change
+settings.modded_targets = Modが変更するエモート
+# Source: Mode
+settings.mode = モード
+# Source: Direct Play
+settings.mode.direct_play = Direct Play
+# Source: Emote Swap
+settings.mode.emote_swap = Emote Swap
+# Source: "Emote Swap" plays your emote over one your character owns, through a Penumbra mod. Other players see it over any sync service.\n"Direct Play" sends the emote to the game itself. Not every sync service supports it.
+settings.mode.help = 「Emote Swap」はPenumbraのModを通じて、キャラクターが習得済みのエモートに重ねてエモートを再生します。他のプレイヤーはどの同期サービスでも見ることができます。\n「Direct Play」はエモートをゲーム自体に送ります。すべての同期サービスが対応しているわけではありません。
+# Source: Not running: {fault}.
+settings.not_running = 動作していません: {fault}。
+# Source: General settings
+settings.page.general = 一般設定
+# Source: Bypass Mode
+settings.page.mode = バイパスモード
+# Source: Emote overrides
+settings.page.overrides = エモートのオーバーライド
+# Source: Enable the plugin
+settings.plugin_enabled = プラグインを有効にする
+# Source: Lets you bypass emotes with the vanilla emote commands (/beesknees, /tea, and so on) and with hotbar slots.\nThe main window and the /be command work regardless of this setting.
+settings.plugin_enabled.help = 通常のエモートコマンド（/beesknees、/tea など）やホットバーのスロットでエモートをバイパスできるようにします。\nメインウィンドウと /be コマンドはこの設定に関係なく動作します。
+# Source: In safe mode you can only bypass emotes from the base pose (pose 0) of your current stance.
+settings.safe_mode_limit = セーフモードでは、現在の構えの基本ポーズ（ポーズ0）からのみエモートをバイパスできます。
+# Source: Chat messages
+settings.section.chat = チャットメッセージ
+# Source: Direct play
+settings.section.direct_play = Direct Play
+# Source: Interface
+settings.section.interface = インターフェース
+# Source: Matching
+settings.section.matching = 一致
+# Source: Penumbra
+settings.section.penumbra = Penumbra
+# Source: Plugin
+settings.section.plugin = プラグイン
+# Source: Safety
+settings.section.safety = 安全性
+# Source: Updates
+settings.section.updates = 更新
+# Source: Sound matching
+settings.sound_matching = 効果音の一致
+# Source: Stop companion emotes when they move
+settings.stop_on_move = 移動したらお供のエモートを止める
+# Source: Stops your minion, pet or chocobo's looped emote when they move.
+settings.stop_on_move.help = ミニオン、ペット、チョコボが移動したとき、ループしているエモートを止めます。
+# Source: Show swap messages
+settings.swap_messages = スワップのメッセージを表示
+# Source: Shows a message in chat when an emote is swapped.
+settings.swap_messages.help = エモートがスワップされたときにチャットにメッセージを表示します。
+# Source: Not all sync services support Direct Play.
+settings.sync_services = すべての同期サービスが Direct Play に対応しているわけではありません。
+# Source: Translate...
+settings.translate = 翻訳...
+# Source: Translation
+settings.translation = 翻訳
+# Source: Opens the translation editor. Your translations are saved in the plugin's configuration folder. Translations or improvements are very much welcome: open an issue or a pull request on the plugin's GitHub to share yours.
+settings.translation.help = 翻訳エディターを開きます。翻訳はプラグインの設定フォルダに保存されます。翻訳や改善は大歓迎です。プラグインのGitHubでissueまたはpull requestを作成して共有してください。
+# Source: Turn matching
+settings.turn_matching = 向きの一致
+# Source: Unsafe toggle
+settings.unsafe = 安全でない設定
+# Source: This is unsafe. Forcing an emote outside your base pose is, in theory, detectable by the server.
+settings.unsafe.headline = これは安全ではありません。基本ポーズ以外でエモートを強制することは、理論上サーバーに検知される可能性があります。
+# Source: Show update notifications
+settings.update_notification = 更新通知を表示
+# Source: Tells you in chat and on screen when a new version of the plugin has been installed.
+settings.update_notification.help = プラグインの新しいバージョンがインストールされたとき、チャットと画面でお知らせします。
+# Source: Show warning messages
+settings.warning_messages = 警告メッセージを表示
+# Source: Repeat a warning at most every
+settings.warning_throttle = 同じ警告を繰り返す最短間隔
+# Source: Default
+silk.card.default = 初期習得
+# Source: Every character has this emote.
+silk.card.default.text = すべてのキャラクターがこのエモートを持っています。
+# Source: FFXIV Collect
+silk.card.ffxiv_collect = FFXIV Collect
+# Source: Open page
+silk.card.open_page = ページを開く
+# Source: Owned by {percent} of players
+silk.card.owned_by = プレイヤーの {percent} が所持
+# Source: Playable while
+silk.card.playable_while = 使用できる状態
+# Source: Sources
+silk.card.sources = 入手方法
+# Source: NEW
+silk.changelog.new = NEW
+# Source: {source} over {target}
+silk.create_mod.auto_name = {target} に {source}
+# Source: Create the mod
+silk.create_mod.create = Modを作成
+# Source: "{mod}" is in Penumbra, enabled at the highest priority.
+silk.create_mod.done = 「{mod}」はPenumbraにあり、最高優先度で有効になっています。
+# Source: Creates a permanent swap mod in Penumbra. Bypass Emote never touches it afterwards. You own it and manage it like any other mod.
+silk.create_mod.intro = Penumbraに永続的なスワップModを作成します。作成後、Bypass Emote がこのModに触れることはありません。他のModと同じように、あなた自身が所有し管理します。
+# Source: Mod
+silk.create_mod.mod = Mod
+# Source: Not unlocked
+silk.create_mod.not_unlocked = 未習得
+# Source: This emote has no animation for this body
+silk.create_mod.no_body = このエモートにはこの体型のモーションがありません
+# Source: Gives the mod the highest priority. When it is off, the mod is created at priority 0.
+silk.create_mod.priority.help = Modの優先度を最高にします。オフの場合、Modは優先度0で作成されます。
+# Source: Block as target
+silk.dock.block = ターゲットとしてブロック
+# Source: Blocked as target
+silk.dock.blocked = ターゲットとしてブロック中
+# Source: Chocobo
+silk.dock.chocobo = チョコボ
+# Source: Play on a companion
+silk.dock.companion = お供に再生させる
+# Source: Favourite
+silk.dock.favourite = お気に入り
+# Source: Favourited
+silk.dock.favourited = お気に入り済み
+# Source: Hotbar
+silk.dock.hotbar = ホットバー
+# Source: Your idle pose
+silk.dock.idle_pose = あなたの待機ポーズ
+# Source: your idle pose
+silk.dock.idle_pose.lower = あなたの待機ポーズ
+# Source: Locked
+silk.dock.locked = 未習得
+# Source: Loop
+silk.dock.loop = ループ
+# Source: Loop matches exactly
+silk.dock.match.loop_exact = ループが完全に一致
+# Source: Loop matches leniently
+silk.dock.match.loop_lenient = ループが緩やかに一致
+# Source: Sound matches exactly
+silk.dock.match.sound_exact = 効果音が完全に一致
+# Source: Sound matches leniently
+silk.dock.match.sound_lenient = 効果音が緩やかに一致
+# Source: Turn matches exactly
+silk.dock.match.turn_exact = 向きが完全に一致
+# Source: Turn matches leniently
+silk.dock.match.turn_lenient = 向きが緩やかに一致
+# Source: Minion
+silk.dock.minion = ミニオン
+# Source: Never use this emote as a swap target
+silk.dock.never_target = このエモートをスワップ先として使わない
+# Source: No text command
+silk.dock.no_command = テキストコマンドなし
+# Source: Pet
+silk.dock.pet = ペット
+# Source: Play emote
+silk.dock.play = エモートを再生
+# Source: or double-click
+silk.dock.play.small = またはダブルクリック
+# Source: Plays through {emote}
+silk.dock.plays_through = {emote} を通じて再生
+# Source: Pose {pose}
+silk.dock.pose = ポーズ {pose}
+# Source: Preview popup
+silk.dock.preview_popup = プレビューポップアップ
+# Source: You can enable this again in the general settings at any time.
+silk.dock.preview_popup.tip = 一般設定でいつでも再び有効にできます。
+# Source: Sound
+silk.dock.sound = 効果音
+# Source: Swap preview
+silk.dock.swap_preview = スワップのプレビュー
+# Source: Idle pose
+silk.dock.tag.idle_pose = 待機ポーズ
+# Source: Override
+silk.dock.tag.override = オーバーライド
+# Source: Turn
+silk.dock.turn = 向き
+# Source: {label} ({seconds})
+silk.gate.countdown = {label}（{seconds}）
+# Source: {reason}\nEmote swaps may behave oddly until the build is approved. The plugin fetches updates every 10 minutes to check if it was approved.{notice}\nChecked at {time}.
+silk.gate.detail = {reason}\nビルドが承認されるまで、エモートのスワップがおかしな動作をすることがあります。プラグインは10分ごとに更新を取得し、承認されたかを確認します。{notice}\n{time} に確認しました。
+# Source: Force approval
+silk.gate.force = 強制承認
+# Source: Force approval is on.
+silk.gate.forced = 強制承認がオンです。
+# Source: Disable force approval
+silk.gate.force_disable = 強制承認を無効にする
+# Source: Bypass Emote cannot be tested on this game client
+silk.gate.untested = Bypass Emote はこのゲームクライアントではテストできません
+# Source: Waiting for this game patch to be approved
+silk.gate.waiting = このゲームパッチの承認を待っています
+# Source: Bypass Emote stays off until the current game version is checked. It usually takes a few hours.
+silk.gate.waiting.text = 現在のゲームバージョンが確認されるまで、Bypass Emote はオフのままです。通常は数時間かかります。
+# Source: Cross
+silk.hotbar.cross = クロス
+# Source: You can also drag an emote from the main window onto any visible hotbar slot.
+silk.hotbar.drag_hint = メインウィンドウから表示中のホットバーのスロットにエモートをドラッグすることもできます。
+# Source: LEFT TRIGGER
+silk.hotbar.left_trigger = 左トリガー
+# Source: Pick a slot.
+silk.hotbar.pick_slot = スロットを選んでください。
+# Source: Pick a slot for {emote}.
+silk.hotbar.pick_slot_for = {emote} のスロットを選んでください。
+# Source: RIGHT TRIGGER
+silk.hotbar.right_trigger = 右トリガー
+# Source: Standard
+silk.hotbar.standard = 通常
+# Source: Cross hotbar {bar}, slot {slot} is empty. You can safely assign the emote.
+silk.hotbar.state.cross_empty = クロスホットバー {bar} のスロット {slot} は空です。安心してエモートを割り当てられます。
+# Source: Cross hotbar {bar}, slot {slot} holds {name}. Assigning replaces it.
+silk.hotbar.state.cross_holds = クロスホットバー {bar} のスロット {slot} には {name} があります。割り当てると置き換わります。
+# Source: Hotbar {bar}, slot {slot} is empty. You can safely assign the emote.
+silk.hotbar.state.empty = ホットバー {bar} のスロット {slot} は空です。安心してエモートを割り当てられます。
+# Source: Hotbar {bar}, slot {slot} holds {name}. Assigning replaces it.
+silk.hotbar.state.holds = ホットバー {bar} のスロット {slot} には {name} があります。割り当てると置き換わります。
+# Source: this emote
+silk.hotbar.this_emote = このエモート
+# Source: Add
+silk.logs.add = 追加
+# Source: Add entry
+silk.logs.add_entry = 項目を追加
+# Source: All categories
+silk.logs.all_categories = すべてのカテゴリー
+# Source: {n} categories
+silk.logs.categories.other = {n} カテゴリー
+# Source: Category
+silk.logs.category_hint = カテゴリー
+# Source: Show colors
+silk.logs.colors = 色を表示
+# Source: No entry matches these filters.
+silk.logs.empty = このフィルターに一致する項目はありません。
+# Source: Export
+silk.logs.export = エクスポート
+# Source: Same as /belogs: exports everything since the plugin loaded
+silk.logs.export.tip = /belogs と同じ: プラグインの読み込み以降のすべてをエクスポートします
+# Source: Category
+silk.logs.head.category = カテゴリー
+# Source: Level
+silk.logs.head.level = レベル
+# Source: Message
+silk.logs.head.message = メッセージ
+# Source: Source
+silk.logs.head.source = ソース
+# Source: Time
+silk.logs.head.time = 時刻
+# Source: Hide category
+silk.logs.hide_category = カテゴリーを非表示
+# Source: Hide source
+silk.logs.hide_source = ソースを非表示
+# Source: Hold to clear
+silk.logs.hold = 長押しで消去
+# Source: Hold to clear the database entries
+silk.logs.hold.database = 長押しでデータベースの項目を消去
+# Source: Hold to clear the in-memory entries
+silk.logs.hold.memory = 長押しでメモリ上の項目を消去
+# Source: Critical
+silk.logs.level.critical = 重大
+# Source: Debug
+silk.logs.level.debug = デバッグ
+# Source: Error
+silk.logs.level.error = エラー
+# Source: Info
+silk.logs.level.info = 情報
+# Source: Trace
+silk.logs.level.trace = トレース
+# Source: Warning
+silk.logs.level.warning = 警告
+# Source: Copy selected entries to clipboard ({n})
+silk.logs.menu.copy_entries.other = 選択した項目をクリップボードにコピー（{n}）
+# Source: Copy entry to clipboard
+silk.logs.menu.copy_entry = 項目をクリップボードにコピー
+# Source: Copy selected line to clipboard
+silk.logs.menu.copy_line = 選択した行をクリップボードにコピー
+# Source: Copy selected lines to clipboard
+silk.logs.menu.copy_lines = 選択した行をクリップボードにコピー
+# Source: Copy selected lines from multiple entries to clipboard ({n})
+silk.logs.menu.copy_lines_multiple.other = 複数の項目で選択した行をクリップボードにコピー（{n}）
+# Source: Copy only message to clipboard
+silk.logs.menu.copy_message = メッセージのみクリップボードにコピー
+# Source: Copy only messages to clipboard ({n})
+silk.logs.menu.copy_messages.other = メッセージのみクリップボードにコピー（{n}）
+# Source: Delete entry
+silk.logs.menu.delete = 項目を削除
+# Source: Hold CTRL to delete
+silk.logs.menu.delete.hint = CTRLを押したままで削除
+# Source: Delete selected entries ({n})
+silk.logs.menu.delete_selected.other = 選択した項目を削除（{n}）
+# Source: What happened?
+silk.logs.message_hint = 何が起きましたか？
+# Source: 0 of {n} entries
+silk.logs.none_of.other = {n} 件中 0 件
+# Source: Options
+silk.logs.options = オプション
+# Source: Persist to database
+silk.logs.persist = データベースに保存
+# Source: Search messages, categories, sources...
+silk.logs.search = メッセージ、カテゴリー、ソースを検索...
+# Source: Showing {first}-{last} of {n} entries ({total} total)
+silk.logs.showing.other = {n} 件中 {first}-{last} 件を表示（合計 {total} 件）
+# Source: Split lines
+silk.logs.split = 行を分割
+# Source: Blocked emotes are never used as swap targets.
+silk.main.empty.blocked.hint = ブロックしたエモートはスワップ先として使われません。
+# Source: No favourited emote
+silk.main.empty.favourites = お気に入りのエモートはありません
+# Source: Star an emote, or add one above.
+silk.main.empty.favourites.hint = エモートに星を付けるか、上から追加してください。
+# Source: Nothing matches "{query}"
+silk.main.empty.search = 「{query}」に一致するものはありません
+# Source: Search by name, command or ID.
+silk.main.empty.search.hint = 名前、コマンド、IDで検索します。
+# Source: Click
+silk.main.hint.click = クリック
+# Source: details
+silk.main.hint.details = 詳細
+# Source: Double-click
+silk.main.hint.double_click = ダブルクリック
+# Source: Drag
+silk.main.hint.drag = ドラッグ
+# Source: hotbar
+silk.main.hint.hotbar = ホットバー
+# Source: more
+silk.main.hint.more = その他
+# Source: play
+silk.main.hint.play = 再生
+# Source: play on yourself
+silk.main.hint.play_self = 自分に再生
+# Source: Right-click
+silk.main.hint.right_click = 右クリック
+# Source: Emote played!
+silk.main.pill.played = エモートを再生しました！
+# Source: Emote swapped!
+silk.main.pill.swapped = エモートをスワップしました！
+# Source: Add an emote to your favourites...
+silk.main.quick.favourite = エモートをお気に入りに追加...
+# Source: blocked
+silk.main.quick.marked_blocked = ブロック中
+# Source: favourite
+silk.main.quick.marked_favourite = お気に入り
+# Source: No emote matches.
+silk.main.quick.none = 一致するエモートはありません。
+# Source: Allow as a swap target
+silk.main.row.allow = スワップ先として許可
+# Source: Block as a swap target
+silk.main.row.block = スワップ先としてブロック
+# Source: Add to favourites
+silk.main.row.favourite = お気に入りに追加
+# Source: Remove from favourites
+silk.main.row.unfavourite = お気に入りから削除
+# Source: {tab} ({count})
+silk.main.tab.tip = {tab}（{count}）
+# Source: Refresh
+silk.main.toolbar.refresh = 更新
+# Source: Sync everyone
+silk.main.toolbar.sync = 全員を同期
+# Source: Apply emote on chocobo
+silk.menu.chocobo = チョコボにエモートを適用
+# Source: Assign to a hotbar slot
+silk.menu.hotbar = ホットバーのスロットに割り当て
+# Source: Apply emote on minion
+silk.menu.minion = ミニオンにエモートを適用
+# Source: Add an override
+silk.menu.override = オーバーライドを追加
+# Source: Apply emote on pet
+silk.menu.pet = ペットにエモートを適用
+# Source: Play on yourself
+silk.menu.play = 自分に再生
+# Source: This tab makes sure a locked emote always uses one or more specific target emotes, tried in order.
+silk.overrides.intro = このタブでは、未習得のエモートが常に特定のターゲットエモート（1つまたは複数）を、順番に試して使うように設定できます。
+# Source: Limited to these targets only
+silk.overrides.limited = これらのターゲットのみに限定
+# Source: Locked emote
+silk.overrides.locked_emote = 未習得のエモート
+# Source: Pick an emote on the left
+silk.overrides.pick = 左側でエモートを選んでください
+# Source: {emote} plays through
+silk.overrides.plays_through = {emote} の再生先
+# Source: Remove
+silk.overrides.remove = 削除
+# Source: + Override an emote...
+silk.overrides.source = + エモートをオーバーライド...
+# Source: + Add a target emote...
+silk.overrides.target = + ターゲットエモートを追加...
+# Source: No result
+silk.picker.no_result = 結果なし
+# Source: OWNED
+silk.picker.owned = 習得済み
+# Source: Allow
+silk.settings.allow = 許可
+# Source: Allowed
+silk.settings.allowed = 許可
+# Source: Any
+silk.settings.any = すべて
+# Source: "Multiple" keeps multiple swaps active at the same time in the mod.\n"One at a time" turns the previous swaps off as soon as a new one starts.\n\nRecommended: "Multiple".
+silk.settings.behavior.help = 「複数」はMod内で複数のスワップを同時に有効にしておきます。\n「一度に1つ」は新しいスワップが始まるとすぐに以前のスワップを無効にします。\n\n推奨: 「複数」。
+# Source: Blocked
+silk.settings.blocked = ブロック
+# Source: Leave this on. Bypassing several animations in a row can look broken while it is off.
+silk.settings.cached_dispatch.alarm = オンのままにしてください。オフの間は、複数のモーションを続けてバイパスしたときに表示が崩れることがあります。
+# Source: Gives each bypassed emote a target emote of its own. Useful when you bypass several emotes quickly.\n\n"Off" redraws your character on every bypass.\n"When needed" spreads emotes only after a game patch breaks the cache-breaker.\n"On" always spreads emotes.\n\nRecommended: "On". "Off" is not recommended.
+silk.settings.cached_dispatch.help = バイパスする各エモートに専用のターゲットエモートを割り当てます。複数のエモートを素早くバイパスするときに便利です。\n\n「オフ」はバイパスのたびにキャラクターを再描画します。\n「必要なとき」はゲームのパッチでキャッシュ破棄が使えなくなった後にのみエモートを分散します。\n「オン」は常にエモートを分散します。\n\n推奨: 「オン」。「オフ」は推奨しません。
+# Source: Applies the cache-break mechanism to every emote, even the ones you own. An animation change then applies without a redraw and without stopping the emote. Experimental.
+silk.settings.cache_break.help = 所持しているエモートも含め、すべてのエモートにキャッシュ破棄を適用します。モーションの変更が、再描画もエモートの停止もなしに反映されます。実験的な機能です。
+# Source: The old version.
+silk.settings.classic_interface.text = 以前のバージョン。
+# Source: Compact rows
+silk.settings.compact_rows = コンパクトな行
+# Source: Much smaller rows in the emote list, to see more emotes at once.
+silk.settings.compact_rows.help = エモート一覧の行をかなり小さくして、一度に多くのエモートを表示します。
+# Source: Which emotes a source emote may spread over. Takes effect while "Spread swaps over several emotes" is on. A rank is a group of emotes with the same characteristics (turn behaviour and so on).\n\n"Same rank" only picks targets of the same rank.\n"One below" also accepts targets one rank below.\n"Any" picks any target it can find.\n\nNone of them breaks your other rules.\n\nRecommended: "One below". Pick "Same rank" for behaviour accuracy.
+silk.settings.dispatch_fidelity.help = 元のエモートを分散できるエモートを決めます。「スワップを複数のエモートに分散」がオンの間に機能します。ランクとは、同じ特徴（向きの変え方など）を持つエモートのグループです。\n\n「同じランク」は同じランクのターゲットだけを選びます。\n「1つ下まで」は1ランク下のターゲットも受け入れます。\n「すべて」は見つかったターゲットを選びます。\n\nどれを選んでも他のルールが破られることはありません。\n\n推奨: 「1つ下まで」。動作の正確さを重視する場合は「同じランク」。
+# Source: How long the same error stays quiet after you have seen it.\n\nSet to 0 to see every one of them.
+silk.settings.error_throttle.help = 同じエラーを一度表示した後、再表示しない時間です。\n\n0にするとすべて表示します。
+# Source: When no unlocked looped emote fits as a target, your current idle pose can carry the emote instead. Using the pose redraws your character.\n\n"Never" blocks idle poses as targets.\n"If nothing fits" uses the pose only when no unlocked looped emote could have played at all. An emote you blocked yourself still counts as one that could have played.\n"Allow" falls back to your idle pose whenever nothing else is available.\n\nRecommended: "If nothing fits".
+silk.settings.idle_pose_loops.help = ターゲットに合う習得済みのループエモートがない場合、代わりに現在の待機ポーズでエモートを再生できます。ポーズを使うとキャラクターが再描画されます。\n\n「使わない」は待機ポーズをターゲットとして使いません。\n「合うものがないとき」は、習得済みのループエモートが一切再生できなかった場合にのみポーズを使います。自分でブロックしたエモートも、再生できたエモートとして数えられます。\n「許可」は他に使えるものがないとき、常に待機ポーズを使います。\n\n推奨: 「合うものがないとき」。
+# Source: If nothing fits
+silk.settings.if_nothing_fits = 合うものがないとき
+# Source: How many swaps are kept per target emote. 0 keeps them all.\n\nA kept swap stays as an option of the generated Penumbra mod. Playing that emote again enables it without rebuilding the mod. Kept swaps make the mod bigger.
+silk.settings.kept_swaps.help = ターゲットエモートごとに保持するスワップの数です。0ですべて保持します。\n\n保持されたスワップは作成されたPenumbra Modのオプションとして残ります。そのエモートを再び使うと、Modを作り直すことなく有効になります。保持するスワップが増えるとModは大きくなります。
+# Source: Last resort
+silk.settings.last_resort = 最終手段
+# Source: Lenient
+silk.settings.lenient = 緩やか
+# Source: "When it ends" puts your real emote back as soon as the animation stops.\n"On the target" keeps the swap enabled until the next time you play the target emote.\n"Never" keeps the swap live until another swap claims the same target emote.\n\n"When it ends" redraws your character after every swap.\n\nRecommended: "On the target".
+silk.settings.lifetime.help = 「終了時」はモーションが止まるとすぐに本来のエモートに戻します。\n「ターゲット使用時」は次にターゲットエモートを使うまでスワップを有効にしておきます。\n「しない」は別のスワップが同じターゲットエモートを使うまでスワップを有効にしておきます。\n\n「終了時」はスワップのたびにキャラクターを再描画します。\n\n推奨: 「ターゲット使用時」。
+# Source: Show locked emotes in the game emote window
+silk.settings.locked_in_window = ゲームのエモートウィンドウに未習得のエモートを表示
+# Source: "Strict" only puts a looping emote on another looping one.\n"Lenient" lets a looping emote play once on a one time emote when no better match exists.\n\nRecommended: "Strict". Pick "Lenient" when you own few emotes.
+silk.settings.loop_matching.help = 「厳密」はループするエモートを別のループするエモートにのみ割り当てます。\n「緩やか」は、より良い一致がない場合、ループするエモートを一回再生のエモートで一度だけ再生させます。\n\n推奨: 「厳密」。持っているエモートが少ない場合は「緩やか」。
+# Source: Adopt Malou, the orange cat
+silk.settings.malou = オレンジ色の猫、マルーを飼う
+# Source: He's really cute.
+silk.settings.malou.help = とてもかわいいです。
+# Source: Whether an unlocked emote that one of your mods changes may be used as a target. Other players can see that modded emote for a moment before the swap takes place.\n\n"Allowed" uses them freely.\n"Last resort" uses one only when nothing else fits.\n"Blocked" never uses one. The chat error then offers to disable the mod or open it in Penumbra.\n\nRecommended: "Last resort". Pick "Blocked" to keep your modded emotes out of sight.
+silk.settings.modded_targets.help = Modで変更されている習得済みのエモートをターゲットとして使ってよいかを決めます。スワップが反映される前に、そのModのエモートが他のプレイヤーに一瞬見えることがあります。\n\n「許可」は自由に使います。\n「最終手段」は他に合うものがないときだけ使います。\n「ブロック」は使いません。チャットのエラーからModを無効にするか、Penumbraで開くことができます。\n\n推奨: 「最終手段」。Modのエモートを見られたくない場合は「ブロック」。
+# Source: Multiple
+silk.settings.multiple = 複数
+# Source: Never
+silk.settings.never = しない
+# Source: The one you are looking at.
+silk.settings.new_interface.text = 今見ているもの。
+# Source: Off
+silk.settings.off = オフ
+# Source: On
+silk.settings.on = オン
+# Source: One at a time
+silk.settings.one_at_a_time = 一度に1つ
+# Source: One below
+silk.settings.one_below = 1つ下まで
+# Source: On the target
+silk.settings.on_the_target = ターゲット使用時
+# Source: Enable preview popup
+silk.settings.preview_popup = プレビューポップアップを有効にする
+# Source: On: clicking an emote opens a panel next to the window, and a double-click plays it. In Emote Swap the panel also previews the swap. Off: no panel, a single click plays the emote.
+silk.settings.preview_popup.help = オン: エモートをクリックするとウィンドウの横にパネルが開き、ダブルクリックで再生します。Emote Swap ではパネルにスワップのプレビューも表示されます。オフ: パネルはなく、クリック1回でエモートを再生します。
+# Source: Recommended
+silk.settings.recommended = 推奨
+# Source: Safe mode is not a guarantee either. It keeps Direct Play out of the states where it was proved to go wrong. Emote Swap is the safe option and behaves almost the same way.
+silk.settings.safe_mode_not_a_promise = セーフモードも保証ではありません。問題が起きると確認された状態では Direct Play を使わないようにします。Emote Swap が安全な選択肢で、動作はほぼ同じです。
+# Source: Same rank
+silk.settings.same_rank = 同じランク
+# Source: Emote list
+silk.settings.section.emote_list = エモート一覧
+# Source: "Strict" never puts an emote on one that makes sound.\n"Lenient" allows matching emotes that make sounds together.\n"Off" plays emotes regardless of sound.\n\nSound matching keeps other players from hearing an emote you did not play.\n\nRecommended: "Lenient".
+silk.settings.sound_matching.help = 「厳密」は効果音のあるエモートには決して割り当てません。\n「緩やか」は効果音のあるエモート同士の割り当てを許可します。\n「オフ」は効果音に関係なくエモートを再生します。\n\n効果音の一致により、あなたが使っていないエモートの音が他のプレイヤーに聞こえることを防ぎます。\n\n推奨: 「緩やか」。
+# Source: Strict
+silk.settings.strict = 厳密
+# Source: Emotes turn your character differently when you have a target. Some turn the torso (/hum). Some turn only the head (/stepdance). Some only move the eyes (/beesknees). Some do not move at all (/guard).\n\n"Very strict" only picks emotes that behave the same way.\n"Strict" keeps the head and body turn, and allows a different eye behaviour.\n"Lenient" allows any turn behaviour.\n\nThe best match is always tried first.\n\nRecommended: "Lenient".
+silk.settings.turn_matching.help = ターゲットがいるとき、エモートによってキャラクターの向きの変え方が違います。胴体を向けるもの（/hum）、頭だけを向けるもの（/stepdance）、目線だけを動かすもの（/beesknees）、まったく動かないもの（/guard）があります。\n\n「非常に厳密」は同じ動きをするエモートだけを選びます。\n「厳密」は頭と体の向きの変え方を同じにし、目線の違いは許可します。\n「緩やか」はどんな向きの変え方も許可します。\n\n常に最も一致するものが先に試されます。\n\n推奨: 「緩やか」。
+# Source: Lets Direct Play bypass an emote in any pose.\n\nLeave it off unless you know what you are doing. When it is off, the plugin only plays emotes from states where nothing can be noticed.
+silk.settings.unsafe.help = どのポーズでも Direct Play でエモートをバイパスできるようにします。\n\n何をしているか分かっていない限り、オフのままにしてください。オフの場合、プラグインは何も気付かれない状態からのみエモートを再生します。
+# Source: In practice it is a non-issue. Other tools and plugins have done this for years without trouble. Go back to safe mode, or to Emote Swap, if you are uncomfortable with it.
+silk.settings.unsafe.reassurance = 実際には問題になりません。他のツールやプラグインは何年も前から問題なくこれを行っています。不安な場合はセーフモードか Emote Swap に戻してください。
+# Source: Very strict
+silk.settings.very_strict = 非常に厳密
+# Source: Shows a warning in chat when a swap did not happen the way you would expect.
+silk.settings.warning_messages.help = スワップが期待通りに行われなかったときにチャットに警告を表示します。
+# Source: How long the same warning stays quiet after you have seen it.\n\nSet to 0 to disable.
+silk.settings.warning_throttle.help = 同じ警告を一度表示した後、再表示しない時間です。\n\n0にすると無効になります。
+# Source: When it ends
+silk.settings.when_it_ends = 終了時
+# Source: When needed
+silk.settings.when_needed = 必要なとき
+# Source: Classic interface
+skin.classic = クラシックインターフェース
+# Source: New interface
+skin.silk = 新しいインターフェース
+# Source: Changelog
+title.changelog = 更新履歴
+# Source: Show changelogs
+title.changelogs = 更新履歴を表示
+# Source: Join the Discord
+title.discord = Discordに参加
+# Source: Show every logs
+title.every_logs = すべてのログを表示
+# Source: Support me
+title.kofi = 支援する
+# Source: All logs
+title.logs = すべてのログ
+# Source: Open settings
+title.open_settings = 設定を開く
+# Source: Settings
+title.settings = 設定
+# Source: Changelog
+window.changelog.subtitle = 更新履歴
+# Source: Create a mod
+window.create_mod.subtitle = Modを作成
+# Source: Bypass Emote - Create a mod
+window.create_mod.title = Bypass Emote - Modを作成
+# Source: Assign to a hotbar
+window.hotbar.subtitle = ホットバーに割り当て
+# Source: Logs
+window.logs.subtitle = ログ
+# Source: Locked emotes
+window.main.subtitle = 未習得のエモート
+# Source: Bypass Emote - Locked Emotes
+window.main.title = Bypass Emote - 未習得のエモート
+# Source: Settings
+window.settings.subtitle = 設定
+# Source: Bypass Emote
+window.settings.title = Bypass Emote

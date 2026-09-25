@@ -18,10 +18,6 @@ public class ConfigurationInstance : NoireConfigBase
 
     public bool PluginEnabled { get; set; } = true;
 
-    public bool ShowWindowsInGpose { get; set; } = false;
-
-    public bool ShowWindowsWhenUiHidden { get; set; } = false;
-
     public List<uint> FavoriteEmotes { get; set; } = new List<uint>();
 
     public List<uint> BlockedTargetEmotesEmoteSwap { get; set; } = new List<uint>();
@@ -99,6 +95,12 @@ public class ConfigurationInstance : NoireConfigBase
     public string AnnouncedApprovalGameVersion { get; set; } = string.Empty;
 
     public bool AlwaysCacheBreak { get; set; } = false;
+
+    public bool EnablePreviewPopup { get; set; } = true;
+
+    public bool CompactEmoteList { get; set; } = true;
+
+    public bool AdoptMalou { get; set; } = false;
 
     public class MigrationV1ToV2 : ConfigMigrationBase
     {

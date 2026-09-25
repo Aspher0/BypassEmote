@@ -1,5 +1,6 @@
 using BypassEmote.Enums;
 using BypassEmote.Helpers;
+using BypassEmote.Localization;
 using BypassEmote.Models;
 using NoireLib;
 using NoireLib.Helpers;
@@ -344,7 +345,7 @@ public sealed partial class SwapOrchestrator
         }
     }
 
-    private static void ReportFailure(SwapBuildRequest request, string message)
+    private static void ReportFailure(SwapBuildRequest request, ChatText message)
     {
         if (request.ExecuteAfterApply)
             LogHelper.Error(message);
