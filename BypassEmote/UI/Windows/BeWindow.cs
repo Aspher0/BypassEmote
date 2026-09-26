@@ -1,4 +1,5 @@
 ﻿using BypassEmote.UI.Classic;
+using BypassEmote.UI.Silk;
 using BypassEmote.UI.Skins;
 using NoireLib.Localizer;
 using NoireLib.UI;
@@ -18,6 +19,18 @@ internal abstract class BeWindow : NoireSkinnedWindow
     internal event Action? Closed;
 
     internal event Action? AfterWindow;
+
+    public override bool DrawConditions()
+    {
+        if (!base.DrawConditions())
+            return false;
+
+        if (!BeSkins.SilkActive || SilkFonts.Ready)
+            return true;
+
+        SilkUi.WarmFonts();
+        return SilkFonts.Ready;
+    }
 
     public override void OnClose()
     {

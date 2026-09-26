@@ -48,6 +48,8 @@ public sealed partial class Plugin : IDalamudPlugin
     public Plugin()
     {
         NoireLibMain.Initialize(PluginInterface, this);
+        NoireScriptFonts.CurrentLanguageOnly = true;
+        NoireFont.RasterizerGamma = 1.2f;
 
         SessionLog.Start($"Bypass Emote {typeof(Plugin).Assembly.GetName().Version} loading"
             + $" | NoireLib {typeof(NoireService).Assembly.GetName().Version}"
@@ -58,6 +60,7 @@ public sealed partial class Plugin : IDalamudPlugin
 
         SetupLocalization();
         BeSkins.Register();
+        SheetLanguage.IncludeGlyphs();
 
         MainWindow = new MainWindow();
         SettingsWindow = new SettingsWindow();
@@ -127,6 +130,10 @@ public sealed partial class Plugin : IDalamudPlugin
     private void DrawWindowSystem()
     {
         using var profile = NoireUI.Profiler.Measure(UiProfiler.RootScopeName);
+        if (BeSkins.SilkActive)
+            SilkUi.WarmFonts();
+
+        LanguageChoice.Commit();
         WindowSystem.Draw();
     }
 

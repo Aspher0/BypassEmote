@@ -148,7 +148,7 @@ public static class CommonHelper
     public static string GetRealEmoteNameById(uint emoteId)
     {
         var foundEmote = EmoteHelper.GetEmoteById(emoteId);
-        return foundEmote?.Name.ToString() ?? L.NoName.Text;
+        return foundEmote is { } emote ? SheetLanguage.Display(emote).Name.ToString() : L.NoName.Text;
     }
 
     public static uint? GetRealEmoteIconById(uint emoteId)

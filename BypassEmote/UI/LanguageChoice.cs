@@ -1,4 +1,6 @@
 using NoireLib.Localizer;
+using NoireLib.UI;
+using System;
 using System.Collections.Generic;
 
 namespace BypassEmote.UI;
@@ -9,6 +11,7 @@ internal static class LanguageChoice
 
     private static IReadOnlyList<NoireLanguageInfo>? source;
     private static string[] names = [];
+    private static string? pending;
 
     internal static IReadOnlyList<NoireLanguageInfo> Languages
     {
@@ -36,7 +39,7 @@ internal static class LanguageChoice
 
             for (var i = 0; i < Offered.Count; i++)
             {
-                if (Offered[i].IsActive)
+                if (pending == null ? Offered[i].IsActive : string.Equals(Offered[i].Code, pending, StringComparison.OrdinalIgnoreCase))
                     return i;
             }
 
@@ -48,8 +51,32 @@ internal static class LanguageChoice
     {
         Refresh();
 
-        if ((uint)index < (uint)Offered.Count)
-            NoireLanguages.Localizer?.SetCurrentLocale(Offered[index].Code);
+        if ((uint)index >= (uint)Offered.Count)
+            return;
+
+        if (pending != null)
+            NoireScriptFonts.Unprepare(pending);
+
+        pending = null;
+
+        if (Offered[index].IsActive)
+            return;
+
+        pending = Offered[index].Code;
+        NoireScriptFonts.Prepare(pending);
+        Commit();
+    }
+
+    internal static void Commit()
+    {
+        if (pending == null || !NoireFont.GlyphsApplied)
+            return;
+
+        var code = pending;
+        pending = null;
+
+        NoireLanguages.Localizer?.SetCurrentLocale(code);
+        NoireScriptFonts.Unprepare(code);
     }
 
     private static void Refresh()

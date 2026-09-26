@@ -630,6 +630,7 @@ internal sealed class ClassicMainPainter
 
     private static readonly Dictionary<int, (Emote, NoireLib.Enums.EmoteCategory)[]> preparedEmotes = new();
     private static readonly Dictionary<(uint, bool), string> emoteLabels = new();
+    private static int emoteLabelsLanguage;
     private static readonly List<int> visibleRows = new();
 
     private const string EmoteContextMenuId = "emote_context_menu";
@@ -711,14 +712,21 @@ internal sealed class ClassicMainPainter
 
     private static string EmoteLabel(Emote emote, bool withIds)
     {
+        if (emoteLabelsLanguage != SheetLanguage.Version)
+        {
+            emoteLabels.Clear();
+            emoteLabelsLanguage = SheetLanguage.Version;
+        }
+
         if (emoteLabels.TryGetValue((emote.RowId, withIds), out var held))
             return held;
 
+        var text = SheetLanguage.Display(emote);
         var displayedName = withIds ? $"[{emote.RowId}] " : "";
-        displayedName += CommonHelper.GetEmoteName(emote);
+        displayedName += CommonHelper.GetEmoteName(text);
 
         var commands = new List<string>(4);
-        var tc = emote.TextCommand.ValueNullable;
+        var tc = text.TextCommand.ValueNullable;
         void AddCmd(string? s)
         {
             if (string.IsNullOrWhiteSpace(s)) return;

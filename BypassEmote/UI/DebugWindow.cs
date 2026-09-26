@@ -7,8 +7,10 @@ using BypassEmote.IPC.Enums;
 using BypassEmote.Models;
 using BypassEmote.Safety;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Game;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Lumina.Excel.Sheets;
@@ -89,6 +91,18 @@ public class DebugWindow : Window, IDisposable
                     DrawPatchApprovalTab();
             }
 
+            using (var tab = ImRaii.TabItem("Sheet Language"))
+            {
+                if (tab)
+                    DrawSheetLanguageTab();
+            }
+
+            using (var tab = ImRaii.TabItem("Fonts"))
+            {
+                if (tab)
+                    DrawFontsTab();
+            }
+
         }
     }
 
@@ -166,6 +180,73 @@ public class DebugWindow : Window, IDisposable
 
         if (approvalNote.Length > 0)
             ImGui.TextWrapped(approvalNote);
+    }
+
+    private static float fontGamma = 1.2f;
+
+    private static void DrawFontsTab()
+    {
+        var custom = NoireLib.UI.NoireFont.RasterizerGamma.HasValue;
+
+        if (ImGui.Checkbox("Override the rasterizer gamma", ref custom))
+            NoireLib.UI.NoireFont.RasterizerGamma = custom ? fontGamma : null;
+
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker("Dalamud rasterizes at 1.7. Lower is thinner. Applied when the slider is released.");
+
+        using (ImRaii.Disabled(!custom))
+        {
+            ImGui.SetNextItemWidth(220f * ImGuiHelpers.GlobalScale);
+            ImGui.SliderFloat("Gamma##BypassEmoteFontGamma", ref fontGamma, 0.8f, 2.4f, "%.2f");
+
+            if (ImGui.IsItemDeactivatedAfterEdit() && custom)
+                NoireLib.UI.NoireFont.RasterizerGamma = fontGamma;
+        }
+
+        var full = NoireLib.UI.NoireFont.FullAlpha;
+
+        if (ImGui.Checkbox("8-bit alpha", ref full))
+            NoireLib.UI.NoireFont.FullAlpha = full;
+
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker("Dalamud uploads glyphs with 4-bit alpha, 16 levels of antialiasing. 8-bit keeps all 256. Doubles the font VRAM.");
+
+        ImGui.Separator();
+        ImGui.TextWrapped("Changes rebuild every font page. Not saved.");
+    }
+
+    private static ClientLanguage sheetLanguagePick = ClientLanguage.Japanese;
+
+    private static void DrawSheetLanguageTab()
+    {
+        ImGui.TextUnformatted($"Client language: {NoireService.ClientState.ClientLanguage}");
+
+        var forcing = SheetLanguage.Forced.HasValue;
+
+        if (ImGui.Checkbox("Force the emote sheet language", ref forcing))
+            SheetLanguage.Forced = forcing ? sheetLanguagePick : null;
+
+        ImGui.SetNextItemWidth(200f * ImGuiHelpers.GlobalScale);
+
+        using (var combo = ImRaii.Combo("Language##BypassEmoteSheetLanguage", sheetLanguagePick.ToString()))
+        {
+            if (combo)
+            {
+                foreach (var language in Enum.GetValues<ClientLanguage>())
+                {
+                    if (!ImGui.Selectable(language.ToString(), language == sheetLanguagePick))
+                        continue;
+
+                    sheetLanguagePick = language;
+
+                    if (forcing)
+                        SheetLanguage.Forced = language;
+                }
+            }
+        }
+
+        if (forcing && ExcelSheetHelper.GetSheet<Emote>(sheetLanguagePick) == null)
+            ImGui.TextColored(new Vector4(1f, 0.75f, 0.25f, 1f), "This client ships no Emote sheet in that language.");
     }
 
     private static void DrawPretendToggle(string label, GameClient client)

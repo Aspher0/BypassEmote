@@ -38,7 +38,8 @@ internal sealed class SilkEmoteEntry
         Row = row;
         RowId = row.RowId;
         IconId = CommonHelper.GetEmoteIcon(row);
-        var name = CommonHelper.GetEmoteName(row);
+        var text = SheetLanguage.Display(row);
+        var name = CommonHelper.GetEmoteName(text);
         unnamed = string.IsNullOrWhiteSpace(name);
         this.name = unnamed ? L.UnknownName.Source : name;
         IdText = row.RowId.ToString();
@@ -48,7 +49,7 @@ internal sealed class SilkEmoteEntry
         IsDefault = row.UnlockLink == 0;
 
         var commands = new List<string>(4);
-        var tc = row.TextCommand.ValueNullable;
+        var tc = text.TextCommand.ValueNullable;
         AddCommand(commands, tc?.Command.ExtractText());
         AddCommand(commands, tc?.ShortCommand.ExtractText());
         AddCommand(commands, tc?.Alias.ExtractText());
@@ -194,6 +195,7 @@ internal sealed class SilkEmoteModel
     private long blockSignature = -1;
     private bool dirty = true;
     private bool built;
+    private int builtLanguage;
 
     internal IReadOnlyList<SilkEmoteEntry> View => view;
 
@@ -233,7 +235,7 @@ internal sealed class SilkEmoteModel
 
     internal void Update()
     {
-        if (!built)
+        if (!built || builtLanguage != SheetLanguage.Version)
             BuildAll();
 
         var locked = Service.LockedEmotes;
@@ -316,6 +318,8 @@ internal sealed class SilkEmoteModel
     private void BuildAll()
     {
         built = true;
+        builtLanguage = SheetLanguage.Version;
+        dirty = true;
 
         var sheet = ExcelSheetHelper.GetSheet<Emote>();
 
@@ -326,6 +330,7 @@ internal sealed class SilkEmoteModel
         }
 
         var list = new List<SilkEmoteEntry>(sheet.Count);
+        byId.Clear();
 
         foreach (var row in sheet)
         {

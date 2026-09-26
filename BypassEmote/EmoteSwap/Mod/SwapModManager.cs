@@ -1248,19 +1248,30 @@ public sealed class SwapModManager
 
     private SwapRegistry LoadRegistryFromDisk()
     {
-        if (RegistryPath is not { } path || !File.Exists(path))
+        if (RegistryPath is not { } path)
             return EmptyRegistry();
 
-        try
+        SwapRegistry? read = null;
+
+        lock (_registryWriteLock)
         {
-            var read = FileHelper.ReadJsonFromFile<SwapRegistry>(path);
-            return read is { SchemaVersion: CurrentRegistrySchemaVersion } ? read : EmptyRegistry();
+            if (_pendingRegistryWrite is { } pending && string.Equals(pending.Path, path, StringComparison.OrdinalIgnoreCase))
+                return pending.Registry;
+
+            if (File.Exists(path))
+            {
+                try
+                {
+                    read = FileHelper.ReadJsonFromFile<SwapRegistry>(path);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"Failed to read the swap registry at '{path}'. Starting empty.", LogPrefix);
+                }
+            }
         }
-        catch (Exception ex)
-        {
-            Log.Error(ex, $"Failed to read the swap registry at '{path}'. Starting empty.", LogPrefix);
-            return EmptyRegistry();
-        }
+
+        return read is { SchemaVersion: CurrentRegistrySchemaVersion } ? read : EmptyRegistry();
     }
 
     private const string RegistryWriteOperationName = "BypassEmote.SwapRegistryWrite";
@@ -1268,6 +1279,8 @@ public sealed class SwapModManager
     private readonly object _registryWriteLock = new();
 
     private long _registryWriteTicket;
+
+    private (string Path, SwapRegistry Registry)? _pendingRegistryWrite;
 
     private int _registryBatchDepth;
     private bool _registryDirty;
@@ -1322,6 +1335,9 @@ public sealed class SwapModManager
         var snapshot = Registry;
         var ticket = Interlocked.Increment(ref _registryWriteTicket);
 
+        lock (_registryWriteLock)
+            _pendingRegistryWrite = (path, snapshot);
+
         AsyncHelper.RunInBackgroundAsync(() =>
         {
             lock (_registryWriteLock)
@@ -1331,7 +1347,10 @@ public sealed class SwapModManager
 
                 try
                 {
-                    FileHelper.WriteJsonToFile(path, snapshot, atomic: true, IndentedJson);
+                    if (FileHelper.WriteJsonToFile(path, snapshot, atomic: true, IndentedJson)
+                        && _pendingRegistryWrite is { } pending
+                        && ReferenceEquals(pending.Registry, snapshot))
+                        _pendingRegistryWrite = null;
                 }
                 catch (Exception ex)
                 {

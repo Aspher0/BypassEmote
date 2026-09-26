@@ -20,7 +20,7 @@ public static class SilkUi
 
     public static bool Active => BeSkins.SilkActive;
 
-    public static float TextScale => StepScale(Settings.TextStep);
+    public static float TextScale => SilkFonts.TextScale;
 
     private static WindowMenuSettings? sharedOptions;
 
@@ -33,8 +33,7 @@ public static class SilkUi
         if (sharedOptions == null || !BeSkins.SilkActive)
             return;
 
-        SilkFonts.TextScale = StepScale(sharedOptions.TextStep);
-        SilkFonts.Prewarm();
+        SilkFonts.Want(StepScale(sharedOptions.TextStep));
     }
 
     public static float Opacity => Math.Clamp(Settings.Opacity, 0.2f, 1f);
@@ -49,11 +48,7 @@ public static class SilkUi
 
     public static float FontPx(float css) => css * TextScale * NoireUI.Scale;
 
-    public static void SyncTextScale()
-    {
-        if (MathF.Abs(SilkFonts.TextScale - TextScale) > 0.0001f)
-            SilkFonts.TextScale = TextScale;
-    }
+    public static void SyncTextScale() => SilkFonts.Want(StepScale(Settings.TextStep));
 
     public static float Ease(string id, string subKey, float target, float seconds)
         => NoireAnim.Ease(id, subKey, target, ReducedMotion ? 0f : seconds, EaseOut.Curve);

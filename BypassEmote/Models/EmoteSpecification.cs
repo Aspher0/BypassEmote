@@ -1,4 +1,5 @@
 using BypassEmote.Enums;
+using System;
 
 namespace BypassEmote.Models;
 
@@ -9,7 +10,9 @@ public class EmoteSpecification
     public uint? RangeEnd { get; }
 
     public EmotePlayType PlayType { get; }
-    public string? Name { get; }
+    private readonly Func<string>? name;
+
+    public string? Name => name?.Invoke();
     public uint? Icon { get; }
     public int? SpecificOneShotActionTimelineSlot { get; }
     public int? SpecificLoopActionTimelineSlot { get; }
@@ -18,7 +21,7 @@ public class EmoteSpecification
     public EmoteSpecification(
         uint id,
         EmotePlayType playType = EmotePlayType.OneShot,
-        string? name = null,
+        Func<string>? name = null,
         uint? icon = null,
         int? specificOneShotActionTimelineSlot = null,
         int? specificLoopActionTimelineSlot = null,
@@ -26,7 +29,7 @@ public class EmoteSpecification
     {
         SingleId = id;
         PlayType = playType;
-        Name = name;
+        this.name = name;
         Icon = icon;
         SpecificOneShotActionTimelineSlot = specificOneShotActionTimelineSlot;
         SpecificLoopActionTimelineSlot = specificLoopActionTimelineSlot;
@@ -37,7 +40,7 @@ public class EmoteSpecification
         uint startId,
         uint endId,
         EmotePlayType playType = EmotePlayType.DoNotPlay,
-        string? name = null,
+        Func<string>? name = null,
         uint? icon = null,
         int? specificOneShotActionTimelineSlot = null,
         int? specificLoopActionTimelineSlot = null,
@@ -46,7 +49,7 @@ public class EmoteSpecification
         RangeStart = startId;
         RangeEnd = endId;
         PlayType = playType;
-        Name = name;
+        this.name = name;
         Icon = icon;
         SpecificOneShotActionTimelineSlot = specificOneShotActionTimelineSlot;
         SpecificLoopActionTimelineSlot = specificLoopActionTimelineSlot;

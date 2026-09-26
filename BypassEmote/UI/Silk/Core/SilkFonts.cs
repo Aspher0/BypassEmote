@@ -49,28 +49,62 @@ public static class SilkFonts
 
     private static readonly Dictionary<string, string> UpperCache = new(StringComparer.Ordinal);
 
-    private static NoireFont?[]? faces;
-    private static float textScale = 1f;
-    private static bool failed;
-
-    public static float TextScale
+    private sealed class Tier(float scale, float uiScale, NoireFontSet set)
     {
-        get => textScale;
-        set
-        {
-            var clamped = Math.Clamp(value, 0.5f, 2f);
+        public float Scale { get; } = scale;
 
-            if (MathF.Abs(clamped - textScale) < 0.0001f)
-                return;
+        public float UiScale { get; } = uiScale;
 
-            textScale = clamped;
-
-            ReleaseFaces();
-            Prewarm();
-        }
+        public NoireFontSet Set { get; } = set;
     }
 
-    public static float Em(float cssPx) => cssPx * textScale;
+    private static readonly List<Tier> Tiers = [];
+    private static readonly List<NoireFontSet> Sets = [];
+    private static float prebuiltFor = float.NaN;
+    private static float droppedFor = float.NaN;
+
+    private static NoireFont?[]? faces;
+    private static Tier? shown;
+    private static float wanted = 1f;
+    private static bool failed;
+
+    public static float TextScale => shown?.Scale ?? wanted;
+
+    public static bool Ready => shown != null;
+
+    public static void Want(float scale)
+    {
+        wanted = Math.Clamp(scale, 0.5f, 2f);
+
+        if (Load() is not { } all)
+            return;
+
+        var uiScale = NoireUI.Scale;
+        var tier = Find(wanted, uiScale) ?? Create(all, [wanted], uiScale, $"Silk {wanted * 100f:0}%");
+
+        if (prebuiltFor != uiScale)
+        {
+            prebuiltFor = uiScale;
+            PrebuildSteps(all, uiScale);
+        }
+
+        if (!ReferenceEquals(tier, shown) && tier.Set.IsBuilt)
+            shown = tier;
+
+        if (shown is not { } current || current.UiScale != uiScale)
+            return;
+
+        if (droppedFor != uiScale)
+        {
+            droppedFor = uiScale;
+            DropOtherUiScales(uiScale);
+        }
+
+        if (NoireScriptFonts.CurrentLanguageOnly && Tiers.TrueForAll(t => t.Set.IsBuilt))
+            NoireScriptFonts.CurrentLanguageOnly = false;
+    }
+
+    public static float Em(float cssPx) => cssPx * TextScale;
 
     public static NoireFont? Face(SilkFace face)
     {
@@ -83,27 +117,80 @@ public static class SilkFonts
     private static float Smear(SilkFace face, float cssPx)
         => IsSynthetic(face) ? NoireFont.SyntheticBoldPixels(Em(cssPx)) : 0f;
 
-    public static void Prewarm()
+    private static Tier? Find(float scale, float uiScale)
     {
-        var all = Load();
+        foreach (var tier in Tiers)
+        {
+            if (MathF.Abs(tier.Scale - scale) < 0.0001f && MathF.Abs(tier.UiScale - uiScale) < 0.0001f)
+                return tier;
+        }
 
-        if (all == null)
-            return;
+        return null;
+    }
 
+    private static Tier Create(NoireFont?[] all, List<float> scales, float uiScale, string name)
+    {
+        var set = new NoireFontSet(name);
         Span<float> sizes = stackalloc float[16];
 
-        for (var index = 0; index < all.Length; index++)
+        foreach (var scale in scales)
         {
-            if (all[index] is not { } face)
+            for (var index = 0; index < all.Length; index++)
+            {
+                if (all[index] is not { } face)
+                    continue;
+
+                var used = UsedSizes[index];
+
+                for (var at = 0; at < used.Length; at++)
+                    sizes[at] = used[at] * scale;
+
+                set.Add(face, sizes[..used.Length]);
+            }
+        }
+
+        set.Build();
+        Sets.Add(set);
+
+        Tier? first = null;
+
+        foreach (var scale in scales)
+        {
+            var tier = new Tier(scale, uiScale, set);
+            Tiers.Add(tier);
+            first ??= tier;
+        }
+
+        return first!;
+    }
+
+    private static void PrebuildSteps(NoireFont?[] all, float uiScale)
+    {
+        var missing = new List<float>();
+
+        foreach (var step in SilkPalette.TextSteps)
+        {
+            if (Find(step, uiScale) == null)
+                missing.Add(step);
+        }
+
+        if (missing.Count > 0)
+            Create(all, missing, uiScale, "Silk other sizes");
+    }
+
+    private static void DropOtherUiScales(float uiScale)
+    {
+        Tiers.RemoveAll(tier => MathF.Abs(tier.UiScale - uiScale) >= 0.0001f && !ReferenceEquals(tier, shown));
+
+        for (var index = Sets.Count - 1; index >= 0; index--)
+        {
+            var set = Sets[index];
+
+            if (Tiers.Exists(tier => ReferenceEquals(tier.Set, set)))
                 continue;
 
-            var used = UsedSizes[index];
-
-
-            for (var at = 0; at < used.Length; at++)
-                sizes[at] = used[at] * textScale;
-
-            face.Request(sizes[..used.Length]);
+            set.Dispose();
+            Sets.RemoveAt(index);
         }
     }
 
@@ -241,6 +328,15 @@ public static class SilkFonts
 
     private static void ReleaseFaces()
     {
+        foreach (var set in Sets)
+            set.Dispose();
+
+        Sets.Clear();
+        Tiers.Clear();
+        shown = null;
+        prebuiltFor = float.NaN;
+        droppedFor = float.NaN;
+
         if (faces != null)
         {
             foreach (var face in faces)
