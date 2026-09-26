@@ -1,5 +1,4 @@
 ﻿using BypassEmote.UI.Classic;
-using BypassEmote.UI.Silk;
 using BypassEmote.UI.Skins;
 using NoireLib.Localizer;
 using NoireLib.UI;
@@ -20,17 +19,13 @@ internal abstract class BeWindow : NoireSkinnedWindow
 
     internal event Action? AfterWindow;
 
+#if DEBUG
     public override bool DrawConditions()
     {
-        if (!base.DrawConditions())
-            return false;
-
-        if (!BeSkins.SilkActive || SilkFonts.Ready)
-            return true;
-
-        SilkUi.WarmFonts();
-        return SilkFonts.Ready;
+        using var profile = NoireUI.Profiler.Measure("BeWindow.DrawConditions");
+        return base.DrawConditions();
     }
+#endif
 
     public override void OnClose()
     {
@@ -38,8 +33,20 @@ internal abstract class BeWindow : NoireSkinnedWindow
         Closed?.Invoke();
     }
 
+#if DEBUG
+    public override void PreDraw()
+    {
+        using var profile = NoireUI.Profiler.Measure("BeWindow.PreDraw");
+        base.PreDraw();
+    }
+#endif
+
     public override void PostDraw()
     {
+#if DEBUG
+        using var profile = NoireUI.Profiler.Measure("BeWindow.PostDraw");
+#endif
+
         base.PostDraw();
         AfterWindow?.Invoke();
     }

@@ -144,10 +144,10 @@ internal sealed partial class SilkSettingsPainter
         var rows = new SilkSettingRows(new Vector2(origin.X, origin.Y + (10f * scale)), width);
 
         var languageRow = rows.Row(L.Language.Text, L.LanguageHelp.Text, SilkControls.ComboHeight);
-        var language = LanguageChoice.Active;
+        var language = NoireLanguagePicker.Active;
 
         if (SilkControls.Combo("##silklanguage", ref language, LanguageItems(), languageRow.ControlMin, languageRow.ControlWidth))
-            LanguageChoice.Pick(language);
+            NoireLanguagePicker.Pick(language);
 
         var translateRow = rows.Row(L.Translation.Text, L.TranslationHelp.Text, SilkControls.ButtonHeight);
 
@@ -181,7 +181,7 @@ internal sealed partial class SilkSettingsPainter
 
     private static SilkComboItem[] LanguageItems()
     {
-        var names = LanguageChoice.Names;
+        var names = NoireLanguagePicker.Names;
 
         if (ReferenceEquals(names, languageItemsFor))
             return languageItems;

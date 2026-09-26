@@ -6,9 +6,15 @@ internal sealed class SilkFontSkin : IFontSkin
 {
     internal static readonly SilkFontSkin Instance = new();
 
-    public void Load() => SilkUi.WarmFonts();
+    public bool IsReady => SilkFonts.Ready;
 
-    public void Unload() => SilkFonts.Dispose();
+    public void Load()
+    {
+        SilkFonts.Parked = false;
+        SilkUi.WarmFonts();
+    }
+
+    public void Unload() => SilkFonts.Parked = true;
 
     public void Push(TextRole role)
     {

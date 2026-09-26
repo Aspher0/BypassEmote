@@ -30,7 +30,7 @@ public static class SilkUi
     {
         sharedOptions = options ?? sharedOptions;
 
-        if (sharedOptions == null || !BeSkins.SilkActive)
+        if (sharedOptions == null)
             return;
 
         SilkFonts.Want(StepScale(sharedOptions.TextStep));

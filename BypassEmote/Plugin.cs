@@ -49,11 +49,13 @@ public sealed partial class Plugin : IDalamudPlugin
     public Plugin()
     {
         NoireLibMain.Initialize(PluginInterface, this);
-        NoireScriptFonts.CurrentLanguageOnly = true;
         NoireFont.RasterizerGamma = 1.2f;
 #if DEBUG
+        NoireLanguagePicker.IncludePseudo = true;
         NoireUI.Profiler.Enabled = true;
         NoireUI.Profiler.Detailed = true;
+        NoireUI.Profiler.SlowFrameMs = 50d;
+        NoireUI.Profiler.SlowFrame += ReportSlowFrame;
 #endif
 
         SessionLog.Start($"Bypass Emote {typeof(Plugin).Assembly.GetName().Version} loading"
@@ -82,8 +84,10 @@ public sealed partial class Plugin : IDalamudPlugin
         SilkHotbarView.Connect(HotbarWindow);
         SilkChangelogView.Connect(BeChangelogWindow);
         SilkLogsView.Connect(BeLogsWindow);
+        SilkFonts.Parked = !BeSkins.SilkActive;
         SilkUi.WarmFonts(MainWindow.Options);
-        _ = Task.Run(WarmDrawPath);
+        _ = NoireUI.WarmDrawPath(typeof(Plugin).Assembly, "BypassEmote.UI");
+        SilkEmoteModel.Prepare();
 
 #if DEBUG
         DebugWindow = new DebugWindow();
@@ -135,61 +139,12 @@ public sealed partial class Plugin : IDalamudPlugin
 
     private void DrawWindowSystem()
     {
-#if DEBUG
-        var started = System.Diagnostics.Stopwatch.GetTimestamp();
-#endif
-
         using (NoireUI.Profiler.Measure(UiProfiler.RootScopeName))
-        {
-#if DEBUG
-            ReportSlowFrame();
-#endif
-
-            if (BeSkins.SilkActive)
-                SilkUi.WarmFonts();
-
-            LanguageChoice.Commit();
             WindowSystem.Draw();
-        }
-
-#if DEBUG
-        var elapsed = System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds;
-
-        if (elapsed >= 50d)
-            slowFrameMs = elapsed;
-#endif
     }
 
 #if DEBUG
-    private readonly System.Collections.Generic.List<UiProfileEntry> slowFrameScopes = [];
-
-    private double slowFrameMs;
-
-    private void ReportSlowFrame()
-    {
-        if (slowFrameMs <= 0d)
-            return;
-
-        var elapsed = slowFrameMs;
-        slowFrameMs = 0d;
-
-        NoireUI.Profiler.Snapshot(slowFrameScopes);
-        slowFrameScopes.Sort(static (a, b) => b.SelfLastMs.CompareTo(a.SelfLastMs));
-
-        var text = new System.Text.StringBuilder($"Slow frame: {elapsed:0} ms, draw path warmed {NoireUI.DrawPathWarmed}. Slowest scopes, self/total ms:");
-
-        for (var index = 0; index < slowFrameScopes.Count && index < 12; index++)
-        {
-            var scope = slowFrameScopes[index];
-
-            if (scope.SelfLastMs < 0.5d)
-                break;
-
-            text.Append($" {scope.Name} {scope.SelfLastMs:0.0}/{scope.LastMs:0.0};");
-        }
-
-        Log.Warning(text.ToString(), "[Draw] ");
-    }
+    private static void ReportSlowFrame(string report) => Log.Warning(report, "[Draw] ");
 #endif
 
     private void SetupModules(bool activateChangelog)
@@ -308,16 +263,11 @@ public sealed partial class Plugin : IDalamudPlugin
         NoireSkins.Use(classic ? BeSkins.Classic : BeSkins.Silk);
     }
 
-    private static void WarmDrawPath()
-    {
-        var types = Array.FindAll(typeof(Plugin).Assembly.GetTypes(),
-            static type => type.Namespace?.StartsWith("BypassEmote.UI", StringComparison.Ordinal) == true);
-
-        NoireUI.WarmDrawPath(types);
-    }
-
     public void Dispose()
     {
+#if DEBUG
+        NoireUI.Profiler.SlowFrame -= ReportSlowFrame;
+#endif
         PluginInterface.UiBuilder.Draw -= DrawWindowSystem;
         PluginInterface.UiBuilder.Draw -= HotbarDragDrop.Draw;
         PluginInterface.UiBuilder.Draw -= SilkTooltip.Render;

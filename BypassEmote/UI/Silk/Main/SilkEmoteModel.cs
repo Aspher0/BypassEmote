@@ -7,6 +7,7 @@ using NoireLib.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Threading.Tasks;
 using EmoteCategory = NoireLib.Enums.EmoteCategory;
 
 namespace BypassEmote.UI.Silk.Main;
@@ -315,35 +316,65 @@ internal sealed class SilkEmoteModel
         return sum;
     }
 
+    private static Task<(int Language, SilkEmoteEntry[]? Entries)>? prepared;
+
+    internal static void Prepare()
+    {
+        if (prepared != null)
+            return;
+
+        var language = SheetLanguage.Version;
+        prepared = Task.Run(() => (language, BuildEntries()));
+    }
+
+    private static SilkEmoteEntry[]? TakePrepared(int language)
+    {
+        if (prepared is not { IsCompletedSuccessfully: true } task)
+            return null;
+
+        prepared = null;
+        return task.Result.Language == language ? task.Result.Entries : null;
+    }
+
+    private static SilkEmoteEntry[]? BuildEntries()
+    {
+        var sheet = ExcelSheetHelper.GetSheet<Emote>();
+
+        if (sheet == null)
+            return null;
+
+        var list = new List<SilkEmoteEntry>(sheet.Count);
+
+        foreach (var row in sheet)
+        {
+            if (CommonHelper.GetEmotePlayType(row) != EmotePlayType.DoNotPlay)
+                list.Add(new SilkEmoteEntry(row));
+        }
+
+        list.Sort(static (a, b) => b.RowId.CompareTo(a.RowId));
+        return list.ToArray();
+    }
+
     private void BuildAll()
     {
         built = true;
         builtLanguage = SheetLanguage.Version;
         dirty = true;
 
-        var sheet = ExcelSheetHelper.GetSheet<Emote>();
+        var entries = TakePrepared(builtLanguage) ?? BuildEntries();
 
-        if (sheet == null)
+        if (entries == null)
         {
             built = false;
             return;
         }
 
-        var list = new List<SilkEmoteEntry>(sheet.Count);
         byId.Clear();
 
-        foreach (var row in sheet)
-        {
-            if (CommonHelper.GetEmotePlayType(row) == EmotePlayType.DoNotPlay)
-                continue;
-
-            var entry = new SilkEmoteEntry(row);
-            list.Add(entry);
+        foreach (var entry in entries)
             byId[entry.RowId] = entry;
-        }
 
-        list.Sort(static (a, b) => b.RowId.CompareTo(a.RowId));
-        all = list.ToArray();
+        all = entries;
         lockedSource = null;
     }
 

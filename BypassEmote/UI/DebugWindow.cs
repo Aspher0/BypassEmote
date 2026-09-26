@@ -186,6 +186,10 @@ public class DebugWindow : NoireLib.UI.NoireWindow, IDisposable
 
     private static void DrawFontsTab()
     {
+        ImGui.TextUnformatted($"Silk fonts: {(BypassEmote.UI.Silk.SilkFonts.Parked ? "parked" : "in use")}, {(BypassEmote.UI.Silk.SilkFonts.Ready ? "ready" : "building")}");
+        ImGui.TextUnformatted($"Glyphs: {(NoireLib.UI.NoireScriptFonts.AllLanguagesLoaded ? "every language" : "current language")}");
+        ImGui.Separator();
+
         var custom = NoireLib.UI.NoireFont.RasterizerGamma.HasValue;
 
         if (ImGui.Checkbox("Override the rasterizer gamma", ref custom))

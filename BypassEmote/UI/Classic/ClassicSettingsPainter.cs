@@ -494,7 +494,7 @@ internal sealed class ClassicSettingsPainter
 
     private static void DrawLanguageTable(float names)
     {
-        var languages = LanguageChoice.Names;
+        var languages = NoireLanguagePicker.Names;
         var controls = SettingsLayout.ControlColumn(languages);
 
         using var rows = SettingsLayout.Rows("##BypassEmoteLanguageRows", names, controls);
@@ -504,14 +504,14 @@ internal sealed class ClassicSettingsPainter
 
         SettingsLayout.Name(LanguageName);
 
-        var active = LanguageChoice.Active;
+        var active = NoireLanguagePicker.Active;
 
         if (ImGui.BeginCombo("##BypassEmoteLanguage", languages.Length > 0 ? languages[active] : string.Empty))
         {
             for (var i = 0; i < languages.Length; i++)
             {
                 if (ImGui.Selectable(languages[i], i == active) && i != active)
-                    LanguageChoice.Pick(i);
+                    NoireLanguagePicker.Pick(i);
 
                 if (i == active)
                     ImGui.SetItemDefaultFocus();

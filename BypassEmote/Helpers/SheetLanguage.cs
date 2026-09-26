@@ -1,9 +1,7 @@
 using Dalamud.Game;
-using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using NoireLib.Helpers;
 using NoireLib.UI;
-using System;
 using System.Collections.Generic;
 
 namespace BypassEmote.Helpers;
@@ -34,34 +32,25 @@ internal static class SheetLanguage
 
     internal static void IncludeGlyphs()
     {
-        var texts = new List<string>();
-
 #if DEBUG
-        foreach (var language in Enum.GetValues<ClientLanguage>())
-            AddTexts(texts, ExcelSheetHelper.GetSheet<Emote>(language));
+        const bool everyLanguage = true;
 #else
-        AddTexts(texts, ExcelSheetHelper.GetSheet<Emote>());
+        const bool everyLanguage = false;
 #endif
 
-        NoireScriptFonts.Include("emotes", texts);
+        NoireScriptFonts.IncludeSheet<Emote>("emotes", Texts, everyLanguage);
     }
 
-    private static void AddTexts(List<string> texts, ExcelSheet<Emote>? sheet)
+    private static IEnumerable<string?> Texts(Emote emote)
     {
-        if (sheet == null)
-            return;
+        yield return emote.Name.ExtractText();
 
-        foreach (var emote in sheet)
-        {
-            texts.Add(emote.Name.ExtractText());
+        if (emote.TextCommand.ValueNullable is not { } command)
+            yield break;
 
-            if (emote.TextCommand.ValueNullable is not { } command)
-                continue;
-
-            texts.Add(command.Command.ExtractText());
-            texts.Add(command.ShortCommand.ExtractText());
-            texts.Add(command.Alias.ExtractText());
-            texts.Add(command.ShortAlias.ExtractText());
-        }
+        yield return command.Command.ExtractText();
+        yield return command.ShortCommand.ExtractText();
+        yield return command.Alias.ExtractText();
+        yield return command.ShortAlias.ExtractText();
     }
 }
