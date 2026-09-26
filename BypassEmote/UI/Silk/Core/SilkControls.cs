@@ -652,7 +652,7 @@ public static class SilkControls
 
         bool changed;
 
-        using (SilkFonts.Push(face, fontCss))
+        using (SilkFonts.PushInput(face, fontCss))
         {
             var fontHeight = ImGui.GetFontSize();
             ImGui.SetCursorScreenPos(new Vector2(x, MathF.Round(((pos.Y + max.Y) * 0.5f) - (fontHeight * 0.5f))));

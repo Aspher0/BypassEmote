@@ -503,7 +503,7 @@ internal sealed partial class SilkMainPainter : IDisposable
 
         bool changed;
 
-        using (SilkFonts.Push(SilkFace.Ui400, 13.5f))
+        using (SilkFonts.PushInput(SilkFace.Ui400, 13.5f))
             changed = ImGui.InputTextWithHint("##silksearch"u8, L.SearchEmotes.Text, ref search, 256);
 
         searchActive = ImGui.IsItemActive();

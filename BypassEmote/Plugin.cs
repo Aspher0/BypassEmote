@@ -21,6 +21,7 @@ using NoireLib.HistoryLogger;
 using NoireLib.Localizer;
 using NoireLib.UI;
 using NoireLib.UpdateTracker;
+using System;
 using System.Threading.Tasks;
 
 namespace BypassEmote;
@@ -50,6 +51,10 @@ public sealed partial class Plugin : IDalamudPlugin
         NoireLibMain.Initialize(PluginInterface, this);
         NoireScriptFonts.CurrentLanguageOnly = true;
         NoireFont.RasterizerGamma = 1.2f;
+#if DEBUG
+        NoireUI.Profiler.Enabled = true;
+        NoireUI.Profiler.Detailed = true;
+#endif
 
         SessionLog.Start($"Bypass Emote {typeof(Plugin).Assembly.GetName().Version} loading"
             + $" | NoireLib {typeof(NoireService).Assembly.GetName().Version}"
@@ -78,6 +83,7 @@ public sealed partial class Plugin : IDalamudPlugin
         SilkChangelogView.Connect(BeChangelogWindow);
         SilkLogsView.Connect(BeLogsWindow);
         SilkUi.WarmFonts(MainWindow.Options);
+        _ = Task.Run(WarmDrawPath);
 
 #if DEBUG
         DebugWindow = new DebugWindow();
@@ -129,13 +135,62 @@ public sealed partial class Plugin : IDalamudPlugin
 
     private void DrawWindowSystem()
     {
-        using var profile = NoireUI.Profiler.Measure(UiProfiler.RootScopeName);
-        if (BeSkins.SilkActive)
-            SilkUi.WarmFonts();
+#if DEBUG
+        var started = System.Diagnostics.Stopwatch.GetTimestamp();
+#endif
 
-        LanguageChoice.Commit();
-        WindowSystem.Draw();
+        using (NoireUI.Profiler.Measure(UiProfiler.RootScopeName))
+        {
+#if DEBUG
+            ReportSlowFrame();
+#endif
+
+            if (BeSkins.SilkActive)
+                SilkUi.WarmFonts();
+
+            LanguageChoice.Commit();
+            WindowSystem.Draw();
+        }
+
+#if DEBUG
+        var elapsed = System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds;
+
+        if (elapsed >= 50d)
+            slowFrameMs = elapsed;
+#endif
     }
+
+#if DEBUG
+    private readonly System.Collections.Generic.List<UiProfileEntry> slowFrameScopes = [];
+
+    private double slowFrameMs;
+
+    private void ReportSlowFrame()
+    {
+        if (slowFrameMs <= 0d)
+            return;
+
+        var elapsed = slowFrameMs;
+        slowFrameMs = 0d;
+
+        NoireUI.Profiler.Snapshot(slowFrameScopes);
+        slowFrameScopes.Sort(static (a, b) => b.SelfLastMs.CompareTo(a.SelfLastMs));
+
+        var text = new System.Text.StringBuilder($"Slow frame: {elapsed:0} ms, draw path warmed {NoireUI.DrawPathWarmed}. Slowest scopes, self/total ms:");
+
+        for (var index = 0; index < slowFrameScopes.Count && index < 12; index++)
+        {
+            var scope = slowFrameScopes[index];
+
+            if (scope.SelfLastMs < 0.5d)
+                break;
+
+            text.Append($" {scope.Name} {scope.SelfLastMs:0.0}/{scope.LastMs:0.0};");
+        }
+
+        Log.Warning(text.ToString(), "[Draw] ");
+    }
+#endif
 
     private void SetupModules(bool activateChangelog)
     {
@@ -251,6 +306,14 @@ public sealed partial class Plugin : IDalamudPlugin
 
         HotbarWindow.IsOpen = false;
         NoireSkins.Use(classic ? BeSkins.Classic : BeSkins.Silk);
+    }
+
+    private static void WarmDrawPath()
+    {
+        var types = Array.FindAll(typeof(Plugin).Assembly.GetTypes(),
+            static type => type.Namespace?.StartsWith("BypassEmote.UI", StringComparison.Ordinal) == true);
+
+        NoireUI.WarmDrawPath(types);
     }
 
     public void Dispose()

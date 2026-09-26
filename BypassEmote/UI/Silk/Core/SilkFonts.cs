@@ -47,6 +47,12 @@ public static class SilkFonts
         [8.5f, 9.5f, 10f, 10.5f, 11f, 12f],
     ];
 
+    private static readonly float[][] InputSizes =
+    [
+        [13f, 13.5f],
+        [13f],
+    ];
+
     private static readonly Dictionary<string, string> UpperCache = new(StringComparer.Ordinal);
 
     private sealed class Tier(float scale, float uiScale, NoireFontSet set)
@@ -64,6 +70,7 @@ public static class SilkFonts
     private static float droppedFor = float.NaN;
 
     private static NoireFont?[]? faces;
+    private static NoireFont?[] inputFaces = [];
     private static Tier? shown;
     private static float wanted = 1f;
     private static bool failed;
@@ -147,6 +154,19 @@ public static class SilkFonts
 
                 set.Add(face, sizes[..used.Length]);
             }
+
+            for (var index = 0; index < inputFaces.Length; index++)
+            {
+                if (inputFaces[index] is not { } input)
+                    continue;
+
+                var used = InputSizes[index];
+
+                for (var at = 0; at < used.Length; at++)
+                    sizes[at] = used[at] * scale;
+
+                set.Add(input, sizes[..used.Length]);
+            }
         }
 
         set.Build();
@@ -196,6 +216,16 @@ public static class SilkFonts
 
     public static NoireFontScope Push(SilkFace face, float cssPx)
         => Face(face) is { } font ? font.Push(Em(cssPx)) : default;
+
+    public static NoireFontScope PushInput(SilkFace face, float cssPx)
+    {
+        var slot = Slots[(int)face];
+
+        if (Load() != null && slot < inputFaces.Length && inputFaces[slot] is { } input)
+            return input.Push(Em(cssPx));
+
+        return Push(face, cssPx);
+    }
 
     public static Vector2 Measure(SilkFace face, float cssPx, string text, float letterSpacingPx = 0f, float maxWidth = 0f)
     {
@@ -316,6 +346,21 @@ public static class SilkFonts
             return null;
         }
 
+        foreach (var face in loaded)
+        {
+            if (face != null)
+                face.MergeDalamudLanguageGlyphs = false;
+        }
+
+        var inputs = new NoireFont?[InputSizes.Length];
+
+        for (var index = 0; index < inputs.Length; index++)
+        {
+            if (loaded[index] is { } source)
+                inputs[index] = NoireFont.FromMemory(source.Data, source.Name + " input");
+        }
+
+        inputFaces = inputs;
         faces = loaded;
         return faces;
     }
@@ -342,6 +387,11 @@ public static class SilkFonts
             foreach (var face in faces)
                 face?.Dispose();
         }
+
+        foreach (var input in inputFaces)
+            input?.Dispose();
+
+        inputFaces = [];
 
         faces = null;
         failed = false;

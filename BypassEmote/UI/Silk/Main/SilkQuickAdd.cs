@@ -64,7 +64,7 @@ internal sealed class SilkQuickAdd
         ImGui.PushStyleColor(ImGuiCol.TextSelectedBg, SilkPalette.Alpha(SilkPalette.Ice, 0.3f));
         ImGui.SetNextItemWidth(right - left);
 
-        using (SilkFonts.Push(SilkFace.Ui400, 13f))
+        using (SilkFonts.PushInput(SilkFace.Ui400, 13f))
             ImGui.InputTextWithHint(favourites ? "##silkfavadd"u8 : "##silkblkadd"u8, placeholder.Text, ref text, 128);
 
         var focused = ImGui.IsItemActive();

@@ -298,7 +298,7 @@ internal sealed partial class SilkLogsPainter
 
     private static bool Input(string id, string hint, ref string text, int maxLength, Vector2 boxMin, float width, float boxHeight, SilkFace face, float cssPx, out bool active)
     {
-        using var font = SilkFonts.Push(face, cssPx);
+        using var font = SilkFonts.PushInput(face, cssPx);
 
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Vector2.Zero);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0f);

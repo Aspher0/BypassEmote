@@ -25,7 +25,7 @@ using System.Numerics;
 
 namespace BypassEmote.UI;
 
-public class DebugWindow : Window, IDisposable
+public class DebugWindow : NoireLib.UI.NoireWindow, IDisposable
 {
 
     private uint selectedEmoteId = 0;
@@ -253,8 +253,11 @@ public class DebugWindow : Window, IDisposable
     {
         var pretending = GameClientHelper.Forced == client;
 
-        if (ImGui.Checkbox(label, ref pretending))
-            GameClientHelper.Forced = pretending ? client : null;
+        if (!ImGui.Checkbox(label, ref pretending))
+            return;
+
+        GameClientHelper.Forced = pretending ? client : null;
+        NoireLib.UI.NoireFont.RebuildAll();
     }
 
     private static void DrawKeptSwapsTab()

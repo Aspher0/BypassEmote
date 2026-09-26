@@ -6,6 +6,7 @@ using NoireLib.Animations.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace BypassEmote.EmoteSwap;
 
@@ -193,15 +194,25 @@ public sealed partial class SwapOrchestrator
 
         if (BestMatchResolver.Resolve(source, clean, matchConfig, posture).Target == null)
         {
-            Log.Debug(BestMatchResolver.Resolve(source, pool, matchConfig, posture).Target == null
+            LogChangedOnce(BestMatchResolver.Resolve(source, pool, matchConfig, posture).Target == null
                 ? $"Nothing fits /{source.Command}, changed by another mod or not."
-                : $"Every emote that fits /{source.Command} is changed by another mod.", LogPrefix);
+                : $"Every emote that fits /{source.Command} is changed by another mod.");
 
             return pool;
         }
 
-        Log.Debug($"{pool.Count - clean.Count} emote(s) being changed by another mod.", LogPrefix);
+        LogChangedOnce($"{pool.Count - clean.Count} emote(s) being changed by another mod.");
         return clean;
+    }
+
+    private static string? lastChangedLog;
+
+    private static void LogChangedOnce(string message)
+    {
+        if (Interlocked.Exchange(ref lastChangedLog, message) == message)
+            return;
+
+        Log.Debug(message, LogPrefix);
     }
 
     internal static ChatText ChangedTargetMessage(EmoteAttributes target, string modName)
