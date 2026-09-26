@@ -424,18 +424,26 @@ changelog.2.4.0.1.04292ed8 =
 changelog.2.4.0.1.05c331b1 = 
 # Source: Added Malou. Please take good care of him.
 changelog.2.4.0.1.12192c44 = 
+# Source: Fixed an error when the list of swapped emotes was read while being saved.
+changelog.2.4.0.1.16f68b61 = 
 # Source: Fixed mods that replace an emote's timeline (.tmb) files not being taken into account by Emote Swap.
 changelog.2.4.0.1.1856a1c1 = 
 # Source: /be sync now also restarts the sounds and VFXs of your emotes in Emote Swap mode as well, try it!
 changelog.2.4.0.1.1c445d74 = 
+# Source: Fonts are now prepared in the background when the plugin loads and cached on disk, so windows open right away.
+changelog.2.4.0.1.22469033 = 
 # Source: Locked emotes are now listed in the game's own emote window.\nYou can search locked emotes and use them from there. Also added an option to grey or un-grey them from your hotbars, and this applies to the Emote game window as well.
 changelog.2.4.0.1.228e7d9a = 
+# Source: Fixed the window options (visible in gpose, when the UI is hidden, during cutscenes...) not applying to windows that had not been opened yet.
+changelog.2.4.0.1.2656e0e6 = 
 # Source: /belogs now exports more information, to help figuring out what went wrong.
 changelog.2.4.0.1.29c642fa = 
 # Source: New Features
 changelog.2.4.0.1.36f4e595 = 
 # Source: Various bug fixes over the versions.
 changelog.2.4.0.1.39c46762 = 
+# Source: Fixed the preview popup filling the log with the same line every second.
+changelog.2.4.0.1.426e0ea9 = 
 # Source: Fixed swapped animations parsing in VFXEditor.
 changelog.2.4.0.1.52e06c34 = 
 # Source: Swapping an emote is now slightly faster.
@@ -448,18 +456,30 @@ changelog.2.4.0.1.6afdbd23 =
 changelog.2.4.0.1.6e05d893 = 
 # Source: Both interfaces are now built on NoireLib's new interface system.
 changelog.2.4.0.1.7700f1ca = 
+# Source: The new interface uses less video memory while the classic interface is active.
+changelog.2.4.0.1.8053148f = 
+# Source: Fixed blurry text in the new interface.
+changelog.2.4.0.1.899ca490 = 
 # Source: Removed the outdated mod writer.
 changelog.2.4.0.1.973a6508 = 
 # Source: Adds a brand new interface, translations, shows your locked emotes in the game's own emote window and fix some issues with modded animations.
 changelog.2.4.0.1.9f4cc7be = 
 # Source: Fixed bypassing emotes from your hotbars on the Chinese client.
 changelog.2.4.0.1.a57ef1dd = 
+# Source: Fixed Japanese, Korean and Chinese characters showing as "?" in emote names and translations.
+changelog.2.4.0.1.a7e602e0 = 
+# Source: Reduced the stutter when opening a window for the first time, and the new interface takes less time to draw.
+changelog.2.4.0.1.ae4c43b1 = 
 # Source: Added a "Compact rows" option to make the emote list smaller. On by default.
 changelog.2.4.0.1.c0c846f7 = 
+# Source: The plugin's help in the plugin installer now follows the plugin's language.
+changelog.2.4.0.1.d4fcfab1 = 
 # Source: Technical Changes
 changelog.2.4.0.1.d80295d6 = 
 # Source: Added a brand new interface, which is now the default one.\nEvery window has been redesigned: the main UI, the settings, "Create a mod", the hotbar assignment, the changelog and the logs.\nIf you prefer the old look, you can switch back to the classic interface at any time in the settings.
 changelog.2.4.0.1.da488787 = 
+# Source: Changing the language, the text size or the interface is now instant.
+changelog.2.4.0.1.dc02f174 = 
 # Source: The new interface has its own window settings, click the Window Options button next to the close button. It allows you to adjust opacity, text size, make the plugin always on top, click through, lock its position, its width and/or height, and make the windows stay visible in gpose, when the UI is hidden, during cutscenes, or when the game hides its own UI.
 changelog.2.4.0.1.e862aedf = 
 # Source: Added a preview popup next to the main UI. Click an emote to make it appear. In Emote Swap mode, it will show you which of your emotes it will play through, offer you to play it, add it to your favorites, block it, assign it to a hotbar or play it on your minion, pet or chocobo.\nDouble click an emote to play it right away. You can turn the popup off in the settings.

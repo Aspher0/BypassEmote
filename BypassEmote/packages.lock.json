@@ -16,9 +16,9 @@
       },
       "NoireLib": {
         "type": "Direct",
-        "requested": "[2.1.0, )",
-        "resolved": "2.1.0",
-        "contentHash": "N/wINF+Ks7EV3lGNNktL6ji1JE6xVv8Wygkd1n2OgkOXrWmjXqH7hJ5vCed5tv5YzoxawVRy266VW6R9IoyYrA==",
+        "requested": "[2.1.0.2, )",
+        "resolved": "2.1.0.2",
+        "contentHash": "adYH3UTPJH55zFVpuB882LZ4Ejpv981DRc71PbFyhSL9GbNSzfAl9LnzGPg3W+at+C+eQ1F5cvaTNaZ/Z50o9g==",
         "dependencies": {
           "BCrypt.Net-Next": "4.2.0",
           "Castle.Core": "5.2.1",
