@@ -419,53 +419,53 @@ changelog.2.3.1.0.d80295d6 =
 # Source: Various technical enhancements.
 changelog.2.3.1.0.fe26324e = 
 # Source: Updated to the latest Penumbra API.
-changelog.2.4.0.0.04292ed8 = 
+changelog.2.4.0.1.04292ed8 = 
 # Source: Added a translation editor, accessible from the settings. You can translate the plugin in game, see your changes live and save them.\nTranslations or improvements are very much welcome. Please open an issue or a pull request on the plugin's GitHub if you'd like to contribute.
-changelog.2.4.0.0.05c331b1 = 
+changelog.2.4.0.1.05c331b1 = 
 # Source: Added Malou. Please take good care of him.
-changelog.2.4.0.0.12192c44 = 
+changelog.2.4.0.1.12192c44 = 
 # Source: Fixed mods that replace an emote's timeline (.tmb) files not being taken into account by Emote Swap.
-changelog.2.4.0.0.1856a1c1 = 
+changelog.2.4.0.1.1856a1c1 = 
 # Source: /be sync now also restarts the sounds and VFXs of your emotes in Emote Swap mode as well, try it!
-changelog.2.4.0.0.1c445d74 = 
+changelog.2.4.0.1.1c445d74 = 
 # Source: Locked emotes are now listed in the game's own emote window.\nYou can search locked emotes and use them from there. Also added an option to grey or un-grey them from your hotbars, and this applies to the Emote game window as well.
-changelog.2.4.0.0.228e7d9a = 
+changelog.2.4.0.1.228e7d9a = 
 # Source: /belogs now exports more information, to help figuring out what went wrong.
-changelog.2.4.0.0.29c642fa = 
+changelog.2.4.0.1.29c642fa = 
 # Source: New Features
-changelog.2.4.0.0.36f4e595 = 
+changelog.2.4.0.1.36f4e595 = 
 # Source: Various bug fixes over the versions.
-changelog.2.4.0.0.39c46762 = 
+changelog.2.4.0.1.39c46762 = 
 # Source: Fixed swapped animations parsing in VFXEditor.
-changelog.2.4.0.0.52e06c34 = 
+changelog.2.4.0.1.52e06c34 = 
 # Source: Swapping an emote is now slightly faster.
-changelog.2.4.0.0.56686f6e = 
+changelog.2.4.0.1.56686f6e = 
 # Source: Bug fixes
-changelog.2.4.0.0.60586b6e = 
+changelog.2.4.0.1.60586b6e = 
 # Source: Added translations.\nThe plugin is now available in French, German, Japanese, Korean and Simplified Chinese.You can pick your language in the settings.
-changelog.2.4.0.0.6afdbd23 = 
+changelog.2.4.0.1.6afdbd23 = 
 # Source: New interface & translations
-changelog.2.4.0.0.6e05d893 = 
+changelog.2.4.0.1.6e05d893 = 
 # Source: Both interfaces are now built on NoireLib's new interface system.
-changelog.2.4.0.0.7700f1ca = 
+changelog.2.4.0.1.7700f1ca = 
 # Source: Removed the outdated mod writer.
-changelog.2.4.0.0.973a6508 = 
+changelog.2.4.0.1.973a6508 = 
 # Source: Adds a brand new interface, translations, shows your locked emotes in the game's own emote window and fix some issues with modded animations.
-changelog.2.4.0.0.9f4cc7be = 
+changelog.2.4.0.1.9f4cc7be = 
 # Source: Fixed bypassing emotes from your hotbars on the Chinese client.
-changelog.2.4.0.0.a57ef1dd = 
+changelog.2.4.0.1.a57ef1dd = 
 # Source: Added a "Compact rows" option to make the emote list smaller. On by default.
-changelog.2.4.0.0.c0c846f7 = 
+changelog.2.4.0.1.c0c846f7 = 
 # Source: Technical Changes
-changelog.2.4.0.0.d80295d6 = 
+changelog.2.4.0.1.d80295d6 = 
 # Source: Added a brand new interface, which is now the default one.\nEvery window has been redesigned: the main UI, the settings, "Create a mod", the hotbar assignment, the changelog and the logs.\nIf you prefer the old look, you can switch back to the classic interface at any time in the settings.
-changelog.2.4.0.0.da488787 = 
+changelog.2.4.0.1.da488787 = 
 # Source: The new interface has its own window settings, click the Window Options button next to the close button. It allows you to adjust opacity, text size, make the plugin always on top, click through, lock its position, its width and/or height, and make the windows stay visible in gpose, when the UI is hidden, during cutscenes, or when the game hides its own UI.
-changelog.2.4.0.0.e862aedf = 
+changelog.2.4.0.1.e862aedf = 
 # Source: Added a preview popup next to the main UI. Click an emote to make it appear. In Emote Swap mode, it will show you which of your emotes it will play through, offer you to play it, add it to your favorites, block it, assign it to a hotbar or play it on your minion, pet or chocobo.\nDouble click an emote to play it right away. You can turn the popup off in the settings.
-changelog.2.4.0.0.e94a5ffa = 
+changelog.2.4.0.1.e94a5ffa = 
 # Source: Various technical enhancements.
-changelog.2.4.0.0.fe26324e = 
+changelog.2.4.0.1.fe26324e = 
 # Source: You cannot bypass this emote right now.
 chat.cannot_bypass_now = 现在无法绕过这个情感动作。
 # Source: Error trying to process command

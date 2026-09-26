@@ -13,14 +13,14 @@ public class V2_4_x_x : BaseChangelogVersion
 
     public override List<ChangelogVersion> GetVersions() => new()
     {
-        CreateV2_4_0_0(),
+        CreateV2_4_0_1(),
     };
 
-    private static ChangelogVersion CreateV2_4_0_0()
+    private static ChangelogVersion CreateV2_4_0_1()
         => new ChangelogVersion
         {
-            Version = new(2, 4, 0, 0),
-            Date = "24-09-2026",
+            Version = new(2, 4, 0, 1),
+            Date = "26-09-2026",
             Title = "New interface & translations",
             TitleColor = Blue,
             Description = "Adds a brand new interface, translations, shows your locked emotes in the game's own emote window and fix some issues with modded animations.",
@@ -55,12 +55,23 @@ public class V2_4_x_x : BaseChangelogVersion
                 EntryBullet("Fixed mods that replace an emote's timeline (.tmb) files not being taken into account by Emote Swap.", LightRed, 1),
                 EntryBullet("Fixed swapped animations parsing in VFXEditor.", White, 1),
                 EntryBullet("Fixed bypassing emotes from your hotbars on the Chinese client.", White, 1),
+                EntryBullet("Fixed Japanese, Korean and Chinese characters showing as \"?\" in emote names and translations.", White, 1),
+                EntryBullet("Fixed blurry text in the new interface.", White, 1),
+                EntryBullet("Fixed the window options (visible in gpose, when the UI is hidden, during cutscenes...) " +
+                    "not applying to windows that had not been opened yet.", White, 1),
+                EntryBullet("Fixed the preview popup filling the log with the same line every second.", White, 1),
+                EntryBullet("Fixed an error when the list of swapped emotes was read while being saved.", White, 1),
                 EntryBullet("Various bug fixes over the versions.", White, 1),
                 Separator(),
                 Header("Technical Changes", Blue, 0, FontAwesomeIcon.Wrench),
                 EntryBullet("Both interfaces are now built on NoireLib's new interface system.", Blue, 1),
                 EntryBullet("Updated to the latest Penumbra API.", White, 1),
                 EntryBullet("Swapping an emote is now slightly faster.", White, 1),
+                EntryBullet("Changing the language, the text size or the interface is now instant.", White, 1),
+                EntryBullet("Fonts are now prepared in the background when the plugin loads and cached on disk, so windows open right away.", White, 1),
+                EntryBullet("The new interface uses less video memory while the classic interface is active.", White, 1),
+                EntryBullet("Reduced the stutter when opening a window for the first time, and the new interface takes less time to draw.", White, 1),
+                EntryBullet("The plugin's help in the plugin installer now follows the plugin's language.", White, 1),
                 EntryBullet("Removed the outdated mod writer.", White, 1),
                 EntryBullet("Various technical enhancements.", White, 1),
             }
