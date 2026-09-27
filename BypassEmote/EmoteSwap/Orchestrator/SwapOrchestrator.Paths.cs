@@ -36,7 +36,8 @@ public sealed partial class SwapOrchestrator
 
     internal static string? SelectRequestedPath(string relativePapPath, IReadOnlyList<string> fallbackSkeletons,
         Func<string, bool> modProvides, Func<string, bool> vanillaExists)
-        => EmotePathHelper.FindExistingPath(relativePapPath, fallbackSkeletons, modProvides, vanillaExists);
+        => EmotePathHelper.FindExistingPath(relativePapPath,
+            EmotePathHelper.GetFallbackOrder(fallbackSkeletons, relativePapPath), modProvides, vanillaExists);
 
     private List<VariantPair> PairVariants(EmoteAttributes source, EmoteAttributes target, string skeleton)
         => BuildPairs(source, target, EmotePathHelper.GetFallbackOrder(skeleton), ForeignModProvides, VanillaExists);
@@ -224,9 +225,8 @@ public sealed partial class SwapOrchestrator
         }
 
         var paths = races
-            .SelectMany(race => EmotePathHelper.GetFallbackOrder(race))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .SelectMany(step => relativePaths.Select(relative => EmotePathHelper.GetSkeletonPath(step, relative)))
+            .SelectMany(race => relativePaths.SelectMany(relative => EmotePathHelper.GetFallbackOrder(race, relative)
+                .Select(step => EmotePathHelper.GetSkeletonPath(step, relative))))
             .Concat(relativePaths.Select(ActionTimelinePathFor).OfType<string>())
             .Distinct(StringComparer.Ordinal)
             .ToList();

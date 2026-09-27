@@ -34,7 +34,7 @@ internal static class DebugLogExporter
     private readonly record struct LogExtract(int Kept, int Dropped, string Sources);
 
     private sealed record LiveSnapshot(string Report, bool LoggedIn, IReadOnlyList<Emote> Unlocked,
-        IReadOnlyList<Emote> Locked, Serving Serving, TargetReading TargetNow);
+        IReadOnlyList<Emote> Locked, Serving Serving, TargetReading TargetNow, string? ModRoot);
 
     private sealed record TargetReading(string? Condition, IReadOnlyDictionary<uint, string> ByEmote)
     {
@@ -143,6 +143,7 @@ internal static class DebugLogExporter
             };
 
             files.AddRange(ConfigEntries(configDirectory, destination));
+            files.AddRange(SwapPapEntries(configDirectory, live.ModRoot));
 
             return FileHelper.ZipFiles(files, destination, $"DO_NOT_POST_PUBLICLY_DebugLogs_{stamp}.zip")
                 ?? throw new IOException("The archive could not be written.");
@@ -157,17 +158,52 @@ internal static class DebugLogExporter
     {
         var entries = new List<(string FilePath, string? EntryName)>();
         var vanillaCopies = Path.Combine(configDirectory, "cache-break");
+        var fontCache = Path.Combine(configDirectory, "NoireFontCache");
 
         foreach (var file in Directory.EnumerateFiles(configDirectory, "*", SearchOption.AllDirectories))
         {
             if (file.StartsWith(excluded, StringComparison.OrdinalIgnoreCase)
-                || file.StartsWith(vanillaCopies, StringComparison.OrdinalIgnoreCase))
+                || file.StartsWith(vanillaCopies, StringComparison.OrdinalIgnoreCase)
+                || file.StartsWith(fontCache, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
 
             var relative = Path.GetRelativePath(configDirectory, file).Replace('\\', '/');
             entries.Add((file, $"config/{relative}"));
+        }
+
+        return entries;
+    }
+
+    private static List<(string FilePath, string? EntryName)> SwapPapEntries(string configDirectory, string? modRoot)
+    {
+        var entries = new List<(string FilePath, string? EntryName)>();
+        var characters = Path.Combine(configDirectory, "characters");
+
+        if (modRoot is not { Length: > 0 } || !Directory.Exists(characters))
+            return entries;
+
+        foreach (var characterDirectory in Directory.EnumerateDirectories(characters))
+        {
+            var characterKey = Path.GetFileName(characterDirectory);
+            var modDirectory = Path.Combine(modRoot, SwapModIdentity.DirectoryPrefix + characterKey);
+
+            if (!Directory.Exists(modDirectory))
+                continue;
+
+            try
+            {
+                foreach (var pap in Directory.EnumerateFiles(modDirectory, "*.pap", SearchOption.AllDirectories))
+                {
+                    var relative = Path.GetRelativePath(modDirectory, pap).Replace('\\', '/');
+                    entries.Add((pap, $"config/characters/{characterKey}/{relative}"));
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                Log.Debug($"Could not list the swap paps of '{modDirectory}' ({ex.Message}).", LogPrefix);
+            }
         }
 
         return entries;
@@ -335,7 +371,7 @@ internal static class DebugLogExporter
         section.AppendLine($"Dalamud log sources: {extract.Sources}");
         section.AppendLine($"Dalamud log lines kept: {extract.Kept}");
         section.AppendLine($"Dalamud log lines dropped: {extract.Dropped}");
-        section.AppendLine($"Contents: report.txt, bypassemote.log, dalamud-extract.log, config/");
+        section.AppendLine($"Contents: report.txt, bypassemote.log, dalamud-extract.log, config/ (with each character's swap paps)");
 
         return section.ToString();
     }
@@ -385,7 +421,9 @@ internal static class DebugLogExporter
         Section(report, "Emote catalog", AppendCatalog);
         Section(report, "Hooks", AppendHooks);
 
-        return new LiveSnapshot(report.ToString(), loggedIn, unlocked, locked, serving, targetNow);
+        var modRoot = Service.Penumbra is { Available: true } penumbra ? penumbra.GetModRootDirectory() : null;
+
+        return new LiveSnapshot(report.ToString(), loggedIn, unlocked, locked, serving, targetNow, modRoot);
     }
 
     private static TargetReading ReadTargetNow(IReadOnlyList<Emote> unlocked)
@@ -433,7 +471,7 @@ internal static class DebugLogExporter
         {
             var skeleton = SwapOrchestrator.SkeletonFor(localPlayer);
             var chain = EmotePathHelper.GetFallbackOrder(skeleton);
-            var slots = new List<(uint RowId, string Role, int Start)>();
+            var slots = new List<(uint RowId, string Role, int Start, IReadOnlyList<string> Steps)>();
             var requested = new List<string>();
 
             foreach (var rowId in emoteRowIds.Distinct())
@@ -443,9 +481,11 @@ internal static class DebugLogExporter
 
                 foreach (var (role, relativePath) in PapRolesOf(emote))
                 {
-                    slots.Add((rowId, role, requested.Count));
+                    var steps = EmotePathHelper.GetFallbackOrder(skeleton, relativePath);
 
-                    foreach (var step in chain)
+                    slots.Add((rowId, role, requested.Count, steps));
+
+                    foreach (var step in steps)
                         requested.Add(EmotePathHelper.GetSkeletonPath(step, relativePath));
                 }
             }
@@ -458,12 +498,12 @@ internal static class DebugLogExporter
             Func<string, bool> isOwnPath = Service.SwapMods is { } swapMods ? swapMods.IsOwnPath : _ => false;
             var changedRoles = new Dictionary<uint, List<string>>();
 
-            foreach (var (rowId, role, start) in slots)
+            foreach (var (rowId, role, start, steps) in slots)
             {
                 if (!changedRoles.TryGetValue(rowId, out var changed))
                     changedRoles[rowId] = changed = [];
 
-                for (var step = 0; step < chain.Count; step++)
+                for (var step = 0; step < steps.Count; step++)
                 {
                     var index = start + step;
 
@@ -475,7 +515,7 @@ internal static class DebugLogExporter
                         continue;
                     }
 
-                    changed.Add($"{role} on {chain[step]} -> "
+                    changed.Add($"{role} on {steps[step]} -> "
                         + ServedPath.Describe(requested[index], resolved[index], modRoot, isOwnPath,
                             directory => modNames != null && modNames.TryGetValue(directory, out var name) ? name : null));
 
@@ -486,7 +526,9 @@ internal static class DebugLogExporter
             var byEmote = changedRoles.ToDictionary(pair => pair.Key,
                 pair => pair.Value.Count == 0 ? ServedPath.Vanilla : string.Join("; ", pair.Value));
 
-            return new Serving($"{skeleton}, chain [{string.Join(", ", chain)}]", byEmote);
+            var table = PapLoadTable.Current is null ? "pap load table unreadable" : "pap load table first";
+
+            return new Serving($"{skeleton}, chain [{string.Join(", ", chain)}], {table}", byEmote);
         }
         catch (Exception ex)
         {
@@ -848,7 +890,9 @@ internal static class DebugLogExporter
 
     private static void AppendPoseServer(StringBuilder report, string skeleton, string relativePath, string role)
     {
-        var gamePath = EmotePathHelper.GetSkeletonPath(skeleton, relativePath);
+        var gamePath = EmotePathHelper.FindExistingPath(relativePath,
+                EmotePathHelper.GetFallbackOrder(skeleton, relativePath), NoireService.DataManager.FileExists)
+            ?? EmotePathHelper.GetSkeletonPath(skeleton, relativePath);
 
         if (Service.Penumbra is not { Available: true } penumbra)
         {

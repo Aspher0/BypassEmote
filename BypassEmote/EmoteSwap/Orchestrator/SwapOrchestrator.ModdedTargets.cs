@@ -45,7 +45,7 @@ public sealed partial class SwapOrchestrator
         {
             foreach (var variant in candidate.Variants)
             {
-                foreach (var step in fallbackOrder)
+                foreach (var step in EmotePathHelper.GetFallbackOrder(fallbackOrder, variant.RelativePapPath))
                 {
                     var path = EmotePathHelper.GetSkeletonPath(step, variant.RelativePapPath);
                     var resolved = _penumbra.ResolvePlayerPath(path);
@@ -118,7 +118,7 @@ public sealed partial class SwapOrchestrator
 
             foreach (var variant in candidate.Variants)
             {
-                foreach (var step in fallbackOrder)
+                foreach (var step in EmotePathHelper.GetFallbackOrder(fallbackOrder, variant.RelativePapPath))
                     requested.Add(EmotePathHelper.GetSkeletonPath(step, variant.RelativePapPath));
             }
 

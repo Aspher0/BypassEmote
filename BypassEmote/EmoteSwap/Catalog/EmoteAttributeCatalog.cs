@@ -102,6 +102,8 @@ public sealed class EmoteAttributeCatalog
 
         WeaponMotionTable.Warm();
 
+        PapLoadTable.Warm();
+
         WeaponMotionFolders.GroupedFolders();
 
         if (Cache.Read(RulesVersion) is { Count: > 0 } cachedRows)
