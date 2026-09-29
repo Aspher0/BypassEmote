@@ -11,8 +11,6 @@ namespace BypassEmote.EmoteSwap;
 
 public sealed partial class SwapOrchestrator
 {
-    internal const string NoOverrideTargetKind = "swap.override-empty";
-
     private const int MaxRefusalsReported = 3;
 
     internal static EmoteOverride? OverrideFor(uint resolvedRowId, uint pressedRowId)
@@ -70,7 +68,7 @@ public sealed partial class SwapOrchestrator
                 refusals.Add((rowId, refusal));
         }
 
-        LogHelper.Error(NoOverrideTargetMessage(source, refusals, NameOf), NoOverrideTargetKind);
+        LogHelper.Error(NoOverrideTargetMessage(source, refusals, NameOf), "swap.override-empty");
     }
 
     internal static ChatText NoOverrideTargetMessage(EmoteAttributes source,

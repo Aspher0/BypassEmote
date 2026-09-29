@@ -57,10 +57,6 @@ public sealed partial class SwapOrchestrator
         Dictionary<string, GroupOutput?> Retargeted,
         Dictionary<byte[], string> FileNames);
 
-    private const string BackgroundOperationName = "Emote Swap byte pipeline";
-
-    private const string CoverageOperationName = "Emote Swap other bodies";
-
     private void StartBackgroundBuild(SwapBuildRequest request)
     {
         _ = AsyncHelper.RunBackgroundThenFrameworkSafeAsync(
@@ -68,7 +64,7 @@ public sealed partial class SwapOrchestrator
             outcome => FinishSwapOnFrameworkThread(request, outcome),
             ex => Log.Debug(
                 $"Could not hand a finished swap build back to the framework thread ({ex.Message}). Dropped.", LogPrefix),
-            BackgroundOperationName);
+            "Emote Swap byte pipeline");
     }
 
     private SwapBuildOutcome? BuildSwapFilesOrNull(SwapBuildRequest request)
@@ -150,7 +146,7 @@ public sealed partial class SwapOrchestrator
             ex => Log.Debug(
                 $"Could not hand the other bodies of a swap back to the framework thread ({ex.Message}). Dropped.",
                 LogPrefix),
-            CoverageOperationName);
+            "Emote Swap other bodies");
     }
 
     private IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? BuildCoverageOrNull(

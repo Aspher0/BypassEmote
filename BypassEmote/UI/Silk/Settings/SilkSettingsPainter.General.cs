@@ -15,7 +15,7 @@ internal sealed partial class SilkSettingsPainter
 {
     private static string PluginEnabledName => L.PluginEnabled.Text;
     private static string HotbarBypassName => L.HotbarBypass.Text;
-    private static string LockedEmotesInWindowName => L.SilkLockedInWindow.Text;
+    private static string LockedEmotesInWindowName => L.LockedInWindow.Text;
     private static string LockedEmotesName => L.LockedAsUsable.Text;
     private static string StopOnMoveName => L.StopOnMove.Text;
     private static string PreviewPopupName => L.PreviewPopupSetting.Text;

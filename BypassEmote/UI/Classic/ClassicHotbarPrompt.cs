@@ -16,7 +16,7 @@ namespace BypassEmote.UI.Classic;
 
 internal sealed class ClassicHotbarPrompt
 {
-    private static string DragHintText => L.ClassicDragHint.Text;
+    private static string DragHintText => L.DragHint.Text;
 
     private static string hotbarItems = string.Empty;
     private static int hotbarItemsRevision = -1;

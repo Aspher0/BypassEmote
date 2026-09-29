@@ -11,7 +11,7 @@ internal static partial class L
     public static readonly NoireString HelpConfig = new("command.config",
         "Opens the configuration window.");
     public static readonly NoireString HelpSync = new("command.sync",
-        "Restarts the emotes of every player and NPC around you, with their sounds.");
+        "Restarts the emotes of every player, NPC, minion and pet around you, with their sounds and effects.");
     public static readonly NoireString HelpSyncDirect = new("command.sync_direct",
         "Restarts only the emotes played with Direct Play.");
     public static readonly NoireString HelpChangelog = new("command.changelog",

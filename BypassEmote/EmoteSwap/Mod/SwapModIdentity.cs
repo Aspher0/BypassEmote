@@ -15,8 +15,6 @@ public sealed class SwapModIdentity : IDisposable
 
     public const string DirectoryPrefix = "_BypassEmote_";
 
-    private const int MaxNameLength = 24;
-
     private const string UnnamedCharacter = "Character";
 
     private bool _subscribed;
@@ -149,7 +147,7 @@ public sealed class SwapModIdentity : IDisposable
             else if (kept.Length > 0 && kept[^1] != '_')
                 kept.Append('_');
 
-            if (kept.Length >= MaxNameLength)
+            if (kept.Length >= 24)
                 break;
         }
 

@@ -22,21 +22,21 @@ namespace BypassEmote.UI.Classic;
 internal sealed class ClassicSettingsPainter
 {
     private static readonly TextList SwapLifetimeOptions =
-        new(L.ClassicLifetimeEnds, L.ClassicLifetimeTarget, L.ClassicNever);
+        new(L.ClassicLifetimeEnds, L.ClassicLifetimeTarget, L.Never);
 
     private static readonly TextList SwapBehaviorOptions = new(L.ClassicBehaviorMultiple, L.ClassicBehaviorOne);
 
-    private static readonly TextList LoopMatchingOptions = new(L.ClassicStrict, L.ClassicLenient);
-    private static readonly TextList SoundMatchingOptions = new(L.ClassicStrict, L.ClassicLenient, L.ClassicOff);
-    private static readonly TextList TurnMatchingOptions = new(L.ClassicVeryStrict, L.ClassicStrict, L.ClassicLenient);
+    private static readonly TextList LoopMatchingOptions = new(L.Strict, L.Lenient);
+    private static readonly TextList SoundMatchingOptions = new(L.Strict, L.Lenient, L.Off);
+    private static readonly TextList TurnMatchingOptions = new(L.VeryStrict, L.Strict, L.Lenient);
     private static readonly TurnMatchRule[] TurnMatchingOrder = [TurnMatchRule.VeryStrict, TurnMatchRule.Strict, TurnMatchRule.Lenient];
 
-    private static readonly TextList ModdedTargetsOptions = new(L.ClassicAllowed, L.ClassicLastResort, L.ClassicBlocked);
-    private static readonly TextList IdlePoseLoopsOptions = new(L.ClassicNever, L.ClassicNothingElseFits, L.ClassicAllow);
+    private static readonly TextList ModdedTargetsOptions = new(L.Allowed, L.LastResort, L.Blocked);
+    private static readonly TextList IdlePoseLoopsOptions = new(L.Never, L.Allow);
 
-    private static readonly TextList CachedDispatchOptions = new(L.ClassicOff, L.ClassicWhenNecessary, L.ClassicOn);
+    private static readonly TextList CachedDispatchOptions = new(L.Off, L.ClassicWhenNecessary, L.On);
 
-    private static readonly TextList DispatchFidelityOptions = new(L.ClassicSameRank, L.ClassicOneBelow, L.ClassicAnything);
+    private static readonly TextList DispatchFidelityOptions = new(L.SameRank, L.OneBelow, L.ClassicAnything);
 
     private static string EmoteSwapLabel => L.EmoteSwap.Text;
     private static string DirectPlayLabel => L.DirectPlay.Text;
@@ -48,6 +48,7 @@ internal sealed class ClassicSettingsPainter
     private static string KeptSwapsName => L.KeptSwaps.Text;
     private static string AnonymizeModName => L.AnonymizeMod.Text;
     private static string AlwaysCacheBreakName => L.AlwaysCacheBreak.Text;
+    private static string DisableModOnExitName => L.DisableModOnExit.Text;
     private static string LoopMatchingName => L.LoopMatching.Text;
     private static string TurnMatchingName => L.TurnMatching.Text;
     private static string SoundMatchingName => L.SoundMatching.Text;
@@ -69,12 +70,12 @@ internal sealed class ClassicSettingsPainter
     private static readonly TextList SwapNames =
         new(L.Mode, L.Lifetime, L.Behavior, L.KeptSwaps, L.AnonymizeMod, L.LoopMatching, L.TurnMatching, L.SoundMatching,
          L.CachedDispatch, L.MaxTargets, L.DispatchFidelity, L.ErrorThrottle, L.WarningThrottle,
-         L.ModdedTargets, L.IdlePoseLoops, L.AlwaysCacheBreak,
+         L.ModdedTargets, L.IdlePoseLoops, L.AlwaysCacheBreak, L.DisableModOnExit,
          L.SwapMessages, L.ErrorMessages, L.WarningMessages, L.FaceTarget, L.UnsafeToggle);
 
     private static string PluginEnabledName => L.PluginEnabled.Text;
     private static string HotbarBypassName => L.HotbarBypass.Text;
-    private static string LockedEmotesInWindowName => L.ClassicLockedInWindow.Text;
+    private static string LockedEmotesInWindowName => L.LockedInWindow.Text;
     private static string LockedEmotesName => L.LockedAsUsable.Text;
     private static string StopOnMoveName => L.StopOnMove.Text;
     private static string UpdateNotificationName => L.UpdateNotification.Text;
@@ -87,7 +88,7 @@ internal sealed class ClassicSettingsPainter
     private static string TranslationName => L.Translation.Text;
 
     private static readonly TextList GeneralNames =
-        new(L.ClassicNewInterface, L.Language, L.Translation, L.PluginEnabled, L.HotbarBypass, L.ClassicLockedInWindow, L.LockedAsUsable,
+        new(L.ClassicNewInterface, L.Language, L.Translation, L.PluginEnabled, L.HotbarBypass, L.LockedInWindow, L.LockedAsUsable,
             L.StopOnMove, L.UpdateNotification, L.ChangelogOnUpdate,
             L.ClassicGposeWindows, L.ClassicHiddenUiWindows);
 
@@ -141,21 +142,19 @@ internal sealed class ClassicSettingsPainter
     private const string ModeTabId = "mode";
     private const string OverridesTabId = "overrides";
 
-    private const float SettingsContentWidth = 485f;
-
     private const float WarningCountdownSeconds = 5f;
 
     private static string SyncServicesLine => L.SyncServicesLine.Text;
 
     private static string SafeModeLimitLine => L.SafeModeLimitLine.Text;
 
-    private static string SafeModeIsNotAPromiseLine => L.ClassicSafeModeNotAPromise.Text;
+    private static string SafeModeIsNotAPromiseLine => L.SafeModeNotAPromise.Text;
 
     private static string UnsafeHeadline => L.UnsafeHeadline.Text;
 
-    private static string UnsafeReassurance => L.ClassicUnsafeReassurance.Text;
+    private static string UnsafeReassurance => L.UnsafeReassurance.Text;
 
-    private static string UnsafeToggleHelp => L.ClassicUnsafeToggleHelp.Text;
+    private static string UnsafeToggleHelp => L.UnsafeToggleHelp.Text;
 
     private static string SafeDirectPlayTooltip => L.SafeDirectPlayTooltip.With("limit", SafeModeLimitLine);
 
@@ -353,7 +352,7 @@ internal sealed class ClassicSettingsPainter
     private static void DrawTabBody(string id, Action body)
     {
         var avail = ImGui.GetContentRegionAvail();
-        var width = MathF.Min(avail.X, NoireUI.Scaled(SettingsContentWidth));
+        var width = MathF.Min(avail.X, NoireUI.Scaled(485f));
 
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + MathF.Max(0f, (avail.X - width) * 0.5f));
 
@@ -708,25 +707,25 @@ internal sealed class ClassicSettingsPainter
             if (rows)
             {
                 var loopMatching = (int)Configuration.LoopMatching;
-                if (ComboRow(LoopMatchingName, "##BypassEmoteLoopMatching", ref loopMatching, LoopMatchingOptions, L.ClassicLoopMatchingHelp.Text))
+                if (ComboRow(LoopMatchingName, "##BypassEmoteLoopMatching", ref loopMatching, LoopMatchingOptions, L.LoopMatchingHelp.Text))
                 {
                     Configuration.LoopMatching = (LoopMatchRule)loopMatching;
                 }
 
                 var turnMatching = Array.IndexOf(TurnMatchingOrder, Configuration.TurnMatching);
-                if (ComboRow(TurnMatchingName, "##BypassEmoteTurnMatching", ref turnMatching, TurnMatchingOptions, L.ClassicTurnMatchingHelp.Text))
+                if (ComboRow(TurnMatchingName, "##BypassEmoteTurnMatching", ref turnMatching, TurnMatchingOptions, L.TurnMatchingHelp.Text))
                 {
                     Configuration.TurnMatching = TurnMatchingOrder[turnMatching];
                 }
 
                 var soundMatching = (int)Configuration.SoundMatching;
-                if (ComboRow(SoundMatchingName, "##BypassEmoteSoundMatching", ref soundMatching, SoundMatchingOptions, L.ClassicSoundMatchingHelp.Text))
+                if (ComboRow(SoundMatchingName, "##BypassEmoteSoundMatching", ref soundMatching, SoundMatchingOptions, L.SoundMatchingHelp.Text))
                 {
                     Configuration.SoundMatching = (SoundMatchRule)soundMatching;
                 }
 
                 var cachedDispatch = (int)Configuration.CachedDispatch;
-                if (ComboRow(CachedDispatchName, "##BypassEmoteCachedDispatch", ref cachedDispatch, CachedDispatchOptions, L.ClassicCachedDispatchHelp.Text,
+                if (ComboRow(CachedDispatchName, "##BypassEmoteCachedDispatch", ref cachedDispatch, CachedDispatchOptions, L.CachedDispatchHelp.Text,
                     CachedDispatchAlarm()))
                 {
                     Configuration.CachedDispatch = (CachedDispatchMode)cachedDispatch;
@@ -742,19 +741,19 @@ internal sealed class ClassicSettingsPainter
 
                 var dispatchFidelity = (int)Configuration.DispatchFidelity;
                 if (ComboRow(DispatchFidelityName, "##BypassEmoteDispatchFidelity", ref dispatchFidelity,
-                    DispatchFidelityOptions, L.ClassicDispatchFidelityHelp.Text))
+                    DispatchFidelityOptions, L.DispatchFidelityHelp.Text))
                 {
                     Configuration.DispatchFidelity = (DispatchFidelity)dispatchFidelity;
                 }
 
                 var moddedTargets = (int)Configuration.ModdedTargets;
-                if (ComboRow(ModdedTargetsName, "##BypassEmoteModdedTargets", ref moddedTargets, ModdedTargetsOptions, L.ClassicModdedTargetsHelp.Text))
+                if (ComboRow(ModdedTargetsName, "##BypassEmoteModdedTargets", ref moddedTargets, ModdedTargetsOptions, L.ModdedTargetsHelp.Text))
                 {
                     Configuration.ModdedTargets = (ModdedTargetRule)moddedTargets;
                 }
 
                 var idlePoseLoops = (int)Configuration.IdlePoseLoops;
-                if (ComboRow(IdlePoseLoopsName, "##BypassEmoteIdlePoseLoops", ref idlePoseLoops, IdlePoseLoopsOptions, L.ClassicIdlePoseLoopsHelp.Text))
+                if (ComboRow(IdlePoseLoopsName, "##BypassEmoteIdlePoseLoops", ref idlePoseLoops, IdlePoseLoopsOptions, L.IdlePoseLoopsHelp.Text))
                 {
                     Configuration.IdlePoseLoops = (IdlePoseFallback)idlePoseLoops;
                 }
@@ -768,13 +767,13 @@ internal sealed class ClassicSettingsPainter
             if (rows)
             {
                 var swapLifetime = (int)Configuration.SwapLifetime;
-                if (ComboRow(LifetimeName, "##BypassEmoteLifetime", ref swapLifetime, SwapLifetimeOptions, L.ClassicLifetimeHelp.Text))
+                if (ComboRow(LifetimeName, "##BypassEmoteLifetime", ref swapLifetime, SwapLifetimeOptions, L.LifetimeHelp.Text))
                 {
                     Configuration.SwapLifetime = (SwapLifetime)swapLifetime;
                 }
 
                 var swapBehavior = (int)Configuration.SwapBehavior;
-                if (ComboRow(BehaviorName, "##BypassEmoteSwapBehavior", ref swapBehavior, SwapBehaviorOptions, L.ClassicBehaviorHelp.Text))
+                if (ComboRow(BehaviorName, "##BypassEmoteSwapBehavior", ref swapBehavior, SwapBehaviorOptions, L.BehaviorHelp.Text))
                 {
                     Configuration.SwapBehavior = (SwapBehavior)swapBehavior;
                 }
@@ -785,7 +784,7 @@ internal sealed class ClassicSettingsPainter
                 if (NoireInputs.Number("###BypassEmoteMaxKeptSwaps", ref maxKeptSwaps, KeptSwapsStyle))
                     Configuration.MaxKeptSwapsPerTarget = maxKeptSwaps;
 
-                SettingsLayout.Help(L.ClassicKeptSwapsHelp.Text);
+                SettingsLayout.Help(L.KeptSwapsHelp.Text);
 
                 var anonymizeModName = Configuration.AnonymizeModName;
                 if (CheckRow(AnonymizeModName, ref anonymizeModName, L.AnonymizeModHelp.Text))
@@ -794,10 +793,16 @@ internal sealed class ClassicSettingsPainter
                 }
 
                 var alwaysCacheBreak = Configuration.AlwaysCacheBreak;
-                if (CheckRow(AlwaysCacheBreakName, ref alwaysCacheBreak, L.ClassicCacheBreakHelp.Text,
+                if (CheckRow(AlwaysCacheBreakName, ref alwaysCacheBreak, L.CacheBreakHelp.Text,
                     AlwaysCacheBreakAlarm()))
                 {
                     Configuration.AlwaysCacheBreak = alwaysCacheBreak;
+                }
+
+                var disableModOnExit = Configuration.DisableModOnExit;
+                if (CheckRow(DisableModOnExitName, ref disableModOnExit, L.DisableModOnExitHelp.Text))
+                {
+                    Configuration.DisableModOnExit = disableModOnExit;
                 }
             }
         }
@@ -827,10 +832,10 @@ internal sealed class ClassicSettingsPainter
                         Configuration.ThrottleTimeErrors = throttleTimeErrors;
                 }
 
-                SettingsLayout.Help(L.ClassicErrorThrottleHelp.Text);
+                SettingsLayout.Help(L.ErrorThrottleHelp.Text);
 
                 var showWarningMessages = Configuration.ShowWarningMessages;
-                if (CheckRow(WarningMessagesName, ref showWarningMessages, L.ClassicWarningMessagesHelp.Text))
+                if (CheckRow(WarningMessagesName, ref showWarningMessages, L.WarningMessagesHelp.Text))
                 {
                     Configuration.ShowWarningMessages = showWarningMessages;
                 }
@@ -844,7 +849,7 @@ internal sealed class ClassicSettingsPainter
                         Configuration.ThrottleTimeWarnings = throttleTimeWarnings;
                 }
 
-                SettingsLayout.Help(L.ClassicWarningThrottleHelp.Text);
+                SettingsLayout.Help(L.WarningThrottleHelp.Text);
             }
         }
     }
@@ -885,7 +890,7 @@ internal sealed class ClassicSettingsPainter
         if (spreads && fault == null)
             return null;
 
-        var message = L.ClassicCachedDispatchAlarm.Text;
+        var message = L.CachedDispatchAlarm.Text;
 
         if (fault == null)
             return message;

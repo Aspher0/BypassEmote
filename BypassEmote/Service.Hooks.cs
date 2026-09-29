@@ -26,7 +26,6 @@ public partial class Service
     // From Luckyumimi: https://github.com/Luckyumimi/BypassEmoteCN/blob/main/BypassEmote/Service.Hooks.cs
     private const string ChineseExecuteSlotSignature = "E9 ?? ?? ?? ?? 73 25 8B CA 49 8D 91 A0 00 00 00";
 
-    private const byte HotbarSlotNotExecuted = 0;
     private static bool inHotbarSlot;
 
     private static unsafe void InstallHooks()
@@ -84,7 +83,7 @@ public partial class Service
     private static unsafe byte DetourExecuteHotbarSlot(RaptureHotbarModule* thisPtr, RaptureHotbarModule.HotbarSlot* hotbarSlot)
     {
         if (Configuration.SelfBypassMode == SelfBypassMode.EmoteSwap && TrySwapHotbarSlot(hotbarSlot))
-            return HotbarSlotNotExecuted;
+            return 0;
 
         byte ret;
 

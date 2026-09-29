@@ -16,7 +16,7 @@ namespace BypassEmote.UI.Silk.Windows;
 
 internal sealed class SilkCreateModPainter
 {
-    private static string Lead => L.SilkCreateModIntro.Text;
+    private static string Lead => L.CreateModIntro.Text;
 
     private static string SourceLabel => L.EmoteToPlay.Text;
     private static string TargetLabel => L.PlayedOver.Text;
@@ -27,7 +27,7 @@ internal sealed class SilkCreateModPainter
     private static string EnableName => L.EnableOnCreation.Text;
     private static string EnableHelp => L.EnableOnCreationHelp.Text;
     private static string PriorityName => L.HighestPriority.Text;
-    private static string PriorityHelp => L.SilkHighestPriorityHelp.Text;
+    private static string PriorityHelp => L.HighestPriorityHelp.Text;
     private static string NamePlaceholder => L.ModNamePlaceholder.Text;
     private static string CreateLabel => L.CreateTheMod.Text;
     private static string NoAnimationTooltip => L.NoAnimationForBody.Text;

@@ -86,7 +86,9 @@ public partial class Service
 
         Orchestrator?.CancelPendingExecute();
         EndWatcher?.StopWatching();
-        SwapMods?.DeselectAll();
+
+        if (Configuration.DisableModOnExit)
+            SwapMods?.DeselectAll();
     }
 
     public static void OpenKofi() => SystemHelper.OpenUrl("https://ko-fi.com/aspher0");

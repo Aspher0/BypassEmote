@@ -13,8 +13,6 @@ internal static class DirectPlayGate
 {
     internal static NoireString SafeModeMessage => L.SafeModeRefusal;
 
-    internal const string SafeModeRefusalKind = "directplay.safemode";
-
     internal static bool IsSafeState(byte poseIndex, EmoteCondition condition, int slotIndex)
         => poseIndex == 0
         || (condition is EmoteCondition.SittingInChair or EmoteCondition.SittingOnGround

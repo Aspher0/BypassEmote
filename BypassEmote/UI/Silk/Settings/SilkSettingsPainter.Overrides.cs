@@ -15,16 +15,16 @@ namespace BypassEmote.UI.Silk.Settings;
 
 internal sealed partial class SilkSettingsPainter
 {
-    private static string OverridesInfo => L.SilkOverridesIntro.Text;
+    private static string OverridesInfo => L.OverridesIntro.Text;
 
-    private static string LimitedName => L.SilkLimited.Text;
+    private static string LimitedName => L.Limited.Text;
 
     private static string LimitedHelp => L.LimitedHelp.Text;
 
-    private static string SourceAdderLabel => L.SilkOverrideEmote.Text;
-    private static string TargetAdderLabel => L.SilkAddTarget.Text;
+    private static string SourceAdderLabel => L.OverrideEmote.Text;
+    private static string TargetAdderLabel => L.AddTarget.Text;
     private static string LockedColumnTitle => L.SilkLockedEmote.Text;
-    private static string EmptyColumnTitle => L.SilkPickLeft.Text;
+    private static string EmptyColumnTitle => L.PickLeft.Text;
     private static string RemoveOverrideTooltip => L.RemoveOverride.Text;
     private static string RemoveTargetTooltip => L.SilkRemove.Text;
 
@@ -260,7 +260,7 @@ internal sealed partial class SilkSettingsPainter
         var headerHeight = (16f * scale) + SilkText.NaturalLine(10.5f, SilkWeight.Bold);
         var title = configured == null ? EmptyColumnTitle : PlaysThroughTitle(configured.SourceEmote);
         var titleX = min.X + (8f * scale) + pad;
-        var limitedRoom = SilkText.Width(L.SilkLimited.Source, 12.5f, SilkWeight.Medium);
+        var limitedRoom = SilkText.Width(L.Limited.Source, 12.5f, SilkWeight.Medium);
         var checkWidth = SilkControls.CheckboxWidth(LimitedName, limitedRoom);
         var helpSize = SilkControls.HelpSize * scale;
         var checkPos = new Vector2(max.X - pad - (8f * scale) - helpSize - (6f * scale) - checkWidth, MathF.Round(min.Y + pad + ((headerHeight - (16f * scale)) * 0.5f)));

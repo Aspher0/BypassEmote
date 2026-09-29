@@ -14,15 +14,13 @@ internal static class SettingsLayout
     private const float TooltipEms = 32f;
     private const float HeadingGap = 6f;
 
-    private const ImGuiTableFlags TableFlags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.NoSavedSettings;
-
     internal static ImRaii.TableDisposable Rows(string id, float nameWidth, float controlWidth)
     {
         var style = ImGui.GetStyle();
         var helpWidth = ImGui.GetFontSize() + (style.CellPadding.X * 6f);
         controlWidth = MathF.Min(controlWidth, MathF.Max(ImGui.GetFrameHeight(), ImGui.GetContentRegionAvail().X - nameWidth - helpWidth));
 
-        var table = ImRaii.Table(id, 3, TableFlags);
+        var table = ImRaii.Table(id, 3, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.NoSavedSettings);
 
         if (table)
         {

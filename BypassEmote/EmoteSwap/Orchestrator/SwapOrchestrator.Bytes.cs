@@ -199,7 +199,7 @@ public sealed partial class SwapOrchestrator
         {
             var held = (hold ?? HoldWeapons)(papBytes, offHand);
 
-            var statements = EntryCount(held, WeaponPositionMagic);
+            var statements = EntryCount(held, "C014");
 
             Log.Debug($"Weapons put in hand for '{pair.TargetRequestedPath}': {statements} "
                 + $"statement(s), {(offHand ? "two weapons" : "one weapon")}.", LogPrefix);
@@ -220,8 +220,6 @@ public sealed partial class SwapOrchestrator
             return papBytes;
         }
     }
-
-    private const string WeaponPositionMagic = "C014";
 
     private static int EntryCount(byte[] papBytes, string magic)
     {
@@ -452,10 +450,6 @@ public sealed partial class SwapOrchestrator
         "bt_common/emote/pose01_loop.pap",
     ];
 
-    private const string WarmUpSkeleton = "c0101";
-
-    private const string WarmUpFaceLibrary = "chara/human/c0101/animation/f0001/nonresident/warmup.tmb";
-
     internal static void WarmUpBytePipeline()
     {
         try
@@ -479,7 +473,7 @@ public sealed partial class SwapOrchestrator
             }
 
             var retargeted = PapRetargeter.Retarget(papBytes, names, removeAnimationLock: true, out _);
-            var injected = PapFaceLibrary.Inject(retargeted, WarmUpFaceLibrary);
+            var injected = PapFaceLibrary.Inject(retargeted, "chara/human/c0101/animation/f0001/nonresident/warmup.tmb");
             var derivedName = SwapModManager.DeriveFileName(injected);
 
             Log.Debug(
@@ -496,7 +490,7 @@ public sealed partial class SwapOrchestrator
     {
         foreach (var relativePath in WarmUpCandidateRelativePaths)
         {
-            if (ReadVanillaPap(EmotePathHelper.GetSkeletonPath(WarmUpSkeleton, relativePath)) is { } bytes)
+            if (ReadVanillaPap(EmotePathHelper.GetSkeletonPath("c0101", relativePath)) is { } bytes)
                 return bytes;
         }
 

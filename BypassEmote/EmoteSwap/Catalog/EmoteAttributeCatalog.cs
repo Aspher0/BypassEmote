@@ -32,16 +32,9 @@ public sealed class EmoteAttributeCatalog
 
     internal const int RulesVersion = 5;
 
-    private const int BuildPacingBatchSize = 8;
-    private const int BuildPacingSleepMs = 5;
-    private const uint GeneralCategoryRowId = 1;
-    private const uint SpecialCategoryRowId = 2;
     private const uint ChangePoseRowId = 90;
     private const int LoadTypePerJob = 1;
-    private const int WeaponMotionIdMode = 2;
     private int _buildState;
-
-    private const int ActionTimelineSlotCount = ActionTimelineSlots.SlotCount;
 
     internal const string ReferenceMotionFolder = WeaponMotionFolders.ReferenceFolder;
 
@@ -256,14 +249,14 @@ public sealed class EmoteAttributeCatalog
         return (weaponMotion ? ReferenceMotionFolder : "bt_common") + "/" + slot.Key + ".pap";
     }
 
-    internal static bool IsWeaponMotionSlot(RawSlotData slot) => slot.ActionTimelineIdMode == WeaponMotionIdMode;
+    internal static bool IsWeaponMotionSlot(RawSlotData slot) => slot.ActionTimelineIdMode == 2;
 
     private static string CatalogProbePath(RawSlotData slot)
         => EmotePathHelper.GetSkeletonPath("c0101", UsablePapPathFor(slot) ?? "bt_common" + "/" + slot.Key + ".pap");
 
     private static bool IsExcluded(RawEmoteData raw, List<RawSlotData> populatedSlots, bool isPoseFamily)
         => PostureLockEmoteModes.Contains(raw.EmoteModeRowId)
-        || raw.CategoryRowId is not (GeneralCategoryRowId or SpecialCategoryRowId)
+        || raw.CategoryRowId is not (1u or 2u)
         || raw.RowId == ChangePoseRowId
         || string.IsNullOrEmpty(raw.Command)
         || populatedSlots.Any(s => s.LoadType == LoadTypePerJob)
@@ -300,8 +293,8 @@ public sealed class EmoteAttributeCatalog
                 Log.Error(ex, $"Failed to process emote {emote.RowId}. Skipped.", LogPrefix);
             }
 
-            if (++processed % BuildPacingBatchSize == 0)
-                Thread.Sleep(BuildPacingSleepMs);
+            if (++processed % 8 == 0)
+                Thread.Sleep(5);
         }
 
         return rows;
@@ -346,7 +339,7 @@ public sealed class EmoteAttributeCatalog
     private static List<RawSlotData> ReadSlots(Emote emote)
     {
         var timelineRefs = emote.ActionTimeline;
-        var slots = new List<RawSlotData>(ActionTimelineSlotCount);
+        var slots = new List<RawSlotData>(ActionTimelineSlots.SlotCount);
 
         for (var i = 0; i < timelineRefs.Count; i++)
         {

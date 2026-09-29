@@ -15,7 +15,7 @@ namespace BypassEmote.UI.Silk.Windows;
 
 internal sealed class SilkHotbarPainter
 {
-    private static string DragHint => L.SilkDragHint.Text;
+    private static string DragHint => L.DragHint.Text;
     private static string StandardLabel => L.Standard.Text;
     private static string CrossLabel => L.Cross.Text;
     private static string LeftTrigger => L.LeftTrigger.Text;

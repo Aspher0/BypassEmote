@@ -19,7 +19,7 @@ namespace BypassEmote.UI.Classic;
 
 internal sealed class ClassicCreateModPainter
 {
-    private static readonly IdLabel CreateLabel = new(L.Create, "###BypassEmoteCreateModCreate");
+    private static readonly IdLabel CreateLabel = new(L.CreateTheMod, "###BypassEmoteCreateModCreate");
 
     private NoireExcelPicker<Emote>? _source;
     private NoireExcelPicker<Emote>? _target;
@@ -74,7 +74,7 @@ internal sealed class ClassicCreateModPainter
             return;
         }
 
-        ImGui.TextWrapped(L.ClassicCreateModIntro.Text);
+        ImGui.TextWrapped(L.CreateModIntro.Text);
 
         ImGui.Spacing();
         ImGui.Separator();
@@ -116,7 +116,7 @@ internal sealed class ClassicCreateModPainter
                 if (SettingsLayout.Check(L.HighestPriority.Text, ref highestPriority))
                     _highestPriority = highestPriority;
 
-                SettingsLayout.Help(L.ClassicHighestPriorityHelp.Text);
+                SettingsLayout.Help(L.HighestPriorityHelp.Text);
             }
         }
 

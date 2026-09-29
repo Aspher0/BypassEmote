@@ -1,58 +1,34 @@
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using FFXIVClientStructs.FFXIV.Client.System.Scheduler.Base;
-using NoireLib.Animations.Helpers;
+using NoireLib.Animations.Timelines;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using NativeCharacter = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
+using ObjectType = FFXIVClientStructs.FFXIV.Client.Graphics.Scene.ObjectType;
 
 namespace BypassEmote;
 
 internal static unsafe class TimelineRestarter
 {
-    private const int FirstTrackOffset = 0x18;
-    private const int PreviousTimestampOffset = 0x38;
     private const int TimestampOffset = 0x34;
-    private const int LoopStartOffset = 0x3C;
-    private const int EndOffset = 0x40;
-    private const int PlayModeOffset = 0x58;
-    private const int PlayStateOffset = 0x74;
-    private const int StateFlagsOffset = 0x7C;
-    private const int ActionTimelineKeyOffset = 0xA8;
-
-    private const int NextTrackOffset = 0x20;
-    private const int TrackGroupsOffset = 0x28;
-    private const int TrackGroupCountOffset = 0x32;
-    private const int GroupClipsOffset = 0x18;
-    private const int GroupClipCountOffset = 0x22;
-
-    private const int ClipKindOffset = 0x84;
-    private const int ClipSoundsOffset = 0xA0;
-    private const int ClipSoundCount = 4;
-    private const int CharacterSoundClip = 41;
-    private const int PathSoundClip = 52;
-
-    private const int ClipChildTimelineOffset = 0x138;
-    private const int PathTimelineClip = 0;
-    private const int PapTimelineClip = 7;
-    private const int MaxTimelineDepth = 4;
-
-    private const int StopSoundVirtualIndex = 36;
-    private const int SoundFadeOutMilliseconds = 0;
-
-    private const int LoopEvent = 10;
-    private const int PlaysOnce = 1;
-    private const byte FinishedFlag = 0x40;
-    private const int FirstFinishedState = 3;
 
     private static readonly uint[] EmoteSlots = [0, 1];
 
-    internal readonly record struct SlotRestart(uint Slot, ushort TimelineId, string? Key, float Timestamp, float End,
-        int PlayState, bool Restarted, int SoundsStopped);
+    internal readonly record struct SlotRestart(uint Slot, ushort TimelineId, string? Key, float Timestamp, float LoopStart,
+        float End, int PlayState, bool Restarted, bool Replayed, float RestartedAt, int SoundsStopped, int VfxRestarted);
 
-    internal static IReadOnlyList<SlotRestart> Restart(ICharacter character, Func<uint, ushort, string?, bool> wanted)
+    private sealed class ClipReset
+    {
+        public readonly HashSet<nint> Sounds = [];
+        public int Vfx;
+    }
+
+    internal static IReadOnlyList<SlotRestart> Restart(ICharacter character, Func<uint, ushort, string?, bool> wanted,
+        int replayPriority = ActionTimelineDriver.DefaultPriority)
     {
         var restarts = new List<SlotRestart>(EmoteSlots.Length);
 
@@ -60,6 +36,8 @@ internal static unsafe class TimelineRestarter
             return restarts;
 
         var sequencer = &((NativeCharacter*)character.Address)->Timeline.TimelineSequencer;
+        var replays = new List<ushort>(EmoteSlots.Length);
+        float? animationStart = null;
 
         foreach (var slot in EmoteSlots)
         {
@@ -74,56 +52,98 @@ internal static unsafe class TimelineRestarter
                 continue;
 
             var bytes = (byte*)timeline;
-            var playState = *(int*)(bytes + PlayStateOffset);
-            var running = playState < FirstFinishedState && (bytes[StateFlagsOffset] & FinishedFlag) == 0;
+            var playState = *(int*)(bytes + 0x74);
+            var running = playState < 3 && (bytes[0x7C] & 0x40) == 0;
             var timestamp = *(float*)(bytes + TimestampOffset);
-            var stopped = 0;
+            var loopStart = *(float*)(bytes + 0x3C);
+            var fromTop = *(int*)(bytes + 0x58) == 1 || timestamp < loopStart;
+            var restartedAt = fromTop ? 0f : Math.Max(0f, loopStart);
+            var reset = new ClipReset();
 
             if (running)
             {
-                stopped = StopSounds(bytes);
-                Rewind(timeline);
+                ResetClips(bytes, !fromTop, reset, 0);
+
+                if (fromTop)
+                    replays.Add(timelineId);
+                else
+                    Rewind(timeline, restartedAt);
+
+                animationStart ??= restartedAt / 30f;
             }
 
-            restarts.Add(new SlotRestart(slot, timelineId, KeyOf(bytes), timestamp, *(float*)(bytes + EndOffset),
-                playState, running, stopped));
+            restarts.Add(new SlotRestart(slot, timelineId, KeyOf(bytes), timestamp, loopStart,
+                *(float*)(bytes + 0x40), playState, running, running && fromTop, restartedAt, reset.Sounds.Count,
+                reset.Vfx));
         }
 
-        if (restarts.Any(restart => restart.Restarted))
-            SkeletonAnimationHelper.ResetAnimationTime(character);
+        if (animationStart is { } start)
+            RewindSkeleton(character, start);
+
+        foreach (var timelineId in replays)
+            Service.ActionTimelinePlayer.Blend(character, timelineId, replayPriority, collapseFade: true);
 
         return restarts;
     }
 
-    private static void Rewind(SchedulerTimeline* timeline)
+    internal static int RewindSkeleton(ICharacter character, float localTime = 0f)
+    {
+        if (character.Address == 0)
+            return 0;
+
+        var native = (GameObject*)character.Address;
+
+        if (native->DrawObject == null || native->DrawObject->GetObjectType() != ObjectType.CharacterBase)
+            return 0;
+
+        var skeleton = ((CharacterBase*)native->DrawObject)->Skeleton;
+
+        if (skeleton == null || skeleton->PartialSkeletons == null)
+            return 0;
+
+        var rewound = 0;
+
+        for (var partial = 0; partial < skeleton->PartialSkeletonCount; partial++)
+        {
+            var animated = skeleton->PartialSkeletons[partial].GetHavokAnimatedSkeleton(0);
+
+            if (animated == null)
+                continue;
+
+            for (var index = 0; index < animated->AnimationControls.Length; index++)
+            {
+                var control = animated->AnimationControls[index].Value;
+
+                if (control == null)
+                    continue;
+
+                control->hkaAnimationControl.LocalTime = localTime;
+                rewound++;
+            }
+        }
+
+        return rewound;
+    }
+
+    private static void Rewind(SchedulerTimeline* timeline, float start)
     {
         var bytes = (byte*)timeline;
-        var playsOnce = *(int*)(bytes + PlayModeOffset) == PlaysOnce;
-        var start = playsOnce ? 0f : Math.Max(0f, *(float*)(bytes + LoopStartOffset));
 
         *(float*)(bytes + TimestampOffset) = start;
-        *(float*)(bytes + PreviousTimestampOffset) = start;
+        *(float*)(bytes + 0x38) = start;
 
         var data = stackalloc byte[16];
-        data[0] = playsOnce ? (byte)0 : (byte)1;
+        data[0] = 1;
 
-        timeline->ProcessAll(LoopEvent, data);
+        timeline->ProcessAll(10, data);
     }
 
-    private static int StopSounds(byte* timeline)
+    private static void ResetClips(byte* timeline, bool loop, ClipReset reset, int depth)
     {
-        var stopped = new HashSet<nint>();
-        StopSounds(timeline, stopped, 0);
-
-        return stopped.Count;
-    }
-
-    private static void StopSounds(byte* timeline, HashSet<nint> stopped, int depth)
-    {
-        for (var track = *(byte**)(timeline + FirstTrackOffset); track != null; track = *(byte**)(track + NextTrackOffset))
+        for (var track = *(byte**)(timeline + 0x18); track != null; track = *(byte**)(track + 0x20))
         {
-            var groups = *(byte***)(track + TrackGroupsOffset);
-            var groupCount = *(ushort*)(track + TrackGroupCountOffset);
+            var groups = *(byte***)(track + 0x28);
+            var groupCount = *(ushort*)(track + 0x32);
 
             for (var groupIndex = 0; groups != null && groupIndex < groupCount; groupIndex++)
             {
@@ -132,38 +152,47 @@ internal static unsafe class TimelineRestarter
                 if (group == null)
                     continue;
 
-                var clips = *(byte***)(group + GroupClipsOffset);
-                var clipCount = *(ushort*)(group + GroupClipCountOffset);
+                var clips = *(byte***)(group + 0x18);
+                var clipCount = *(ushort*)(group + 0x22);
 
                 for (var clipIndex = 0; clips != null && clipIndex < clipCount; clipIndex++)
-                    StopClipSounds(clips[clipIndex], stopped, depth);
+                    ResetClip(clips[clipIndex], loop, reset, depth);
             }
         }
     }
 
-    private static void StopClipSounds(byte* clip, HashSet<nint> stopped, int depth)
+    private static void ResetClip(byte* clip, bool loop, ClipReset reset, int depth)
     {
         if (clip == null)
             return;
 
-        var kind = *(int*)(clip + ClipKindOffset);
+        var kind = *(int*)(clip + 0x84);
+        var skipsRearm = (clip[0x88] & 0x01) != 0;
 
-        if (kind is PathTimelineClip or PapTimelineClip)
+        if (kind is 0 or 7)
         {
-            var child = *(byte**)(clip + ClipChildTimelineOffset);
+            var child = *(byte**)(clip + 0x138);
 
-            if (child != null && depth < MaxTimelineDepth)
-                StopSounds(child, stopped, depth + 1);
+            if (child != null && depth < 4)
+                ResetClips(child, loop && skipsRearm, reset, depth + 1);
 
             return;
         }
 
-        if (kind is not (PathSoundClip or CharacterSoundClip))
+        if (loop && skipsRearm)
             return;
 
-        var sounds = (nint*)(clip + ClipSoundsOffset);
+        if (kind is 52 or 41)
+            StopClipSounds(clip, reset.Sounds);
+        else if (kind is 9 or 39)
+            RestartClipVfx(clip, reset);
+    }
 
-        for (var soundIndex = 0; soundIndex < ClipSoundCount; soundIndex++)
+    private static void StopClipSounds(byte* clip, HashSet<nint> stopped)
+    {
+        var sounds = (nint*)(clip + 0xA0);
+
+        for (var soundIndex = 0; soundIndex < 4; soundIndex++)
         {
             var sound = sounds[soundIndex];
 
@@ -172,12 +201,23 @@ internal static unsafe class TimelineRestarter
 
             if (stopped.Add(sound))
             {
-                ((delegate* unmanaged<nint, int, void>)(*(nint**)sound)[StopSoundVirtualIndex])(sound,
-                    SoundFadeOutMilliseconds);
+                ((delegate* unmanaged<nint, int, void>)(*(nint**)sound)[36])(sound,
+                    0);
             }
 
             sounds[soundIndex] = 0;
         }
+    }
+
+    private static void RestartClipVfx(byte* clip, ClipReset reset)
+    {
+        var vfx = *(byte**)(clip + 0x98);
+
+        if (vfx == null || vfx[0xD0] == 0)
+            return;
+
+        ((delegate* unmanaged<byte*, void>)(*(nint**)clip)[24])(clip);
+        reset.Vfx++;
     }
 
     internal static bool IsDrawnAndVisible(ICharacter character)
@@ -211,19 +251,9 @@ internal static unsafe class TimelineRestarter
         return string.Join("; ", slots);
     }
 
-    internal static string Describe(IReadOnlyList<SlotRestart> restarts)
-        => restarts.Count == 0
-            ? "no matching timeline in the base or upper body slot"
-            : string.Join("; ", restarts.Select(restart =>
-                $"slot {restart.Slot} timeline {restart.TimelineId} '{restart.Key ?? "?"}' at "
-                + $"{restart.Timestamp:0.00}/{restart.End:0.00}s, state {restart.PlayState}, "
-                + (restart.Restarted
-                    ? $"restarted, {restart.SoundsStopped} sound(s) stopped"
-                    : "left alone, already finished")));
-
     private static string? KeyOf(byte* timeline)
     {
-        var key = *(nint*)(timeline + ActionTimelineKeyOffset);
+        var key = *(nint*)(timeline + 0xA8);
 
         return key == 0 ? null : Marshal.PtrToStringUTF8(key);
     }

@@ -15,12 +15,7 @@ namespace BypassEmote.UI;
 
 public static class HotbarDragDrop
 {
-    private const float GhostSize = 40f;
     private const float OutlineRounding = 4f;
-    private const float OutlineThickness = 2f;
-    private const uint OutlineColor = 0xFF00D7FF;
-    private const uint OutlineFillColor = 0x3300D7FF;
-    private const uint GhostTint = 0xD9FFFFFF;
 
     private static Emote? draggedEmote;
     private static bool swallowUntilRelease;
@@ -89,8 +84,8 @@ public static class HotbarDragDrop
     {
         var drawList = ImGui.GetForegroundDrawList();
 
-        drawList.AddRectFilled(slot.Min, slot.Max, OutlineFillColor, OutlineRounding);
-        drawList.AddRect(slot.Min, slot.Max, OutlineColor, OutlineRounding, ImDrawFlags.None, OutlineThickness);
+        drawList.AddRectFilled(slot.Min, slot.Max, 0x3300D7FFu, OutlineRounding);
+        drawList.AddRect(slot.Min, slot.Max, 0xFF00D7FFu, OutlineRounding, ImDrawFlags.None, 2f);
     }
 
     private static void DrawDragGhost(Emote emote, Vector2 mousePos)
@@ -99,8 +94,8 @@ public static class HotbarDragDrop
         {
             if (IconHelper.Get(CommonHelper.GetEmoteIcon(emote)) is { } texture && texture.TryGetWrap(out var wrap, out _))
             {
-                var half = new Vector2(GhostSize * 0.5f * ImGuiHelpers.GlobalScale);
-                ImGui.GetForegroundDrawList().AddImage(wrap.Handle, mousePos - half, mousePos + half, Vector2.Zero, Vector2.One, GhostTint);
+                var half = new Vector2(40f * 0.5f * ImGuiHelpers.GlobalScale);
+                ImGui.GetForegroundDrawList().AddImage(wrap.Handle, mousePos - half, mousePos + half, Vector2.Zero, Vector2.One, 0xD9FFFFFFu);
                 return;
             }
         }

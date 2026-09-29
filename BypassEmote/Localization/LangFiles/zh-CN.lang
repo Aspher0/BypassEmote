@@ -684,18 +684,12 @@ chrome.menu.shared = 所有 Bypass Emote 窗口共用。
 chrome.on_top = 始终置顶
 # Source: Window options
 chrome.options = 窗口选项
-# Source: Create
-classic.create_mod.create = 创建
-# Source: This window allows you to create a permanent swap mod, and it stays unaffected by Bypass Emote. You own it, and you manage it, like any other mod.
-classic.create_mod.intro = 此窗口可以创建一个永久的替换模组，它不受 Bypass Emote 影响。它归你所有，你可以像管理其他模组一样管理它。
 # Source: Mod name
 classic.create_mod.name = 模组名称
 # Source: The name of the generated mod.
 classic.create_mod.name.help = 生成的模组的名称。
 # Source: No race covered
 classic.create_mod.no_race = 未涵盖任何种族
-# Source: Makes the mod have the highest priority. When off, it is created at priority 0.
-classic.create_mod.priority.help = 让模组拥有最高优先级。关闭时，模组以优先级 0 创建。
 # Source: Which bodies the mod is written for.
 classic.create_mod.races.help = 模组为哪些体型编写。
 # Source: Search races...
@@ -704,52 +698,22 @@ classic.create_mod.search_races = 搜索种族…
 classic.hotbar.assigned = 当前设置：{name}
 # Source: XHB {number}
 classic.hotbar.cross = 十字热键栏 {number}
-# Source: You can also drag and drop an emote from the main window onto any visible hotbar slot.
-classic.hotbar.drag_hint = 你也可以把主窗口中的情感动作拖放到任意可见的热键栏格子上。
 # Source: This slot is empty. You can safely assign an emote.
 classic.hotbar.slot_empty = 这个格子是空的，可以放心设置情感动作。
 # Source: Assign {emote} to hotbar...
 classic.hotbar.title = 将{emote}设置到热键栏…
 # Source: {name}  (empty)
 classic.overrides.empty = {name}（空）
-# Source: This tab allows you to make sure a locked emote will always use one or multiple specific target emotes.
-classic.overrides.intro = 此页面可以确保某个未解锁的情感动作始终使用一个或多个指定的目标情感动作。
-# Source: Limited to selected targets only
-classic.overrides.limited = 仅限所选目标
 # Source: No override yet.
 classic.overrides.none = 还没有覆盖。
 # Source: No target yet.
 classic.overrides.no_target = 还没有目标。
-# Source: Pick an emote on the left.
-classic.overrides.pick = 请在左侧选择一个情感动作。
-# Source: Override an emote...
-classic.overrides.source = 覆盖一个情感动作…
-# Source: Add a target emote...
-classic.overrides.target = 添加目标情感动作…
-# Source: Allow
-classic.settings.allow = 允许
-# Source: Allowed
-classic.settings.allowed = 允许
 # Source: Anything allowed
 classic.settings.anything = 任何都可以
-# Source: "Multiple swaps" keeps multiple swaps active at the same time in the mod.\n"One swap at a time" turns the previous swaps off as soon as a new one starts.\n\nRecommended: "Multiple swaps", unless for some reason you want to only keep one swap at a time.
-classic.settings.behavior.help = “多个替换”在模组中同时保持多个替换生效。\n“一次一个替换”在新的替换开始时立即关闭之前的替换。\n\n推荐：“多个替换”，除非你出于某种原因只想保留一个替换。
 # Source: Multiple swaps
 classic.settings.behavior.multiple = 多个替换
 # Source: One swap at a time
 classic.settings.behavior.one = 一次一个替换
-# Source: Blocked
-classic.settings.blocked = 屏蔽
-# Source: Leave this on, otherwise bypassing several animations in a row may look broken.
-classic.settings.cached_dispatch.alarm = 请保持开启，否则连续绕过多个动画时可能看起来不正常。
-# Source: Gives each bypassed emote a target emote of its own. This is useful when you want to bypass multiple emotes quickly.\n\n"Off" would make it so other people on your sync service would see you redraw constantly.\n"Only when necessary" spreads emotes only after a game patch breaks the cache-breaker feature.\n"On" always spreads emotes.\n\nRecommended: "On" if you want other people on your sync service to always see you properly without redrawing all the time, otherwise highly recommended to leave it on "Only when necessary" and not "Off".
-classic.settings.cached_dispatch.help = 为每个被绕过的情感动作分配一个专属的目标情感动作。当你想快速绕过多个情感动作时很有用。\n\n“关闭”会让同步服务中的其他人看到你不断重绘。\n“仅在必要时”只在游戏版本更新导致缓存破坏功能失效后才分散情感动作。\n“开启”始终分散情感动作。\n\n推荐：如果你希望同步服务中的其他人始终正确看到你、而不是一直重绘，请选“开启”；否则强烈建议保持“仅在必要时”，不要选“关闭”。
-# Source: Applies the cache-break mechanism to every emote, even those you own. This is a bonus feature and is experimental. This will allow the client to always "refresh" animations so you never have to redraw yourself or stop emoting to apply an animation change.
-classic.settings.cache_break.help = 对所有情感动作应用缓存破坏机制，包括你已拥有的。这是一个实验性的额外功能。它让客户端始终“刷新”动画，这样你就不必为了应用动画更改而重绘自己或停止情感动作。
-# Source: Takes effect when "Spread swaps over several emote" is enabled. This determines which emotes become available for a source emote. Basically, if you want to spread swaps over 5 emotes, and you try to bypass an emote but you only have 2 same-rank targets available, this is how it will determine what to do in this scenario. A rank is basically a category of emotes with similar characteristics (same turn behaviour, etc).\n\n"Same rank only" strictly picks targets of the same rank.\n"One rank below" also accepts targets one rank below.\n"Anything allowed" picks any target it can find, regardless of the rank.\n\nNone of them ever breaks your other rules.\n\nRecommended: "One rank below", or "Same rank only" if you want behavior accuracy.
-classic.settings.dispatch_fidelity.help = 在启用“将替换分散到多个情感动作”时生效。它决定一个源情感动作可以使用哪些情感动作。简单来说，如果你想把替换分散到 5 个情感动作上，而你尝试绕过某个情感动作时只有 2 个同等级目标可用，这个设置就决定此时该怎么做。等级大致是一类特征相近的情感动作（相同的转向行为等）。\n\n“仅限同一等级”严格只选同一等级的目标。\n“低一个等级”也接受低一个等级的目标。\n“任何都可以”会选择它能找到的任何目标，不论等级。\n\n它们都不会破坏你的其他规则。\n\n推荐：“低一个等级”，如果你想要行为准确，可选“仅限同一等级”。
-# Source: How long the same error stays quiet after you have seen it.\n\nAccepts time format: 5m, 300s, 5m10s, 1h.\nSet to 0 to see every one of them.
-classic.settings.error_throttle.help = 你看到某个错误后，同一错误保持静默的时长。\n\n可接受的时间格式：5m、300s、5m10s、1h。\n设为 0 则每次都显示。
 # Source: Checked at {time}.
 classic.settings.gate.checked_at = 检查于 {time}。
 # Source: {label} ({seconds})
@@ -774,62 +738,16 @@ classic.settings.gpose.help = 在集体动作中保持此插件的窗口可见�
 classic.settings.hidden_ui = 隐藏游戏界面时显示窗口
 # Source: Keeps this plugin's windows visible when you hide the game UI.
 classic.settings.hidden_ui.help = 隐藏游戏界面时保持此插件的窗口可见。
-# Source: When no unlocked looped emote fits as a target, your current idle pose may be eligible instead. The emote you try to bypass will then be targeted onto your current idle pose. This will cause a redraw of your character when triggered.\n\n"Never" blocks idle poses from being used as targets.\n"Only when nothing else fits" uses the pose only when literally no unlocked looped emote could have played here at all. This will not use your idle pose if any other emote would have been available if it wasn't blocked.\n"Allow" always falls back to your idle pose when no other options are available.\n\nRecommended: "Only when nothing else fits".
-classic.settings.idle_pose_loops.help = 当没有合适的已解锁循环情感动作可作为目标时，你当前的待机姿势可能会作为替代。你尝试绕过的情感动作会被放到你当前的待机姿势上。触发时会导致你的角色重绘。\n\n“从不”禁止把待机姿势用作目标。\n“仅在没有其他合适选项时”只在确实没有任何已解锁的循环情感动作可以播放时才使用姿势。如果某个其他情感动作在未被屏蔽的情况下本可以使用，就不会使用你的待机姿势。\n“允许”在没有其他选项时始终退回到你的待机姿势。\n\n推荐：“仅在没有其他合适选项时”。
-# Source: How many swaps are kept per target emote. 0 keeps them all.\n\nEach kept swap stays as an option of the generated Penumbra mod, so playing an emote again enables it again without rebuilding it. The only cost is that the mod gets bigger.
-classic.settings.kept_swaps.help = 每个目标情感动作保留多少个替换。0 表示全部保留。\n\n每个保留的替换都会作为生成的 Penumbra 模组中的一个选项，因此再次播放情感动作时会直接重新启用，无需重建。唯一的代价是模组会变大。
-# Source: Last resort
-classic.settings.last_resort = 最后手段
-# Source: Lenient
-classic.settings.lenient = 宽松
 # Source: When the emote ends
 classic.settings.lifetime.ends = 情感动作结束时
-# Source: "When the emote ends" puts your real emote back as soon as the animation stops.\n"When you play the target emote" keeps the swap enabled until the next time you play the target emote.\n"Never" keeps the swap live until another swap claims the same target emote.\n\nRecommended: "When you play the target emote". "When the emote ends" is not recommended, as people will see you redraw constantly after swapping.
-classic.settings.lifetime.help = “情感动作结束时”在动画停止后立即恢复你真正的情感动作。\n“播放目标情感动作时”会保持替换，直到你下一次播放目标情感动作。\n“从不”会保持替换，直到另一个替换占用同一个目标情感动作。\n\n推荐：“播放目标情感动作时”。不推荐“情感动作结束时”，因为替换后别人会看到你不断重绘。
 # Source: When you play the target emote
 classic.settings.lifetime.target = 播放目标情感动作时
-# Source: Show locked emotes in the game's Emote window
-classic.settings.locked_in_window = 在游戏的情感动作窗口中显示未解锁的情感动作
-# Source: "Strict" only puts a looping emote on another looping one.\n"Lenient" lets a looping emote play once on a one time emote when no better match exists.\n\nRecommended: "Strict", or "Lenient" if you really don't have many emotes.
-classic.settings.loop_matching.help = “严格”只会把循环情感动作放到另一个循环情感动作上。\n“宽松”在没有更好的匹配时，允许循环情感动作在只播放一次的情感动作上播放一次。\n\n推荐：“严格”，如果你拥有的情感动作确实不多，可选“宽松”。
-# Source: Determines whether to block unlocked emotes from being picked when they are modified by at least one of your mods. This prevents other people from seeing other modded emotes you might have before the swap takes place.\nAs an example, you have a mod on beesknees, and you try to bypass /conduct which happens to land on beesknees: other players might or might not see the modded beesknees for a moment.\n\n"Allowed" allows using unlocked emotes that are modified by one of your mods.\n"Last resort" uses one only when nothing else fits.\n"Blocked" never uses one, and show an error message in the chat with options to disable or open the mod in penumbra.\n\nRecommended: "Last resort", or "Blocked" if you absolutely don't want your modded emotes to accidentaly be seen.
-classic.settings.modded_targets.help = 决定是否禁止选用被你至少一个模组修改过的已解锁情感动作。这可以防止在替换生效之前，其他人看到你可能拥有的其他模组情感动作。\n例如，你有一个修改 beesknees 的模组，当你尝试绕过 /conduct 而它恰好落在 beesknees 上时，其他玩家可能会短暂看到被修改的 beesknees。\n\n“允许”允许使用被你的模组修改过的已解锁情感动作。\n“最后手段”只在没有其他合适选项时才使用。\n“屏蔽”永远不使用，并在聊天中显示错误消息，提供停用模组或在 Penumbra 中打开模组的选项。\n\n推荐：“最后手段”，如果你绝对不希望模组情感动作被意外看到，可选“屏蔽”。
-# Source: Never
-classic.settings.never = 从不
 # Source: Use the new interface
 classic.settings.new_interface = 使用新界面
 # Source: Switches back to the new interface.\nThe classic interface is the one you are looking at, exactly as in previous versions.
 classic.settings.new_interface.help = 切换回新界面。\n你现在看到的就是经典界面，与以前的版本完全相同。
-# Source: Only when nothing else fits
-classic.settings.nothing_else_fits = 仅在没有其他合适选项时
-# Source: Off
-classic.settings.off = 关闭
-# Source: On
-classic.settings.on = 开启
-# Source: One rank below
-classic.settings.one_below = 低一个等级
-# Source: Safe mode is not 100% guaranteed to be safe either. It prevents Direct Play from being used in states where it was proved to go wrong, but I can not prove the absence of issues. Use Emote Swap if you want to be 100% safe, it will behave almost the same way.
-classic.settings.safe_mode_not_a_promise = 安全模式也不能保证 100% 安全。它会阻止在已被证实会出问题的状态下使用直接播放，但我无法证明不存在任何问题。如果你想要 100% 安全，请使用情感动作替换，它的表现几乎相同。
-# Source: Same rank only
-classic.settings.same_rank = 仅限同一等级
 # Source: Windows
 classic.settings.section.windows = 窗口
-# Source: "Strict" never puts an emote on one that makes sound.\n"Lenient" allows matching emotes that make sounds together.\n"Off" will let emotes play regardless of sound.\n\nThis is to prevent vanilla people from seeing you play fume which could annoy other vanilla players, for example.\n\nRecommended: "Lenient".
-classic.settings.sound_matching.help = “严格”永远不会把情感动作放到会发出声音的情感动作上。\n“宽松”允许把都会发出声音的情感动作相互匹配。\n“关闭”无论声音如何都会播放情感动作。\n\n这是为了避免原版玩家看到你播放例如“生气”之类的动作，从而打扰到其他原版玩家。\n\n推荐：“宽松”。
-# Source: Strict
-classic.settings.strict = 严格
-# Source: Emotes have different turn behaviors when you target someone. Some emotes will make your torso turn (i.e: /hum), some only your head (i.e: /stepdance),some will only make your eyes follow your target (i.e: /beesknees) while others will not move at all (i.e:/guard).\n\n"Very strict" only picks emotes that behaves the same way.\n"Strict" allows eye following differences but keeps emotes head and body turn behaviors.\n"Lenient" allows any turn behavior.\n\nThe plugin will still always try to find the best match first, regardless of the selected rule.\n\nRecommended: "Lenient".
-classic.settings.turn_matching.help = 当你选中他人时，情感动作的转向行为各不相同。有些会让你的上身转向（例如 /hum），有些只转动头部（例如 /stepdance），有些只用眼睛跟随目标（例如 /beesknees），还有些完全不动（例如 /guard）。\n\n“非常严格”只选择行为完全相同的情感动作。\n“严格”允许眼睛跟随的差异，但保留头部和身体的转向行为。\n“宽松”允许任何转向行为。\n\n无论选择哪条规则，插件都会优先尝试寻找最佳匹配。\n\n推荐：“宽松”。
-# Source: Lets Direct Play bypass an emote in any pose.\n\nLeave it off unless you know what you are doing. When off, the plugin only plays emotes from states where nothing can be noticed.
-classic.settings.unsafe.help = 允许直接播放在任何姿势下绕过情感动作。\n\n除非你清楚自己在做什么，否则请保持关闭。关闭时，插件只会在不会被察觉的状态下播放情感动作。
-# Source: In practice it is a non-issue. This has been a thing in other tools and plugins (and still is in some of them), which people have used for years without trouble. Go back to safe mode, or even better, to emote swap, if you are uncomfy with this.
-classic.settings.unsafe.reassurance = 实际上这不是问题。其他工具和插件中也有过这种做法（其中一些至今仍然如此），人们已经使用多年都没有出现问题。如果你对此感到不安，请切回安全模式，或者更好的是，使用情感动作替换。
-# Source: Very strict
-classic.settings.very_strict = 非常严格
-# Source: Shows a warning in chat when a swap happened, but not the way you would expect.
-classic.settings.warning_messages.help = 当替换发生了、但方式与你的预期不同时，在聊天中显示警告。
-# Source: How long the same warning stays quiet after you have seen it.\n\nAccepts time format: 5m, 300s, 5m10s, 1h.\nSet to 0 to disable.
-classic.settings.warning_throttle.help = 你看到某个警告后，同一警告保持静默的时长。\n\n可接受的时间格式：5m、300s、5m10s、1h。\n设为 0 则停用。
 # Source: Only when necessary
 classic.settings.when_necessary = 仅在必要时
 # Source: Opens the changelog window.
@@ -866,8 +784,8 @@ command.pet_stop = 停止你的召唤兽正在播放的情感动作。
 command.self_emote = 通过指令名称或 ID，在自己身上绕过任意情感动作（包括未解锁的）。
 # Source: Stops the emote currently playing on yourself. Direct Play mode only.
 command.stop = 停止你自己正在播放的情感动作。仅限直接播放模式。
-# Source: Restarts the emotes of every player and NPC around you, with their sounds.
-command.sync = 重新开始你周围所有玩家和 NPC 的情感动作及其声音。
+# Source: Restarts the emotes of every player, NPC, minion and pet around you, with their sounds and effects.
+command.sync = 重新开始你周围所有玩家、NPC、宠物和召唤兽的情感动作及其声音和特效。
 # Source: Restarts only the emotes played with Direct Play.
 command.sync_direct = 只重新开始以直接播放方式播放的情感动作。
 # Source: Applies any emote to a targetted NPC. Only works on NPCs and owned minions/pets. Use /bet <emote_command> or /bet stop.
@@ -886,10 +804,14 @@ common.close = 关闭
 common.none = 无
 # Source: Owned
 common.owned = 已拥有
+# Source: Create the mod
+create_mod.create = 创建模组
 # Source: Enable on creation
 create_mod.enable = 创建时启用
 # Source: Switches the mod on in your character's collection as soon as it exists.
 create_mod.enable.help = 模组创建后立即在你角色的合集中启用它。
+# Source: Creates a permanent swap mod in Penumbra. Bypass Emote never touches it afterwards. You own it and manage it like any other mod.
+create_mod.intro = 在 Penumbra 中创建一个永久的替换模组。之后 Bypass Emote 不会再改动它。它归你所有，你可以像管理其他模组一样管理它。
 # Source: Emote data is still loading. Try again in a moment.
 create_mod.loading = 情感动作数据仍在加载中，请稍后再试。
 # Source: Modded animation: {mod}
@@ -908,6 +830,8 @@ create_mod.pick_both = 请选择两个情感动作并为模组命名。
 create_mod.pick_race = 请至少选择一个种族。
 # Source: Highest priority
 create_mod.priority = 最高优先级
+# Source: Gives the mod the highest priority. When it is off, the mod is created at priority 0.
+create_mod.priority.help = 让模组拥有最高优先级。关闭时，模组以优先级 0 创建。
 # Source: Races covered
 create_mod.races = 涵盖的种族
 # Source: Emote to play
@@ -970,6 +894,8 @@ gate.untested_client = {client}客户端未经测试，也无法测试。此插�
 gate.untested_other = 此游戏客户端不是国际服，未经测试，也无法测试。此插件可能无法正常工作，可能不稳定或无法使用。如果运行不正常，请不要使用。
 # Source: Assign
 hotbar.assign = 设置
+# Source: You can also drag an emote from the main window onto any visible hotbar slot.
+hotbar.drag_hint = 你也可以把主窗口中的情感动作拖到任意可见的热键栏格子上。
 # Source: Hotbar
 hotbar.hotbar = 热键栏
 # Source: Slot {slot} - Empty
@@ -1342,14 +1268,24 @@ noire.translate.validate = 仍然正确
 noire.window.options = 窗口选项
 # Source: The emote catalog is still building.
 overrides.catalog_building = 情感动作目录仍在构建中。
+# Source: This tab makes sure a locked emote always uses one or more specific target emotes, tried in order.
+overrides.intro = 此页面可以确保某个未解锁的情感动作始终使用一个或多个指定的目标情感动作，并按顺序尝试。
+# Source: Limited to these targets only
+overrides.limited = 仅限这些目标
 # Source: On: this emote plays on one of these targets, or not at all.\nOff: your usual settings take over when none of these targets can be used.
 overrides.limited.help = 开启：这个情感动作只会在这些目标之一上播放，否则不播放。\n关闭：当这些目标都无法使用时，由你的常规设置接管。
 # Source: (overridden)
 overrides.marked.source = （已覆盖）
 # Source: (already a target)
 overrides.marked.target = （已是目标）
+# Source: Pick an emote on the left
+overrides.pick = 请在左侧选择一个情感动作
 # Source: Remove this override
 overrides.remove = 移除这个覆盖
+# Source: + Override an emote...
+overrides.source = + 覆盖一个情感动作…
+# Source: + Add a target emote...
+overrides.target = + 添加目标情感动作…
 # Source: Every emote that fits is on your blocked targets list.
 preview.all_blocked = 所有适合的情感动作都在你的屏蔽目标列表中。
 # Source: One of your mods changes every emote that fits.
@@ -1430,16 +1366,30 @@ prompt.heading = 一种更安全的播放未解锁情感动作的方式
 prompt.now = 新模式使用 Penumbra 把未解锁的情感动作替换到已解锁的情感动作上，由游戏自己播放情感动作。游戏与服务器之间不再有任何不一致。
 # Source: Choose how Bypass Emote plays locked emotes
 prompt.title = 选择 Bypass Emote 播放未解锁情感动作的方式
+# Source: Allow
+settings.allow = 允许
+# Source: Allowed
+settings.allowed = 允许
 # Source: Hide your name on the mod
 settings.anonymize = 在模组中隐藏你的名字
 # Source: Names the generated mod after your initials instead of your full name and world.
 settings.anonymize.help = 生成的模组以你的名字缩写命名，而不是完整的名字和服务器。
 # Source: Swaps at the same time
 settings.behavior = 同时进行的替换
+# Source: "Multiple" keeps multiple swaps active at the same time in the mod.\n"One at a time" turns the previous swaps off as soon as a new one starts.\n\nRecommended: "Multiple".
+settings.behavior.help = “多个”在模组中同时保持多个替换生效。\n“一次一个”在新的替换开始时立即关闭之前的替换。\n\n推荐：“多个”。
+# Source: Blocked
+settings.blocked = 屏蔽
 # Source: Spread swaps over several emotes
 settings.cached_dispatch = 将替换分散到多个情感动作
+# Source: Leave this on. Bypassing several animations in a row can look broken while it is off.
+settings.cached_dispatch.alarm = 请保持开启。关闭时，连续绕过多个动画可能看起来不正常。
+# Source: Gives each bypassed emote a target emote of its own. Useful when you bypass several emotes quickly.\n\n"Off" redraws your character on every bypass.\n"When needed" spreads emotes only after a game patch breaks the cache-breaker.\n"On" always spreads emotes.\n\nRecommended: "On". "Off" is not recommended.
+settings.cached_dispatch.help = 为每个被绕过的情感动作分配一个专属的目标情感动作。在你快速绕过多个情感动作时很有用。\n\n“关闭”每次绕过都会重绘你的角色。\n“必要时”只在游戏版本更新导致缓存破坏失效后才分散情感动作。\n“开启”始终分散情感动作。\n\n推荐：“开启”。不推荐“关闭”。
 # Source: Always cache-break
 settings.cache_break = 始终破坏缓存
+# Source: Applies the cache-break mechanism to every emote, even the ones you own. An animation change then applies without a redraw and without stopping the emote. Experimental.
+settings.cache_break.help = 对所有情感动作应用缓存破坏机制，包括你已拥有的。这样动画更改无需重绘、也无需停止情感动作即可生效。实验性功能。
 # Source: This game build is not approved yet, this will not work.
 settings.cache_break.not_approved = 此游戏版本尚未获得批准，此功能不会生效。
 # Source: Show the changelog after an update
@@ -1458,14 +1408,22 @@ settings.confirm.unsafe.title = 启用不安全模式？
 settings.direct_play.safe_tooltip = 并非所有同步服务都支持。{limit}
 # Source: Not recommended. Not all sync services support it. Emote Swap is safer and works over any sync service.
 settings.direct_play.unsafe_tooltip = 不推荐。并非所有同步服务都支持。情感动作替换更安全，且适用于任何同步服务。
+# Source: Disable the mod on logout and unload
+settings.disable_mod_on_exit = 登出和卸载时禁用模组
+# Source: When on, the generated Penumbra mod is disabled when you log out or unload the plugin.
+settings.disable_mod_on_exit.help = 开启时，在登出或卸载插件时会禁用生成的 Penumbra 模组。
 # Source: How close a spread emote must fit
 settings.dispatch_fidelity = 分散的情感动作需要多接近
+# Source: Which emotes a source emote may spread over. Takes effect while "Spread swaps over several emotes" is on. A rank is a group of emotes with the same characteristics (turn behaviour and so on).\n\n"Same rank" only picks targets of the same rank.\n"One below" also accepts targets one rank below.\n"Any" picks any target it can find.\n\nNone of them breaks your other rules.\n\nRecommended: "One below". Pick "Same rank" for behaviour accuracy.
+settings.dispatch_fidelity.help = 一个源情感动作可以分散到哪些情感动作上。在“将替换分散到多个情感动作”开启时生效。等级是一组特征相同的情感动作（转向行为等）。\n\n“同一等级”只选择同一等级的目标。\n“低一级”也接受低一个等级的目标。\n“任意”会选择它能找到的任何目标。\n\n它们都不会破坏你的其他规则。\n\n推荐：“低一级”。想要行为准确时可选“同一等级”。
 # Source: Show error messages
 settings.error_messages = 显示错误消息
 # Source: Shows an error in chat when a swap could not be done.
 settings.error_messages.help = 无法完成替换时在聊天中显示错误。
 # Source: Repeat an error at most every
 settings.error_throttle = 同一错误最多重复一次的间隔
+# Source: How long the same error stays quiet after you have seen it.\n\nSet to 0 to see every one of them.
+settings.error_throttle.help = 你看到某个错误后，同一错误保持静默的时长。\n\n设为 0 则每次都显示。
 # Source: Face your target automatically
 settings.face_target = 自动面向目标
 # Source: Turns your character toward your target when you bypass an emote.
@@ -1480,28 +1438,44 @@ settings.hotbar_bypass = 通过未解锁的热键栏格子绕过情感动作
 settings.hotbar_bypass.help = 按下热键栏格子时绕过其中未解锁的情感动作。\n在主窗口中右键点击情感动作可将其设置到格子上。
 # Source: Loops on idle poses
 settings.idle_pose_loops = 待机姿势上的循环
+# Source: When no unlocked looped emote fits as a target, your current idle pose can carry the emote instead. Using the pose redraws your character.\n\n"Never" blocks idle poses as targets.\n"Allow" falls back to your idle pose whenever no looped emote fits.\n\nRecommended: "Allow".
+settings.idle_pose_loops.help = 当没有合适的已解锁循环情感动作可作为目标时，你当前的待机姿势可以代为承载情感动作。使用姿势会重绘你的角色。\n\n“从不”不会把待机姿势用作目标。\n“允许”在没有合适的循环情感动作时，总会改用你的待机姿势。\n\n推荐：“允许”。
 # Source: Kept swaps per emote
 settings.kept_swaps = 每个情感动作保留的替换数
+# Source: How many swaps are kept per target emote. 0 keeps them all.\n\nA kept swap stays as an option of the generated Penumbra mod. Playing that emote again enables it without rebuilding the mod. Kept swaps make the mod bigger.
+settings.kept_swaps.help = 每个目标情感动作保留多少个替换。0 表示全部保留。\n\n保留的替换会作为生成的 Penumbra 模组中的一个选项。再次播放该情感动作时会直接启用它，无需重建模组。保留的替换会让模组变大。
 # Source: Language
 settings.language = 语言
 # Source: The language of the plugin's windows and chat messages.
 settings.language.help = 插件窗口和聊天消息使用的语言。\n日志保持英文。
+# Source: Last resort
+settings.last_resort = 最后手段
+# Source: Lenient
+settings.lenient = 宽松
 # Source: Turn the swap off
 settings.lifetime = 关闭替换的时机
+# Source: "When it ends" puts your real emote back as soon as the animation stops.\n"On the target" keeps the swap enabled until the next time you play the target emote.\n"Never" keeps the swap live until another swap claims the same target emote.\n\n"When it ends" redraws your character after every swap.\n\nRecommended: "On the target".
+settings.lifetime.help = “结束时”在动画停止后立即恢复你真正的情感动作。\n“播放目标时”会保持替换，直到你下一次播放目标情感动作。\n“从不”会保持替换，直到另一个替换占用同一个目标情感动作。\n\n“结束时”会在每次替换后重绘你的角色。\n\n推荐：“播放目标时”。
 # Source: Do not grey out locked emotes
 settings.locked_as_usable = 不将未解锁的情感动作显示为灰色
 # Source: Keeps the emotes you have not unlocked lit in the game's emote window and on your hotbars.\nPurely cosmetic.
 settings.locked_as_usable.help = 让你尚未解锁的情感动作在游戏的情感动作窗口和热键栏中保持高亮。\n仅影响外观。
+# Source: Show locked emotes in the game emote window
+settings.locked_in_window = 在游戏情感动作窗口中显示未解锁的情感动作
 # Source: Lists the emotes you have not unlocked in the game's own emote window.\nClose and reopen the emote window for changes to appear.
 settings.locked_in_window.help = 在游戏自带的情感动作窗口中列出你尚未解锁的情感动作。\n关闭并重新打开情感动作窗口后生效。
 # Source: Loop matching
 settings.loop_matching = 循环匹配
+# Source: "Strict" only puts a looping emote on another looping one.\n"Lenient" lets a looping emote play once on a one time emote when no better match exists.\n\nRecommended: "Strict". Pick "Lenient" when you own few emotes.
+settings.loop_matching.help = “严格”只会把循环情感动作放到另一个循环情感动作上。\n“宽松”在没有更好的匹配时，允许循环情感动作在只播放一次的情感动作上播放一次。\n\n推荐：“严格”。拥有的情感动作较少时可选“宽松”。
 # Source: Emotes used per behaviour
 settings.max_targets = 每种行为使用的情感动作数
 # Source: How many different target emotes one kind of emote may swap to.
 settings.max_targets.help = 一类情感动作最多可以替换到多少个不同的目标情感动作。
 # Source: Emotes your mods change
 settings.modded_targets = 被模组修改的情感动作
+# Source: Whether an unlocked emote that one of your mods changes may be used as a target. Other players can see that modded emote for a moment before the swap takes place.\n\n"Allowed" uses them freely.\n"Last resort" uses one only when nothing else fits.\n"Blocked" never uses one. The chat error then offers to disable the mod or open it in Penumbra.\n\nRecommended: "Last resort". Pick "Blocked" to keep your modded emotes out of sight.
+settings.modded_targets.help = 被你的某个模组修改过的已解锁情感动作能否用作目标。在替换生效之前，其他玩家可能会短暂看到那个被修改的情感动作。\n\n“允许”自由使用它们。\n“最后手段”只在没有其他合适选项时才使用。\n“屏蔽”永不使用，聊天中的错误消息会提供停用模组或在 Penumbra 中打开它的选项。\n\n推荐：“最后手段”。想让你的模组情感动作不被看到时可选“屏蔽”。
 # Source: Mode
 settings.mode = 模式
 # Source: Direct Play
@@ -1510,8 +1484,16 @@ settings.mode.direct_play = 直接播放
 settings.mode.emote_swap = 情感动作替换
 # Source: "Emote Swap" plays your emote over one your character owns, through a Penumbra mod. Other players see it over any sync service.\n"Direct Play" sends the emote to the game itself. Not every sync service supports it.
 settings.mode.help = “情感动作替换”通过 Penumbra 模组，把你的情感动作叠加到你角色已拥有的情感动作上播放。其他玩家可以通过任何同步服务看到它。\n“直接播放”把情感动作直接交给游戏。并非所有同步服务都支持。
+# Source: Never
+settings.never = 从不
 # Source: Not running: {fault}.
 settings.not_running = 未运行：{fault}。
+# Source: Off
+settings.off = 关闭
+# Source: On
+settings.on = 开启
+# Source: One below
+settings.one_below = 低一级
 # Source: General settings
 settings.page.general = 常规设置
 # Source: Bypass Mode
@@ -1524,6 +1506,10 @@ settings.plugin_enabled = 启用插件
 settings.plugin_enabled.help = 让你可以通过原版情感动作指令（/beesknees、/tea 等）和热键栏格子绕过情感动作。\n无论此设置如何，主窗口和 /be 指令都可以使用。
 # Source: In safe mode you can only bypass emotes from the base pose (pose 0) of your current stance.
 settings.safe_mode_limit = 在安全模式下，你只能在当前姿态的基础姿势（姿势 0）下绕过情感动作。
+# Source: Safe mode is not a guarantee either. It keeps Direct Play out of the states where it was proved to go wrong. Emote Swap is the safe option and behaves almost the same way.
+settings.safe_mode_not_a_promise = 安全模式也不是保证。它会让直接播放避开已被证实会出问题的状态。情感动作替换才是安全的选项，而且表现几乎相同。
+# Source: Same rank
+settings.same_rank = 同一等级
 # Source: Chat messages
 settings.section.chat = 聊天消息
 # Source: Direct play
@@ -1542,10 +1528,14 @@ settings.section.safety = 安全
 settings.section.updates = 更新
 # Source: Sound matching
 settings.sound_matching = 声音匹配
+# Source: Decides whether an emote can be swapped onto one that makes a sound, which players around you would hear.\n"Strict" only uses silent targets.\n"Lenient" keeps silent emotes on silent targets. An emote that makes a sound itself can use any target.\n"Off" allows any target, so a silent emote can end up playing another emote's sound.\n\nWhenever a silent target fits, it is picked first.\n\nRecommended: "Lenient".
+settings.sound_matching.help = 决定情感动作能否被换到会发出声音的情感动作上，周围的玩家会听到这个声音。\n“严格”只使用无声的目标。\n“宽松”让无声的情感动作只使用无声的目标。本身会发出声音的情感动作可以使用任何目标。\n“关闭”允许任何目标，因此无声的情感动作可能会播放另一个情感动作的声音。\n\n只要有合适的无声目标，总会优先选择它。\n\n推荐：“宽松”。
 # Source: Stop companion emotes when they move
 settings.stop_on_move = 同伴移动时停止其情感动作
 # Source: Stops your minion, pet or chocobo's looped emote when they move.
 settings.stop_on_move.help = 你的宠物、召唤兽或陆行鸟移动时，停止其循环情感动作。
+# Source: Strict
+settings.strict = 严格
 # Source: Show swap messages
 settings.swap_messages = 显示替换消息
 # Source: Shows a message in chat when an emote is swapped.
@@ -1560,18 +1550,30 @@ settings.translation = 翻译
 settings.translation.help = 打开翻译编辑器。你的翻译保存在插件的配置文件夹中。非常欢迎贡献翻译或改进现有翻译：在插件的 GitHub 上提交 issue 或 pull request 即可分享。
 # Source: Turn matching
 settings.turn_matching = 转向匹配
+# Source: Emotes turn your character differently when you have a target. Some turn the torso (/hum). Some turn only the head (/stepdance). Some only move the eyes (/beesknees). Some do not move at all (/guard).\n\n"Very strict" only picks emotes that behave the same way.\n"Strict" keeps the head and body turn, and allows a different eye behaviour.\n"Lenient" allows any turn behaviour.\n\nThe best match is always tried first.\n\nRecommended: "Lenient".
+settings.turn_matching.help = 当你有目标时，不同情感动作让角色转向的方式不同。有些转动上身（/hum），有些只转动头部（/stepdance），有些只移动眼睛（/beesknees），有些完全不动（/guard）。\n\n“非常严格”只选择行为相同的情感动作。\n“严格”保留头部和身体的转向，允许眼睛行为不同。\n“宽松”允许任何转向行为。\n\n总会优先尝试最佳匹配。\n\n推荐：“宽松”。
 # Source: Unsafe toggle
 settings.unsafe = 不安全开关
 # Source: This is unsafe. Forcing an emote outside your base pose is, in theory, detectable by the server.
 settings.unsafe.headline = 这是不安全的。在基础姿势以外强制播放情感动作，理论上可以被服务器检测到。
+# Source: Lets Direct Play bypass an emote in any pose.\n\nLeave it off unless you know what you are doing. When it is off, the plugin only plays emotes from states where nothing can be noticed.
+settings.unsafe.help = 允许直接播放在任何姿势下绕过情感动作。\n\n除非你清楚自己在做什么，否则请保持关闭。关闭时，插件只会在不会被察觉的状态下播放情感动作。
+# Source: In practice it is a non-issue. Other tools and plugins have done this for years without trouble. Go back to safe mode, or to Emote Swap, if you are uncomfortable with it.
+settings.unsafe.reassurance = 实际上这不是问题。其他工具和插件多年来一直这样做，没有出现问题。如果你对此感到不安，请切回安全模式或情感动作替换。
 # Source: Show update notifications
 settings.update_notification = 显示更新通知
 # Source: Tells you in chat and on screen when a new version of the plugin has been installed.
 settings.update_notification.help = 插件安装新版本后，在聊天和屏幕上通知你。
+# Source: Very strict
+settings.very_strict = 非常严格
 # Source: Show warning messages
 settings.warning_messages = 显示警告消息
+# Source: Shows a warning in chat when a swap did not happen the way you would expect.
+settings.warning_messages.help = 当替换没有按你预期的方式发生时，在聊天中显示警告。
 # Source: Repeat a warning at most every
 settings.warning_throttle = 同一警告最多重复一次的间隔
+# Source: How long the same warning stays quiet after you have seen it.\n\nSet to 0 to disable.
+settings.warning_throttle.help = 你看到某个警告后，同一警告保持静默的时长。\n\n设为 0 则停用。
 # Source: Default
 silk.card.default = 默认
 # Source: Every character has this emote.
@@ -1590,20 +1592,14 @@ silk.card.sources = 获取途径
 silk.changelog.new = 新
 # Source: {source} over {target}
 silk.create_mod.auto_name = {source} 覆盖 {target}
-# Source: Create the mod
-silk.create_mod.create = 创建模组
 # Source: "{mod}" is in Penumbra, enabled at the highest priority.
 silk.create_mod.done = “{mod}”已加入 Penumbra，并以最高优先级启用。
-# Source: Creates a permanent swap mod in Penumbra. Bypass Emote never touches it afterwards. You own it and manage it like any other mod.
-silk.create_mod.intro = 在 Penumbra 中创建一个永久的替换模组。之后 Bypass Emote 不会再改动它。它归你所有，你可以像管理其他模组一样管理它。
 # Source: Mod
 silk.create_mod.mod = 模组
 # Source: Not unlocked
 silk.create_mod.not_unlocked = 未解锁
 # Source: This emote has no animation for this body
 silk.create_mod.no_body = 这个情感动作没有适用于此体型的动画
-# Source: Gives the mod the highest priority. When it is off, the mod is created at priority 0.
-silk.create_mod.priority.help = 让模组拥有最高优先级。关闭时，模组以优先级 0 创建。
 # Source: Block as target
 silk.dock.block = 屏蔽为目标
 # Source: Blocked as target
@@ -1686,8 +1682,6 @@ silk.gate.waiting = 正在等待此游戏版本获得批准
 silk.gate.waiting.text = 在当前游戏版本经过检查之前，Bypass Emote 会保持关闭。通常需要几个小时。
 # Source: Cross
 silk.hotbar.cross = 十字
-# Source: You can also drag an emote from the main window onto any visible hotbar slot.
-silk.hotbar.drag_hint = 你也可以把主窗口中的情感动作拖到任意可见的热键栏格子上。
 # Source: LEFT TRIGGER
 silk.hotbar.left_trigger = 左扳机
 # Source: Pick a slot.
@@ -1858,88 +1852,34 @@ silk.menu.override = 添加覆盖
 silk.menu.pet = 对召唤兽使用情感动作
 # Source: Play on yourself
 silk.menu.play = 对自己播放
-# Source: This tab makes sure a locked emote always uses one or more specific target emotes, tried in order.
-silk.overrides.intro = 此页面可以确保某个未解锁的情感动作始终使用一个或多个指定的目标情感动作，并按顺序尝试。
-# Source: Limited to these targets only
-silk.overrides.limited = 仅限这些目标
 # Source: Locked emote
 silk.overrides.locked_emote = 未解锁的情感动作
-# Source: Pick an emote on the left
-silk.overrides.pick = 请在左侧选择一个情感动作
 # Source: {emote} plays through
 silk.overrides.plays_through = {emote}通过以下动作播放
 # Source: Remove
 silk.overrides.remove = 移除
-# Source: + Override an emote...
-silk.overrides.source = + 覆盖一个情感动作…
-# Source: + Add a target emote...
-silk.overrides.target = + 添加目标情感动作…
 # Source: No result
 silk.picker.no_result = 没有结果
 # Source: OWNED
 silk.picker.owned = 已拥有
-# Source: Allow
-silk.settings.allow = 允许
-# Source: Allowed
-silk.settings.allowed = 允许
 # Source: Any
 silk.settings.any = 任意
-# Source: "Multiple" keeps multiple swaps active at the same time in the mod.\n"One at a time" turns the previous swaps off as soon as a new one starts.\n\nRecommended: "Multiple".
-silk.settings.behavior.help = “多个”在模组中同时保持多个替换生效。\n“一次一个”在新的替换开始时立即关闭之前的替换。\n\n推荐：“多个”。
-# Source: Blocked
-silk.settings.blocked = 屏蔽
-# Source: Leave this on. Bypassing several animations in a row can look broken while it is off.
-silk.settings.cached_dispatch.alarm = 请保持开启。关闭时，连续绕过多个动画可能看起来不正常。
-# Source: Gives each bypassed emote a target emote of its own. Useful when you bypass several emotes quickly.\n\n"Off" redraws your character on every bypass.\n"When needed" spreads emotes only after a game patch breaks the cache-breaker.\n"On" always spreads emotes.\n\nRecommended: "On". "Off" is not recommended.
-silk.settings.cached_dispatch.help = 为每个被绕过的情感动作分配一个专属的目标情感动作。在你快速绕过多个情感动作时很有用。\n\n“关闭”每次绕过都会重绘你的角色。\n“必要时”只在游戏版本更新导致缓存破坏失效后才分散情感动作。\n“开启”始终分散情感动作。\n\n推荐：“开启”。不推荐“关闭”。
-# Source: Applies the cache-break mechanism to every emote, even the ones you own. An animation change then applies without a redraw and without stopping the emote. Experimental.
-silk.settings.cache_break.help = 对所有情感动作应用缓存破坏机制，包括你已拥有的。这样动画更改无需重绘、也无需停止情感动作即可生效。实验性功能。
 # Source: The old version.
 silk.settings.classic_interface.text = 与以前版本完全相同的窗口。
 # Source: Compact rows
 silk.settings.compact_rows = 紧凑行
 # Source: Much smaller rows in the emote list, to see more emotes at once.
 silk.settings.compact_rows.help = 情感动作列表中的行会小很多，可以同时看到更多情感动作。
-# Source: Which emotes a source emote may spread over. Takes effect while "Spread swaps over several emotes" is on. A rank is a group of emotes with the same characteristics (turn behaviour and so on).\n\n"Same rank" only picks targets of the same rank.\n"One below" also accepts targets one rank below.\n"Any" picks any target it can find.\n\nNone of them breaks your other rules.\n\nRecommended: "One below". Pick "Same rank" for behaviour accuracy.
-silk.settings.dispatch_fidelity.help = 一个源情感动作可以分散到哪些情感动作上。在“将替换分散到多个情感动作”开启时生效。等级是一组特征相同的情感动作（转向行为等）。\n\n“同一等级”只选择同一等级的目标。\n“低一级”也接受低一个等级的目标。\n“任意”会选择它能找到的任何目标。\n\n它们都不会破坏你的其他规则。\n\n推荐：“低一级”。想要行为准确时可选“同一等级”。
-# Source: How long the same error stays quiet after you have seen it.\n\nSet to 0 to see every one of them.
-silk.settings.error_throttle.help = 你看到某个错误后，同一错误保持静默的时长。\n\n设为 0 则每次都显示。
-# Source: When no unlocked looped emote fits as a target, your current idle pose can carry the emote instead. Using the pose redraws your character.\n\n"Never" blocks idle poses as targets.\n"If nothing fits" uses the pose only when no unlocked looped emote could have played at all. An emote you blocked yourself still counts as one that could have played.\n"Allow" falls back to your idle pose whenever nothing else is available.\n\nRecommended: "If nothing fits".
-silk.settings.idle_pose_loops.help = 当没有合适的已解锁循环情感动作可作为目标时，你当前的待机姿势可以代为承载情感动作。使用姿势会重绘你的角色。\n\n“从不”禁止把待机姿势用作目标。\n“无其他选项时”只在确实没有任何已解锁的循环情感动作可以播放时才使用姿势。你自己屏蔽的情感动作仍算作本可以播放的情感动作。\n“允许”在没有其他可用选项时总会退回到你的待机姿势。\n\n推荐：“无其他选项时”。
-# Source: If nothing fits
-silk.settings.if_nothing_fits = 无其他选项时
-# Source: How many swaps are kept per target emote. 0 keeps them all.\n\nA kept swap stays as an option of the generated Penumbra mod. Playing that emote again enables it without rebuilding the mod. Kept swaps make the mod bigger.
-silk.settings.kept_swaps.help = 每个目标情感动作保留多少个替换。0 表示全部保留。\n\n保留的替换会作为生成的 Penumbra 模组中的一个选项。再次播放该情感动作时会直接启用它，无需重建模组。保留的替换会让模组变大。
-# Source: Last resort
-silk.settings.last_resort = 最后手段
-# Source: Lenient
-silk.settings.lenient = 宽松
-# Source: "When it ends" puts your real emote back as soon as the animation stops.\n"On the target" keeps the swap enabled until the next time you play the target emote.\n"Never" keeps the swap live until another swap claims the same target emote.\n\n"When it ends" redraws your character after every swap.\n\nRecommended: "On the target".
-silk.settings.lifetime.help = “结束时”在动画停止后立即恢复你真正的情感动作。\n“播放目标时”会保持替换，直到你下一次播放目标情感动作。\n“从不”会保持替换，直到另一个替换占用同一个目标情感动作。\n\n“结束时”会在每次替换后重绘你的角色。\n\n推荐：“播放目标时”。
-# Source: Show locked emotes in the game emote window
-silk.settings.locked_in_window = 在游戏情感动作窗口中显示未解锁的情感动作
-# Source: "Strict" only puts a looping emote on another looping one.\n"Lenient" lets a looping emote play once on a one time emote when no better match exists.\n\nRecommended: "Strict". Pick "Lenient" when you own few emotes.
-silk.settings.loop_matching.help = “严格”只会把循环情感动作放到另一个循环情感动作上。\n“宽松”在没有更好的匹配时，允许循环情感动作在只播放一次的情感动作上播放一次。\n\n推荐：“严格”。拥有的情感动作较少时可选“宽松”。
 # Source: Adopt Malou, the orange cat
 silk.settings.malou = 领养橘猫 Malou
 # Source: He's really cute.
 silk.settings.malou.help = 它真的很可爱。
-# Source: Whether an unlocked emote that one of your mods changes may be used as a target. Other players can see that modded emote for a moment before the swap takes place.\n\n"Allowed" uses them freely.\n"Last resort" uses one only when nothing else fits.\n"Blocked" never uses one. The chat error then offers to disable the mod or open it in Penumbra.\n\nRecommended: "Last resort". Pick "Blocked" to keep your modded emotes out of sight.
-silk.settings.modded_targets.help = 被你的某个模组修改过的已解锁情感动作能否用作目标。在替换生效之前，其他玩家可能会短暂看到那个被修改的情感动作。\n\n“允许”自由使用它们。\n“最后手段”只在没有其他合适选项时才使用。\n“屏蔽”永不使用，聊天中的错误消息会提供停用模组或在 Penumbra 中打开它的选项。\n\n推荐：“最后手段”。想让你的模组情感动作不被看到时可选“屏蔽”。
 # Source: Multiple
 silk.settings.multiple = 多个
-# Source: Never
-silk.settings.never = 从不
 # Source: The one you are looking at.
 silk.settings.new_interface.text = 就是你现在看到的这个。
-# Source: Off
-silk.settings.off = 关闭
-# Source: On
-silk.settings.on = 开启
 # Source: One at a time
 silk.settings.one_at_a_time = 一次一个
-# Source: One below
-silk.settings.one_below = 低一级
 # Source: On the target
 silk.settings.on_the_target = 播放目标时
 # Source: Enable preview popup
@@ -1948,28 +1888,8 @@ silk.settings.preview_popup = 启用预览弹窗
 silk.settings.preview_popup.help = 开启：点击情感动作会在窗口旁打开一个面板，双击则播放。在情感动作替换模式下，面板还会预览替换结果。关闭：没有面板，单击即播放情感动作。
 # Source: Recommended
 silk.settings.recommended = 推荐
-# Source: Safe mode is not a guarantee either. It keeps Direct Play out of the states where it was proved to go wrong. Emote Swap is the safe option and behaves almost the same way.
-silk.settings.safe_mode_not_a_promise = 安全模式也不是保证。它会让直接播放避开已被证实会出问题的状态。情感动作替换才是安全的选项，而且表现几乎相同。
-# Source: Same rank
-silk.settings.same_rank = 同一等级
 # Source: Emote list
 silk.settings.section.emote_list = 情感动作列表
-# Source: "Strict" never puts an emote on one that makes sound.\n"Lenient" allows matching emotes that make sounds together.\n"Off" plays emotes regardless of sound.\n\nSound matching keeps other players from hearing an emote you did not play.\n\nRecommended: "Lenient".
-silk.settings.sound_matching.help = “严格”永远不会把情感动作放到会发出声音的情感动作上。\n“宽松”允许把都会发出声音的情感动作相互匹配。\n“关闭”无论声音如何都会播放情感动作。\n\n声音匹配可以避免其他玩家听到你并没有播放的情感动作。\n\n推荐：“宽松”。
-# Source: Strict
-silk.settings.strict = 严格
-# Source: Emotes turn your character differently when you have a target. Some turn the torso (/hum). Some turn only the head (/stepdance). Some only move the eyes (/beesknees). Some do not move at all (/guard).\n\n"Very strict" only picks emotes that behave the same way.\n"Strict" keeps the head and body turn, and allows a different eye behaviour.\n"Lenient" allows any turn behaviour.\n\nThe best match is always tried first.\n\nRecommended: "Lenient".
-silk.settings.turn_matching.help = 当你有目标时，不同情感动作让角色转向的方式不同。有些转动上身（/hum），有些只转动头部（/stepdance），有些只移动眼睛（/beesknees），有些完全不动（/guard）。\n\n“非常严格”只选择行为相同的情感动作。\n“严格”保留头部和身体的转向，允许眼睛行为不同。\n“宽松”允许任何转向行为。\n\n总会优先尝试最佳匹配。\n\n推荐：“宽松”。
-# Source: Lets Direct Play bypass an emote in any pose.\n\nLeave it off unless you know what you are doing. When it is off, the plugin only plays emotes from states where nothing can be noticed.
-silk.settings.unsafe.help = 允许直接播放在任何姿势下绕过情感动作。\n\n除非你清楚自己在做什么，否则请保持关闭。关闭时，插件只会在不会被察觉的状态下播放情感动作。
-# Source: In practice it is a non-issue. Other tools and plugins have done this for years without trouble. Go back to safe mode, or to Emote Swap, if you are uncomfortable with it.
-silk.settings.unsafe.reassurance = 实际上这不是问题。其他工具和插件多年来一直这样做，没有出现问题。如果你对此感到不安，请切回安全模式或情感动作替换。
-# Source: Very strict
-silk.settings.very_strict = 非常严格
-# Source: Shows a warning in chat when a swap did not happen the way you would expect.
-silk.settings.warning_messages.help = 当替换没有按你预期的方式发生时，在聊天中显示警告。
-# Source: How long the same warning stays quiet after you have seen it.\n\nSet to 0 to disable.
-silk.settings.warning_throttle.help = 你看到某个警告后，同一警告保持静默的时长。\n\n设为 0 则停用。
 # Source: When it ends
 silk.settings.when_it_ends = 结束时
 # Source: When needed

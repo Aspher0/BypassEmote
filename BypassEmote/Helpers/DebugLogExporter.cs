@@ -719,6 +719,7 @@ internal static class DebugLogExporter
         report.AppendLine($"Rules stamp: {SwapRulesStamp.Current()}");
         report.AppendLine($"Anonymize mod name: {Configuration.AnonymizeModName}");
         report.AppendLine($"Always cache break: {Configuration.AlwaysCacheBreak}");
+        report.AppendLine($"Disable mod on exit: {Configuration.DisableModOnExit}");
         report.AppendLine($"Direct play: auto face target {Configuration.AutoFaceTargetDirectPlay}, unsafe {Configuration.DirectPlayUnsafe}"
             + $", stop owned object emote on move {Configuration.StopOwnedObjectEmoteOnMove}");
         report.AppendLine($"Bypass on hotbar slot: {Configuration.BypassOnHotbarSlotTriggered}");

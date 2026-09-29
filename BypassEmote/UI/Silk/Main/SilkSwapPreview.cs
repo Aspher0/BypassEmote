@@ -102,7 +102,7 @@ public sealed partial class SwapOrchestrator
         var leftOut = new Dictionary<string, int>(StringComparer.Ordinal);
         var pool = BuildPool(localPlayer, source, condition, leftOut);
 
-        if (pool.Count == 0 && leftOut.ContainsKey(GameGateReason))
+        if (pool.Count == 0 && leftOut.ContainsKey("game gate"))
         {
             leftOut.Clear();
             pool = SilkPoolIgnoringGameGate(localPlayer, source, condition, leftOut);
@@ -137,8 +137,6 @@ public sealed partial class SwapOrchestrator
         var fullPool = pool;
         (matchConfig, pool) = ApplyModdedRule(source, pool, matchConfig, posture, skeleton, fallbackOrder, collection.Id);
 
-        var poolHasLoop = PoolOffersALoop(pool, matchConfig);
-
         var loopsFirst = source.LoopKind == EmotePlayType.Looped
             && matchConfig.Loop == LoopMatchRule.AllowLoopOnOneShot;
 
@@ -151,7 +149,7 @@ public sealed partial class SwapOrchestrator
             match = BestMatchResolver.Resolve(source, pool, rules, posture);
         }
 
-        if (ShouldAttemptIdlePoseFallback(source, match, Configuration.IdlePoseLoops, poolHasLoop)
+        if (ShouldAttemptIdlePoseFallback(source, match, Configuration.IdlePoseLoops)
             && SilkIdlePose(localPlayer) is { } pose)
         {
             return new SilkSwapPlan(SilkPreviewKind.IdlePose, source, null, false, pose.Index, pose.RowId, string.Empty, NoDetails);
@@ -177,8 +175,6 @@ public sealed partial class SwapOrchestrator
 
         return NoMatchReasons(localPlayer, source, fullPool, pool, matchConfig, match, leftOut, skeleton, fallbackOrder);
     }
-
-    private const string GameGateReason = "game gate";
 
     private List<EmoteAttributes> SilkPoolIgnoringGameGate(ICharacter localPlayer, EmoteAttributes source, EmoteCondition condition,
         Dictionary<string, int> leftOut)

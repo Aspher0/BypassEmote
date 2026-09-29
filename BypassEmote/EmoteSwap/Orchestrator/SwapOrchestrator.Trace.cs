@@ -46,10 +46,9 @@ public sealed partial class SwapOrchestrator
         return $"best match, dispatched off {(emoteOf(best) is { } plain ? LabelFor(plain) : $"#{best}")}";
     }
 
-    private static string IdlePoseRoute(MatchResult match, bool poolHasLoop)
-        => $"idle pose ({Configuration.IdlePoseLoops}), "
-        + (match.Target is { } best ? $"the best target {LabelFor(best)} is a one shot" : "no target fits")
-        + $", {(poolHasLoop ? "the pool has a loop" : "the pool has no loop")}";
+    private static string IdlePoseRoute(MatchResult match)
+        => "idle pose, "
+        + (match.Target is { } best ? $"the best target {LabelFor(best)} is a one shot" : "no loop target fits");
 
     internal static string? TargetRefusal(ICharacter character, EmoteAttributes candidate, EmoteCondition condition)
     {

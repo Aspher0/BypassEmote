@@ -81,20 +81,16 @@ public sealed partial class SwapOrchestrator
     internal static bool ArmsIdlePoseWatch(SwapLifetime lifetime)
         => lifetime != SwapLifetime.Never;
 
-    internal const byte PersistentIdlePoseIndex = 0;
-
     internal static bool IdlePoseNeedsRedrawOnEnd(byte poseIndex)
-        => poseIndex == PersistentIdlePoseIndex;
+        => poseIndex == 0;
 
     internal static bool PoolOffersALoop(IReadOnlyList<EmoteAttributes> pool, MatchConfig matchConfig)
         => pool.Any(candidate => candidate.LoopKind == EmotePlayType.Looped
             && matchConfig.BlockedTargets?.Contains(candidate.RowId) != true
             && matchConfig.ModdedTargets?.Contains(candidate.RowId) != true);
 
-    internal static bool ShouldAttemptIdlePoseFallback(EmoteAttributes source, MatchResult match,
-        IdlePoseFallback mode, bool poolHasLoop)
-        => mode != IdlePoseFallback.Never
-        && (mode == IdlePoseFallback.Allowed || !poolHasLoop)
+    internal static bool ShouldAttemptIdlePoseFallback(EmoteAttributes source, MatchResult match, IdlePoseFallback mode)
+        => mode == IdlePoseFallback.Allowed
         && source.LoopKind == EmotePlayType.Looped
         && !source.IsPoseFamily
         && (match.Target == null || match.Target.LoopKind != EmotePlayType.Looped);

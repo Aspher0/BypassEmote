@@ -14,7 +14,7 @@ namespace BypassEmote;
 public class ConfigurationInstance : NoireConfigBase
 {
     public override string GetConfigFileName() => "Configuration";
-    public override int Version { get; set; } = 2;
+    public override int Version { get; set; } = 3;
 
     public bool PluginEnabled { get; set; } = true;
 
@@ -72,7 +72,7 @@ public class ConfigurationInstance : NoireConfigBase
 
     public DispatchFidelity DispatchFidelity { get; set; } = DispatchFidelity.OneRankBelow;
 
-    public IdlePoseFallback IdlePoseLoops { get; set; } = IdlePoseFallback.NothingElseFits;
+    public IdlePoseFallback IdlePoseLoops { get; set; } = IdlePoseFallback.Allowed;
 
     public ModdedTargetRule ModdedTargets { get; set; } = ModdedTargetRule.LastResort;
 
@@ -96,6 +96,8 @@ public class ConfigurationInstance : NoireConfigBase
 
     public bool AlwaysCacheBreak { get; set; } = false;
 
+    public bool DisableModOnExit { get; set; } = false;
+
     public bool EnablePreviewPopup { get; set; } = true;
 
     public bool CompactEmoteList { get; set; } = true;
@@ -111,5 +113,15 @@ public class ConfigurationInstance : NoireConfigBase
                 .AddProperty("SelfBypassMode", (int)SelfBypassMode.DirectPlay)
                 .AddProperty("SwapPromptPending", true)
                 .Migrate(jsonObject, 2);
+    }
+
+    public class MigrationV2ToV3 : ConfigMigrationBase
+    {
+        public override int FromVersion => 2;
+        public override int ToVersion => 3;
+        public override string Migrate(JObject jsonObject) =>
+            MigrationBuilder.Create()
+                .TransformProperty<int>("IdlePoseLoops", value => value == 2 ? 1 : value)
+                .Migrate(jsonObject, 3);
     }
 }

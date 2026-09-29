@@ -17,11 +17,11 @@ internal static class SilkConfirms
 
     internal static string SafeModeLimitLine => L.SafeModeLimitLine.Text;
 
-    internal static string SafeModeIsNotAPromiseLine => L.SilkSafeModeNotAPromise.Text;
+    internal static string SafeModeIsNotAPromiseLine => L.SafeModeNotAPromise.Text;
 
     internal static string UnsafeHeadline => L.UnsafeHeadline.Text;
 
-    internal static string UnsafeReassurance => L.SilkUnsafeReassurance.Text;
+    internal static string UnsafeReassurance => L.UnsafeReassurance.Text;
 
     internal static string SafeDirectPlayTooltip => L.SafeDirectPlayTooltip.With("limit", SafeModeLimitLine);
 
@@ -31,17 +31,17 @@ internal static class SilkConfirms
 
     private static readonly SilkParagraphList UnsafeWithSync = new(
         (L.UnsafeHeadline, SilkParagraphTone.Warn),
-        (L.SilkUnsafeReassurance, SilkParagraphTone.Body),
+        (L.UnsafeReassurance, SilkParagraphTone.Body),
         (L.SyncServicesLine, SilkParagraphTone.Body));
 
     private static readonly SilkParagraphList UnsafeWithoutSync = new(
         (L.UnsafeHeadline, SilkParagraphTone.Warn),
-        (L.SilkUnsafeReassurance, SilkParagraphTone.Body));
+        (L.UnsafeReassurance, SilkParagraphTone.Body));
 
     private static readonly SilkParagraphList SafeSwitch = new(
         (L.SyncServicesLine, SilkParagraphTone.Body),
         (L.SafeModeLimitLine, SilkParagraphTone.Body),
-        (L.SilkSafeModeNotAPromise, SilkParagraphTone.Muted));
+        (L.SafeModeNotAPromise, SilkParagraphTone.Muted));
 
     private static ModalOptions? liveOptions;
     private static SilkParagraph[]? liveBody;

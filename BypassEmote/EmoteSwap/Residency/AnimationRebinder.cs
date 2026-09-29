@@ -19,15 +19,6 @@ public sealed unsafe class AnimationRebinder : IDisposable
         "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 48 89 7C 24 20 41 56 48 83 EC 30 41 8B F1 49 8B E8 44 8B F2 "
         + "48 8B F9 E8";
 
-    private const int OwnerPackListOffset = 0x38;
-    private const int NodeNextOffset = 0x10;
-    private const int NodeBindingOffset = 0x18;
-    private const int NodeStateOffset = 0x28;
-    private const int BindingBoundOffset = 0x58;
-    private const int BindingRowIdOffset = 0x5C;
-
-    private const int MaxNodes = 512;
-
     private static readonly TimeSpan ArmLifetime = TimeSpan.FromSeconds(10);
 
     private readonly object _gate = new();
@@ -230,19 +221,19 @@ public sealed unsafe class AnimationRebinder : IDisposable
     private static List<BoundView> Read(nint owner)
     {
         var bound = new List<BoundView>();
-        var node = *(nint*)(owner + OwnerPackListOffset);
+        var node = *(nint*)(owner + 0x38);
 
-        for (var seen = 0; node > 0x10000 && seen < MaxNodes; seen++)
+        for (var seen = 0; node > 0x10000 && seen < 512; seen++)
         {
-            var binding = *(nint*)(node + NodeBindingOffset);
+            var binding = *(nint*)(node + 0x18);
 
-            if (binding > 0x10000 && *(int*)(node + NodeStateOffset) == 1)
+            if (binding > 0x10000 && *(int*)(node + 0x28) == 1)
             {
-                bound.Add(new BoundView(binding, *(int*)(binding + BindingRowIdOffset),
-                    *(byte*)(binding + BindingBoundOffset) != 0));
+                bound.Add(new BoundView(binding, *(int*)(binding + 0x5C),
+                    *(byte*)(binding + 0x58) != 0));
             }
 
-            node = *(nint*)(node + NodeNextOffset);
+            node = *(nint*)(node + 0x10);
         }
 
         return bound;

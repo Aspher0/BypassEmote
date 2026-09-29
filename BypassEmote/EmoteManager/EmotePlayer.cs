@@ -11,6 +11,7 @@ using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
 using NoireLib;
 using NoireLib.Animations.Helpers;
+using NoireLib.Animations.Timelines;
 using NoireLib.Helpers;
 using System;
 using System.Collections.Generic;
@@ -25,7 +26,7 @@ internal static unsafe class EmotePlayer
 
     public static List<TrackedCharacter> TrackedCharacters = new List<TrackedCharacter>();
 
-    private const string DirectPlayRefusalKind = "directplay.refused";
+    private const int DirectPlayIntroPriority = 1;
 
     public static void PlayEmote(ICharacter? chara, Emote emote, CharacterState? characterState = null, IpcData? receivedIpcData = null)
     {
@@ -88,7 +89,7 @@ internal static unsafe class EmotePlayer
 
             if (plan == null)
             {
-                LogHelper.Error(DirectPlayPlanner.RefusalMessageFor(emote, state), DirectPlayRefusalKind);
+                LogHelper.Error(DirectPlayPlanner.RefusalMessageFor(emote, state), "directplay.refused");
                 return;
             }
 
@@ -98,7 +99,7 @@ internal static unsafe class EmotePlayer
             if (DirectPlayGate.ShouldBlockSelfPlay(
                     Configuration.SelfBypassMode, Configuration.DirectPlayUnsafe, isLocalPlayer, isSafeState))
             {
-                LogHelper.Error(DirectPlayGate.SafeModeMessage, DirectPlayGate.SafeModeRefusalKind);
+                LogHelper.Error(DirectPlayGate.SafeModeMessage, "directplay.safemode");
                 return;
             }
         }
@@ -191,7 +192,7 @@ internal static unsafe class EmotePlayer
     private static void PlayPlannedLoop(ICharacter chara, DirectPlayPlan plan)
     {
         if (plan.IntroTimelineId != 0)
-            Service.ActionTimelinePlayer.Blend(chara, plan.IntroTimelineId, 1);
+            Service.ActionTimelinePlayer.Blend(chara, plan.IntroTimelineId, DirectPlayIntroPriority);
 
         if (plan.TimelineId != 0)
             Service.ActionTimelinePlayer.Play(chara, plan.TimelineId, false);
@@ -210,7 +211,7 @@ internal static unsafe class EmotePlayer
             loop = (ushort)emote.ActionTimeline[specifications.SpecificLoopActionTimelineSlot.Value].RowId;
 
         if (blendIntro && intro != 0)
-            player.Blend(actor, intro, 1);
+            player.Blend(actor, intro, DirectPlayIntroPriority);
 
         if (loop != 0)
         {
@@ -408,86 +409,41 @@ internal static unsafe class EmotePlayer
         }
     }
 
-    //From SimpleHeels by Caraxi to sync NPCs
     public static void SyncEmotes(bool shouldSyncAll)
     {
-        List<(ICharacter Character, bool IsTracked, TrackedCharacter? TrackedCharacter)> charactersToSync = new List<(ICharacter Chara, bool IsTracked, TrackedCharacter? TrackedCharacter)>();
-
-        if (shouldSyncAll)
-        {
-            var objectTable = NoireService.ObjectTable;
-            foreach (var obj in objectTable)
-            {
-                if (obj is IPlayerCharacter || obj is INpc || obj is IBattleNpc)
-                {
-                    var trackedCharacter = CommonHelper.TryGetTrackedCharacterFromAddress(obj.Address);
-                    var isTracked = trackedCharacter != null;
-
-                    if (obj is IPlayerCharacter character)
-                        charactersToSync.Add((character, isTracked, trackedCharacter));
-                    else if (obj is INpc || obj is IBattleNpc)
-                        charactersToSync.Add(((ICharacter)obj, isTracked, trackedCharacter));
-                }
-            }
-        }
-        else
-        {
-            foreach (var trackedCharacter in TrackedCharacters)
-            {
-                var character = CommonHelper.GetCharacterFromTrackedCharacter(trackedCharacter);
-                if (character == null) continue;
-                charactersToSync.Add((character, true, trackedCharacter));
-            }
-        }
-
-        // If the player is a tracked character, restart their emote directly to trigger the sound again
-        // If it's just a player, do it the simple heels way
-
-        var emoteTimelines = shouldSyncAll ? EmoteTimelineIds() : null;
-        var localAddress = NoireService.ObjectTable.LocalPlayer?.Address ?? 0;
+        var emoteTimelines = EmoteTimelineIds();
+        var localCid = NoireService.ObjectTable.LocalPlayer is { } localPlayer
+            ? CharacterHelper.GetCIDFromPlayerCharacterAddress(localPlayer.Address)
+            : null;
         var localIdlePoseSwapped = Service.SwapMods?.ArmedIdlePose() != null;
         var restartedCount = 0;
         var rewoundCount = 0;
 
-        foreach (var characterToSync in charactersToSync)
+        foreach (var obj in NoireService.ObjectTable)
         {
-            if (characterToSync.IsTracked && characterToSync.TrackedCharacter != null && characterToSync.TrackedCharacter.PlayingEmoteId != null)
+            if (obj is not ICharacter character)
+                continue;
+
+            var isDirectPlay = CommonHelper.TryGetTrackedCharacterFromAddress(character.Address) != null;
+
+            if (!shouldSyncAll && !isDirectPlay)
+                continue;
+
+            var idlePoseSwap = localIdlePoseSwapped && localCid != null && character is IPlayerCharacter
+                && CharacterHelper.GetCIDFromPlayerCharacterAddress(character.Address) == localCid;
+
+            var restarts = TimelineRestarter.Restart(character,
+                (slot, timelineId, _) => isDirectPlay || emoteTimelines.Contains(timelineId) || (idlePoseSwap && slot == 0),
+                isDirectPlay ? DirectPlayIntroPriority : ActionTimelineDriver.DefaultPriority);
+
+            if (restarts.Any(restart => restart.Restarted))
             {
-                var emote = EmoteHelper.GetEmoteById(characterToSync.TrackedCharacter.PlayingEmoteId.Value);
-                if (emote.HasValue)
-                {
-                    ushort loop = (ushort)emote.Value.ActionTimeline[0].RowId;
-                    Service.ActionTimelinePlayer.Blend(characterToSync.Character, loop); // Seems to work better for loop anims with an intro, otherwise there will be a slight desync
-                    continue;
-                }
+                restartedCount++;
+                continue;
             }
 
-            if (emoteTimelines != null && !characterToSync.IsTracked)
-            {
-                var idlePoseSwap = localIdlePoseSwapped && characterToSync.Character.Address == localAddress;
-
-                var restarts = TimelineRestarter.Restart(characterToSync.Character,
-                    (slot, timelineId, _) => emoteTimelines.Contains(timelineId) || (idlePoseSwap && slot == 0));
-
-                if (restarts.Any(restart => restart.Restarted))
-                {
-                    restartedCount++;
-
-                    Log.Warning($"Sync restarted {characterToSync.Character.Name.TextValue}: "
-                        + $"{TimelineRestarter.Describe(restarts)}.", "[EmotePlayer] ");
-
-                    continue;
-                }
-            }
-
-            SkeletonAnimationHelper.ResetAnimationTime(characterToSync.Character);
-            rewoundCount++;
-        }
-
-        if (shouldSyncAll)
-        {
-            Log.Warning($"Sync: {restartedCount} emote(s) restarted with their sounds, {rewoundCount} character(s) "
-                + "rewound.", "[EmotePlayer] ");
+            if (TimelineRestarter.RewindSkeleton(character) > 0)
+                rewoundCount++;
         }
     }
 

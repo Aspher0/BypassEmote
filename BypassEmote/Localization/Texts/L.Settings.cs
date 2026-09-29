@@ -36,6 +36,9 @@ internal static partial class L
     public static readonly NoireString AnonymizeMod = new("settings.anonymize", "Hide your name on the mod");
     public static readonly NoireString AnonymizeModHelp = new("settings.anonymize.help", "Names the generated mod after your initials instead of your full name and world.");
     public static readonly NoireString AlwaysCacheBreak = new("settings.cache_break", "Always cache-break");
+    public static readonly NoireString DisableModOnExit = new("settings.disable_mod_on_exit", "Disable the mod on logout and unload");
+    public static readonly NoireString DisableModOnExitHelp = new("settings.disable_mod_on_exit.help",
+        "When on, the generated Penumbra mod is disabled when you log out or unload the plugin.");
     public static readonly NoireString SwapMessages = new("settings.swap_messages", "Show swap messages");
     public static readonly NoireString SwapMessagesHelp = new("settings.swap_messages.help", "Shows a message in chat when an emote is swapped.");
     public static readonly NoireString ErrorMessages = new("settings.error_messages", "Show error messages");
@@ -85,27 +88,12 @@ internal static partial class L
     public static readonly NoireString NotYet = new("settings.gate.not_yet", "not yet");
     public static readonly NoireString CacheBreakNotApproved = new("settings.cache_break.not_approved", "This game build is not approved yet, this will not work.");
     public static readonly NoireString NotRunning = new("settings.not_running", "Not running: {fault}.");
-
-    public static readonly NoireString ClassicStrict = new("classic.settings.strict", "Strict");
-    public static readonly NoireString ClassicLenient = new("classic.settings.lenient", "Lenient");
-    public static readonly NoireString ClassicOff = new("classic.settings.off", "Off");
-    public static readonly NoireString ClassicVeryStrict = new("classic.settings.very_strict", "Very strict");
     public static readonly NoireString ClassicLifetimeEnds = new("classic.settings.lifetime.ends", "When the emote ends");
     public static readonly NoireString ClassicLifetimeTarget = new("classic.settings.lifetime.target", "When you play the target emote");
-    public static readonly NoireString ClassicNever = new("classic.settings.never", "Never");
     public static readonly NoireString ClassicBehaviorMultiple = new("classic.settings.behavior.multiple", "Multiple swaps");
     public static readonly NoireString ClassicBehaviorOne = new("classic.settings.behavior.one", "One swap at a time");
-    public static readonly NoireString ClassicAllowed = new("classic.settings.allowed", "Allowed");
-    public static readonly NoireString ClassicLastResort = new("classic.settings.last_resort", "Last resort");
-    public static readonly NoireString ClassicBlocked = new("classic.settings.blocked", "Blocked");
-    public static readonly NoireString ClassicNothingElseFits = new("classic.settings.nothing_else_fits", "Only when nothing else fits");
-    public static readonly NoireString ClassicAllow = new("classic.settings.allow", "Allow");
     public static readonly NoireString ClassicWhenNecessary = new("classic.settings.when_necessary", "Only when necessary");
-    public static readonly NoireString ClassicOn = new("classic.settings.on", "On");
-    public static readonly NoireString ClassicSameRank = new("classic.settings.same_rank", "Same rank only");
-    public static readonly NoireString ClassicOneBelow = new("classic.settings.one_below", "One rank below");
     public static readonly NoireString ClassicAnything = new("classic.settings.anything", "Anything allowed");
-    public static readonly NoireString ClassicLockedInWindow = new("classic.settings.locked_in_window", "Show locked emotes in the game's Emote window");
     public static readonly NoireString ClassicNewInterface = new("classic.settings.new_interface", "Use the new interface");
     public static readonly NoireString ClassicNewInterfaceHelp = new("classic.settings.new_interface.help",
         "Switches back to the new interface."
@@ -115,16 +103,6 @@ internal static partial class L
     public static readonly NoireString ClassicHiddenUiWindows = new("classic.settings.hidden_ui", "Show windows while the game UI is hidden");
     public static readonly NoireString ClassicHiddenUiWindowsHelp = new("classic.settings.hidden_ui.help", "Keeps this plugin's windows visible when you hide the game UI.");
     public static readonly NoireString ClassicSectionWindows = new("classic.settings.section.windows", "Windows");
-    public static readonly NoireString ClassicSafeModeNotAPromise = new("classic.settings.safe_mode_not_a_promise",
-        "Safe mode is not 100% guaranteed to be safe either. It prevents Direct Play from being used in states where it was proved to "
-        + "go wrong, but I can not prove the absence of issues. Use Emote Swap if you want to be 100% safe, it will behave almost the same way.");
-    public static readonly NoireString ClassicUnsafeReassurance = new("classic.settings.unsafe.reassurance",
-        "In practice it is a non-issue. This has been a thing in other tools and plugins (and still is in some of them), "
-        + "which people have used for years without trouble. Go back to safe mode, or even better, to emote swap, if you are uncomfy with this.");
-    public static readonly NoireString ClassicUnsafeToggleHelp = new("classic.settings.unsafe.help",
-        "Lets Direct Play bypass an emote in any pose."
-        + "\n\nLeave it off unless you know what you are doing. When off, the plugin only plays emotes from states where "
-        + "nothing can be noticed.");
     public static readonly NoireString ClassicNotApproved = new("classic.settings.gate.not_approved", "Bypass Emote has not been approved for this game build.");
     public static readonly NoireString ClassicNotApprovedText = new("classic.settings.gate.not_approved.text",
         "Emote swaps may behave oddly until the build is approved.\nThe plugin will automatically fetch updates every 10 minutes to check if it was approved.");
@@ -134,91 +112,138 @@ internal static partial class L
     public static readonly NoireString ClassicEnableForceApproval = new("classic.settings.gate.force_enable", "Enable Force Approval");
     public static readonly NoireString ClassicDisableForceApproval = new("classic.settings.gate.force_disable", "Disable Force Approval");
     public static readonly NoireString ClassicUntested = new("classic.settings.gate.untested", "Bypass Emote cannot be tested on this game client.");
-    public static readonly NoireString ClassicLoopMatchingHelp = new("classic.settings.loop_matching.help",
-        "\"Strict\" only puts a looping emote on another looping one."
-        + "\n\"Lenient\" lets a looping emote play once on a one time emote when no better match exists."
-        + "\n\nRecommended: \"Strict\", or \"Lenient\" if you really don't have many emotes.");
-    public static readonly NoireString ClassicTurnMatchingHelp = new("classic.settings.turn_matching.help",
-        "Emotes have different turn behaviors when you target someone. Some emotes will make your torso turn (i.e: /hum), some only your head (i.e: /stepdance),"
-        + "some will only make your eyes follow your target (i.e: /beesknees) while others will not move at all (i.e:/guard)."
-        + "\n\n\"Very strict\" only picks emotes that behaves the same way."
-        + "\n\"Strict\" allows eye following differences but keeps emotes head and body turn behaviors."
-        + "\n\"Lenient\" allows any turn behavior."
-        + "\n\nThe plugin will still always try to find the best match first, regardless of the selected rule."
-        + "\n\nRecommended: \"Lenient\".");
-    public static readonly NoireString ClassicSoundMatchingHelp = new("classic.settings.sound_matching.help",
-        "\"Strict\" never puts an emote on one that makes sound."
-        + "\n\"Lenient\" allows matching emotes that make sounds together."
-        + "\n\"Off\" will let emotes play regardless of sound."
-        + "\n\nThis is to prevent vanilla people from seeing you play fume which could annoy other vanilla players, for example."
-        + "\n\nRecommended: \"Lenient\".");
-    public static readonly NoireString ClassicCachedDispatchHelp = new("classic.settings.cached_dispatch.help",
-        "Gives each bypassed emote a target emote of its own. This is useful when you want to bypass multiple emotes quickly."
-        + "\n\n\"Off\" would make it so other people on your sync service would see you redraw constantly."
-        + "\n\"Only when necessary\" spreads emotes only after a game patch breaks the cache-breaker feature."
-        + "\n\"On\" always spreads emotes."
-        + "\n\nRecommended: \"On\" if you want other people on your sync service to always see you properly without "
-        + "redrawing all the time, otherwise highly recommended to leave it on \"Only when necessary\" and not \"Off\".");
-    public static readonly NoireString ClassicDispatchFidelityHelp = new("classic.settings.dispatch_fidelity.help",
-        "Takes effect when \"Spread swaps over several emote\" is enabled. This determines which emotes become available for a source emote. "
-        + "Basically, if you want to spread swaps over 5 emotes, and you try to bypass an emote but you only have 2 same-rank targets available, "
-        + "this is how it will determine what to do in this scenario. A rank is basically a category of emotes with similar characteristics (same turn behaviour, etc)."
-        + "\n\n\"Same rank only\" strictly picks targets of the same rank."
-        + "\n\"One rank below\" also accepts targets one rank below."
-        + "\n\"Anything allowed\" picks any target it can find, regardless of the rank."
-        + "\n\nNone of them ever breaks your other rules."
-        + "\n\nRecommended: \"One rank below\", or \"Same rank only\" if you want behavior accuracy.");
-    public static readonly NoireString ClassicModdedTargetsHelp = new("classic.settings.modded_targets.help",
-        "Determines whether to block unlocked emotes from being picked when they are modified by at least one of your mods. "
-        + "This prevents other people from seeing other modded emotes you might have before the swap takes place."
-        + "\nAs an example, you have a mod on beesknees, and you try to bypass /conduct which happens to land on beesknees: "
-        + "other players might or might not see the modded beesknees for a moment."
-        + "\n\n\"Allowed\" allows using unlocked emotes that are modified by one of your mods."
-        + "\n\"Last resort\" uses one only when nothing else fits."
-        + "\n\"Blocked\" never uses one, and show an error message in the chat with options to disable or open the mod in penumbra."
-        + "\n\nRecommended: \"Last resort\", or \"Blocked\" if you absolutely don't want your modded emotes to accidentaly be seen.");
-    public static readonly NoireString ClassicIdlePoseLoopsHelp = new("classic.settings.idle_pose_loops.help",
-        "When no unlocked looped emote fits as a target, your current idle pose may be eligible instead. "
-        + "The emote you try to bypass will then be targeted onto your current idle pose. This will cause a redraw of your character when triggered."
-        + "\n\n\"Never\" blocks idle poses from being used as targets."
-        + "\n\"Only when nothing else fits\" uses the pose only when literally no unlocked looped emote could have played here at all. "
-        + "This will not use your idle pose if any other emote would have been available if it wasn't blocked."
-        + "\n\"Allow\" always falls back to your idle pose when no other options are available."
-        + "\n\nRecommended: \"Only when nothing else fits\".");
-    public static readonly NoireString ClassicLifetimeHelp = new("classic.settings.lifetime.help",
-        "\"When the emote ends\" puts your real emote back as soon as the animation stops."
-        + "\n\"When you play the target emote\" keeps the swap enabled until the next time you play the target emote."
-        + "\n\"Never\" keeps the swap live until another swap claims the same target emote."
-        + "\n\nRecommended: \"When you play the target emote\". \"When the emote ends\" is not recommended, as people will "
-        + "see you redraw constantly after swapping.");
-    public static readonly NoireString ClassicBehaviorHelp = new("classic.settings.behavior.help",
-        "\"Multiple swaps\" keeps multiple swaps active at the same time in the mod."
-        + "\n\"One swap at a time\" turns the previous swaps off as soon as a new one starts."
-        + "\n\nRecommended: \"Multiple swaps\", unless for some reason you want to only keep one swap at a time.");
-    public static readonly NoireString ClassicKeptSwapsHelp = new("classic.settings.kept_swaps.help",
-        "How many swaps are kept per target emote. 0 keeps them all."
-        + "\n\nEach kept swap stays as an option of the generated Penumbra mod, so playing an emote "
-        + "again enables it again without rebuilding it. The only cost is that the mod gets bigger.");
-    public static readonly NoireString ClassicCacheBreakHelp = new("classic.settings.cache_break.help",
-        "Applies the cache-break mechanism to every emote, even those you own. This is a bonus feature and "
-        + "is experimental. This will allow the client to always \"refresh\" animations so you never have "
-        + "to redraw yourself or stop emoting to apply an animation change.");
-    public static readonly NoireString ClassicErrorThrottleHelp = new("classic.settings.error_throttle.help",
-        "How long the same error stays quiet after you have seen it."
-        + "\n\nAccepts time format: 5m, 300s, 5m10s, 1h."
-        + "\nSet to 0 to see every one of them.");
-    public static readonly NoireString ClassicWarningMessagesHelp = new("classic.settings.warning_messages.help",
-        "Shows a warning in chat when a swap happened, but not the way you would expect.");
-    public static readonly NoireString ClassicWarningThrottleHelp = new("classic.settings.warning_throttle.help",
-        "How long the same warning stays quiet after you have seen it."
-        + "\n\nAccepts time format: 5m, 300s, 5m10s, 1h."
-        + "\nSet to 0 to disable.");
-    public static readonly NoireString ClassicCachedDispatchAlarm = new("classic.settings.cached_dispatch.alarm",
-        "Leave this on, otherwise bypassing several animations in a row may look broken.");
 
     public static readonly NoireString Language = new("settings.language", "Language");
     public static readonly NoireString LanguageHelp = new("settings.language.help", "The language of the plugin's windows and chat messages.");
     public static readonly NoireString Translation = new("settings.translation", "Translation");
     public static readonly NoireString Translate = new("settings.translate", "Translate...");
     public static readonly NoireString TranslationHelp = new("settings.translation.help", "Opens the translation editor. Your translations are saved in the plugin's configuration folder. Translations or improvements are very much welcome: open an issue or a pull request on the plugin's GitHub to share yours.");
+    public static readonly NoireString LockedInWindow = new("settings.locked_in_window", "Show locked emotes in the game emote window");
+    public static readonly NoireString PreviewPopupSetting = new("silk.settings.preview_popup", "Enable preview popup");
+    public static readonly NoireString PreviewPopupSettingHelp = new("silk.settings.preview_popup.help",
+        "On: clicking an emote opens a panel next to the window, and a double-click plays it. In Emote Swap the panel also "
+        + "previews the swap. Off: no panel, a single click plays the emote.");
+    public static readonly NoireString NewInterfaceText = new("silk.settings.new_interface.text", "The one you are looking at.");
+    public static readonly NoireString ClassicInterfaceText = new("silk.settings.classic_interface.text", "The old version.");
+    public static readonly NoireString SectionEmoteList = new("silk.settings.section.emote_list", "Emote list");
+    public static readonly NoireString CompactRows = new("silk.settings.compact_rows", "Compact rows");
+    public static readonly NoireString CompactRowsHelp = new("silk.settings.compact_rows.help", "Much smaller rows in the emote list, to see more emotes at once.");
+    public static readonly NoireString AdoptMalou = new("silk.settings.malou", "Adopt Malou, the orange cat");
+    public static readonly NoireString AdoptMalouHelp = new("silk.settings.malou.help", "He's really cute.");
+
+    public static readonly NoireString Recommended = new("silk.settings.recommended", "Recommended");
+    public static readonly NoireString Strict = new("settings.strict", "Strict");
+    public static readonly NoireString Lenient = new("settings.lenient", "Lenient");
+    public static readonly NoireString VeryStrict = new("settings.very_strict", "Very strict");
+    public static readonly NoireString Off = new("settings.off", "Off");
+    public static readonly NoireString SilkWhenNeeded = new("silk.settings.when_needed", "When needed");
+    public static readonly NoireString On = new("settings.on", "On");
+    public static readonly NoireString SameRank = new("settings.same_rank", "Same rank");
+    public static readonly NoireString OneBelow = new("settings.one_below", "One below");
+    public static readonly NoireString SilkAny = new("silk.settings.any", "Any");
+    public static readonly NoireString Allowed = new("settings.allowed", "Allowed");
+    public static readonly NoireString LastResort = new("settings.last_resort", "Last resort");
+    public static readonly NoireString Blocked = new("settings.blocked", "Blocked");
+    public static readonly NoireString Never = new("settings.never", "Never");
+    public static readonly NoireString Allow = new("settings.allow", "Allow");
+    public static readonly NoireString SilkWhenItEnds = new("silk.settings.when_it_ends", "When it ends");
+    public static readonly NoireString SilkOnTheTarget = new("silk.settings.on_the_target", "On the target");
+    public static readonly NoireString SilkMultiple = new("silk.settings.multiple", "Multiple");
+    public static readonly NoireString SilkOneAtATime = new("silk.settings.one_at_a_time", "One at a time");
+    public static readonly NoireString UnsafeToggleHelp = new("settings.unsafe.help",
+        "Lets Direct Play bypass an emote in any pose."
+        + "\n\nLeave it off unless you know what you are doing. When it is off, the plugin only plays emotes from "
+        + "states where nothing can be noticed.");
+    public static readonly NoireString LoopMatchingHelp = new("settings.loop_matching.help",
+        "\"Strict\" only puts a looping emote on another looping one."
+        + "\n\"Lenient\" lets a looping emote play once on a one time emote when no better match exists."
+        + "\n\nRecommended: \"Strict\". Pick \"Lenient\" when you own few emotes.");
+    public static readonly NoireString TurnMatchingHelp = new("settings.turn_matching.help",
+        "Emotes turn your character differently when you have a target. Some turn the torso (/hum). Some turn only the "
+        + "head (/stepdance). Some only move the eyes (/beesknees). Some do not move at all (/guard)."
+        + "\n\n\"Very strict\" only picks emotes that behave the same way."
+        + "\n\"Strict\" keeps the head and body turn, and allows a different eye behaviour."
+        + "\n\"Lenient\" allows any turn behaviour."
+        + "\n\nThe best match is always tried first."
+        + "\n\nRecommended: \"Lenient\".");
+    public static readonly NoireString SoundMatchingHelp = new("settings.sound_matching.help",
+        "Decides whether an emote can be swapped onto one that makes a sound, which players around you would hear."
+        + "\n\"Strict\" only uses silent targets."
+        + "\n\"Lenient\" keeps silent emotes on silent targets. An emote that makes a sound itself can use any target."
+        + "\n\"Off\" allows any target, so a silent emote can end up playing another emote's sound."
+        + "\n\nWhenever a silent target fits, it is picked first."
+        + "\n\nRecommended: \"Lenient\".");
+    public static readonly NoireString CachedDispatchHelp = new("settings.cached_dispatch.help",
+        "Gives each bypassed emote a target emote of its own. Useful when you bypass several emotes quickly."
+        + "\n\n\"Off\" redraws your character on every bypass."
+        + "\n\"When needed\" spreads emotes only after a game patch breaks the cache-breaker."
+        + "\n\"On\" always spreads emotes."
+        + "\n\nRecommended: \"On\". \"Off\" is not recommended.");
+    public static readonly NoireString DispatchFidelityHelp = new("settings.dispatch_fidelity.help",
+        "Which emotes a source emote may spread over. Takes effect while \"Spread swaps over several emotes\" is on. "
+        + "A rank is a group of emotes with the same characteristics (turn behaviour and so on)."
+        + "\n\n\"Same rank\" only picks targets of the same rank."
+        + "\n\"One below\" also accepts targets one rank below."
+        + "\n\"Any\" picks any target it can find."
+        + "\n\nNone of them breaks your other rules."
+        + "\n\nRecommended: \"One below\". Pick \"Same rank\" for behaviour accuracy.");
+    public static readonly NoireString ModdedTargetsHelp = new("settings.modded_targets.help",
+        "Whether an unlocked emote that one of your mods changes may be used as a target. Other players can see that "
+        + "modded emote for a moment before the swap takes place."
+        + "\n\n\"Allowed\" uses them freely."
+        + "\n\"Last resort\" uses one only when nothing else fits."
+        + "\n\"Blocked\" never uses one. The chat error then offers to disable the mod or open it in Penumbra."
+        + "\n\nRecommended: \"Last resort\". Pick \"Blocked\" to keep your modded emotes out of sight.");
+    public static readonly NoireString IdlePoseLoopsHelp = new("settings.idle_pose_loops.help",
+        "When no unlocked looped emote fits as a target, your current idle pose can carry the emote instead. "
+        + "Using the pose redraws your character."
+        + "\n\n\"Never\" blocks idle poses as targets."
+        + "\n\"Allow\" falls back to your idle pose whenever no looped emote fits."
+        + "\n\nRecommended: \"Allow\".");
+    public static readonly NoireString LifetimeHelp = new("settings.lifetime.help",
+        "\"When it ends\" puts your real emote back as soon as the animation stops."
+        + "\n\"On the target\" keeps the swap enabled until the next time you play the target emote."
+        + "\n\"Never\" keeps the swap live until another swap claims the same target emote."
+        + "\n\n\"When it ends\" redraws your character after every swap."
+        + "\n\nRecommended: \"On the target\".");
+    public static readonly NoireString BehaviorHelp = new("settings.behavior.help",
+        "\"Multiple\" keeps multiple swaps active at the same time in the mod."
+        + "\n\"One at a time\" turns the previous swaps off as soon as a new one starts."
+        + "\n\nRecommended: \"Multiple\".");
+    public static readonly NoireString KeptSwapsHelp = new("settings.kept_swaps.help",
+        "How many swaps are kept per target emote. 0 keeps them all."
+        + "\n\nA kept swap stays as an option of the generated Penumbra mod. Playing that emote again enables it "
+        + "without rebuilding the mod. Kept swaps make the mod bigger.");
+    public static readonly NoireString CacheBreakHelp = new("settings.cache_break.help",
+        "Applies the cache-break mechanism to every emote, even the ones you own. An animation change then applies "
+        + "without a redraw and without stopping the emote. Experimental.");
+    public static readonly NoireString ErrorThrottleHelp = new("settings.error_throttle.help",
+        "How long the same error stays quiet after you have seen it."
+        + "\n\nSet to 0 to see every one of them.");
+    public static readonly NoireString WarningMessagesHelp = new("settings.warning_messages.help",
+        "Shows a warning in chat when a swap did not happen the way you would expect.");
+    public static readonly NoireString WarningThrottleHelp = new("settings.warning_throttle.help",
+        "How long the same warning stays quiet after you have seen it."
+        + "\n\nSet to 0 to disable.");
+    public static readonly NoireString CachedDispatchAlarm = new("settings.cached_dispatch.alarm",
+        "Leave this on. Bypassing several animations in a row can look broken while it is off.");
+
+    public static readonly NoireString SafeModeNotAPromise = new("settings.safe_mode_not_a_promise",
+        "Safe mode is not a guarantee either. It keeps Direct Play out of the states where it was proved to go wrong. "
+        + "Emote Swap is the safe option and behaves almost the same way.");
+    public static readonly NoireString UnsafeReassurance = new("settings.unsafe.reassurance",
+        "In practice it is a non-issue. Other tools and plugins have done this for years without trouble. Go back to "
+        + "safe mode, or to Emote Swap, if you are uncomfortable with it.");
+
+    public static readonly NoireString GateWaitingTitle = new("silk.gate.waiting", "Waiting for this game patch to be approved");
+    public static readonly NoireString GateWaitingText = new("silk.gate.waiting.text",
+        "Bypass Emote stays off until the current game version is checked. It usually takes a few hours.");
+    public static readonly NoireString GateUntestedTitle = new("silk.gate.untested", "Bypass Emote cannot be tested on this game client");
+    public static readonly NoireString ForceApproval = new("silk.gate.force", "Force approval");
+    public static readonly NoireString ForceApprovalOn = new("silk.gate.forced", "Force approval is on.");
+    public static readonly NoireString DisableForceApproval = new("silk.gate.force_disable", "Disable force approval");
+    public static readonly NoireString GateDetail = new("silk.gate.detail",
+        "{reason}\nEmote swaps may behave oddly until the build is approved. The plugin fetches updates "
+        + "every 10 minutes to check if it was approved.{notice}\nChecked at {time}.");
+    public static readonly NoireString CountdownLabel = new("silk.gate.countdown", "{label} ({seconds})");
 }

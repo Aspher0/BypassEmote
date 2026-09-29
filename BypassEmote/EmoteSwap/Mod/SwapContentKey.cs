@@ -9,8 +9,6 @@ namespace BypassEmote.EmoteSwap;
 
 internal static class SwapContentKey
 {
-    private const int KeyLength = 16;
-
     internal static string For(int rulesVersion, uint targetEmote, uint sourceEmote, IReadOnlyList<RaceSourceInput> races)
     {
         var material = new StringBuilder();
@@ -48,5 +46,5 @@ internal static class SwapContentKey
 
     private static string Digest(StringBuilder material)
         => Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(material.ToString())))
-            .ToLowerInvariant()[..KeyLength];
+            .ToLowerInvariant()[..16];
 }

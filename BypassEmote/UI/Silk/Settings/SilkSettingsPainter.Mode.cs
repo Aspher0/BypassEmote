@@ -27,21 +27,22 @@ internal sealed partial class SilkSettingsPainter
     private static string KeptSwapsName => L.KeptSwaps.Text;
     private static string AnonymizeModName => L.AnonymizeMod.Text;
     private static string AlwaysCacheBreakName => L.AlwaysCacheBreak.Text;
+    private static string DisableModOnExitName => L.DisableModOnExit.Text;
     private static string SwapMessagesName => L.SwapMessages.Text;
     private static string ErrorMessagesName => L.ErrorMessages.Text;
     private static string ErrorThrottleName => L.ErrorThrottle.Text;
     private static string WarningMessagesName => L.WarningMessages.Text;
     private static string WarningThrottleName => L.WarningThrottle.Text;
 
-    private static readonly TextList LoopMatchingOptions = new(L.SilkStrict, L.SilkLenient);
-    private static readonly TextList TurnMatchingOptions = new(L.SilkVeryStrict, L.SilkStrict, L.SilkLenient);
+    private static readonly TextList LoopMatchingOptions = new(L.Strict, L.Lenient);
+    private static readonly TextList TurnMatchingOptions = new(L.VeryStrict, L.Strict, L.Lenient);
     private static readonly TurnMatchRule[] TurnMatchingOrder = [TurnMatchRule.VeryStrict, TurnMatchRule.Strict, TurnMatchRule.Lenient];
-    private static readonly TextList SoundMatchingOptions = new(L.SilkStrict, L.SilkLenient, L.SilkOff);
-    private static readonly TextList CachedDispatchOptions = new(L.SilkOff, L.SilkWhenNeeded, L.SilkOn);
-    private static readonly TextList DispatchFidelityOptions = new(L.SilkSameRank, L.SilkOneBelow, L.SilkAny);
-    private static readonly TextList ModdedTargetsOptions = new(L.SilkAllowed, L.SilkLastResort, L.SilkBlocked);
-    private static readonly TextList IdlePoseLoopsOptions = new(L.SilkNever, L.SilkIfNothingFits, L.SilkAllow);
-    private static readonly TextList SwapLifetimeOptions = new(L.SilkWhenItEnds, L.SilkOnTheTarget, L.SilkNever);
+    private static readonly TextList SoundMatchingOptions = new(L.Strict, L.Lenient, L.Off);
+    private static readonly TextList CachedDispatchOptions = new(L.Off, L.SilkWhenNeeded, L.On);
+    private static readonly TextList DispatchFidelityOptions = new(L.SameRank, L.OneBelow, L.SilkAny);
+    private static readonly TextList ModdedTargetsOptions = new(L.Allowed, L.LastResort, L.Blocked);
+    private static readonly TextList IdlePoseLoopsOptions = new(L.Never, L.Allow);
+    private static readonly TextList SwapLifetimeOptions = new(L.SilkWhenItEnds, L.SilkOnTheTarget, L.Never);
     private static readonly TextList SwapBehaviorOptions = new(L.SilkMultiple, L.SilkOneAtATime);
 
     private static readonly SilkComboItem EmoteSwapItem = new(L.EmoteSwap.Text, L.Recommended.Text, SilkPalette.Ok);
@@ -50,53 +51,55 @@ internal sealed partial class SilkSettingsPainter
 
     private static readonly SilkParagraphList SafeNotice = new(
         (L.SafeModeLimitLine, SilkParagraphTone.Body),
-        (L.SilkSafeModeNotAPromise, SilkParagraphTone.Muted));
+        (L.SafeModeNotAPromise, SilkParagraphTone.Muted));
 
     private static readonly SilkParagraphList UnsafeNotice = new(
         (L.UnsafeHeadline, SilkParagraphTone.Strong),
-        (L.SilkUnsafeReassurance, SilkParagraphTone.Body));
+        (L.UnsafeReassurance, SilkParagraphTone.Body));
 
     private static string ModeHelp => L.ModeHelp.Text;
 
-    private static string UnsafeToggleHelp => L.SilkUnsafeToggleHelp.Text;
+    private static string UnsafeToggleHelp => L.UnsafeToggleHelp.Text;
 
     private static string FaceTargetHelp => L.FaceTargetHelp.Text;
 
-    private static string LoopMatchingHelp => L.SilkLoopMatchingHelp.Text;
+    private static string LoopMatchingHelp => L.LoopMatchingHelp.Text;
 
-    private static string TurnMatchingHelp => L.SilkTurnMatchingHelp.Text;
+    private static string TurnMatchingHelp => L.TurnMatchingHelp.Text;
 
-    private static string SoundMatchingHelp => L.SilkSoundMatchingHelp.Text;
+    private static string SoundMatchingHelp => L.SoundMatchingHelp.Text;
 
-    private static string CachedDispatchHelp => L.SilkCachedDispatchHelp.Text;
+    private static string CachedDispatchHelp => L.CachedDispatchHelp.Text;
 
     private static string MaxTargetsHelp => L.MaxTargetsHelp.Text;
 
-    private static string DispatchFidelityHelp => L.SilkDispatchFidelityHelp.Text;
+    private static string DispatchFidelityHelp => L.DispatchFidelityHelp.Text;
 
-    private static string ModdedTargetsHelp => L.SilkModdedTargetsHelp.Text;
+    private static string ModdedTargetsHelp => L.ModdedTargetsHelp.Text;
 
-    private static string IdlePoseLoopsHelp => L.SilkIdlePoseLoopsHelp.Text;
+    private static string IdlePoseLoopsHelp => L.IdlePoseLoopsHelp.Text;
 
-    private static string LifetimeHelp => L.SilkLifetimeHelp.Text;
+    private static string LifetimeHelp => L.LifetimeHelp.Text;
 
-    private static string BehaviorHelp => L.SilkBehaviorHelp.Text;
+    private static string BehaviorHelp => L.BehaviorHelp.Text;
 
-    private static string KeptSwapsHelp => L.SilkKeptSwapsHelp.Text;
+    private static string KeptSwapsHelp => L.KeptSwapsHelp.Text;
 
     private static string AnonymizeModHelp => L.AnonymizeModHelp.Text;
 
-    private static string AlwaysCacheBreakHelp => L.SilkCacheBreakHelp.Text;
+    private static string AlwaysCacheBreakHelp => L.CacheBreakHelp.Text;
+
+    private static string DisableModOnExitHelp => L.DisableModOnExitHelp.Text;
 
     private static string SwapMessagesHelp => L.SwapMessagesHelp.Text;
 
     private static string ErrorMessagesHelp => L.ErrorMessagesHelp.Text;
 
-    private static string ErrorThrottleHelp => L.SilkErrorThrottleHelp.Text;
+    private static string ErrorThrottleHelp => L.ErrorThrottleHelp.Text;
 
-    private static string WarningMessagesHelp => L.SilkWarningMessagesHelp.Text;
+    private static string WarningMessagesHelp => L.WarningMessagesHelp.Text;
 
-    private static string WarningThrottleHelp => L.SilkWarningThrottleHelp.Text;
+    private static string WarningThrottleHelp => L.WarningThrottleHelp.Text;
 
     private string? cacheBreakAlarm;
     private int alarmRevision = -1;
@@ -260,6 +263,10 @@ internal sealed partial class SilkSettingsPainter
         if (SwitchRow(ref rows, "##silkcachebreak", AlwaysCacheBreakName, AlwaysCacheBreakHelp, ref cacheBreak, AlwaysCacheBreakAlarm()))
             Configuration.AlwaysCacheBreak = cacheBreak;
 
+        var disableOnExit = Configuration.DisableModOnExit;
+        if (SwitchRow(ref rows, "##silkdisableonexit", DisableModOnExitName, DisableModOnExitHelp, ref disableOnExit))
+            Configuration.DisableModOnExit = disableOnExit;
+
         y += rows.End();
 
         return y - origin.Y;
@@ -388,7 +395,7 @@ internal sealed partial class SilkSettingsPainter
             return dispatchAlarm;
 
         alarmRevision = NoireLanguages.Revision;
-        var message = L.SilkCachedDispatchAlarm.Text;
+        var message = L.CachedDispatchAlarm.Text;
 
         dispatchAlarmSpreads = spreads;
         dispatchAlarmFault = fault;

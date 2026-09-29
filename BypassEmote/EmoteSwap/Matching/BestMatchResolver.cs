@@ -8,35 +8,7 @@ namespace BypassEmote.EmoteSwap;
 
 public static class BestMatchResolver
 {
-    private const int CurrentPostureFit = 400;
-    private const int SameKindWhenLenient = 300;
-    private const int IntroBothMatch = 250;
-    private const int TurnExact = 200;
-    private const int SoundSilent = 150;
-    private const int TurnEyesNone = 100;
-    private const int PostureSetEqual = 100;
-    private const int SoundSfx = 50;
-    private const int TurnHeadEyes = 50;
-    private const int TurnHeadNone = 35;
-    private const int IntroSourceOnly = 25;
-    private const int TurnBodyHead = 25;
-    private const int TurnBodyEyes = 10;
-    private const int PostureShared = 10;
-    private const int TurnBodyNone = 0;
-    private const int SoundVoiceline = 0;
     private const int TurnUnknownPenalty = -50;
-
-    private const int SoundingTargetTierPenalty = -10_000;
-
-    private const int CancelsOnRotateTierPenalty = -100_000;
-
-    private const int SourceIntroDroppedTierPenalty = -50_000;
-
-    // A TMB-only intro still plays its windup over any swap.
-    // Might be unncessary
-    private const int TmbOnlyIntroTierPenalty = -75_000;
-
-    private const int PapIntroOnPaplessSourceTierPenalty = -25_000;
 
     public static MatchResult Resolve(
         EmoteAttributes source,
@@ -257,10 +229,10 @@ public static class BestMatchResolver
         var score = 0;
 
         if ((candidate.Postures & currentPosture) == currentPosture)
-            score += CurrentPostureFit;
+            score += 400;
 
         if (config.Loop == LoopMatchRule.AllowLoopOnOneShot && candidate.LoopKind == source.LoopKind)
-            score += SameKindWhenLenient;
+            score += 300;
 
         score += ScoreTurn(source.Turn, candidate.Turn);
         score += ScoreSound(config.Sound, candidate.Sound);
@@ -268,16 +240,16 @@ public static class BestMatchResolver
         score += ScoreIntro(HasPapIntro(source), HasPapIntro(candidate));
 
         if (candidate.CancelsOnRotate)
-            score += CancelsOnRotateTierPenalty;
+            score -= 100_000;
 
         if (HasPapIntro(source) && candidate.Intro == IntroKind.None)
-            score += SourceIntroDroppedTierPenalty;
+            score -= 50_000;
 
         if (HasPapIntro(source) && candidate.Intro == IntroKind.TmbOnly)
-            score += TmbOnlyIntroTierPenalty;
+            score -= 75_000;
 
         if (!HasPapIntro(source) && HasPapIntro(candidate))
-            score += PapIntroOnPaplessSourceTierPenalty;
+            score -= 25_000;
 
         return score;
     }
@@ -288,16 +260,16 @@ public static class BestMatchResolver
             return TurnUnknownPenalty;
 
         if (sourceTurn == candidateTurn)
-            return TurnExact;
+            return 200;
 
         return (sourceTurn, candidateTurn) switch
         {
-            (TurnClass.Eyes, TurnClass.None) or (TurnClass.None, TurnClass.Eyes) => TurnEyesNone,
-            (TurnClass.Head, TurnClass.Eyes) or (TurnClass.Eyes, TurnClass.Head) => TurnHeadEyes,
-            (TurnClass.Head, TurnClass.None) or (TurnClass.None, TurnClass.Head) => TurnHeadNone,
-            (TurnClass.Body, TurnClass.Head) or (TurnClass.Head, TurnClass.Body) => TurnBodyHead,
-            (TurnClass.Body, TurnClass.Eyes) or (TurnClass.Eyes, TurnClass.Body) => TurnBodyEyes,
-            (TurnClass.Body, TurnClass.None) or (TurnClass.None, TurnClass.Body) => TurnBodyNone,
+            (TurnClass.Eyes, TurnClass.None) or (TurnClass.None, TurnClass.Eyes) => 100,
+            (TurnClass.Head, TurnClass.Eyes) or (TurnClass.Eyes, TurnClass.Head) => 50,
+            (TurnClass.Head, TurnClass.None) or (TurnClass.None, TurnClass.Head) => 35,
+            (TurnClass.Body, TurnClass.Head) or (TurnClass.Head, TurnClass.Body) => 25,
+            (TurnClass.Body, TurnClass.Eyes) or (TurnClass.Eyes, TurnClass.Body) => 10,
+            (TurnClass.Body, TurnClass.None) or (TurnClass.None, TurnClass.Body) => 0,
             _ => TurnUnknownPenalty,
         };
     }
@@ -306,14 +278,14 @@ public static class BestMatchResolver
     {
         var score = candidateSound switch
         {
-            SoundClass.Silent => SoundSilent,
-            SoundClass.Sfx => SoundSfx,
-            SoundClass.Voiceline => SoundVoiceline,
+            SoundClass.Silent => 150,
+            SoundClass.Sfx => 50,
+            SoundClass.Voiceline => 0,
             _ => 0,
         };
 
         if (rule != SoundMatchRule.Strict && candidateSound != SoundClass.Silent)
-            score += SoundingTargetTierPenalty;
+            score -= 10_000;
 
         return score;
     }
@@ -321,18 +293,18 @@ public static class BestMatchResolver
     private static int ScorePosture(PostureFlags sourcePostures, PostureFlags candidatePostures)
     {
         if (candidatePostures == sourcePostures)
-            return PostureSetEqual;
+            return 100;
 
         var shared = candidatePostures & sourcePostures;
-        return BitOperations.PopCount((uint)shared) * PostureShared;
+        return BitOperations.PopCount((uint)shared) * 10;
     }
 
     private static int ScoreIntro(bool sourceHasIntro, bool candidateHasIntro)
     {
         if (sourceHasIntro == candidateHasIntro)
-            return IntroBothMatch;
+            return 250;
 
-        return sourceHasIntro ? IntroSourceOnly : 0;
+        return sourceHasIntro ? 25 : 0;
     }
 
     private static bool HasPapIntro(EmoteAttributes emote) => emote.Intro == IntroKind.Pap;

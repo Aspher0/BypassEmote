@@ -109,8 +109,6 @@ public sealed partial class SwapOrchestrator : IDisposable
         var poolLine = PoolLine(_catalog.All.Count, leftOut, pool, matchConfig.BlockedTargets,
             ModdedLine(fullPool, pool, matchConfig, skeleton, fallbackOrder));
 
-        var poolHasLoop = PoolOffersALoop(pool, matchConfig);
-
         var loopsFirst = source.LoopKind == EmotePlayType.Looped
             && matchConfig.Loop == LoopMatchRule.AllowLoopOnOneShot;
 
@@ -119,9 +117,9 @@ public sealed partial class SwapOrchestrator : IDisposable
 
         var elapsedAtMatch = swapClock.ElapsedMilliseconds;
 
-        if (ShouldAttemptIdlePoseFallback(source, choice.Match, Configuration.IdlePoseLoops, poolHasLoop)
+        if (ShouldAttemptIdlePoseFallback(source, choice.Match, Configuration.IdlePoseLoops)
             && TryIdlePoseSwap(source, localPlayer, skeleton, swapClock, elapsedAtMatch,
-                new SwapContext(IdlePoseRoute(choice.Match, poolHasLoop), poolLine, character)))
+                new SwapContext(IdlePoseRoute(choice.Match), poolLine, character)))
         {
             return;
         }

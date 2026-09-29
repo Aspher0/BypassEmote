@@ -23,7 +23,7 @@ internal static class OverridesTab
 
     private static uint _selectedSource;
 
-    private static readonly IdLabel LimitedLabel = new(L.ClassicLimited, "###BypassEmoteOverrideLimited");
+    private static readonly IdLabel LimitedLabel = new(L.Limited, "###BypassEmoteOverrideLimited");
 
     private static EmoteQuickAdd? _sourceAdd;
     private static EmoteQuickAdd? _targetAdd;
@@ -116,7 +116,7 @@ internal static class OverridesTab
         var overrides = Configuration.EmoteOverrides;
 
         ImGui.TextColoredWrapped(NoireTheme.Current.Resolve(ThemeColor.Info),
-            L.ClassicOverridesIntro.Text);
+            L.OverridesIntro.Text);
 
         ImGui.Spacing();
         ImGui.Separator();
@@ -146,7 +146,7 @@ internal static class OverridesTab
                 DrawSourceRows(overrides);
         }
 
-        var picker = _sourceAdd ??= new EmoteQuickAdd("BypassEmoteOverrideSourceAdd", L.ClassicOverrideEmote)
+        var picker = _sourceAdd ??= new EmoteQuickAdd("BypassEmoteOverrideSourceAdd", L.OverrideEmote)
         {
             Marked = rowId => Configuration.EmoteOverrides.Any(entry => entry.SourceEmote == rowId),
             MarkedColor = NoireTheme.Current.Resolve(ThemeColor.Accent),
@@ -210,7 +210,7 @@ internal static class OverridesTab
             if (child)
             {
                 if (configured == null)
-                    ImGui.TextDisabled(L.ClassicPickLeft.Text);
+                    ImGui.TextDisabled(L.PickLeft.Text);
                 else
                     DrawTargetPane(configured);
             }
@@ -219,7 +219,7 @@ internal static class OverridesTab
         if (configured == null)
             return;
 
-        var picker = _targetAdd ??= new EmoteQuickAdd("BypassEmoteOverrideTargetAdd", L.ClassicAddTarget)
+        var picker = _targetAdd ??= new EmoteQuickAdd("BypassEmoteOverrideTargetAdd", L.AddTarget)
         {
             MarkedColor = NoireTheme.Current.Resolve(ThemeColor.Accent),
             MarkedNote = L.AlreadyTargetMark,

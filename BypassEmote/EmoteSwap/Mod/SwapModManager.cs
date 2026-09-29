@@ -20,22 +20,19 @@ public sealed class SwapModManager
     private const string SwapsSubfolderName = "swaps";
     private const string SwapFileSearchPattern = "swap_*.*";
 
-    private const int SwapFileTagLength = 8;
     private const int CurrentRegistrySchemaVersion = 2;
-    private const int MaxPriorityPasses = 4;
 
     private static readonly ContentAddressedStore Store =
-        new("swap_", SwapFileTagLength, SwapFileSearchPattern);
+        new("swap_", 8, SwapFileSearchPattern);
 
     private static readonly JsonSerializerSettings IndentedJson = new() { Formatting = Formatting.Indented };
 
     private static readonly IReadOnlyDictionary<string, string> NoRedirects = new Dictionary<string, string>();
 
-    private const string GeneratedModDescription =
-        "Made by Bypass Emote automatically. Safe to disable or delete. Bypass Emote will recreate it when needed.";
-
     internal static ModMeta MetaFor(string modName)
-        => new(modName, Service.PenumbraModAuthor, GeneratedModDescription, Service.PenumbraModVersion,
+        => new(modName, Service.PenumbraModAuthor,
+            "Made by Bypass Emote automatically. Safe to disable or delete. Bypass Emote will recreate it when needed.",
+            Service.PenumbraModVersion,
             Service.PenumbraModWebsite);
 
     private readonly IPCCaller_Penumbra _gateway;
@@ -105,7 +102,7 @@ public sealed class SwapModManager
             return;
         }
 
-        if (_boundNames is { } left)
+        if (_boundNames is { } left && Configuration.DisableModOnExit)
             DeselectAllUnder(left);
 
         _boundNames = names;
@@ -737,11 +734,15 @@ public sealed class SwapModManager
             return;
 
         var armed = Registry.Entries.Where(entry => entry.SelectedByUs).ToList();
-        var heldTheIdlePose = armed.Any(entry => entry.IsIdlePoseSwap);
+        var releases = Configuration.DisableModOnExit;
+        var heldTheIdlePose = releases && armed.Any(entry => entry.IsIdlePoseSwap);
+        var disabled = false;
 
-        DeselectAll();
-
-        var disabled = DisableMod();
+        if (releases)
+        {
+            DeselectAll();
+            disabled = DisableMod();
+        }
 
         if (heldTheIdlePose)
             _gateway.RedrawLocalPlayer();
@@ -753,7 +754,7 @@ public sealed class SwapModManager
         _gateway.ExternalModChanged -= HandleCompetingModChange;
         _identity.Changed -= HandleIdentityChanged;
 
-        Log.Debug($"Shutting down. {armed.Count} swap(s) deselected. Generated mod "
+        Log.Debug($"Shutting down. {armed.Count} swap(s) {(releases ? "deselected" : "kept")}. Generated mod "
             + (disabled ? "disabled" : "left as is")
             + (heldTheIdlePose ? ". Character redrawn off the swapped idle pose." : "."), LogPrefix);
 
@@ -900,7 +901,7 @@ public sealed class SwapModManager
 
         SyncAppliedPriority(names.Directory);
 
-        for (var pass = 0; pass < MaxPriorityPasses; pass++)
+        for (var pass = 0; pass < 4; pass++)
         {
             var servedPaths = SelectedGamePaths();
 

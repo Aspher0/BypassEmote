@@ -188,15 +188,13 @@ public sealed partial class SwapOrchestrator
             }
         }
 
-        var poolHasLoop = PoolOffersALoop(pool, matchConfig);
-
         var loopsFirst = source.LoopKind == EmotePlayType.Looped
             && matchConfig.Loop == LoopMatchRule.AllowLoopOnOneShot;
 
         var config = loopsFirst ? matchConfig with { Loop = LoopMatchRule.Strict } : matchConfig;
         var match = BestMatchResolver.Resolve(source, pool, config, posture);
 
-        var triesIdlePose = ShouldAttemptIdlePoseFallback(source, match, Configuration.IdlePoseLoops, poolHasLoop);
+        var triesIdlePose = ShouldAttemptIdlePoseFallback(source, match, Configuration.IdlePoseLoops);
         var loopsFirstFailed = false;
 
         if (match.Target == null && loopsFirst)

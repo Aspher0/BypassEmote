@@ -686,18 +686,12 @@ chrome.menu.shared = Gilt für alle Bypass-Emote-Fenster.
 chrome.on_top = Immer im Vordergrund
 # Source: Window options
 chrome.options = Fensteroptionen
-# Source: Create
-classic.create_mod.create = Erstellen
-# Source: This window allows you to create a permanent swap mod, and it stays unaffected by Bypass Emote. You own it, and you manage it, like any other mod.
-classic.create_mod.intro = In diesem Fenster kannst du eine dauerhafte Tausch-Mod erstellen, die von Bypass Emote unberührt bleibt. Sie gehört dir und du verwaltest sie wie jede andere Mod.
 # Source: Mod name
 classic.create_mod.name = Name der Mod
 # Source: The name of the generated mod.
 classic.create_mod.name.help = Der Name der erstellten Mod.
 # Source: No race covered
 classic.create_mod.no_race = Kein Volk abgedeckt
-# Source: Makes the mod have the highest priority. When off, it is created at priority 0.
-classic.create_mod.priority.help = Gibt der Mod die höchste Priorität. Wenn aus, wird sie mit Priorität 0 erstellt.
 # Source: Which bodies the mod is written for.
 classic.create_mod.races.help = Für welche Körper die Mod geschrieben wird.
 # Source: Search races...
@@ -706,52 +700,22 @@ classic.create_mod.search_races = Völker suchen...
 classic.hotbar.assigned = Aktuell zugewiesen: {name}
 # Source: XHB {number}
 classic.hotbar.cross = KAL {number}
-# Source: You can also drag and drop an emote from the main window onto any visible hotbar slot.
-classic.hotbar.drag_hint = Du kannst ein Emote auch aus dem Hauptfenster auf einen sichtbaren Aktionsleistenplatz ziehen.
 # Source: This slot is empty. You can safely assign an emote.
 classic.hotbar.slot_empty = Dieser Platz ist leer. Du kannst bedenkenlos ein Emote zuweisen.
 # Source: Assign {emote} to hotbar...
 classic.hotbar.title = {emote} einer Aktionsleiste zuweisen...
 # Source: {name}  (empty)
 classic.overrides.empty = {name}  (leer)
-# Source: This tab allows you to make sure a locked emote will always use one or multiple specific target emotes.
-classic.overrides.intro = In diesem Tab kannst du sicherstellen, dass ein gesperrtes Emote immer ein oder mehrere bestimmte Ziel-Emotes verwendet.
-# Source: Limited to selected targets only
-classic.overrides.limited = Nur auf ausgewählte Ziele beschränkt
 # Source: No override yet.
 classic.overrides.none = Noch keine Zuweisung.
 # Source: No target yet.
 classic.overrides.no_target = Noch kein Ziel.
-# Source: Pick an emote on the left.
-classic.overrides.pick = Wähle links ein Emote.
-# Source: Override an emote...
-classic.overrides.source = Ein Emote zuweisen...
-# Source: Add a target emote...
-classic.overrides.target = Ein Ziel-Emote hinzufügen...
-# Source: Allow
-classic.settings.allow = Erlauben
-# Source: Allowed
-classic.settings.allowed = Erlaubt
 # Source: Anything allowed
 classic.settings.anything = Alles erlaubt
-# Source: "Multiple swaps" keeps multiple swaps active at the same time in the mod.\n"One swap at a time" turns the previous swaps off as soon as a new one starts.\n\nRecommended: "Multiple swaps", unless for some reason you want to only keep one swap at a time.
-classic.settings.behavior.help = „Mehrere Tausche“ hält mehrere Tausche gleichzeitig in der Mod aktiv.\n„Ein Tausch nach dem anderen“ deaktiviert die vorherigen Tausche, sobald ein neuer beginnt.\n\nEmpfohlen: „Mehrere Tausche“, außer du möchtest aus einem bestimmten Grund immer nur einen Tausch behalten.
 # Source: Multiple swaps
 classic.settings.behavior.multiple = Mehrere Tausche
 # Source: One swap at a time
 classic.settings.behavior.one = Ein Tausch nach dem anderen
-# Source: Blocked
-classic.settings.blocked = Gesperrt
-# Source: Leave this on, otherwise bypassing several animations in a row may look broken.
-classic.settings.cached_dispatch.alarm = Lass das eingeschaltet, sonst kann das Umgehen mehrerer Animationen hintereinander fehlerhaft aussehen.
-# Source: Gives each bypassed emote a target emote of its own. This is useful when you want to bypass multiple emotes quickly.\n\n"Off" would make it so other people on your sync service would see you redraw constantly.\n"Only when necessary" spreads emotes only after a game patch breaks the cache-breaker feature.\n"On" always spreads emotes.\n\nRecommended: "On" if you want other people on your sync service to always see you properly without redrawing all the time, otherwise highly recommended to leave it on "Only when necessary" and not "Off".
-classic.settings.cached_dispatch.help = Gibt jedem umgangenen Emote ein eigenes Ziel-Emote. Nützlich, wenn du mehrere Emotes schnell hintereinander umgehen möchtest.\n\n„Aus“ würde dazu führen, dass andere Personen über deinen Sync-Dienst sehen, wie du ständig neu gezeichnet wirst.\n„Nur wenn nötig“ verteilt Emotes nur, nachdem ein Spielpatch die Cache-Umgehung kaputt gemacht hat.\n„Ein“ verteilt Emotes immer.\n\nEmpfohlen: „Ein“, wenn andere Personen über deinen Sync-Dienst dich immer korrekt sehen sollen, ohne ständiges Neuzeichnen. Ansonsten wird dringend empfohlen, „Nur wenn nötig“ statt „Aus“ zu wählen.
-# Source: Applies the cache-break mechanism to every emote, even those you own. This is a bonus feature and is experimental. This will allow the client to always "refresh" animations so you never have to redraw yourself or stop emoting to apply an animation change.
-classic.settings.cache_break.help = Wendet die Cache-Umgehung auf jedes Emote an, auch auf die, die du besitzt. Dies ist eine experimentelle Zusatzfunktion. Der Client „aktualisiert“ Animationen dann immer, sodass du dich nie neu zeichnen oder dein Emote beenden musst, damit eine Animationsänderung greift.
-# Source: Takes effect when "Spread swaps over several emote" is enabled. This determines which emotes become available for a source emote. Basically, if you want to spread swaps over 5 emotes, and you try to bypass an emote but you only have 2 same-rank targets available, this is how it will determine what to do in this scenario. A rank is basically a category of emotes with similar characteristics (same turn behaviour, etc).\n\n"Same rank only" strictly picks targets of the same rank.\n"One rank below" also accepts targets one rank below.\n"Anything allowed" picks any target it can find, regardless of the rank.\n\nNone of them ever breaks your other rules.\n\nRecommended: "One rank below", or "Same rank only" if you want behavior accuracy.
-classic.settings.dispatch_fidelity.help = Wirkt, wenn „Tausche auf mehrere Emotes verteilen“ aktiviert ist. Legt fest, welche Emotes für ein Quell-Emote verfügbar werden. Wenn du Tausche z. B. auf 5 Emotes verteilen möchtest, beim Umgehen aber nur 2 Ziele desselben Rangs verfügbar sind, entscheidet diese Einstellung, was passiert. Ein Rang ist eine Gruppe von Emotes mit ähnlichen Eigenschaften (gleiches Drehverhalten usw.).\n\n„Nur gleicher Rang“ wählt strikt Ziele desselben Rangs.\n„Ein Rang darunter“ akzeptiert auch Ziele einen Rang darunter.\n„Alles erlaubt“ wählt jedes Ziel, das es finden kann, unabhängig vom Rang.\n\nKeine davon bricht jemals deine anderen Regeln.\n\nEmpfohlen: „Ein Rang darunter“ oder „Nur gleicher Rang“, wenn dir genaues Verhalten wichtig ist.
-# Source: How long the same error stays quiet after you have seen it.\n\nAccepts time format: 5m, 300s, 5m10s, 1h.\nSet to 0 to see every one of them.
-classic.settings.error_throttle.help = Wie lange derselbe Fehler stumm bleibt, nachdem du ihn gesehen hast.\n\nAkzeptierte Zeitformate: 5m, 300s, 5m10s, 1h.\nAuf 0 setzen, um jeden einzelnen zu sehen.
 # Source: Checked at {time}.
 classic.settings.gate.checked_at = Geprüft um {time}.
 # Source: {label} ({seconds})
@@ -776,62 +740,16 @@ classic.settings.gpose.help = Hält die Fenster dieses Plugins sichtbar, währen
 classic.settings.hidden_ui = Fenster bei ausgeblendeter Spieloberfläche anzeigen
 # Source: Keeps this plugin's windows visible when you hide the game UI.
 classic.settings.hidden_ui.help = Hält die Fenster dieses Plugins sichtbar, wenn du die Spieloberfläche ausblendest.
-# Source: When no unlocked looped emote fits as a target, your current idle pose may be eligible instead. The emote you try to bypass will then be targeted onto your current idle pose. This will cause a redraw of your character when triggered.\n\n"Never" blocks idle poses from being used as targets.\n"Only when nothing else fits" uses the pose only when literally no unlocked looped emote could have played here at all. This will not use your idle pose if any other emote would have been available if it wasn't blocked.\n"Allow" always falls back to your idle pose when no other options are available.\n\nRecommended: "Only when nothing else fits".
-classic.settings.idle_pose_loops.help = Wenn kein freigeschaltetes Schleifen-Emote als Ziel passt, kann stattdessen deine aktuelle Ruhehaltung in Frage kommen. Das Emote, das du umgehen möchtest, wird dann auf deine aktuelle Ruhehaltung gelegt. Dabei wird dein Charakter neu gezeichnet.\n\n„Nie“ verhindert, dass Ruhehaltungen als Ziele verwendet werden.\n„Nur wenn nichts anderes passt“ verwendet die Haltung nur, wenn wirklich kein freigeschaltetes Schleifen-Emote hier hätte abgespielt werden können. Deine Ruhehaltung wird nicht verwendet, wenn ein anderes Emote verfügbar gewesen wäre, wäre es nicht gesperrt.\n„Erlauben“ greift immer auf deine Ruhehaltung zurück, wenn keine anderen Optionen verfügbar sind.\n\nEmpfohlen: „Nur wenn nichts anderes passt“.
-# Source: How many swaps are kept per target emote. 0 keeps them all.\n\nEach kept swap stays as an option of the generated Penumbra mod, so playing an emote again enables it again without rebuilding it. The only cost is that the mod gets bigger.
-classic.settings.kept_swaps.help = Wie viele Tausche pro Ziel-Emote behalten werden. 0 behält alle.\n\nJeder behaltene Tausch bleibt eine Option der erstellten Penumbra-Mod, sodass ein erneutes Abspielen des Emotes ihn wieder aktiviert, ohne ihn neu zu erstellen. Der einzige Nachteil ist, dass die Mod größer wird.
-# Source: Last resort
-classic.settings.last_resort = Letzter Ausweg
-# Source: Lenient
-classic.settings.lenient = Nachsichtig
 # Source: When the emote ends
 classic.settings.lifetime.ends = Wenn das Emote endet
-# Source: "When the emote ends" puts your real emote back as soon as the animation stops.\n"When you play the target emote" keeps the swap enabled until the next time you play the target emote.\n"Never" keeps the swap live until another swap claims the same target emote.\n\nRecommended: "When you play the target emote". "When the emote ends" is not recommended, as people will see you redraw constantly after swapping.
-classic.settings.lifetime.help = „Wenn das Emote endet“ stellt dein echtes Emote wieder her, sobald die Animation stoppt.\n„Wenn du das Ziel-Emote abspielst“ hält den Tausch aktiv, bis du das Ziel-Emote das nächste Mal abspielst.\n„Nie“ hält den Tausch aktiv, bis ein anderer Tausch dasselbe Ziel-Emote beansprucht.\n\nEmpfohlen: „Wenn du das Ziel-Emote abspielst“. „Wenn das Emote endet“ wird nicht empfohlen, da andere dich nach dem Tausch ständig neu gezeichnet sehen.
 # Source: When you play the target emote
 classic.settings.lifetime.target = Wenn du das Ziel-Emote abspielst
-# Source: Show locked emotes in the game's Emote window
-classic.settings.locked_in_window = Gesperrte Emotes im Emote-Fenster des Spiels anzeigen
-# Source: "Strict" only puts a looping emote on another looping one.\n"Lenient" lets a looping emote play once on a one time emote when no better match exists.\n\nRecommended: "Strict", or "Lenient" if you really don't have many emotes.
-classic.settings.loop_matching.help = „Streng“ legt ein Schleifen-Emote nur auf ein anderes Schleifen-Emote.\n„Nachsichtig“ lässt ein Schleifen-Emote einmal auf einem einmaligen Emote abspielen, wenn es keine bessere Übereinstimmung gibt.\n\nEmpfohlen: „Streng“, oder „Nachsichtig“, wenn du wirklich nicht viele Emotes hast.
-# Source: Determines whether to block unlocked emotes from being picked when they are modified by at least one of your mods. This prevents other people from seeing other modded emotes you might have before the swap takes place.\nAs an example, you have a mod on beesknees, and you try to bypass /conduct which happens to land on beesknees: other players might or might not see the modded beesknees for a moment.\n\n"Allowed" allows using unlocked emotes that are modified by one of your mods.\n"Last resort" uses one only when nothing else fits.\n"Blocked" never uses one, and show an error message in the chat with options to disable or open the mod in penumbra.\n\nRecommended: "Last resort", or "Blocked" if you absolutely don't want your modded emotes to accidentaly be seen.
-classic.settings.modded_targets.help = Legt fest, ob freigeschaltete Emotes, die von mindestens einer deiner Mods verändert werden, nicht gewählt werden dürfen. So sehen andere Personen keine anderen gemoddeten Emotes, die du vielleicht hast, bevor der Tausch greift.\nBeispiel: Du hast eine Mod auf beesknees und versuchst /conduct zu umgehen, das zufällig auf beesknees landet: andere Spieler sehen dann vielleicht kurz das gemoddete beesknees.\n\n„Erlaubt“ erlaubt freigeschaltete Emotes, die von einer deiner Mods verändert werden.\n„Letzter Ausweg“ verwendet eines nur, wenn nichts anderes passt.\n„Gesperrt“ verwendet nie eines und zeigt eine Fehlermeldung im Chat mit Optionen, die Mod zu deaktivieren oder in Penumbra zu öffnen.\n\nEmpfohlen: „Letzter Ausweg“, oder „Gesperrt“, wenn deine gemoddeten Emotes auf keinen Fall versehentlich gesehen werden sollen.
-# Source: Never
-classic.settings.never = Nie
 # Source: Use the new interface
 classic.settings.new_interface = Die neue Oberfläche verwenden
 # Source: Switches back to the new interface.\nThe classic interface is the one you are looking at, exactly as in previous versions.
 classic.settings.new_interface.help = Wechselt zurück zur neuen Oberfläche.\nDie klassische Oberfläche ist die, die du gerade siehst, genau wie in früheren Versionen.
-# Source: Only when nothing else fits
-classic.settings.nothing_else_fits = Nur wenn nichts anderes passt
-# Source: Off
-classic.settings.off = Aus
-# Source: On
-classic.settings.on = Ein
-# Source: One rank below
-classic.settings.one_below = Ein Rang darunter
-# Source: Safe mode is not 100% guaranteed to be safe either. It prevents Direct Play from being used in states where it was proved to go wrong, but I can not prove the absence of issues. Use Emote Swap if you want to be 100% safe, it will behave almost the same way.
-classic.settings.safe_mode_not_a_promise = Auch der sichere Modus ist nicht zu 100 % sicher. Er verhindert Direct Play in Zuständen, in denen nachweislich Probleme auftreten, aber ich kann nicht beweisen, dass es keine Probleme gibt. Verwende Emote Swap, wenn du zu 100 % sicher sein möchtest. Es verhält sich fast genauso.
-# Source: Same rank only
-classic.settings.same_rank = Nur gleicher Rang
 # Source: Windows
 classic.settings.section.windows = Fenster
-# Source: "Strict" never puts an emote on one that makes sound.\n"Lenient" allows matching emotes that make sounds together.\n"Off" will let emotes play regardless of sound.\n\nThis is to prevent vanilla people from seeing you play fume which could annoy other vanilla players, for example.\n\nRecommended: "Lenient".
-classic.settings.sound_matching.help = „Streng“ legt ein Emote nie auf eines, das einen Ton ausgibt.\n„Nachsichtig“ erlaubt, Emotes mit Ton aufeinander abzustimmen.\n„Aus“ spielt Emotes unabhängig vom Ton ab.\n\nSo wird z. B. verhindert, dass Spieler ohne Mods dich fume abspielen sehen, was andere Spieler stören könnte.\n\nEmpfohlen: „Nachsichtig“.
-# Source: Strict
-classic.settings.strict = Streng
-# Source: Emotes have different turn behaviors when you target someone. Some emotes will make your torso turn (i.e: /hum), some only your head (i.e: /stepdance),some will only make your eyes follow your target (i.e: /beesknees) while others will not move at all (i.e:/guard).\n\n"Very strict" only picks emotes that behaves the same way.\n"Strict" allows eye following differences but keeps emotes head and body turn behaviors.\n"Lenient" allows any turn behavior.\n\nThe plugin will still always try to find the best match first, regardless of the selected rule.\n\nRecommended: "Lenient".
-classic.settings.turn_matching.help = Emotes drehen sich unterschiedlich, wenn du jemanden anvisierst. Manche drehen deinen Oberkörper (z. B. /hum), manche nur den Kopf (z. B. /stepdance), manche lassen nur die Augen dem Ziel folgen (z. B. /beesknees), andere bewegen sich gar nicht (z. B. /guard).\n\n„Sehr streng“ wählt nur Emotes, die sich gleich verhalten.\n„Streng“ erlaubt Unterschiede bei den Augen, behält aber das Dreh-Verhalten von Kopf und Körper bei.\n„Nachsichtig“ erlaubt jedes Drehverhalten.\n\nDas Plugin sucht unabhängig von der gewählten Regel immer zuerst die beste Übereinstimmung.\n\nEmpfohlen: „Nachsichtig“.
-# Source: Lets Direct Play bypass an emote in any pose.\n\nLeave it off unless you know what you are doing. When off, the plugin only plays emotes from states where nothing can be noticed.
-classic.settings.unsafe.help = Lässt Direct Play ein Emote in jeder Haltung umgehen.\n\nLass das aus, außer du weißt, was du tust. Wenn aus, spielt das Plugin Emotes nur aus Zuständen ab, in denen nichts bemerkt werden kann.
-# Source: In practice it is a non-issue. This has been a thing in other tools and plugins (and still is in some of them), which people have used for years without trouble. Go back to safe mode, or even better, to emote swap, if you are uncomfy with this.
-classic.settings.unsafe.reassurance = In der Praxis ist das kein Problem. Andere Tools und Plugins haben das gemacht (manche tun es noch), und Leute haben sie jahrelang ohne Probleme verwendet. Geh zurück zum sicheren Modus oder besser noch zu Emote Swap, wenn du dich damit unwohl fühlst.
-# Source: Very strict
-classic.settings.very_strict = Sehr streng
-# Source: Shows a warning in chat when a swap happened, but not the way you would expect.
-classic.settings.warning_messages.help = Zeigt eine Warnung im Chat, wenn ein Tausch stattgefunden hat, aber nicht so, wie du es erwarten würdest.
-# Source: How long the same warning stays quiet after you have seen it.\n\nAccepts time format: 5m, 300s, 5m10s, 1h.\nSet to 0 to disable.
-classic.settings.warning_throttle.help = Wie lange dieselbe Warnung stumm bleibt, nachdem du sie gesehen hast.\n\nAkzeptierte Zeitformate: 5m, 300s, 5m10s, 1h.\nAuf 0 setzen, um zu deaktivieren.
 # Source: Only when necessary
 classic.settings.when_necessary = Nur wenn nötig
 # Source: Opens the changelog window.
@@ -868,8 +786,8 @@ command.pet_stop = Beendet das Emote, das gerade auf deinem Pet läuft.
 command.self_emote = Umgeht ein beliebiges Emote (auch gesperrte) auf dir selbst, per Befehlsname oder ID.
 # Source: Stops the emote currently playing on yourself. Direct Play mode only.
 command.stop = Beendet das Emote, das gerade auf dir selbst läuft. Nur im Modus Direct Play.
-# Source: Restarts the emotes of every player and NPC around you, with their sounds.
-command.sync = Startet die Emotes aller Spieler und NPCs um dich herum neu, mit ihren Tönen.
+# Source: Restarts the emotes of every player, NPC, minion and pet around you, with their sounds and effects.
+command.sync = Startet die Emotes aller Spieler, NPCs, Begleiter und Pets um dich herum neu, mit ihren Tönen und Effekten.
 # Source: Restarts only the emotes played with Direct Play.
 command.sync_direct = Startet nur die mit Direct Play abgespielten Emotes neu.
 # Source: Applies any emote to a targetted NPC. Only works on NPCs and owned minions/pets. Use /bet <emote_command> or /bet stop.
@@ -888,10 +806,14 @@ common.close = Schließen
 common.none = Keine
 # Source: Owned
 common.owned = Im Besitz
+# Source: Create the mod
+create_mod.create = Mod erstellen
 # Source: Enable on creation
 create_mod.enable = Beim Erstellen aktivieren
 # Source: Switches the mod on in your character's collection as soon as it exists.
 create_mod.enable.help = Aktiviert die Mod in der Collection deines Charakters, sobald sie existiert.
+# Source: Creates a permanent swap mod in Penumbra. Bypass Emote never touches it afterwards. You own it and manage it like any other mod.
+create_mod.intro = Erstellt eine dauerhafte Tausch-Mod in Penumbra. Bypass Emote rührt sie danach nie wieder an. Sie gehört dir und du verwaltest sie wie jede andere Mod.
 # Source: Emote data is still loading. Try again in a moment.
 create_mod.loading = Emote-Daten werden noch geladen. Versuch es gleich noch einmal.
 # Source: Modded animation: {mod}
@@ -910,6 +832,8 @@ create_mod.pick_both = Wähle beide Emotes und gib der Mod einen Namen.
 create_mod.pick_race = Wähle mindestens ein Volk.
 # Source: Highest priority
 create_mod.priority = Höchste Priorität
+# Source: Gives the mod the highest priority. When it is off, the mod is created at priority 0.
+create_mod.priority.help = Gibt der Mod die höchste Priorität. Wenn aus, wird die Mod mit Priorität 0 erstellt.
 # Source: Races covered
 create_mod.races = Abgedeckte Völker
 # Source: Emote to play
@@ -972,6 +896,8 @@ gate.untested_client = Der Client {client} wurde nicht getestet und kann nicht g
 gate.untested_other = Dieser Spielclient ist nicht der globale und wurde nicht getestet und kann nicht getestet werden. Das Plugin funktioniert möglicherweise nicht und kann instabil oder unbrauchbar sein. Bitte verwende es nicht, wenn es nicht gut funktioniert.
 # Source: Assign
 hotbar.assign = Zuweisen
+# Source: You can also drag an emote from the main window onto any visible hotbar slot.
+hotbar.drag_hint = Du kannst ein Emote auch aus dem Hauptfenster auf einen sichtbaren Aktionsleistenplatz ziehen.
 # Source: Hotbar
 hotbar.hotbar = Aktionsleiste
 # Source: Slot {slot} - Empty
@@ -1350,14 +1276,24 @@ noire.translate.validate = Noch korrekt
 noire.window.options = Fensteroptionen
 # Source: The emote catalog is still building.
 overrides.catalog_building = Der Emote-Katalog wird noch erstellt.
+# Source: This tab makes sure a locked emote always uses one or more specific target emotes, tried in order.
+overrides.intro = Dieser Tab stellt sicher, dass ein gesperrtes Emote immer ein oder mehrere bestimmte Ziel-Emotes verwendet, in der angegebenen Reihenfolge.
+# Source: Limited to these targets only
+overrides.limited = Nur auf diese Ziele beschränkt
 # Source: On: this emote plays on one of these targets, or not at all.\nOff: your usual settings take over when none of these targets can be used.
 overrides.limited.help = Ein: Dieses Emote wird auf einem dieser Ziele abgespielt oder gar nicht.\nAus: Deine üblichen Einstellungen greifen, wenn keines dieser Ziele verwendet werden kann.
 # Source: (overridden)
 overrides.marked.source = (zugewiesen)
 # Source: (already a target)
 overrides.marked.target = (bereits ein Ziel)
+# Source: Pick an emote on the left
+overrides.pick = Wähle links ein Emote
 # Source: Remove this override
 overrides.remove = Diese Zuweisung entfernen
+# Source: + Override an emote...
+overrides.source = + Ein Emote zuweisen...
+# Source: + Add a target emote...
+overrides.target = + Ein Ziel-Emote hinzufügen...
 # Source: Every emote that fits is on your blocked targets list.
 preview.all_blocked = Jedes passende Emote steht auf deiner Liste gesperrter Ziele.
 # Source: One of your mods changes every emote that fits.
@@ -1456,16 +1392,30 @@ prompt.heading = Ein sichererer Weg, gesperrte Emotes abzuspielen
 prompt.now = Der neue Modus verwendet Penumbra, um gesperrte Emotes auf freigeschaltete zu tauschen. Das Spiel spielt das Emote selbst ab. Zwischen Spiel und Server gibt es keine Abweichungen mehr.
 # Source: Choose how Bypass Emote plays locked emotes
 prompt.title = Wähle, wie Bypass Emote gesperrte Emotes abspielt
+# Source: Allow
+settings.allow = Erlauben
+# Source: Allowed
+settings.allowed = Erlaubt
 # Source: Hide your name on the mod
 settings.anonymize = Deinen Namen auf der Mod verbergen
 # Source: Names the generated mod after your initials instead of your full name and world.
 settings.anonymize.help = Benennt die erstellte Mod nach deinen Initialen statt nach deinem vollen Namen und deiner Welt.
 # Source: Swaps at the same time
 settings.behavior = Gleichzeitige Tausche
+# Source: "Multiple" keeps multiple swaps active at the same time in the mod.\n"One at a time" turns the previous swaps off as soon as a new one starts.\n\nRecommended: "Multiple".
+settings.behavior.help = „Mehrere“ hält mehrere Tausche gleichzeitig in der Mod aktiv.\n„Einzeln“ deaktiviert die vorherigen Tausche, sobald ein neuer beginnt.\n\nEmpfohlen: „Mehrere“.
+# Source: Blocked
+settings.blocked = Gesperrt
 # Source: Spread swaps over several emotes
 settings.cached_dispatch = Tausche auf mehrere Emotes verteilen
+# Source: Leave this on. Bypassing several animations in a row can look broken while it is off.
+settings.cached_dispatch.alarm = Lass das eingeschaltet. Das Umgehen mehrerer Animationen hintereinander kann fehlerhaft aussehen, solange es aus ist.
+# Source: Gives each bypassed emote a target emote of its own. Useful when you bypass several emotes quickly.\n\n"Off" redraws your character on every bypass.\n"When needed" spreads emotes only after a game patch breaks the cache-breaker.\n"On" always spreads emotes.\n\nRecommended: "On". "Off" is not recommended.
+settings.cached_dispatch.help = Gibt jedem umgangenen Emote ein eigenes Ziel-Emote. Nützlich, wenn du mehrere Emotes schnell umgehst.\n\n„Aus“ zeichnet deinen Charakter bei jedem Umgehen neu.\n„Wenn nötig“ verteilt Emotes nur, nachdem ein Spielpatch die Cache-Umgehung kaputt gemacht hat.\n„Ein“ verteilt Emotes immer.\n\nEmpfohlen: „Ein“. „Aus“ wird nicht empfohlen.
 # Source: Always cache-break
 settings.cache_break = Cache immer umgehen
+# Source: Applies the cache-break mechanism to every emote, even the ones you own. An animation change then applies without a redraw and without stopping the emote. Experimental.
+settings.cache_break.help = Wendet die Cache-Umgehung auf jedes Emote an, auch auf die, die du besitzt. Eine Animationsänderung greift dann ohne Neuzeichnen und ohne das Emote zu beenden. Experimentell.
 # Source: This game build is not approved yet, this will not work.
 settings.cache_break.not_approved = Dieser Spiel-Build ist noch nicht freigegeben, das funktioniert nicht.
 # Source: Show the changelog after an update
@@ -1484,14 +1434,22 @@ settings.confirm.unsafe.title = Unsicheren Modus aktivieren?
 settings.direct_play.safe_tooltip = Nicht alle Sync-Dienste unterstützen es. {limit}
 # Source: Not recommended. Not all sync services support it. Emote Swap is safer and works over any sync service.
 settings.direct_play.unsafe_tooltip = Nicht empfohlen. Nicht alle Sync-Dienste unterstützen es. Emote Swap ist sicherer und funktioniert mit jedem Sync-Dienst.
+# Source: Disable the mod on logout and unload
+settings.disable_mod_on_exit = Mod beim Ausloggen und Entladen deaktivieren
+# Source: When on, the generated Penumbra mod is disabled when you log out or unload the plugin.
+settings.disable_mod_on_exit.help = Wenn aktiviert, wird die erstellte Penumbra-Mod deaktiviert, sobald du dich ausloggst oder das Plugin entlädst.
 # Source: How close a spread emote must fit
 settings.dispatch_fidelity = Wie genau ein verteiltes Emote passen muss
+# Source: Which emotes a source emote may spread over. Takes effect while "Spread swaps over several emotes" is on. A rank is a group of emotes with the same characteristics (turn behaviour and so on).\n\n"Same rank" only picks targets of the same rank.\n"One below" also accepts targets one rank below.\n"Any" picks any target it can find.\n\nNone of them breaks your other rules.\n\nRecommended: "One below". Pick "Same rank" for behaviour accuracy.
+settings.dispatch_fidelity.help = Auf welche Emotes ein Quell-Emote verteilt werden darf. Wirkt, solange „Tausche auf mehrere Emotes verteilen“ aktiv ist. Ein Rang ist eine Gruppe von Emotes mit denselben Eigenschaften (Drehverhalten usw.).\n\n„Gleicher Rang“ wählt nur Ziele desselben Rangs.\n„Einer darunter“ akzeptiert auch Ziele einen Rang darunter.\n„Beliebig“ wählt jedes Ziel, das es finden kann.\n\nKeine davon bricht deine anderen Regeln.\n\nEmpfohlen: „Einer darunter“. Wähle „Gleicher Rang“ für genaues Verhalten.
 # Source: Show error messages
 settings.error_messages = Fehlermeldungen anzeigen
 # Source: Shows an error in chat when a swap could not be done.
 settings.error_messages.help = Zeigt einen Fehler im Chat, wenn ein Tausch nicht durchgeführt werden konnte.
 # Source: Repeat an error at most every
 settings.error_throttle = Einen Fehler höchstens wiederholen alle
+# Source: How long the same error stays quiet after you have seen it.\n\nSet to 0 to see every one of them.
+settings.error_throttle.help = Wie lange derselbe Fehler stumm bleibt, nachdem du ihn gesehen hast.\n\nAuf 0 setzen, um jeden einzelnen zu sehen.
 # Source: Face your target automatically
 settings.face_target = Automatisch zum Ziel drehen
 # Source: Turns your character toward your target when you bypass an emote.
@@ -1506,28 +1464,44 @@ settings.hotbar_bypass = Emotes von gesperrten Aktionsleistenplätzen umgehen
 settings.hotbar_bypass.help = Umgeht ein gesperrtes Emote, wenn du seinen Aktionsleistenplatz drückst.\nRechtsklicke im Hauptfenster auf ein Emote, um es einem Platz zuzuweisen.
 # Source: Loops on idle poses
 settings.idle_pose_loops = Schleifen auf Ruhehaltungen
+# Source: When no unlocked looped emote fits as a target, your current idle pose can carry the emote instead. Using the pose redraws your character.\n\n"Never" blocks idle poses as targets.\n"Allow" falls back to your idle pose whenever no looped emote fits.\n\nRecommended: "Allow".
+settings.idle_pose_loops.help = Wenn kein freigeschaltetes Schleifen-Emote als Ziel passt, kann stattdessen deine aktuelle Ruhehaltung das Emote tragen. Dabei wird dein Charakter neu gezeichnet.\n\n„Nie“ verhindert Ruhehaltungen als Ziel.\n„Erlauben“ greift auf deine Ruhehaltung zurück, sobald kein Schleifen-Emote passt.\n\nEmpfohlen: „Erlauben“.
 # Source: Kept swaps per emote
 settings.kept_swaps = Behaltene Tausche pro Emote
+# Source: How many swaps are kept per target emote. 0 keeps them all.\n\nA kept swap stays as an option of the generated Penumbra mod. Playing that emote again enables it without rebuilding the mod. Kept swaps make the mod bigger.
+settings.kept_swaps.help = Wie viele Tausche pro Ziel-Emote behalten werden. 0 behält alle.\n\nEin behaltener Tausch bleibt eine Option der erstellten Penumbra-Mod. Ein erneutes Abspielen dieses Emotes aktiviert ihn, ohne die Mod neu zu erstellen. Behaltene Tausche machen die Mod größer.
 # Source: Language
 settings.language = Sprache
 # Source: The language of the plugin's windows and chat messages.
 settings.language.help = Die Sprache der Fenster und Chatnachrichten des Plugins.
+# Source: Last resort
+settings.last_resort = Letzter Ausweg
+# Source: Lenient
+settings.lenient = Nachsichtig
 # Source: Turn the swap off
 settings.lifetime = Tausch deaktivieren
+# Source: "When it ends" puts your real emote back as soon as the animation stops.\n"On the target" keeps the swap enabled until the next time you play the target emote.\n"Never" keeps the swap live until another swap claims the same target emote.\n\n"When it ends" redraws your character after every swap.\n\nRecommended: "On the target".
+settings.lifetime.help = „Wenn es endet“ stellt dein echtes Emote wieder her, sobald die Animation stoppt.\n„Beim Ziel“ hält den Tausch aktiv, bis du das Ziel-Emote das nächste Mal abspielst.\n„Nie“ hält den Tausch aktiv, bis ein anderer Tausch dasselbe Ziel-Emote beansprucht.\n\n„Wenn es endet“ zeichnet deinen Charakter nach jedem Tausch neu.\n\nEmpfohlen: „Beim Ziel“.
 # Source: Do not grey out locked emotes
 settings.locked_as_usable = Gesperrte Emotes nicht ausgrauen
 # Source: Keeps the emotes you have not unlocked lit in the game's emote window and on your hotbars.\nPurely cosmetic.
 settings.locked_as_usable.help = Lässt die Emotes, die du nicht freigeschaltet hast, im Emote-Fenster des Spiels und auf deinen Aktionsleisten hell.\nRein kosmetisch.
+# Source: Show locked emotes in the game emote window
+settings.locked_in_window = Gesperrte Emotes im Emote-Fenster des Spiels anzeigen
 # Source: Lists the emotes you have not unlocked in the game's own emote window.\nClose and reopen the emote window for changes to appear.
 settings.locked_in_window.help = Listet die Emotes, die du nicht freigeschaltet hast, im Emote-Fenster des Spiels auf.\nSchließe das Emote-Fenster und öffne es erneut, damit die Änderungen erscheinen.
 # Source: Loop matching
 settings.loop_matching = Schleifenabgleich
+# Source: "Strict" only puts a looping emote on another looping one.\n"Lenient" lets a looping emote play once on a one time emote when no better match exists.\n\nRecommended: "Strict". Pick "Lenient" when you own few emotes.
+settings.loop_matching.help = „Streng“ legt ein Schleifen-Emote nur auf ein anderes Schleifen-Emote.\n„Nachsichtig“ lässt ein Schleifen-Emote einmal auf einem einmaligen Emote abspielen, wenn es keine bessere Übereinstimmung gibt.\n\nEmpfohlen: „Streng“. Wähle „Nachsichtig“, wenn du wenige Emotes besitzt.
 # Source: Emotes used per behaviour
 settings.max_targets = Verwendete Emotes pro Verhalten
 # Source: How many different target emotes one kind of emote may swap to.
 settings.max_targets.help = Auf wie viele verschiedene Ziel-Emotes eine Art von Emote getauscht werden darf.
 # Source: Emotes your mods change
 settings.modded_targets = Von deinen Mods veränderte Emotes
+# Source: Whether an unlocked emote that one of your mods changes may be used as a target. Other players can see that modded emote for a moment before the swap takes place.\n\n"Allowed" uses them freely.\n"Last resort" uses one only when nothing else fits.\n"Blocked" never uses one. The chat error then offers to disable the mod or open it in Penumbra.\n\nRecommended: "Last resort". Pick "Blocked" to keep your modded emotes out of sight.
+settings.modded_targets.help = Ob ein freigeschaltetes Emote, das eine deiner Mods verändert, als Ziel verwendet werden darf. Andere Spieler können dieses gemoddete Emote kurz sehen, bevor der Tausch greift.\n\n„Erlaubt“ verwendet sie frei.\n„Letzter Ausweg“ verwendet eines nur, wenn nichts anderes passt.\n„Gesperrt“ verwendet nie eines. Die Fehlermeldung im Chat bietet dann an, die Mod zu deaktivieren oder in Penumbra zu öffnen.\n\nEmpfohlen: „Letzter Ausweg“. Wähle „Gesperrt“, damit deine gemoddeten Emotes nicht gesehen werden.
 # Source: Mode
 settings.mode = Modus
 # Source: Direct Play
@@ -1536,8 +1510,16 @@ settings.mode.direct_play = Direct Play
 settings.mode.emote_swap = Emote Swap
 # Source: "Emote Swap" plays your emote over one your character owns, through a Penumbra mod. Other players see it over any sync service.\n"Direct Play" sends the emote to the game itself. Not every sync service supports it.
 settings.mode.help = „Emote Swap“ spielt dein Emote über eines ab, das dein Charakter besitzt, über eine Penumbra-Mod. Andere Spieler sehen es über jeden Sync-Dienst.\n„Direct Play“ schickt das Emote direkt an das Spiel. Nicht jeder Sync-Dienst unterstützt es.
+# Source: Never
+settings.never = Nie
 # Source: Not running: {fault}.
 settings.not_running = Läuft nicht: {fault}.
+# Source: Off
+settings.off = Aus
+# Source: On
+settings.on = Ein
+# Source: One below
+settings.one_below = Einer darunter
 # Source: General settings
 settings.page.general = Allgemeine Einstellungen
 # Source: Bypass Mode
@@ -1550,6 +1532,10 @@ settings.plugin_enabled = Plugin aktivieren
 settings.plugin_enabled.help = Lässt dich Emotes mit den normalen Emote-Befehlen (/beesknees, /tea usw.) und über Aktionsleistenplätze umgehen.\nDas Hauptfenster und der Befehl /be funktionieren unabhängig von dieser Einstellung.
 # Source: In safe mode you can only bypass emotes from the base pose (pose 0) of your current stance.
 settings.safe_mode_limit = Im sicheren Modus kannst du Emotes nur aus der Grundhaltung (Haltung 0) deiner aktuellen Stellung umgehen.
+# Source: Safe mode is not a guarantee either. It keeps Direct Play out of the states where it was proved to go wrong. Emote Swap is the safe option and behaves almost the same way.
+settings.safe_mode_not_a_promise = Auch der sichere Modus ist keine Garantie. Er hält Direct Play aus den Zuständen fern, in denen nachweislich Probleme auftreten. Emote Swap ist die sichere Option und verhält sich fast genauso.
+# Source: Same rank
+settings.same_rank = Gleicher Rang
 # Source: Chat messages
 settings.section.chat = Chatnachrichten
 # Source: Direct play
@@ -1568,10 +1554,14 @@ settings.section.safety = Sicherheit
 settings.section.updates = Updates
 # Source: Sound matching
 settings.sound_matching = Tonabgleich
+# Source: Decides whether an emote can be swapped onto one that makes a sound, which players around you would hear.\n"Strict" only uses silent targets.\n"Lenient" keeps silent emotes on silent targets. An emote that makes a sound itself can use any target.\n"Off" allows any target, so a silent emote can end up playing another emote's sound.\n\nWhenever a silent target fits, it is picked first.\n\nRecommended: "Lenient".
+settings.sound_matching.help = Legt fest, ob ein Emote auf eines gelegt werden darf, das einen Ton ausgibt, den Spieler in deiner Nähe hören würden.\n„Streng“ nutzt nur stumme Ziele.\n„Nachsichtig“ lässt stumme Emotes nur auf stummen Zielen. Ein Emote, das selbst einen Ton ausgibt, darf jedes Ziel nutzen.\n„Aus“ erlaubt jedes Ziel, sodass ein stummes Emote den Ton eines anderen Emotes abspielen kann.\n\nWenn ein stummes Ziel passt, wird es immer zuerst gewählt.\n\nEmpfohlen: „Nachsichtig“.
 # Source: Stop companion emotes when they move
 settings.stop_on_move = Emotes von Gefährten beenden, wenn sie sich bewegen
 # Source: Stops your minion, pet or chocobo's looped emote when they move.
 settings.stop_on_move.help = Beendet das Schleifen-Emote deines Begleiters, Pets oder Chocobos, wenn er sich bewegt.
+# Source: Strict
+settings.strict = Streng
 # Source: Show swap messages
 settings.swap_messages = Tauschnachrichten anzeigen
 # Source: Shows a message in chat when an emote is swapped.
@@ -1586,18 +1576,30 @@ settings.translation = Übersetzung
 settings.translation.help = Öffnet den Übersetzungseditor. Deine Übersetzungen werden im Konfigurationsordner des Plugins gespeichert. Übersetzungen und Verbesserungen sind sehr willkommen: Eröffne ein Issue oder einen Pull Request auf dem GitHub des Plugins, um deine zu teilen.
 # Source: Turn matching
 settings.turn_matching = Drehungsabgleich
+# Source: Emotes turn your character differently when you have a target. Some turn the torso (/hum). Some turn only the head (/stepdance). Some only move the eyes (/beesknees). Some do not move at all (/guard).\n\n"Very strict" only picks emotes that behave the same way.\n"Strict" keeps the head and body turn, and allows a different eye behaviour.\n"Lenient" allows any turn behaviour.\n\nThe best match is always tried first.\n\nRecommended: "Lenient".
+settings.turn_matching.help = Emotes drehen deinen Charakter unterschiedlich, wenn du ein Ziel hast. Manche drehen den Oberkörper (/hum). Manche drehen nur den Kopf (/stepdance). Manche bewegen nur die Augen (/beesknees). Manche bewegen sich gar nicht (/guard).\n\n„Sehr streng“ wählt nur Emotes, die sich gleich verhalten.\n„Streng“ behält die Drehung von Kopf und Körper bei und erlaubt ein anderes Augenverhalten.\n„Nachsichtig“ erlaubt jedes Drehverhalten.\n\nDie beste Übereinstimmung wird immer zuerst versucht.\n\nEmpfohlen: „Nachsichtig“.
 # Source: Unsafe toggle
 settings.unsafe = Unsicherer Schalter
 # Source: This is unsafe. Forcing an emote outside your base pose is, in theory, detectable by the server.
 settings.unsafe.headline = Das ist unsicher. Ein Emote außerhalb deiner Grundhaltung zu erzwingen, ist theoretisch für den Server erkennbar.
+# Source: Lets Direct Play bypass an emote in any pose.\n\nLeave it off unless you know what you are doing. When it is off, the plugin only plays emotes from states where nothing can be noticed.
+settings.unsafe.help = Lässt Direct Play ein Emote in jeder Haltung umgehen.\n\nLass das aus, außer du weißt, was du tust. Wenn es aus ist, spielt das Plugin Emotes nur aus Zuständen ab, in denen nichts bemerkt werden kann.
+# Source: In practice it is a non-issue. Other tools and plugins have done this for years without trouble. Go back to safe mode, or to Emote Swap, if you are uncomfortable with it.
+settings.unsafe.reassurance = In der Praxis ist das kein Problem. Andere Tools und Plugins machen das seit Jahren ohne Probleme. Geh zurück zum sicheren Modus oder zu Emote Swap, wenn du dich damit unwohl fühlst.
 # Source: Show update notifications
 settings.update_notification = Update-Benachrichtigungen anzeigen
 # Source: Tells you in chat and on screen when a new version of the plugin has been installed.
 settings.update_notification.help = Teilt dir im Chat und auf dem Bildschirm mit, wenn eine neue Version des Plugins installiert wurde.
+# Source: Very strict
+settings.very_strict = Sehr streng
 # Source: Show warning messages
 settings.warning_messages = Warnungen anzeigen
+# Source: Shows a warning in chat when a swap did not happen the way you would expect.
+settings.warning_messages.help = Zeigt eine Warnung im Chat, wenn ein Tausch nicht so stattfand, wie du es erwarten würdest.
 # Source: Repeat a warning at most every
 settings.warning_throttle = Eine Warnung höchstens wiederholen alle
+# Source: How long the same warning stays quiet after you have seen it.\n\nSet to 0 to disable.
+settings.warning_throttle.help = Wie lange dieselbe Warnung stumm bleibt, nachdem du sie gesehen hast.\n\nAuf 0 setzen, um zu deaktivieren.
 # Source: Default
 silk.card.default = Standard
 # Source: Every character has this emote.
@@ -1616,20 +1618,14 @@ silk.card.sources = Quellen
 silk.changelog.new = NEU
 # Source: {source} over {target}
 silk.create_mod.auto_name = {source} über {target}
-# Source: Create the mod
-silk.create_mod.create = Mod erstellen
 # Source: "{mod}" is in Penumbra, enabled at the highest priority.
 silk.create_mod.done = „{mod}“ ist in Penumbra, aktiviert mit höchster Priorität.
-# Source: Creates a permanent swap mod in Penumbra. Bypass Emote never touches it afterwards. You own it and manage it like any other mod.
-silk.create_mod.intro = Erstellt eine dauerhafte Tausch-Mod in Penumbra. Bypass Emote rührt sie danach nie wieder an. Sie gehört dir und du verwaltest sie wie jede andere Mod.
 # Source: Mod
 silk.create_mod.mod = Mod
 # Source: Not unlocked
 silk.create_mod.not_unlocked = Nicht freigeschaltet
 # Source: This emote has no animation for this body
 silk.create_mod.no_body = Dieses Emote hat keine Animation für diesen Körper
-# Source: Gives the mod the highest priority. When it is off, the mod is created at priority 0.
-silk.create_mod.priority.help = Gibt der Mod die höchste Priorität. Wenn aus, wird die Mod mit Priorität 0 erstellt.
 # Source: Block as target
 silk.dock.block = Als Ziel sperren
 # Source: Blocked as target
@@ -1712,8 +1708,6 @@ silk.gate.waiting = Warten auf die Freigabe dieses Spielpatches
 silk.gate.waiting.text = Bypass Emote bleibt aus, bis die aktuelle Spielversion geprüft wurde. Das dauert meist einige Stunden.
 # Source: Cross
 silk.hotbar.cross = Kreuz
-# Source: You can also drag an emote from the main window onto any visible hotbar slot.
-silk.hotbar.drag_hint = Du kannst ein Emote auch aus dem Hauptfenster auf einen sichtbaren Aktionsleistenplatz ziehen.
 # Source: LEFT TRIGGER
 silk.hotbar.left_trigger = LINKE SCHULTERTASTE
 # Source: Pick a slot.
@@ -1898,88 +1892,34 @@ silk.menu.override = Eine Zuweisung hinzufügen
 silk.menu.pet = Emote auf Pet anwenden
 # Source: Play on yourself
 silk.menu.play = Auf dir abspielen
-# Source: This tab makes sure a locked emote always uses one or more specific target emotes, tried in order.
-silk.overrides.intro = Dieser Tab stellt sicher, dass ein gesperrtes Emote immer ein oder mehrere bestimmte Ziel-Emotes verwendet, in der angegebenen Reihenfolge.
-# Source: Limited to these targets only
-silk.overrides.limited = Nur auf diese Ziele beschränkt
 # Source: Locked emote
 silk.overrides.locked_emote = Gesperrtes Emote
-# Source: Pick an emote on the left
-silk.overrides.pick = Wähle links ein Emote
 # Source: {emote} plays through
 silk.overrides.plays_through = {emote} läuft über
 # Source: Remove
 silk.overrides.remove = Entfernen
-# Source: + Override an emote...
-silk.overrides.source = + Ein Emote zuweisen...
-# Source: + Add a target emote...
-silk.overrides.target = + Ein Ziel-Emote hinzufügen...
 # Source: No result
 silk.picker.no_result = Kein Ergebnis
 # Source: OWNED
 silk.picker.owned = IM BESITZ
-# Source: Allow
-silk.settings.allow = Erlauben
-# Source: Allowed
-silk.settings.allowed = Erlaubt
 # Source: Any
 silk.settings.any = Beliebig
-# Source: "Multiple" keeps multiple swaps active at the same time in the mod.\n"One at a time" turns the previous swaps off as soon as a new one starts.\n\nRecommended: "Multiple".
-silk.settings.behavior.help = „Mehrere“ hält mehrere Tausche gleichzeitig in der Mod aktiv.\n„Einzeln“ deaktiviert die vorherigen Tausche, sobald ein neuer beginnt.\n\nEmpfohlen: „Mehrere“.
-# Source: Blocked
-silk.settings.blocked = Gesperrt
-# Source: Leave this on. Bypassing several animations in a row can look broken while it is off.
-silk.settings.cached_dispatch.alarm = Lass das eingeschaltet. Das Umgehen mehrerer Animationen hintereinander kann fehlerhaft aussehen, solange es aus ist.
-# Source: Gives each bypassed emote a target emote of its own. Useful when you bypass several emotes quickly.\n\n"Off" redraws your character on every bypass.\n"When needed" spreads emotes only after a game patch breaks the cache-breaker.\n"On" always spreads emotes.\n\nRecommended: "On". "Off" is not recommended.
-silk.settings.cached_dispatch.help = Gibt jedem umgangenen Emote ein eigenes Ziel-Emote. Nützlich, wenn du mehrere Emotes schnell umgehst.\n\n„Aus“ zeichnet deinen Charakter bei jedem Umgehen neu.\n„Wenn nötig“ verteilt Emotes nur, nachdem ein Spielpatch die Cache-Umgehung kaputt gemacht hat.\n„Ein“ verteilt Emotes immer.\n\nEmpfohlen: „Ein“. „Aus“ wird nicht empfohlen.
-# Source: Applies the cache-break mechanism to every emote, even the ones you own. An animation change then applies without a redraw and without stopping the emote. Experimental.
-silk.settings.cache_break.help = Wendet die Cache-Umgehung auf jedes Emote an, auch auf die, die du besitzt. Eine Animationsänderung greift dann ohne Neuzeichnen und ohne das Emote zu beenden. Experimentell.
 # Source: The old version.
 silk.settings.classic_interface.text = Die alte Version.
 # Source: Compact rows
 silk.settings.compact_rows = Kompakte Zeilen
 # Source: Much smaller rows in the emote list, to see more emotes at once.
 silk.settings.compact_rows.help = Viel kleinere Zeilen in der Emote-Liste, um mehr Emotes auf einmal zu sehen.
-# Source: Which emotes a source emote may spread over. Takes effect while "Spread swaps over several emotes" is on. A rank is a group of emotes with the same characteristics (turn behaviour and so on).\n\n"Same rank" only picks targets of the same rank.\n"One below" also accepts targets one rank below.\n"Any" picks any target it can find.\n\nNone of them breaks your other rules.\n\nRecommended: "One below". Pick "Same rank" for behaviour accuracy.
-silk.settings.dispatch_fidelity.help = Auf welche Emotes ein Quell-Emote verteilt werden darf. Wirkt, solange „Tausche auf mehrere Emotes verteilen“ aktiv ist. Ein Rang ist eine Gruppe von Emotes mit denselben Eigenschaften (Drehverhalten usw.).\n\n„Gleicher Rang“ wählt nur Ziele desselben Rangs.\n„Einer darunter“ akzeptiert auch Ziele einen Rang darunter.\n„Beliebig“ wählt jedes Ziel, das es finden kann.\n\nKeine davon bricht deine anderen Regeln.\n\nEmpfohlen: „Einer darunter“. Wähle „Gleicher Rang“ für genaues Verhalten.
-# Source: How long the same error stays quiet after you have seen it.\n\nSet to 0 to see every one of them.
-silk.settings.error_throttle.help = Wie lange derselbe Fehler stumm bleibt, nachdem du ihn gesehen hast.\n\nAuf 0 setzen, um jeden einzelnen zu sehen.
-# Source: When no unlocked looped emote fits as a target, your current idle pose can carry the emote instead. Using the pose redraws your character.\n\n"Never" blocks idle poses as targets.\n"If nothing fits" uses the pose only when no unlocked looped emote could have played at all. An emote you blocked yourself still counts as one that could have played.\n"Allow" falls back to your idle pose whenever nothing else is available.\n\nRecommended: "If nothing fits".
-silk.settings.idle_pose_loops.help = Wenn kein freigeschaltetes Schleifen-Emote als Ziel passt, kann stattdessen deine aktuelle Ruhehaltung das Emote tragen. Dabei wird dein Charakter neu gezeichnet.\n\n„Nie“ sperrt Ruhehaltungen als Ziele.\n„Wenn nichts passt“ verwendet die Haltung nur, wenn überhaupt kein freigeschaltetes Schleifen-Emote hätte abgespielt werden können. Ein Emote, das du selbst gesperrt hast, zählt weiterhin als eines, das hätte abgespielt werden können.\n„Erlauben“ greift auf deine Ruhehaltung zurück, wann immer nichts anderes verfügbar ist.\n\nEmpfohlen: „Wenn nichts passt“.
-# Source: If nothing fits
-silk.settings.if_nothing_fits = Wenn nichts passt
-# Source: How many swaps are kept per target emote. 0 keeps them all.\n\nA kept swap stays as an option of the generated Penumbra mod. Playing that emote again enables it without rebuilding the mod. Kept swaps make the mod bigger.
-silk.settings.kept_swaps.help = Wie viele Tausche pro Ziel-Emote behalten werden. 0 behält alle.\n\nEin behaltener Tausch bleibt eine Option der erstellten Penumbra-Mod. Ein erneutes Abspielen dieses Emotes aktiviert ihn, ohne die Mod neu zu erstellen. Behaltene Tausche machen die Mod größer.
-# Source: Last resort
-silk.settings.last_resort = Letzter Ausweg
-# Source: Lenient
-silk.settings.lenient = Nachsichtig
-# Source: "When it ends" puts your real emote back as soon as the animation stops.\n"On the target" keeps the swap enabled until the next time you play the target emote.\n"Never" keeps the swap live until another swap claims the same target emote.\n\n"When it ends" redraws your character after every swap.\n\nRecommended: "On the target".
-silk.settings.lifetime.help = „Wenn es endet“ stellt dein echtes Emote wieder her, sobald die Animation stoppt.\n„Beim Ziel“ hält den Tausch aktiv, bis du das Ziel-Emote das nächste Mal abspielst.\n„Nie“ hält den Tausch aktiv, bis ein anderer Tausch dasselbe Ziel-Emote beansprucht.\n\n„Wenn es endet“ zeichnet deinen Charakter nach jedem Tausch neu.\n\nEmpfohlen: „Beim Ziel“.
-# Source: Show locked emotes in the game emote window
-silk.settings.locked_in_window = Gesperrte Emotes im Emote-Fenster des Spiels anzeigen
-# Source: "Strict" only puts a looping emote on another looping one.\n"Lenient" lets a looping emote play once on a one time emote when no better match exists.\n\nRecommended: "Strict". Pick "Lenient" when you own few emotes.
-silk.settings.loop_matching.help = „Streng“ legt ein Schleifen-Emote nur auf ein anderes Schleifen-Emote.\n„Nachsichtig“ lässt ein Schleifen-Emote einmal auf einem einmaligen Emote abspielen, wenn es keine bessere Übereinstimmung gibt.\n\nEmpfohlen: „Streng“. Wähle „Nachsichtig“, wenn du wenige Emotes besitzt.
 # Source: Adopt Malou, the orange cat
 silk.settings.malou = Adoptiere Malou, den orangen Kater
 # Source: He's really cute.
 silk.settings.malou.help = Er ist wirklich süß.
-# Source: Whether an unlocked emote that one of your mods changes may be used as a target. Other players can see that modded emote for a moment before the swap takes place.\n\n"Allowed" uses them freely.\n"Last resort" uses one only when nothing else fits.\n"Blocked" never uses one. The chat error then offers to disable the mod or open it in Penumbra.\n\nRecommended: "Last resort". Pick "Blocked" to keep your modded emotes out of sight.
-silk.settings.modded_targets.help = Ob ein freigeschaltetes Emote, das eine deiner Mods verändert, als Ziel verwendet werden darf. Andere Spieler können dieses gemoddete Emote kurz sehen, bevor der Tausch greift.\n\n„Erlaubt“ verwendet sie frei.\n„Letzter Ausweg“ verwendet eines nur, wenn nichts anderes passt.\n„Gesperrt“ verwendet nie eines. Die Fehlermeldung im Chat bietet dann an, die Mod zu deaktivieren oder in Penumbra zu öffnen.\n\nEmpfohlen: „Letzter Ausweg“. Wähle „Gesperrt“, damit deine gemoddeten Emotes nicht gesehen werden.
 # Source: Multiple
 silk.settings.multiple = Mehrere
-# Source: Never
-silk.settings.never = Nie
 # Source: The one you are looking at.
 silk.settings.new_interface.text = Die, die du gerade siehst.
-# Source: Off
-silk.settings.off = Aus
-# Source: On
-silk.settings.on = Ein
 # Source: One at a time
 silk.settings.one_at_a_time = Einzeln
-# Source: One below
-silk.settings.one_below = Einer darunter
 # Source: On the target
 silk.settings.on_the_target = Beim Ziel
 # Source: Enable preview popup
@@ -1988,28 +1928,8 @@ silk.settings.preview_popup = Vorschau-Popup aktivieren
 silk.settings.preview_popup.help = Ein: Ein Klick auf ein Emote öffnet einen Bereich neben dem Fenster, ein Doppelklick spielt es ab. Mit Emote Swap zeigt der Bereich auch eine Vorschau des Tauschs. Aus: Kein Bereich, ein einfacher Klick spielt das Emote ab.
 # Source: Recommended
 silk.settings.recommended = Empfohlen
-# Source: Safe mode is not a guarantee either. It keeps Direct Play out of the states where it was proved to go wrong. Emote Swap is the safe option and behaves almost the same way.
-silk.settings.safe_mode_not_a_promise = Auch der sichere Modus ist keine Garantie. Er hält Direct Play aus den Zuständen fern, in denen nachweislich Probleme auftreten. Emote Swap ist die sichere Option und verhält sich fast genauso.
-# Source: Same rank
-silk.settings.same_rank = Gleicher Rang
 # Source: Emote list
 silk.settings.section.emote_list = Emote-Liste
-# Source: "Strict" never puts an emote on one that makes sound.\n"Lenient" allows matching emotes that make sounds together.\n"Off" plays emotes regardless of sound.\n\nSound matching keeps other players from hearing an emote you did not play.\n\nRecommended: "Lenient".
-silk.settings.sound_matching.help = „Streng“ legt ein Emote nie auf eines, das einen Ton ausgibt.\n„Nachsichtig“ erlaubt, Emotes mit Ton aufeinander abzustimmen.\n„Aus“ spielt Emotes unabhängig vom Ton ab.\n\nDer Tonabgleich verhindert, dass andere Spieler ein Emote hören, das du nicht abgespielt hast.\n\nEmpfohlen: „Nachsichtig“.
-# Source: Strict
-silk.settings.strict = Streng
-# Source: Emotes turn your character differently when you have a target. Some turn the torso (/hum). Some turn only the head (/stepdance). Some only move the eyes (/beesknees). Some do not move at all (/guard).\n\n"Very strict" only picks emotes that behave the same way.\n"Strict" keeps the head and body turn, and allows a different eye behaviour.\n"Lenient" allows any turn behaviour.\n\nThe best match is always tried first.\n\nRecommended: "Lenient".
-silk.settings.turn_matching.help = Emotes drehen deinen Charakter unterschiedlich, wenn du ein Ziel hast. Manche drehen den Oberkörper (/hum). Manche drehen nur den Kopf (/stepdance). Manche bewegen nur die Augen (/beesknees). Manche bewegen sich gar nicht (/guard).\n\n„Sehr streng“ wählt nur Emotes, die sich gleich verhalten.\n„Streng“ behält die Drehung von Kopf und Körper bei und erlaubt ein anderes Augenverhalten.\n„Nachsichtig“ erlaubt jedes Drehverhalten.\n\nDie beste Übereinstimmung wird immer zuerst versucht.\n\nEmpfohlen: „Nachsichtig“.
-# Source: Lets Direct Play bypass an emote in any pose.\n\nLeave it off unless you know what you are doing. When it is off, the plugin only plays emotes from states where nothing can be noticed.
-silk.settings.unsafe.help = Lässt Direct Play ein Emote in jeder Haltung umgehen.\n\nLass das aus, außer du weißt, was du tust. Wenn es aus ist, spielt das Plugin Emotes nur aus Zuständen ab, in denen nichts bemerkt werden kann.
-# Source: In practice it is a non-issue. Other tools and plugins have done this for years without trouble. Go back to safe mode, or to Emote Swap, if you are uncomfortable with it.
-silk.settings.unsafe.reassurance = In der Praxis ist das kein Problem. Andere Tools und Plugins machen das seit Jahren ohne Probleme. Geh zurück zum sicheren Modus oder zu Emote Swap, wenn du dich damit unwohl fühlst.
-# Source: Very strict
-silk.settings.very_strict = Sehr streng
-# Source: Shows a warning in chat when a swap did not happen the way you would expect.
-silk.settings.warning_messages.help = Zeigt eine Warnung im Chat, wenn ein Tausch nicht so stattfand, wie du es erwarten würdest.
-# Source: How long the same warning stays quiet after you have seen it.\n\nSet to 0 to disable.
-silk.settings.warning_throttle.help = Wie lange dieselbe Warnung stumm bleibt, nachdem du sie gesehen hast.\n\nAuf 0 setzen, um zu deaktivieren.
 # Source: When it ends
 silk.settings.when_it_ends = Wenn es endet
 # Source: When needed
