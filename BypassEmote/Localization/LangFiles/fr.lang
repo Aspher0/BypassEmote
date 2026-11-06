@@ -486,6 +486,30 @@ changelog.2.4.0.1.e862aedf =
 changelog.2.4.0.1.e94a5ffa = 
 # Source: Various technical enhancements.
 changelog.2.4.0.1.fe26324e = 
+# Source: Reworked /be sync.\nEvery character now sync the same way, and VFXs and sounds sync should now be fixed.
+changelog.2.4.0.3.2e90d60c = 
+# Source: New Features
+changelog.2.4.0.3.36f4e595 = 
+# Source: Sync fixes
+changelog.2.4.0.3.4e027d9c = 
+# Source: Fixes /be sync, keeps the generated mod when you log out and simplifies "Loops on idle poses".
+changelog.2.4.0.3.4e52bc27 = 
+# Source: Fixed /be sync not restarting the sounds of loop emotes when the loop has completed once.
+changelog.2.4.0.3.51808142 = 
+# Source: Bug fixes
+changelog.2.4.0.3.60586b6e = 
+# Source: Syncing during an emote's intro now restarts the intro instead of skipping to the loop.
+changelog.2.4.0.3.acfa1183 = 
+# Source: Rewrote some of the settings descriptions to make them clearer.
+changelog.2.4.0.3.b82fb1f9 = 
+# Source: Removed "Only when nothing else fits" from "Loops on idle poses". It is now either "Never" or "Allowed", and "Allowed" is the default.
+changelog.2.4.0.3.c5be445c = 
+# Source: Technical Changes
+changelog.2.4.0.3.d80295d6 = 
+# Source: Added "Disable the mod on logout and unload" to the settings.\nWith it on, the generated Penumbra mod is disabled when you log out or unload the plugin.\nIt is off by default, the generated mod now stays enabled when you log out or unload the plugin.
+changelog.2.4.0.3.dde5cc54 = 
+# Source: Various technical enhancements.
+changelog.2.4.0.3.fe26324e = 
 # Source: You cannot bypass this emote right now.
 chat.cannot_bypass_now = Vous ne pouvez pas bypasser cette emote pour le moment.
 # Source: Error trying to process command

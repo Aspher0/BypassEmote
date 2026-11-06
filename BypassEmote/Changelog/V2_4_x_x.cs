@@ -14,6 +14,7 @@ public class V2_4_x_x : BaseChangelogVersion
     public override List<ChangelogVersion> GetVersions() => new()
     {
         CreateV2_4_0_1(),
+        CreateV2_4_0_3(),
     };
 
     private static ChangelogVersion CreateV2_4_0_1()
@@ -73,6 +74,36 @@ public class V2_4_x_x : BaseChangelogVersion
                 EntryBullet("Reduced the stutter when opening a window for the first time, and the new interface takes less time to draw.", White, 1),
                 EntryBullet("The plugin's help in the plugin installer now follows the plugin's language.", White, 1),
                 EntryBullet("Removed the outdated mod writer.", White, 1),
+                EntryBullet("Various technical enhancements.", White, 1),
+            }
+        };
+
+    private static ChangelogVersion CreateV2_4_0_3()
+        => new ChangelogVersion
+        {
+            Version = new(2, 4, 0, 3),
+            Date = "06-11-2026",
+            Title = "Sync fixes",
+            TitleColor = Blue,
+            Description = "Fixes /be sync, keeps the generated mod when you log out and simplifies \"Loops on idle poses\".",
+            Entries = new List<ChangelogEntry>
+            {
+                Header("New Features", Orange, 0, FontAwesomeIcon.Star),
+                EntryBullet("Added \"Disable the mod on logout and unload\" to the settings.\n" +
+                    "With it on, the generated Penumbra mod is disabled when you log out or unload the plugin.\n" +
+                    "It is off by default, the generated mod now stays enabled when you log out or unload the plugin.", Orange, 1),
+                Separator(),
+                Entry("Reworked /be sync.\n" +
+                    "Every character now sync the same way, and VFXs and sounds sync should now be fixed.", Orange, 1, FontAwesomeIcon.SyncAlt, White),
+                EntryBullet("Syncing during an emote's intro now restarts the intro instead of skipping to the loop.", White, 1),
+                Separator(),
+                Header("Bug fixes", LightRed, 0, FontAwesomeIcon.Bug),
+                EntryBullet("Fixed /be sync not restarting the sounds of loop emotes when the loop has completed once.", LightRed, 1),
+                Separator(),
+                Header("Technical Changes", Blue, 0, FontAwesomeIcon.Wrench),
+                EntryBullet("Removed \"Only when nothing else fits\" from \"Loops on idle poses\". " +
+                    "It is now either \"Never\" or \"Allowed\", and \"Allowed\" is the default.", Blue, 1),
+                EntryBullet("Rewrote some of the settings descriptions to make them clearer.", White, 1),
                 EntryBullet("Various technical enhancements.", White, 1),
             }
         };
