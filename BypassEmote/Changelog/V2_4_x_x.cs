@@ -93,7 +93,7 @@ public class V2_4_x_x : BaseChangelogVersion
                     "With it on, the generated Penumbra mod is disabled when you log out or unload the plugin.\n" +
                     "It is off by default, the generated mod now stays enabled when you log out or unload the plugin.", Orange, 1),
                 Entry("Reworked /be sync.\n" +
-                    "Every character now sync the same way, and VFXs and sounds sync should now be fixed.", Orange, 1, FontAwesomeIcon.SyncAlt, White),
+                    "Every character now syncs the same way, and VFXs and sounds sync should now be fixed.", Orange, 1, FontAwesomeIcon.SyncAlt, White),
                 EntryBullet("Syncing during an emote's intro now restarts the intro instead of skipping to the loop.", White, 1),
                 Separator(),
                 Header("Bug fixes", LightRed, 0, FontAwesomeIcon.Bug),
