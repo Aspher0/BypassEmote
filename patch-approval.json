@@ -2,9 +2,9 @@
   "notice": "",
   "approved": [
     {
-      "gameVersion": "2026.09.15.0000.0000",
+      "gameVersion": "2026.10.16.0000.0000",
       "client": "Global",
-      "minimumPluginVersion": "2.3.1.0",
+      "minimumPluginVersion": "2.4.0.3",
       "notice": ""
     }
   ]
