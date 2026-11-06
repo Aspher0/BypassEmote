@@ -56,11 +56,13 @@ internal static unsafe class TimelineRestarter
             var running = playState < 3 && (bytes[0x7C] & 0x40) == 0;
             var timestamp = *(float*)(bytes + TimestampOffset);
             var loopStart = *(float*)(bytes + 0x3C);
-            var fromTop = *(int*)(bytes + 0x58) == 1 || timestamp < loopStart;
+            var stillLooping = !running && HoldsLoopingAnimation(bytes, 0);
+            var fromTop = stillLooping || *(int*)(bytes + 0x58) == 1 || timestamp < loopStart;
             var restartedAt = fromTop ? 0f : Math.Max(0f, loopStart);
             var reset = new ClipReset();
+            var restarted = running || stillLooping;
 
-            if (running)
+            if (restarted)
             {
                 ResetClips(bytes, !fromTop, reset, 0);
 
@@ -73,7 +75,7 @@ internal static unsafe class TimelineRestarter
             }
 
             restarts.Add(new SlotRestart(slot, timelineId, KeyOf(bytes), timestamp, loopStart,
-                *(float*)(bytes + 0x40), playState, running, running && fromTop, restartedAt, reset.Sounds.Count,
+                *(float*)(bytes + 0x40), playState, restarted, restarted && fromTop, restartedAt, reset.Sounds.Count,
                 reset.Vfx));
         }
 
@@ -138,8 +140,10 @@ internal static unsafe class TimelineRestarter
         timeline->ProcessAll(10, data);
     }
 
-    private static void ResetClips(byte* timeline, bool loop, ClipReset reset, int depth)
+    private static List<nint> ClipsOf(byte* timeline)
     {
+        var clips = new List<nint>();
+
         for (var track = *(byte**)(timeline + 0x18); track != null; track = *(byte**)(track + 0x20))
         {
             var groups = *(byte***)(track + 0x28);
@@ -152,13 +156,50 @@ internal static unsafe class TimelineRestarter
                 if (group == null)
                     continue;
 
-                var clips = *(byte***)(group + 0x18);
+                var groupClips = *(byte***)(group + 0x18);
                 var clipCount = *(ushort*)(group + 0x22);
 
-                for (var clipIndex = 0; clips != null && clipIndex < clipCount; clipIndex++)
-                    ResetClip(clips[clipIndex], loop, reset, depth);
+                for (var clipIndex = 0; groupClips != null && clipIndex < clipCount; clipIndex++)
+                {
+                    if (groupClips[clipIndex] != null)
+                        clips.Add((nint)groupClips[clipIndex]);
+                }
             }
         }
+
+        return clips;
+    }
+
+    private static bool HoldsLoopingAnimation(byte* timeline, int depth)
+    {
+        foreach (var address in ClipsOf(timeline))
+        {
+            var clip = (byte*)address;
+            var kind = *(int*)(clip + 0x84);
+
+            if (kind == 6)
+            {
+                var animation = *(byte**)(clip + 0x98);
+
+                if (animation != null && *(int*)(animation + 0x40) == 1)
+                    return true;
+            }
+            else if (kind is 0 or 7)
+            {
+                var child = *(byte**)(clip + 0x138);
+
+                if (child != null && depth < 4 && HoldsLoopingAnimation(child, depth + 1))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void ResetClips(byte* timeline, bool loop, ClipReset reset, int depth)
+    {
+        foreach (var clip in ClipsOf(timeline))
+            ResetClip((byte*)clip, loop, reset, depth);
     }
 
     private static void ResetClip(byte* clip, bool loop, ClipReset reset, int depth)
